@@ -53,11 +53,14 @@ struct dustevo_props {
 
   /* ------------ Global parameters ------------- */
 
-  /*! Clumping factor assumed for accretion at a given density (default 1.)*/
+  /*! Clumping factor assumed for accretion at a given density (default 10.)*/
   float clumping_factor;
 
   /*! Boost (> 1.) or reduction (< 1.) factor applied to dust diffusion rates (default 1.) */
   float diffusion_rate_boost;
+
+  /*! Fraction of Fe silicate grains (fayalite) as opposed to Mg (forsterite) (default 0.5)*/
+  float nu;
 
   /* ----------- Correcting cooling tables ---------- */
 

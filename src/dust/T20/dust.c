@@ -27,19 +27,6 @@ void redistribute_dust_masses(struct spart* sp,
 
   float grain_mass;
   int eldx;
-
-  /* message("gcomp1 %e", dp->grain_element_mfrac[0][0]); */
-  /* message("gcomp2 %e %e %e %e", dp->grain_element_mfrac[1][0], */
-  /* 	  dp->grain_element_mfrac[1][1], */
-  /* 	  dp->grain_element_mfrac[1][2], */
-  /* 	  dp->grain_element_mfrac[1][3]); */
-  /* message("Fe %d %d %d %d %d", dp->grain_element_indices[0][0], */
-  /* 	  dp->grain_element_indices[1][0], */
-  /* 	  dp->grain_element_indices[1][1], */
-  /* 	  dp->grain_element_indices[1][2], */
-  /* 	  dp->grain_element_indices[1][3]); */
-
-
   for (int grain = 0; grain < grain_species_count; grain++) {
     grain_mass =  p->dust_data.grain_mass_fraction[grain];
     for (int elem = 0; elem < dp->grain_element_count[grain]; elem++) {
@@ -98,11 +85,37 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
    **/  
   
   /* read some parameters */
+  /* operation modes */
+  dp->pair_to_cooling = 
+    parser_get_opt_param_int(params, "DustEvolution:pair_to_cooling", 0);
+  dp->with_subgrid_props = 
+    parser_get_opt_param_int(params, "DustEvolution:use_subgrid_props", 1);
+  dp->with_sputtering = 
+    parser_get_opt_param_int(params, "DustEvolution:use_sputtering", 1);
+  dp->with_SNII_destruction = 
+    parser_get_opt_param_int(params, "DustEvolution:use_SNII_destruction", 1);
+  dp->with_accretion = 
+    parser_get_opt_param_int(params, "DustEvolution:use_accretion", 1);
 
-  /* <!! SET IN PARAMETER FILE> */
-  dp->initial_grain_mass_fraction[grain_species_graphite] = 0.;
-  dp->initial_grain_mass_fraction[grain_species_silicate] = 0.;
-   
+  /* initial abundances */
+  dp->initial_grain_mass_fraction[grain_species_graphite] = 
+    parser_get_opt_param_float(params, "DustEvolution:initial_abundance_graphite", 0.);
+  dp->initial_grain_mass_fraction[grain_species_silicate] =
+    parser_get_opt_param_float(params, "DustEvolution:initial_abundance_silicate", 0.);
+
+  /* global parameters */
+  dp->clumping_factor = 
+    parser_get_opt_param_float(params, "DustEvolution:clumping_factor", 10.);
+  dp->diffusion_rate_boost = 
+    parser_get_opt_param_float(params, "DustEvolution:diffusion_boost_factor",
+			       1.0);
+  dp->nu = 
+    parser_get_opt_param_float(params, "DustEvolution:silicate_fe_grain_fraction",
+			       0.5);
+
+  parser_get_opt_param_string(params, "DustEvolution:dust_yields_path", 
+			      dp->AGB_dyield_path, "./dust_yields");
+  
   /* set assumed abundance patterns to Wiersma et al (2009a) */
   memset(dp->abundance_pattern, 0, sizeof dp->abundance_pattern);
   dp->abundance_pattern[chemistry_element_H] = 7.0649785e-01;
@@ -133,13 +146,10 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   dp->grain_element_count[grain_species_graphite] = 1;
   dp->grain_element_count[grain_species_silicate] = 4;
 
-  /* value from 0-1 setting the ratio of Fe to Mg in the effective silicate grain composition */
-  float nu = 0.5; // <-- read from param file.
-
   /* effective grain molecular weights in amu */
   float Agra = dp->atomic_weight[chemistry_element_C];
-  float Asil = 2* nu * dp->atomic_weight[chemistry_element_Fe] +
-    (2 - 2*nu) * dp->atomic_weight[chemistry_element_Mg] +
+  float Asil = 2* dp->nu * dp->atomic_weight[chemistry_element_Fe] +
+    (2 - 2*dp->nu) * dp->atomic_weight[chemistry_element_Mg] +
     dp->atomic_weight[chemistry_element_Si] +
     4*dp->atomic_weight[chemistry_element_O];
 
@@ -152,9 +162,9 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   /* set grain composition */
   float gcomp1[1] = {dp->atomic_weight[chemistry_element_C]/Agra};
   float gcomp2[4] = {4*dp->atomic_weight[chemistry_element_O]/Asil,
-		     (2-2*nu)*dp->atomic_weight[chemistry_element_Mg]/Asil,
+		     (2-2*dp->nu)*dp->atomic_weight[chemistry_element_Mg]/Asil,
   		     dp->atomic_weight[chemistry_element_Si]/Asil,
-  		     2*nu*dp->atomic_weight[chemistry_element_Fe]/Asil};
+  		     2*dp->nu*dp->atomic_weight[chemistry_element_Fe]/Asil};
 
   dp->grain_element_mfrac[grain_species_graphite] = gcomp1;
   dp->grain_element_mfrac[grain_species_silicate] = gcomp2;
@@ -170,10 +180,6 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
 	 &gcomp1, dp->grain_element_count[grain_species_graphite] * sizeof(float));
   memcpy(dp->grain_element_mfrac[grain_species_silicate],
 	 &gcomp2, dp->grain_element_count[grain_species_silicate] * sizeof(float));
-
-  /* float *(dp->grain_element_mfrac)[] = {&gcomp1, &gcomp1}; */
-  /* dp->grain_element_mfrac[grain_species_silicate] = &gcomp2; */
-
 
   /* set chemistry indices composition */
   int gidx1[1] = {chemistry_element_C};
@@ -195,26 +201,12 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   memcpy(dp->grain_element_indices[grain_species_silicate],
 	 &gidx2, dp->grain_element_count[grain_species_silicate] * sizeof(int));
 
-  /* float *(dp->grain_element_mfrac)[] = {&gcomp1, &gcomp1}; */
-  /* dp->grain_element_mfrac[grain_species_silicate] = &gcomp2; */
-
-  /* dp->grain_element_indices[grain_species_graphite] = gidx1; */
-  /* dp->grain_element_indices[grain_species_silicate] = gidx2; */
-
   /* set element count contributing to each grain */
   dp->accretion_coeff[grain_species_graphite] = 3.132e15;
   dp->accretion_coeff[grain_species_silicate] = 5.677e15;
 
   /* number of SNII per unit stellar mass */
   dp->specific_numSNII = 7.039463e-3 / phys_const->const_solar_mass;
-
-  /* hard coded params for now */
-  strncpy(dp->AGB_dyield_path, "./dust_yields", 200);
-  dp->pair_to_cooling = 0;
-  dp->with_subgrid_props = 1;
-  dp->with_sputtering = 1;
-  dp->with_SNII_destruction = 1;
-  dp->with_accretion = 1;
 
   /** NOTE 1: total metallicity yields untouched here, so Z represents the conserved dust + gas phase metals **/
 
@@ -289,8 +281,6 @@ void evolve_dust_part(const struct phys_const *phys_const,
   }
   else deltf_sput = 0.;
 
-  //message("Sput %e", deltf_sput);
-
   /*------------------------- SNII shocks -------------------------*/
 
   double deltf_SNII;
@@ -316,8 +306,6 @@ void evolve_dust_part(const struct phys_const *phys_const,
     deltf_SNII = 0.;
   }
 
-  //message("SNII %e", deltf_SNII);
-
   /* ------------------------- Accretion ------------------------- */
   
   double deltf_acc[grain_species_count] = {0.};
@@ -341,11 +329,9 @@ void evolve_dust_part(const struct phys_const *phys_const,
 	  p->chemistry_data.metal_mass_fraction[eldx] / dp->abundance_pattern[eldx]);
       }
       tau_acc = dp->accretion_coeff[grain] * mult_terms / min_abundance_ratio;
-      deltf_acc[grain] = dt_cgs / tau_acc;
+      deltf_acc[grain] = dt_cgs  * dp->clumping_factor / (tau_acc);
     }
   }
-
-  //message("Acc %e %e", deltf_acc[0], deltf_acc[1]);
   
   /* ------------------------- Combine ------------------------- */
   
@@ -367,9 +353,6 @@ void evolve_dust_part(const struct phys_const *phys_const,
 
     /* update particle grain mass fractions */
     p->dust_data.grain_mass_fraction[grain] += delta_dfrac;
-    /* message("delta_dfrac %e", delta_dfrac); */
-    /* message("delta grain %d: %e, delt sput %e delt SNII %e delt acc %e", grain, delta_dfrac, */
-    /*   deltf_sput, deltf_SNII, deltf_acc[grain]); */
  
     for (int elem = 0; elem < dp->grain_element_count[grain]; elem++) {
       eldx = dp->grain_element_indices[grain][elem];

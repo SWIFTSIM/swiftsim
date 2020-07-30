@@ -71,8 +71,6 @@ __attribute__((always_inline)) INLINE static void dust_first_init_part(
       p->dust_data.grain_mass_fraction[grain] =
           dp->initial_grain_mass_fraction[grain];
     }
-  
-
     dust_init_part(p, dp);
 }
 
