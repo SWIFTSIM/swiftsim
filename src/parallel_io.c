@@ -418,10 +418,10 @@ void prepare_array_parallel(
     error("Error while changing data space shape for field '%s'.", props.name);
 
   /* Dataset type */
-  hid_t h_type = io_hdf5_type(props.type);
+  hid_t h_type = H5Tcopy(io_hdf5_type(props.type));
 
   /* Dataset properties */
-  const hid_t h_prop = H5Pcreate(H5P_DATASET_CREATE);
+  hid_t h_prop = H5Pcreate(H5P_DATASET_CREATE);
 
   /* Create property list for collective dataset write.    */
   const hid_t h_plist_id = H5Pcreate(H5P_DATASET_XFER);
@@ -436,7 +436,7 @@ void prepare_array_parallel(
 
   /* Are we imposing some form of lossy compression filter? */
   if (lossy_compression != compression_write_lossless)
-    set_hdf5_lossy_compression(h_prop, h_type, lossy_compression, props.name);
+    set_hdf5_lossy_compression(&h_prop, &h_type, lossy_compression, props.name);
 
   /* Impose check-sum to verify data corruption */
   h_err = H5Pset_fletcher32(h_prop);
@@ -489,6 +489,8 @@ void prepare_array_parallel(
                    props.dimension, props.type);
 
   /* Close everything */
+  H5Tclose(h_type);
+  H5Pclose(h_prop);
   H5Pclose(h_plist_id);
   H5Dclose(h_data);
   H5Sclose(h_space);
