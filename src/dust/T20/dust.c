@@ -217,7 +217,6 @@ void dustevo_props_init_backend(struct dustevo_props* dp,
   compute_AGB_dyield(fp, dp);
   compute_SNII_dyield(fp, dp);
   //print_dyield_tables(fp, dp);
-
 }
 
 void evolve_dust_part(const struct phys_const *phys_const,
