@@ -1121,6 +1121,8 @@ INLINE static void evolve_SNII(float log10_min_mass, float log10_max_mass,
     for (int grain = 0; grain < grain_species_count; grain++) {
       sp->feedback_data.to_distribute.dust_mass[grain] +=
           dust_mass_released[grain] * norm_factor;
+      /* message("grain %d:  %e", grain, */
+      /* 	      sp->feedback_data.to_distribute.dust_mass[grain]); */
     }
 
   } else {

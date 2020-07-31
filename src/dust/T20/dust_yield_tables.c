@@ -328,17 +328,16 @@ void compute_SNII_dyield(struct feedback_props *fp,
   
   /* first pass through each grain composition to find bottlenecked yield for each grain type */
   for (int grain = 0; grain < grain_species_count; grain++) {
-
+    
     /* grain-specific constants here */
     c_frac = dp->condensation_frac[grain];
 
-    for (int elem = 0; elem < dp->grain_element_count[grain]; elem++) {
-
+    for (int elem = 0; elem < dp->grain_element_count[grain]; elem++) {  
       /* get constituent element chemistry index */
       eldx = dp->grain_element_indices[grain][elem];
 
-      /* only Mg and Si are considered key elements */
-      if ((eldx != chemistry_element_Mg) && (eldx != chemistry_element_Si)){
+      /* only Mg and Si are considered key elements for silicate grains */
+      if ((grain==1) && (eldx != chemistry_element_Mg) && (eldx != chemistry_element_Si)){
 	continue;
       }
 
@@ -379,7 +378,7 @@ void compute_SNII_dyield(struct feedback_props *fp,
 
 	  /* ejected metal mass condensing in the dust phase */
 	  dust_yield = (rel_yield+base_yield) * c_frac / elfrac;
-	  
+       
 	  /* if dust yield is unset or estimated larger than predicted for this element, set */
 	    if (dp->dyield_SNII.yield_IMF_resampled[dyield_index_3d] != 0){
 	      dp->dyield_SNII.yield_IMF_resampled[dyield_index_3d] = 
@@ -388,19 +387,6 @@ void compute_SNII_dyield(struct feedback_props *fp,
 	    else {
 	      dp->dyield_SNII.yield_IMF_resampled[dyield_index_3d] = dust_yield;
 	    }
-	  
-	  if (yield_index_3d % 50 == -1) {
-	    message("\t Index %d :: Dindex %d :: :: Mass %f :: Metallicity %f :: cfrac %f :: Dust Yield %f :: Mod Yield %f",
-		    //elname,
-		    yield_index_3d, dyield_index_3d, 
-		    exp10f(fp->yield_mass_bins[k]), 
-		    exp10f(fp->yield_SNII.metallicity[i]), 
-		    c_frac, 
-		    dp->dyield_SNII.yield_IMF_resampled[dyield_index_3d],
-		    fp->yield_SNII.yield_IMF_resampled[yield_index_3d]);
-		     
-
-	  }
 	}  
       }
     }
