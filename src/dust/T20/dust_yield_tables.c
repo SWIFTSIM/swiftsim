@@ -169,13 +169,14 @@ void print_dyield_tables(struct feedback_props *fp,
 }
 
 
+
 /**
  * @brief reads yield tables, flattens and stores them in stars_props data
  * struct
  *
  * @param feedback_props the #feedback_props data struct to read the table into.
  */
-INLINE  void read_AGB_dyield_tables(struct dustevo_props *dp) {
+void read_AGB_dyield_tables(struct dustevo_props *dp) {
 
 #ifdef HAVE_HDF5
 
@@ -190,18 +191,17 @@ INLINE  void read_AGB_dyield_tables(struct dustevo_props *dp) {
                      (void **)&dp->dyield_AGB.yield,
                      SWIFT_STRUCT_ALIGNMENT,
                      eagle_feedback_AGB_N_metals * eagle_feedback_AGB_N_masses *
-                         t20_dust_N_grains * sizeof(double)) != 0) {
+                         grain_species_count * sizeof(double)) != 0) {
     error("Failed to allocate AGB yield array");
   }
 
   /* Read AGB tables */
   sprintf(fname, "%s/AGB_dustyield.hdf5", dp->AGB_dyield_path);
-  message("%s, %s", fname, dp->AGB_dyield_path);
   file_id = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
-  if (file_id < 0) error("unable to open file %s\n", fname);
+if (file_id < 0) error("unable to open file %s\n", fname);      
 
   double temp_yield_AGB[grain_species_count]
-    		       [eagle_feedback_AGB_N_masses];
+       [eagle_feedback_AGB_N_masses];
   char *metallicity_yield_table_name_AGB[eagle_feedback_AGB_N_metals];
 
   /* read metallicity names */
@@ -214,6 +214,7 @@ INLINE  void read_AGB_dyield_tables(struct dustevo_props *dp) {
                    metallicity_yield_table_name_AGB);
   if (status < 0) error("error reading yield table names");
 
+
   /* read AGB yield tables */
   for (int i = 0; i < eagle_feedback_AGB_N_metals; i++) {
     /* read yields to temporary array */
@@ -224,21 +225,18 @@ INLINE  void read_AGB_dyield_tables(struct dustevo_props *dp) {
     if (status < 0) error("error reading AGB yield");
     status = H5Dclose(dataset);
     if (status < 0) error("error closing dataset");
-
-    message("try setting");
     /* Flatten the temporary tables that were read, store in stars_props */
     for (int k = 0; k < eagle_feedback_AGB_N_masses; k++) {
 
       for (int j = 0; j < grain_species_count; j++) {
         const int flat_index_Z = row_major_index_3d(
-            i, j, k, eagle_feedback_AGB_N_metals, eagle_feedback_AGB_N_elements,
+            i, j, k, eagle_feedback_AGB_N_metals, grain_species_count,
             eagle_feedback_AGB_N_masses);
-
         dp->dyield_AGB.yield[flat_index_Z] = temp_yield_AGB[j][k];
       }
     }
   }
-
+  
   /* Release the memory allocated by HDF5 for the strings */
   status = H5Dvlen_reclaim(datatype, dataspace, H5P_DEFAULT,
                            metallicity_yield_table_name_AGB);
@@ -250,15 +248,10 @@ INLINE  void read_AGB_dyield_tables(struct dustevo_props *dp) {
   status = H5Sclose(dataspace);
   if (status < 0) error("error closing dataspace");
 
-  message("done 1");
-  fflush(stdout);
   status = H5Fclose(file_id);
-  message("done 2");
-  fflush(stdout);
   if (status < 0) error("error closing file");
 #endif
 }
-
 /**
  * @brief resamples yields based on IMF mass bins
  *
