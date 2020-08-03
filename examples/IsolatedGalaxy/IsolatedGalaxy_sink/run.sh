@@ -17,4 +17,5 @@ fi
 echo "Generate initial conditions"
 python3 makeIC.py $filename
 
-../../swift --hydro --sinks --external-gravity --self-gravity --threads=16 isolated_galaxy.yml 2>&1 | tee output.log
+../../swift --hydro --sinks --external-gravity --self-gravity --threads=1 isolated_galaxy.yml 2>&1 | tee output.log
+# gdb ../../swift --eval-command="run --hydro --sinks --external-gravity --self-gravity --threads=16 isolated_galaxy.yml"
