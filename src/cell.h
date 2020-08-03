@@ -319,7 +319,7 @@ enum cell_flags {
  */
 struct cell {
 
-  /*! The cell location on the grid. */
+  /*! The cell location on the grid (corner nearest to the origin). */
   double loc[3];
 
   /*! The cell dimensions. */

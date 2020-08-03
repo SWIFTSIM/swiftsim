@@ -137,6 +137,7 @@ struct index_data {
   size_t count_extra_sink;
 };
 
+
 /**
  * @brief Recursively dismantle a cell tree.
  *
@@ -625,6 +626,7 @@ void space_regrid(struct space *s, int verbose) {
           c->hydro.count = 0;
           c->grav.count = 0;
           c->stars.count = 0;
+          c->sinks.count = 0;
           c->top = c;
           c->super = c;
           c->hydro.super = c;
@@ -2125,6 +2127,7 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
       c->hydro.count_total = c->hydro.count + space_extra_parts;
       c->grav.count_total = c->grav.count + space_extra_gparts;
       c->stars.count_total = c->stars.count + space_extra_sparts;
+      c->sinks.count_total = c->sinks.count + space_extra_sinks;
       c->black_holes.count_total = c->black_holes.count + space_extra_bparts;
 
       finger = &finger[c->hydro.count_total];
@@ -3002,7 +3005,7 @@ void space_sinks_get_cell_index_mapper(void *map_data, int nr_sinks,
     if (cell_counts[k]) atomic_add(&data->cell_counts[k], cell_counts[k]);
   free(cell_counts);
 
-  /* Write the count of inhibited and extra bparts */
+  /* Write the count of inhibited and extra sinks */
   if (count_inhibited_sink)
     atomic_add(&data->count_inhibited_sink, count_inhibited_sink);
   if (count_extra_sink) atomic_add(&data->count_extra_sink, count_extra_sink);

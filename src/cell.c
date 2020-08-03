@@ -2066,6 +2066,7 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
   /* Store the counts and offsets. */
   for (int k = 0; k < 8; k++) {
     c->progeny[k]->sinks.count = bucket_count[k];
+    c->progeny[k]->sinks.count_total = c->progeny[k]->sinks.count;
     c->progeny[k]->sinks.parts = &c->sinks.parts[bucket_offset[k]];
   }
 

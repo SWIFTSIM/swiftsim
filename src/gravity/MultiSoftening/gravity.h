@@ -298,6 +298,9 @@ __attribute__((always_inline)) INLINE static void gravity_first_init_gpart(
     case swift_type_stars:
       gp->epsilon = grav_props->epsilon_baryon_cur;
       break;
+    case swift_type_sink:
+      gp->epsilon = grav_props->epsilon_baryon_cur;
+      break;
     case swift_type_gas:
       gp->epsilon = grav_props->epsilon_baryon_cur;
       break;
