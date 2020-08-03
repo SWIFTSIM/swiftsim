@@ -74,8 +74,8 @@ struct bpart {
     float formation_scale_factor;
   };
 
-  /*! Density of the converted part */
-  float formation_density;
+  /*! Physical density of the converted part (internal units) */
+  float formation_gas_density;
 
   /*! Subgrid mass of the black hole */
   float subgrid_mass;

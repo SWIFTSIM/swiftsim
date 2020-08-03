@@ -329,8 +329,8 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "Physical subgrid sound-speeds used in the subgrid-Bondi model.");
 
   list[29] = io_make_output_field(
-      "BirthDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, bparts,
-      formation_density,
+      "BirthGasDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, bparts,
+      formation_gas_density,
       "Physical densities of the converted part at the time of birth. "
       "We store the physical density at the birth redshift, no conversion is "
       "needed.");
