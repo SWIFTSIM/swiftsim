@@ -27,7 +27,7 @@ import sys
 fileName = sys.argv[-1]
 output = "isolated_galaxy.hdf5"
 
-L_sink = 1000  # Size of the sink particle area
+L_sink = 50  # Size of the sink particle area
 N = 1000  # Number of sink particles
 max_vel = 100  # Maximal velocity of the sink particles (in km / s)
 mass = 0.000142  # Mass of a sink particle (internal units)
@@ -39,7 +39,9 @@ copyfile(fileName, output)
 
 # File
 file = h5py.File(output, 'a')
-L = file["PartType0/Coordinates"][:].max()
+
+# Get the box size (suppose that the galaxy is at the center of the box)
+L = 2 * file["PartType0/Coordinates"][:].mean()
 if (L < L_sink):
     raise Exception("Error the size of the sink box is too large")
 

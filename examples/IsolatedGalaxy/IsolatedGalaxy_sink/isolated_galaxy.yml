@@ -68,3 +68,15 @@ SPH:
   diffusion_alpha_max:               1.0      # (Optional) Override the maximal thermal diffusion coefficient that is allowed for a given particle.
   diffusion_alpha_min:               0.0      # (Optional) Override the minimal thermal diffusion coefficient that is allowed for a given particle.
  
+# Hernquist potential parameters
+HernquistPotential:
+  useabspos:       0        # 0 -> positions based on centre, 1 -> absolute positions 
+  position:        [0.,0.,0.]    # Location of centre of isothermal potential with respect to centre of the box (if 0) otherwise absolute (if 1) (internal units)
+  idealizeddisk:   1        # Run with an idealized galaxy disk
+  M200:            137.0   # M200 of the galaxy disk
+  h:               0.704    # reduced Hubble constant (value does not specify the used units!)
+  concentration:   9.0      # concentration of the Halo
+  diskfraction:              0.040   # Disk mass fraction
+  bulgefraction:              0.014   # Bulge mass fraction
+  timestep_mult:   0.01     # Dimensionless pre-factor for the time-step condition, basically determines the fraction of the orbital time we use to do the time integration
+  epsilon:         0.2      # Softening size (internal units)
