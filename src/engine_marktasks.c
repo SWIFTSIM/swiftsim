@@ -897,8 +897,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
     /* Sink drift ? */
     else if (t_type == task_type_drift_sink) {
 
-      if (cell_is_active_sinks(t->ci, e))
-        cell_activate_drift_sink(t->ci, s);
+      if (cell_is_active_sinks(t->ci, e)) cell_activate_drift_sink(t->ci, s);
     }
 
     /* Hydro ghost tasks ? */

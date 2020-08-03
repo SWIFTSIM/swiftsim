@@ -558,7 +558,7 @@ void runner_do_kick2(struct runner *r, struct cell *c, int timer) {
 
         /* Finish the time-step with a second half-kick */
         kick_sink(sink, dt_kick_grav, ti_begin + ti_step / 2,
-                   ti_begin + ti_step);
+                  ti_begin + ti_step);
 
 #ifdef SWIFT_DEBUG_CHECKS
         /* Check that kick and the drift are synchronized */
@@ -656,7 +656,8 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
     return;
   }
 
-  int updated = 0, g_updated = 0, s_updated = 0, sink_updated = 0, b_updated = 0;
+  int updated = 0, g_updated = 0, s_updated = 0, sink_updated = 0,
+      b_updated = 0;
   integertime_t ti_hydro_end_min = max_nr_timesteps, ti_hydro_end_max = 0,
                 ti_hydro_beg_max = 0;
   integertime_t ti_gravity_end_min = max_nr_timesteps, ti_gravity_end_max = 0,
@@ -664,7 +665,7 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
   integertime_t ti_stars_end_min = max_nr_timesteps, ti_stars_end_max = 0,
                 ti_stars_beg_max = 0;
   integertime_t ti_sinks_end_min = max_nr_timesteps, ti_sinks_end_max = 0,
-    ti_sinks_beg_max = 0;
+                ti_sinks_beg_max = 0;
   integertime_t ti_black_holes_end_min = max_nr_timesteps,
                 ti_black_holes_end_max = 0, ti_black_holes_beg_max = 0;
 
@@ -910,10 +911,8 @@ void runner_do_timestep(struct runner *r, struct cell *c, int timer) {
         sink_updated++;
         g_updated++;
 
-        ti_sinks_end_min =
-            min(ti_current + ti_new_step, ti_sinks_end_min);
-        ti_sinks_end_max =
-            max(ti_current + ti_new_step, ti_sinks_end_max);
+        ti_sinks_end_min = min(ti_current + ti_new_step, ti_sinks_end_min);
+        ti_sinks_end_max = max(ti_current + ti_new_step, ti_sinks_end_max);
         ti_gravity_end_min = min(ti_current + ti_new_step, ti_gravity_end_min);
         ti_gravity_end_max = max(ti_current + ti_new_step, ti_gravity_end_max);
 

@@ -137,7 +137,6 @@ struct index_data {
   size_t count_extra_sink;
 };
 
-
 /**
  * @brief Recursively dismantle a cell tree.
  *
@@ -1631,7 +1630,7 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
               &s->gparts[nr_gparts];
         } else if (s->gparts[nr_gparts].type == swift_type_stars) {
           s->sparts[-s->gparts[nr_gparts].id_or_neg_offset].gpart =
-            &s->gparts[nr_gparts];
+              &s->gparts[nr_gparts];
         } else if (s->gparts[nr_gparts].type == swift_type_sink) {
           s->sparts[-s->gparts[nr_gparts].id_or_neg_offset].gpart =
               &s->gparts[nr_gparts];
@@ -3770,7 +3769,7 @@ void space_split_recursive(struct space *s, struct cell *c,
   integertime_t ti_gravity_end_min = max_nr_timesteps, ti_gravity_end_max = 0,
                 ti_gravity_beg_max = 0;
   integertime_t ti_stars_end_min = max_nr_timesteps, ti_stars_end_max = 0,
-    ti_stars_beg_max = 0;
+                ti_stars_beg_max = 0;
   integertime_t ti_sinks_end_min = max_nr_timesteps, ti_sinks_end_max = 0,
                 ti_sinks_beg_max = 0;
   integertime_t ti_black_holes_end_min = max_nr_timesteps,

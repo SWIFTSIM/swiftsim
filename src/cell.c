@@ -2325,8 +2325,10 @@ void cell_check_sink_drift_point(struct cell *c, void *data) {
   for (int i = 0; i < c->sinks.count; ++i)
     if (c->sinks.parts[i].ti_drift != ti_drift &&
         c->sinks.parts[i].time_bin != time_bin_inhibited)
-      error("sink-part in an incorrect time-zone! sink->ti_drift=%lld ti_drift=%lld",
-            c->sinks.parts[i].ti_drift, ti_drift);
+      error(
+          "sink-part in an incorrect time-zone! sink->ti_drift=%lld "
+          "ti_drift=%lld",
+          c->sinks.parts[i].ti_drift, ti_drift);
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif
@@ -2671,9 +2673,8 @@ void cell_clear_drift_flags(struct cell *c, void *data) {
                          cell_flag_do_grav_drift | cell_flag_do_grav_sub_drift |
                          cell_flag_do_bh_drift | cell_flag_do_bh_sub_drift |
                          cell_flag_do_stars_drift |
-                  cell_flag_do_stars_sub_drift |
-                  cell_flag_do_sink_drift |
-                  cell_flag_do_sink_sub_drift);
+                         cell_flag_do_stars_sub_drift |
+                         cell_flag_do_sink_drift | cell_flag_do_sink_sub_drift);
 }
 
 /**
@@ -3592,7 +3593,7 @@ void cell_activate_subcell_black_holes_tasks(struct cell *ci, struct cell *cj,
   } /* Otherwise, pair interation */
 }
 
- /**
+/**
  * @brief Traverse a sub-cell task and activate the sinks drift tasks that
  * are required by a sinks task
  *
@@ -3633,8 +3634,8 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
                                             with_timestep_sync);
           for (int k = j + 1; k < 8; k++)
             if (ci->progeny[k] != NULL)
-              cell_activate_subcell_sinks_tasks(
-                  ci->progeny[j], ci->progeny[k], s, with_timestep_sync);
+              cell_activate_subcell_sinks_tasks(ci->progeny[j], ci->progeny[k],
+                                                s, with_timestep_sync);
         }
       }
     } else {
@@ -4800,28 +4801,28 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
  *
  * @return 1 If the space needs rebuilding. 0 otherwise.
  */
- int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
+int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
 
-   struct engine *e = s->space->e;
-   const int nodeID = e->nodeID;
-   int rebuild = 0;
+  struct engine *e = s->space->e;
+  const int nodeID = e->nodeID;
+  int rebuild = 0;
 
-   if (c->sinks.drift != NULL && cell_is_active_sinks(c, e)) {
-     cell_activate_drift_sink(c, s);
-   }
+  if (c->sinks.drift != NULL && cell_is_active_sinks(c, e)) {
+    cell_activate_drift_sink(c, s);
+  }
 
-   /* Unskip all the other task types. */
-   if (c->nodeID == nodeID && cell_is_active_sinks(c, e)) {
-     if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
-     if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
-     if (c->timestep != NULL) scheduler_activate(s, c->timestep);
+  /* Unskip all the other task types. */
+  if (c->nodeID == nodeID && cell_is_active_sinks(c, e)) {
+    if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
+    if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
+    if (c->timestep != NULL) scheduler_activate(s, c->timestep);
 #ifdef WITH_LOGGER
-     if (c->logger != NULL) scheduler_activate(s, c->logger);
+    if (c->logger != NULL) scheduler_activate(s, c->logger);
 #endif
-   }
+  }
 
-   return rebuild;
- }
+  return rebuild;
+}
 
 /**
  * @brief Set the super-cell pointers for all cells in a hierarchy.
@@ -5803,7 +5804,7 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
   cell_clear_flag(c, cell_flag_do_sink_drift | cell_flag_do_sink_sub_drift);
 }
 
-  /**
+/**
  * @brief Recursively drifts all multipoles in a cell hierarchy.
  *
  * @param c The #cell.

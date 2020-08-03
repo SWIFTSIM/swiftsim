@@ -1584,13 +1584,16 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
         cost = wscale * (count_i + scount_i);
         break;
       case task_type_kick1:
-        cost = wscale * (count_i + gcount_i + scount_i + sink_count_i + bcount_i);
+        cost =
+            wscale * (count_i + gcount_i + scount_i + sink_count_i + bcount_i);
         break;
       case task_type_kick2:
-        cost = wscale * (count_i + gcount_i + scount_i + sink_count_i + bcount_i);
+        cost =
+            wscale * (count_i + gcount_i + scount_i + sink_count_i + bcount_i);
         break;
       case task_type_timestep:
-        cost = wscale * (count_i + gcount_i + scount_i + sink_count_i + bcount_i);
+        cost =
+            wscale * (count_i + gcount_i + scount_i + sink_count_i + bcount_i);
         break;
       case task_type_timestep_limiter:
         cost = wscale * count_i;

@@ -105,15 +105,37 @@ const char *taskID_names[task_type_count] = {"none",
                                              "fof_pair"};
 
 /* Sub-task type names. */
-const char *subtaskID_names[task_subtype_count] = {
-    "none",       "density",      "gradient",       "force",
-    "limiter",    "grav",         "external_grav",  "tend_part",
-    "tend_gpart", "tend_spart",   "tend_sink",      "tend_bpart",     "xv",
-    "rho",        "part_swallow", "bpart_merger",   "gpart",
-    "multipole",  "spart",        "stars_density",  "stars_feedback",
-    "sf_count",   "bpart_rho",    "bpart_swallow",  "bpart_feedback",
-    "bh_density", "bh_swallow",   "do_gas_swallow", "do_bh_swallow",
-    "bh_feedback", "sink"};
+const char *subtaskID_names[task_subtype_count] = {"none",
+                                                   "density",
+                                                   "gradient",
+                                                   "force",
+                                                   "limiter",
+                                                   "grav",
+                                                   "external_grav",
+                                                   "tend_part",
+                                                   "tend_gpart",
+                                                   "tend_spart",
+                                                   "tend_sink",
+                                                   "tend_bpart",
+                                                   "xv",
+                                                   "rho",
+                                                   "part_swallow",
+                                                   "bpart_merger",
+                                                   "gpart",
+                                                   "multipole",
+                                                   "spart",
+                                                   "stars_density",
+                                                   "stars_feedback",
+                                                   "sf_count",
+                                                   "bpart_rho",
+                                                   "bpart_swallow",
+                                                   "bpart_feedback",
+                                                   "bh_density",
+                                                   "bh_swallow",
+                                                   "do_gas_swallow",
+                                                   "do_bh_swallow",
+                                                   "bh_feedback",
+                                                   "sink"};
 
 const char *task_category_names[task_category_count] = {
     "drift",       "sort",    "hydro",          "gravity", "feedback",
@@ -320,8 +342,7 @@ float task_overlap(const struct task *restrict ta,
       (ta_act == task_action_gpart || ta_act == task_action_all);
   const int ta_spart =
       (ta_act == task_action_spart || ta_act == task_action_all);
-  const int ta_sink =
-    (ta_act == task_action_sink || ta_act == task_action_all);
+  const int ta_sink = (ta_act == task_action_sink || ta_act == task_action_all);
   const int ta_bpart =
       (ta_act == task_action_bpart || ta_act == task_action_all);
   const int tb_part = (tb_act == task_action_part || tb_act == task_action_all);
@@ -329,8 +350,7 @@ float task_overlap(const struct task *restrict ta,
       (tb_act == task_action_gpart || tb_act == task_action_all);
   const int tb_spart =
       (tb_act == task_action_spart || tb_act == task_action_all);
-  const int tb_sink =
-    (tb_act == task_action_sink || tb_act == task_action_all);
+  const int tb_sink = (tb_act == task_action_sink || tb_act == task_action_all);
   const int tb_bpart =
       (tb_act == task_action_bpart || tb_act == task_action_all);
 
@@ -411,9 +431,9 @@ float task_overlap(const struct task *restrict ta,
 
     /* Compute the intersection of the cell data. */
     const size_t size_intersect = task_cell_overlap_spart(ta->ci, tb->ci) +
-      task_cell_overlap_sink(ta->ci, tb->cj) +
-      task_cell_overlap_sink(ta->cj, tb->ci) +
-      task_cell_overlap_sink(ta->cj, tb->cj);
+                                  task_cell_overlap_sink(ta->ci, tb->cj) +
+                                  task_cell_overlap_sink(ta->cj, tb->ci) +
+                                  task_cell_overlap_sink(ta->cj, tb->cj);
 
     return ((float)size_intersect) / (size_union - size_intersect);
   }

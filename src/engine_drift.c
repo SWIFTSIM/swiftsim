@@ -268,7 +268,6 @@ void engine_do_drift_all_sink_mapper(void *map_data, int num_elements,
   }
 }
 
-
 /**
  * @brief Mapper function to drift *all* the multipoles to the current time.
  *
