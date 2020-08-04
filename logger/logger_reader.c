@@ -93,11 +93,11 @@ void logger_reader_init_index(struct logger_reader *reader) {
   /* Initialize the arrays */
   if ((reader->index.times = (double *)malloc(count * sizeof(double))) ==
       NULL) {
-    error("Failed to allocate the list of times");
+    error_python("Failed to allocate the list of times");
   }
   if ((reader->index.int_times =
            (integertime_t *)malloc(count * sizeof(integertime_t))) == NULL) {
-    error("Failed to allocate the list of times");
+    error_python("Failed to allocate the list of times");
   }
 
   /* Get the information contained in the headers */
@@ -245,7 +245,7 @@ void logger_reader_read_single_particle(
     full_output[local] =
         malloc(h->masks[hydro_logger_local_to_global[local]].size);
     if (full_output[local] == NULL) {
-      error(
+      error_python(
           "Failed to allocate a field for the output before the requested "
           "time.");
     }
@@ -256,7 +256,7 @@ void logger_reader_read_single_particle(
     tmp_output[local] =
         malloc(h->masks[hydro_logger_local_to_global[local]].size);
     if (tmp_output[local] == NULL) {
-      error("Failed to allocate a field for the temporary storage.");
+      error_python("Failed to allocate a field for the temporary storage.");
     }
   }
 
@@ -278,7 +278,7 @@ void logger_reader_read_single_particle(
     const int global_first = hydro_logger_local_to_global[local_first];
     first_deriv[local_field] = malloc(h->masks[global_first].size);
     if (first_deriv[local_field] == NULL) {
-      error("Failed to allocate a first derivative.");
+      error_python("Failed to allocate a first derivative.");
     }
   }
 
@@ -296,7 +296,7 @@ void logger_reader_read_single_particle(
     const int global_second = hydro_logger_local_to_global[local_second];
     second_deriv[local_field] = malloc(h->masks[global_second].size);
     if (second_deriv[local_field] == NULL) {
-      error("Failed to allocate a second derivative.");
+      error_python("Failed to allocate a second derivative.");
     }
   }
 
@@ -502,7 +502,7 @@ void logger_reader_read_single_gparticle(
     full_output[local] =
         malloc(h->masks[gravity_logger_local_to_global[local]].size);
     if (full_output[local] == NULL) {
-      error(
+      error_python(
           "Failed to allocate a field for the output before the requested "
           "time.");
     }
@@ -513,7 +513,7 @@ void logger_reader_read_single_gparticle(
     tmp_output[local] =
         malloc(h->masks[gravity_logger_local_to_global[local]].size);
     if (tmp_output[local] == NULL) {
-      error("Failed to allocate a field for the temporary storage.");
+      error_python("Failed to allocate a field for the temporary storage.");
     }
   }
 
@@ -535,7 +535,7 @@ void logger_reader_read_single_gparticle(
     const int global_first = gravity_logger_local_to_global[local_first];
     first_deriv[local_field] = malloc(h->masks[global_first].size);
     if (first_deriv[local_field] == NULL) {
-      error("Failed to allocate a first derivative.");
+      error_python("Failed to allocate a first derivative.");
     }
   }
 
@@ -553,7 +553,7 @@ void logger_reader_read_single_gparticle(
     const int global_second = gravity_logger_local_to_global[local_second];
     second_deriv[local_field] = malloc(h->masks[global_second].size);
     if (second_deriv[local_field] == NULL) {
-      error("Failed to allocate a second derivative.");
+      error_python("Failed to allocate a second derivative.");
     }
   }
 
@@ -760,7 +760,7 @@ void logger_reader_read_single_sparticle(
     full_output[local] =
         malloc(h->masks[stars_logger_local_to_global[local]].size);
     if (full_output[local] == NULL) {
-      error(
+      error_python(
           "Failed to allocate a field for the output before the requested "
           "time.");
     }
@@ -771,7 +771,7 @@ void logger_reader_read_single_sparticle(
     tmp_output[local] =
         malloc(h->masks[stars_logger_local_to_global[local]].size);
     if (tmp_output[local] == NULL) {
-      error("Failed to allocate a field for the temporary storage.");
+      error_python("Failed to allocate a field for the temporary storage.");
     }
   }
 
@@ -793,7 +793,7 @@ void logger_reader_read_single_sparticle(
     const int global_first = stars_logger_local_to_global[local_first];
     first_deriv[local_field] = malloc(h->masks[global_first].size);
     if (first_deriv[local_field] == NULL) {
-      error("Failed to allocate a first derivative.");
+      error_python("Failed to allocate a first derivative.");
     }
   }
 
@@ -811,7 +811,7 @@ void logger_reader_read_single_sparticle(
     const int global_second = stars_logger_local_to_global[local_second];
     second_deriv[local_field] = malloc(h->masks[global_second].size);
     if (second_deriv[local_field] == NULL) {
-      error("Failed to allocate a second derivative.");
+      error_python("Failed to allocate a second derivative.");
     }
   }
 
@@ -1017,7 +1017,7 @@ void logger_reader_global_to_local(
       local_names = stars_logger_field_names;
       break;
     default:
-      error("Particle type not implemented yet.");
+      error_python("Particle type not implemented yet.");
   }
 
   /* Initialize the arrays */
@@ -1052,8 +1052,8 @@ void logger_reader_global_to_local(
   /* Check that we found the fields */
   for (int local = 0; local < n_fields_wanted; local++) {
     if (local_fields_wanted[local] < 0) {
-      error("Field %s not found in particle type %s", local_names[local],
-            part_type_names[type]);
+      error_python("Field %s not found in particle type %s", local_names[local],
+                   part_type_names[type]);
     }
   }
 }
@@ -1082,26 +1082,26 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   /* fields_wanted sorted according to the fields order (local index). */
   int *local_fields_wanted = (int *)malloc(sizeof(int) * n_fields_wanted);
   if (local_fields_wanted == NULL) {
-    error("Failed to allocate the array of sorted fields.");
+    error_python("Failed to allocate the array of sorted fields.");
   }
   /* Pointer to the output array in the correct reading order. */
   void **output_single = malloc(sizeof(void *) * n_fields_wanted);
   if (output_single == NULL) {
-    error("Failed to allocate the output.");
+    error_python("Failed to allocate the output.");
   }
 
   /* Fields corresponding to the first derivative of fields_wanted (sorted and
    * local index). */
   int *local_first_deriv = malloc(sizeof(int) * n_fields_wanted);
   if (local_first_deriv == NULL) {
-    error("Failed to allocate the list of first derivative.");
+    error_python("Failed to allocate the list of first derivative.");
   }
 
   /* Fields corresponding to the second derivative of fields_wanted (sorted and
    * local index). */
   int *local_second_deriv = malloc(sizeof(int) * n_fields_wanted);
   if (local_second_deriv == NULL) {
-    error("Failed to allocate the list of second derivative.");
+    error_python("Failed to allocate the list of second derivative.");
   }
 
   /* Do the hydro. */
@@ -1274,7 +1274,7 @@ size_t logger_reader_read_record(struct logger_reader *reader, void **output,
     /* We request all the fields */
     int *required_fields = malloc(hydro_logger_field_count * sizeof(int));
     if (required_fields == NULL) {
-      error("Failed to allocate the required fields.");
+      error_python("Failed to allocate the required fields.");
     }
     for (int i = 0; i < hydro_logger_field_count; i++) {
       required_fields[i] = i;

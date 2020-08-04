@@ -34,32 +34,41 @@
 typedef struct {
   PyObject_HEAD
 
-  /* Add logger stuff here */
-  struct logger_reader reader;
-} PyObjectReader;
+      /* Add logger stuff here */
+      struct logger_reader reader;
 
+  /* Is the logger ready? */
+  int ready;
+
+  /* basename of the logfile */
+  char *basename;
+
+  /* Verbose level */
+  int verbose;
+
+} PyObjectReader;
 
 /**
  * @brief Deallocate the memory.
  */
-static void Reader_dealloc(PyObjectReader* self)
-{
-  if (strcmp(self->reader.basename, "") == 0) {
-    error("It seems that the reader was not initialized");
+static void Reader_dealloc(PyObjectReader *self) {
+  if (self->basename != NULL) {
+    free(self->basename);
+    self->basename = NULL;
   }
-  logger_reader_free(&self->reader);
-  Py_TYPE(self)->tp_free((PyObject*)self);
+  Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 /**
  * @brief Allocate the memory.
  */
-static PyObject *Reader_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
+static PyObject *Reader_new(PyTypeObject *type, PyObject *args,
+                            PyObject *kwds) {
   PyObjectReader *self;
 
   self = (PyObjectReader *)type->tp_alloc(type, 0);
-  strcpy(self->reader.basename, "");
+  self->ready = 0;
+  self->basename = NULL;
   return (PyObject *)self;
 }
 /**
@@ -80,10 +89,19 @@ static int Reader_init(PyObjectReader *self, PyObject *args, PyObject *kwds) {
   static char *kwlist[] = {"basename", "verbose", NULL};
 
   /* parse the arguments. */
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|i", kwlist, &basename, &verbose))
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|i", kwlist, &basename,
+                                   &verbose))
     return -1;
 
-  logger_reader_init(&self->reader, basename, verbose);
+  /* Copy the arguments */
+  self->verbose = verbose;
+
+  size_t n_plus_null = strlen(basename) + 1;
+  self->basename = (char *)malloc(n_plus_null * sizeof(char));
+  if (self->basename == NULL) {
+    error_python("Failed to allocate memory");
+  }
+  strcpy(self->basename, basename);
 
   return 0;
 }
@@ -94,9 +112,12 @@ static int Reader_init(PyObjectReader *self, PyObject *args, PyObject *kwds) {
  * <b>returns</b> tuple containing min and max time.
  */
 static PyObject *getTimeLimits(PyObject *self, PyObject *Py_UNUSED(ignored)) {
+  if (!((PyObjectReader *)self)->ready) {
+    error_python("The logger is not ready yet");
+  }
 
   /* initialize the reader. */
-  struct logger_reader *reader = &((PyObjectReader *) self)->reader;
+  struct logger_reader *reader = &((PyObjectReader *)self)->reader;
 
   if (reader->verbose > 1) message("Reading time limits.");
 
@@ -169,7 +190,7 @@ logger_loader_create_output(void **output, const int *field_indices,
           if (current_field->dimension !=
                   python_fields[local_shifted].dimension ||
               current_field->typenum != python_fields[local_shifted].typenum) {
-            error(
+            error_python(
                 "The python definition of the field %s does not correspond "
                 "between"
                 " the modules.",
@@ -192,7 +213,7 @@ logger_loader_create_output(void **output, const int *field_indices,
           if (current_field->dimension !=
                   python_fields[local_shifted].dimension ||
               current_field->typenum != python_fields[local_shifted].typenum) {
-            error(
+            error_python(
                 "The python definition of the field %s does not correspond "
                 "between"
                 " the modules.",
@@ -207,7 +228,7 @@ logger_loader_create_output(void **output, const int *field_indices,
 
     /* Check if we got a field */
     if (current_field == NULL) {
-      error("Failed to find the required field");
+      error_python("Failed to find the required field");
     }
     PyObject *array = NULL;
     if (current_field->dimension > 1) {
@@ -226,6 +247,29 @@ logger_loader_create_output(void **output, const int *field_indices,
   return list;
 }
 
+static PyObject *pyEnter(__attribute__((unused)) PyObject *self,
+                         PyObject *args) {
+
+  PyObjectReader *self_reader = (PyObjectReader *)self;
+  logger_reader_init(&self_reader->reader, self_reader->basename,
+                     self_reader->verbose);
+  self_reader->ready = 1;
+
+  Py_INCREF(self);
+  return self;
+}
+
+static PyObject *pyExit(__attribute__((unused)) PyObject *self,
+                        PyObject *args) {
+  PyObjectReader *self_reader = (PyObjectReader *)self;
+  if (!self_reader->ready) {
+    error_python("It seems that the reader was not initialized");
+  }
+  logger_reader_free(&self_reader->reader);
+  self_reader->ready = 0;
+
+  Py_RETURN_NONE;
+}
 /**
  * @brief Read some fields at a given time.
  *
@@ -240,20 +284,24 @@ logger_loader_create_output(void **output, const int *field_indices,
  */
 static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
                                    PyObject *args) {
+  PyObjectReader *self_reader = (PyObjectReader *)self;
+  if (!self_reader->ready) {
+    error_python("The logger is not ready yet");
+  }
+
   /* input variables. */
   PyObject *fields = NULL;
   double time = 0;
   /* parse the arguments. */
-  if (!PyArg_ParseTuple(args, "Od", &fields, &time))
-    return NULL;
+  if (!PyArg_ParseTuple(args, "Od", &fields, &time)) return NULL;
 
   /* Check the inputs. */
   if (!PyList_Check(fields)) {
-    error("Expecting a list of fields");
+    error_python("Expecting a list of fields");
   }
 
   /* initialize the reader. */
-  struct logger_reader *reader = &((PyObjectReader *) self)->reader;
+  struct logger_reader *reader = &self_reader->reader;
   const struct header *h = &reader->log.header;
 
   /* Get the fields indexes from the header. */
@@ -265,7 +313,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
     /* Get the an item in the list. */
     PyObject *field = PyList_GetItem(fields, i);
     if (!PyUnicode_Check(field)) {
-      error("Expecting list of string for the fields");
+      error_python("Expecting list of string for the fields");
     }
 
     /* Convert into C string. */
@@ -282,7 +330,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
 
     /* Check if we found a field. */
     if (field_indices[i] == -1) {
-      error("Failed to find the field %s", field_name);
+      error_python("Failed to find the field %s", field_name);
     }
   }
 
@@ -342,6 +390,8 @@ static PyMethodDef libloggerReaderMethods[] = {
      "-------\n\n"
      "list_of_fields: list\n"
      "  Each element is a numpy array containing the corresponding field.\n"},
+    {"__enter__", pyEnter, METH_VARARGS, ""},
+    {"__exit__", pyExit, METH_VARARGS, ""},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
@@ -357,20 +407,16 @@ static struct PyModuleDef libloggermodule = {
     NULL  /* m_free */
 };
 
-
-
 static PyTypeObject PyObjectReader_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "liblogger.Reader",
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "liblogger.Reader",
     .tp_basicsize = sizeof(PyObjectReader),
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_doc = "TODO",
-    .tp_init = (initproc) Reader_init,
-    .tp_dealloc = (destructor) Reader_dealloc,
+    .tp_init = (initproc)Reader_init,
+    .tp_dealloc = (destructor)Reader_dealloc,
     .tp_new = Reader_new,
     .tp_methods = libloggerReaderMethods,
 };
-
 
 PyMODINIT_FUNC PyInit_liblogger(void) {
 
@@ -388,7 +434,7 @@ PyMODINIT_FUNC PyInit_liblogger(void) {
   }
 
   Py_INCREF(&PyObjectReader_Type);
-  PyModule_AddObject(m, "Reader", (PyObject *) &PyObjectReader_Type);
+  PyModule_AddObject(m, "Reader", (PyObject *)&PyObjectReader_Type);
 
   /* Import numpy. */
   import_array();

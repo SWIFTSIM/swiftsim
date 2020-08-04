@@ -64,12 +64,12 @@ logger_particle_read(const struct logger_reader *reader, size_t offset,
 
   /* Check that the mask is meaningful */
   if (*mask > (unsigned int)(1 << h->masks_count)) {
-    error("Found an unexpected mask %zi", *mask);
+    error_python("Found an unexpected mask %zi", *mask);
   }
 
   /* Check if it is not a time record. */
   if (*mask == h->timestamp_mask) {
-    error("Unexpected timestamp while reading a particle: %lu.", *mask);
+    error_python("Unexpected timestamp while reading a particle: %lu.", *mask);
   }
 
   /* Read the record and copy it to a particle. */
