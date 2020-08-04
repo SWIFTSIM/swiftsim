@@ -230,7 +230,8 @@ void feedback_evolve_spart(struct spart* restrict sp,
     error("Negative age for a star");
   }
 #endif
-  const double star_age_beg_step_safe = star_age_beg_step < 0 ? 0 : star_age_beg_step;
+  const double star_age_beg_step_safe =
+      star_age_beg_step < 0 ? 0 : star_age_beg_step;
 
   /* Reset the feedback */
   feedback_reset_feedback(sp, feedback_props);
@@ -243,7 +244,8 @@ void feedback_evolve_spart(struct spart* restrict sp,
 
   /* Compute the stellar evolution */
   stellar_evolution_evolve_spart(sp, &feedback_props->stellar_model, cosmo, us,
-                                 phys_const, ti_begin, star_age_beg_step_safe, dt);
+                                 phys_const, ti_begin, star_age_beg_step_safe,
+                                 dt);
 
   /* Transform the number of SN to the energy */
   sp->feedback_data.energy_ejected =
