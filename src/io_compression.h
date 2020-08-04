@@ -29,6 +29,7 @@ enum lossy_compression_schemes {
   compression_do_not_write = 0,    /*!< Do not write that field */
   compression_write_lossless,      /*!< Do not apply any lossy compression */
   compression_write_d_scale_1,     /*!< D-scale filter of magnitude 10^1 */
+  compression_write_d_scale_2,     /*!< D-scale filter of magnitude 10^2 */
   compression_write_d_scale_3,     /*!< D-scale filter of magnitude 10^3 */
   compression_write_d_scale_6,     /*!< D-scale filter of magnitude 10^6 */
   compression_write_f_mantissa_10, /*!< Conversion to 10-bits mantissa float */

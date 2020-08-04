@@ -32,7 +32,7 @@
 
 /* Compression level names. */
 const char* lossy_compression_schemes_names[compression_level_count] = {
-    "off",     "on",          "DScale1",     "DScale3",
+    "off",     "on",          "DScale1",     "Dscale2",     "DScale3",
     "DScale6", "FMantissa10", "FMantissa15", "IntegerNBits"};
 
 enum lossy_compression_schemes compression_scheme_from_name(const char* name) {
@@ -71,6 +71,16 @@ void set_hdf5_lossy_compression(hid_t* h_prop, hid_t* h_type,
     /* Scale filter with a scaling by 10^3 */
 
     hid_t h_err = H5Pset_scaleoffset(*h_prop, H5Z_SO_FLOAT_DSCALE, 3);
+    if (h_err < 0)
+      error("Error while setting scale-offset filter for field '%s'.",
+            field_name);
+  }
+
+  else if (comp == compression_write_d_scale_2) {
+
+    /* Scale filter with a scaling by 10^2 */
+
+    hid_t h_err = H5Pset_scaleoffset(*h_prop, H5Z_SO_FLOAT_DSCALE, 2);
     if (h_err < 0)
       error("Error while setting scale-offset filter for field '%s'.",
             field_name);
