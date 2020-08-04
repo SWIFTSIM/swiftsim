@@ -34,6 +34,7 @@ enum lossy_compression_schemes {
   compression_write_d_scale_6,     /*!< D-scale filter of magnitude 10^6 */
   compression_write_f_mantissa_10, /*!< Conversion to 10-bits mantissa float */
   compression_write_f_mantissa_15, /*!< Conversion to 15-bits mantissa float */
+  compression_write_half_float,    /*!< Conversion to half-float */
   compression_write_integer_nbits, /*!< Compress integers to the min # bits */
   /* Counter, always leave last */
   compression_level_count,

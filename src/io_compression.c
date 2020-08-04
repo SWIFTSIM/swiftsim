@@ -33,7 +33,7 @@
 /* Compression level names. */
 const char* lossy_compression_schemes_names[compression_level_count] = {
     "off",     "on",          "DScale1",     "Dscale2",     "DScale3",
-    "DScale6", "FMantissa10", "FMantissa15", "IntegerNBits"};
+    "DScale6", "FMantissa10", "FMantissa15", "HalfFloat", "IntegerNBits"};
 
 enum lossy_compression_schemes compression_scheme_from_name(const char* name) {
 
@@ -198,6 +198,57 @@ void set_hdf5_lossy_compression(hid_t* h_prop, hid_t* h_type,
       error("Error while setting n-bit filter for field '%s'.", field_name);
   }
 
+  else if (comp == compression_write_half_float) {
+
+    /* Float numbers with 10-bits mantissa and 5-bits exponent */
+
+    /* Note a regular IEEE-754 float has:
+     * - size = 4
+     * - m_size = 23
+     * - e_size = 8
+     * i.e. 23 + 8 + 1 (the sign bit) == 32 bits (== 4 bytes) */
+
+    const int size = 4;
+    const int m_size = 10;
+    const int e_size = 5;
+    const int offset = 0;
+    const int precision = m_size + e_size + 1;
+    const int e_pos = offset + m_size;
+    const int s_pos = e_pos + e_size;
+    const int m_pos = offset;
+    const int bias = (1 << (e_size - 1)) - 1;
+
+    H5Tclose(*h_type);
+    *h_type = H5Tcopy(H5T_IEEE_F32BE);
+    hid_t h_err = H5Tset_fields(*h_type, s_pos, e_pos, e_size, m_pos, m_size);
+    if (h_err < 0)
+      error("Error while setting type properties for field '%s'.", field_name);
+
+    h_err = H5Tset_offset(*h_type, offset);
+    if (h_err < 0)
+      error("Error while setting type offset properties for field '%s'.",
+            field_name);
+
+    h_err = H5Tset_precision(*h_type, precision);
+    if (h_err < 0)
+      error("Error while setting type precision properties for field '%s'.",
+            field_name);
+
+    h_err = H5Tset_size(*h_type, size);
+    if (h_err < 0)
+      error("Error while setting type size properties for field '%s'.",
+            field_name);
+
+    h_err = H5Tset_ebias(*h_type, bias);
+    if (h_err < 0)
+      error("Error while setting type bias properties for field '%s'.",
+            field_name);
+
+    h_err = H5Pset_nbit(*h_prop);
+    if (h_err < 0)
+      error("Error while setting n-bit filter for field '%s'.", field_name);
+  }
+
   else if (comp == compression_write_integer_nbits) {
 
     hid_t h_err =
@@ -205,4 +256,6 @@ void set_hdf5_lossy_compression(hid_t* h_prop, hid_t* h_type,
     if (h_err < 0)
       error("Error while setting n-bit filter for field '%s'.", field_name);
   }
+
+  /* Other case: Do nothing! */
 }
