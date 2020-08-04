@@ -845,6 +845,8 @@ static long long cell_count_non_inhibited_sinks(const struct cell* c) {
  * This creates a simple Nx1 array with a chunk size of 1024x1.
  * The Fletcher-32 filter is applied to the array.
  *
+ * For integer types, the N-bits compression filter is also applied.
+ *
  * @param h_grp The open hdf5 group.
  * @param n The number of elements in the array.
  * @param array The data to write.
@@ -879,6 +881,11 @@ void io_write_array(hid_t h_grp, const int n, const void* array,
   if (h_err < 0)
     error("Error while setting check-sum filter on %s %s data space.", name,
           array_content);
+
+  if (type == INT || type == LONG || type == LONGLONG || type == UINT ||
+      type == UINT64 || type == ULONG || type == ULONGLONG)
+    set_hdf5_lossy_compression(&h_prop, NULL, compression_write_integer_nbits,
+                               array_content);
 
   /* Write */
   hid_t h_data = H5Dcreate(h_grp, name, io_hdf5_type(type), h_space,
