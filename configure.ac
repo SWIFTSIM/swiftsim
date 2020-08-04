@@ -1488,7 +1488,6 @@ with_subgrid_pressure_floor=none
 with_subgrid_stars=none
 with_subgrid_star_formation=none
 with_subgrid_feedback=none
-with_subgrid_task_order=default
 with_subgrid_sink=none
 
 case "$with_subgrid" in
@@ -1505,8 +1504,7 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=GEAR
 	with_subgrid_feedback=GEAR
 	with_subgrid_black_holes=none
-	with_subgrid_task_order=GEAR
-  	with_subgrid_sink=none
+	with_subgrid_sink=none
 	enable_fof=no
    ;;
    QLA)
@@ -1518,8 +1516,7 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=QLA
 	with_subgrid_feedback=none
 	with_subgrid_black_holes=none
-	with_subgrid_task_order=default
-  	with_subgrid_sink=none
+	with_subgrid_sink=none
 	enable_fof=no
    ;;
    EAGLE)
@@ -1531,8 +1528,7 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=EAGLE
 	with_subgrid_feedback=EAGLE
 	with_subgrid_black_holes=EAGLE
-	with_subgrid_task_order=EAGLE
-  	with_subgrid_sink=none
+	with_subgrid_sink=none
 	enable_fof=yes
    ;;
    EAGLE-XL)
@@ -1544,7 +1540,6 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=EAGLE
 	with_subgrid_feedback=EAGLE
 	with_subgrid_black_holes=EAGLE
-	with_subgrid_task_order=EAGLE
 	with_subgrid_sink=none
 	enable_fof=yes
    ;;
@@ -2080,38 +2075,6 @@ case "$with_sink" in
    ;;
 esac
 
-# Task order
-AC_ARG_WITH([task-order],
-   [AS_HELP_STRING([--with-task-order=<model>],
-       [Task order to use @<:@default, EAGLE, GEAR default: default@:>@]
-   )],
-   [with_task_order="$withval"],
-   [with_task_order="default"]
-)
-
-if test "$with_subgrid" != "none"; then
-   if test "$with_task_order" != "default"; then
-      AC_MSG_ERROR([Cannot provide with-subgrid and with-task-order together])
-   else
-      with_task_order="$with_subgrid_task_order"
-   fi
-fi
-
-case "$with_task_order" in
-   EAGLE)
-       AC_DEFINE([TASK_ORDER_EAGLE], [1], [EAGLE task order])
-   ;;
-   default)
-       AC_DEFINE([TASK_ORDER_DEFAULT], [1], [Default (i.e. EAGLE/OWLS) task order])
-   ;;
-   GEAR)
-       AC_DEFINE([TASK_ORDER_GEAR], [1], [GEAR task order])
-   ;;
-   *)
-       AC_MSG_ERROR([Unknown task ordering: $with_task_order])
-   ;;
-esac
-
 #  External potential
 AC_ARG_WITH([ext-potential],
    [AS_HELP_STRING([--with-ext-potential=<pot>],
@@ -2381,7 +2344,6 @@ AC_MSG_RESULT([
    Star feedback model  : $with_feedback
    Sink particle model  : $with_sink
    Black holes model    : $with_black_holes
-   Task dependencies    : $with_task_order
 
    Atomic operations in tasks  : $enable_atomics_within_tasks
    Individual timers           : $enable_timers
