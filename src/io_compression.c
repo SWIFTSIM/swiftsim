@@ -30,11 +30,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Compression level names. */
+/**
+ * @brief Names of the compression levels, used in the select_output.yml
+ *        parameter file.
+ **/
 const char* lossy_compression_schemes_names[compression_level_count] = {
-    "off",     "on",          "DScale1",     "Dscale2",     "DScale3",
+    "off",     "on",          "DScale1",     "Dscale2",   "DScale3",
     "DScale6", "FMantissa10", "FMantissa15", "HalfFloat", "IntegerNBits"};
 
+/**
+ * @brief Returns the lossy compression scheme given its name
+ *
+ * Calls error if the name is not found in the list of filters.
+ *
+ * @param name The name of the filter
+ * @return The #lossy_compression_schemes
+ */
 enum lossy_compression_schemes compression_scheme_from_name(const char* name) {
 
   for (int i = 0; i < compression_level_count; ++i) {
@@ -46,6 +57,17 @@ enum lossy_compression_schemes compression_scheme_from_name(const char* name) {
   return (enum lossy_compression_schemes)0;
 }
 
+#ifdef HAVE_HDF5
+
+/**
+ * @brief Sets the properties and type of an HDF5 dataspace to apply a given
+ * lossy compression scheme.
+ *
+ * @param h_prop The properties of the dataspace.
+ * @param h_type The type of the dataspace.
+ * @param comp The lossy compression scheme to apply to this dataspace.
+ * @param field_name The name of the field to write in the dataspace.
+ */
 void set_hdf5_lossy_compression(hid_t* h_prop, hid_t* h_type,
                                 const enum lossy_compression_schemes comp,
                                 const char* field_name) {
@@ -259,3 +281,5 @@ void set_hdf5_lossy_compression(hid_t* h_prop, hid_t* h_type,
 
   /* Other case: Do nothing! */
 }
+
+#endif /* HAVE_HDF5 */
