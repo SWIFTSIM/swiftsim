@@ -845,8 +845,6 @@ static long long cell_count_non_inhibited_sinks(const struct cell* c) {
  * This creates a simple Nx1 array with a chunk size of 1024x1.
  * The Fletcher-32 filter is applied to the array.
  *
- * For integer types, the N-bits compression filter is also applied.
- *
  * @param h_grp The open hdf5 group.
  * @param n The number of elements in the array.
  * @param array The data to write.
@@ -869,6 +867,9 @@ void io_write_array(hid_t h_grp, const int n, const void* array,
     error("Error while changing shape of %s %s data space.", name,
           array_content);
 
+  /* Dataset type */
+  hid_t h_type = H5Tcopy(io_hdf5_type(type));
+
   const hsize_t chunk[2] = {(1024 > n ? n : 1024), 1};
   hid_t h_prop = H5Pcreate(H5P_DATASET_CREATE);
   h_err = H5Pset_chunk(h_prop, 1, chunk);
@@ -882,19 +883,15 @@ void io_write_array(hid_t h_grp, const int n, const void* array,
     error("Error while setting check-sum filter on %s %s data space.", name,
           array_content);
 
-  if (type == INT || type == LONG || type == LONGLONG || type == UINT ||
-      type == UINT64 || type == ULONG || type == ULONGLONG)
-    set_hdf5_lossy_compression(&h_prop, NULL, compression_write_integer_nbits,
-                               array_content);
-
   /* Write */
-  hid_t h_data = H5Dcreate(h_grp, name, io_hdf5_type(type), h_space,
-                           H5P_DEFAULT, h_prop, H5P_DEFAULT);
+  hid_t h_data =
+      H5Dcreate(h_grp, name, h_type, h_space, H5P_DEFAULT, h_prop, H5P_DEFAULT);
   if (h_data < 0)
     error("Error while creating dataspace for %s %s.", name, array_content);
   h_err = H5Dwrite(h_data, io_hdf5_type(type), h_space, H5S_ALL, H5P_DEFAULT,
                    array);
   if (h_err < 0) error("Error while writing %s %s.", name, array_content);
+  H5Tclose(h_type);
   H5Dclose(h_data);
   H5Pclose(h_prop);
   H5Sclose(h_space);
