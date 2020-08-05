@@ -30,8 +30,9 @@
 extern int hydro_logger_local_to_global[hydro_logger_field_count];
 
 /**
- * @brief When starting to read a logfile, check the required fields in the
- * logfile's header.
+ * @brief Populate the mapping between the local mask index and the index in the header,
+ * as well as the derivatives for each field.
+ * Also checks that the actual field sizes match the expected sizes.
  *
  * @param head The #header.
  */
