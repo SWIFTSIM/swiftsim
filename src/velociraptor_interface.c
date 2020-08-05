@@ -31,16 +31,16 @@
 #include "velociraptor_interface.h"
 
 /* Local includes. */
+#include "black_holes_io.h"
 #include "cooling.h"
 #include "engine.h"
+#include "gravity_io.h"
 #include "hydro.h"
+#include "hydro_io.h"
+#include "stars_io.h"
 #include "swift_velociraptor_part.h"
 #include "threadpool.h"
 #include "velociraptor_struct.h"
-#include "gravity_io.h"
-#include "hydro_io.h"
-#include "stars_io.h"
-#include "black_holes_io.h"
 
 #ifdef HAVE_VELOCIRAPTOR
 
