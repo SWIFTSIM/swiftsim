@@ -3180,6 +3180,10 @@ void space_sinks_get_cell_index(struct space *s, int *sink_ind,
 
   const ticks tic = getticks();
 
+  /* Re-set the counters */
+  s->min_sink_mass = FLT_MAX;
+  s->sum_sink_vel_norm = 0.f;
+
   /* Pack the extra information */
   struct index_data data;
   data.s = s;
@@ -5504,10 +5508,12 @@ void space_init(struct space *s, struct swift_params *params,
   s->sinks = sinks;
   s->min_part_mass = FLT_MAX;
   s->min_gpart_mass = FLT_MAX;
+  s->min_sink_mass = FLT_MAX;
   s->min_spart_mass = FLT_MAX;
   s->min_bpart_mass = FLT_MAX;
   s->sum_part_vel_norm = 0.f;
   s->sum_gpart_vel_norm = 0.f;
+  s->sum_sink_vel_norm = 0.f;
   s->sum_spart_vel_norm = 0.f;
   s->sum_bpart_vel_norm = 0.f;
   s->nr_queues = 1; /* Temporary value until engine construction */
