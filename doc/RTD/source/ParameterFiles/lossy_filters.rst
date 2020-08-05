@@ -64,17 +64,17 @@ the decimal point.
 
 SWIFT implements 4 variants of this filter:
 
- * ``DScale1`` --> Scale by :math:`10^1`
- * ``DScale2`` --> Scale by :math:`10^2`
- * ``DScale3`` --> Scale by :math:`10^3`
- * ``DScale6`` --> Scale by :math:`10^6`
+ * ``DScale1`` scales by :math:`10^1`
+ * ``DScale2`` scales by :math:`10^2`
+ * ``DScale3`` scales by :math:`10^3`
+ * ``DScale6`` scales by :math:`10^6`
 
-An example application is to store the positions with `pc` accuracy in
-simulations that use `Mpc` as their base unit by using the ``DScale6``
+An example application is to store the positions with ``pc`` accuracy in
+simulations that use ``Mpc`` as their base unit by using the ``DScale6``
 filter.
 
 The compression rate of these filters depends on the data. On an
-EAGLE-like simulation, compressing the positions from Mpc to pc (via
+EAGLE-like simulation, compressing the positions from ``Mpc`` to ``pc`` (via
 ``Dscale6``) leads to rate of around 2.2x.
 
 Modified floating-point representation filters
@@ -104,7 +104,7 @@ below this range they default to zero.
 
 The filters in this category change the number of bits in the mantissa and
 exponent. When reading the values (for example via ``h5py`` or
-``swiftsimio``) the numbers are transparently restored to regular `float`
+``swiftsimio``) the numbers are transparently restored to regular ``float``
 but with 0s in the bits of the mantissa that were not stored on disk, hence
 changing the result from what was stored originally before compression.
 
