@@ -38,43 +38,46 @@ extern int stars_logger_local_to_global[stars_logger_field_count];
  */
 __attribute__((always_inline)) INLINE static void
 stars_logger_reader_populate_mask_data(struct header *head) {
+  struct spart p;
+  /* We need a gpart because the acceleration is not defined in the spart */
+  struct gpart gp;
 
   for (int i = 0; i < head->masks_count; i++) {
     int size = 0;
     if (strcmp(head->masks[i].name,
                stars_logger_field_names[stars_logger_field_coordinates]) == 0) {
-      size = 3 * sizeof(double);
+      size = sizeof(p.x);
       stars_logger_local_to_global[stars_logger_field_coordinates] = i;
     } else if (strcmp(
                    head->masks[i].name,
                    stars_logger_field_names[stars_logger_field_velocities]) ==
                0) {
-      size = 3 * sizeof(float);
+      size = sizeof(p.v);
       stars_logger_local_to_global[stars_logger_field_velocities] = i;
 
     } else if (strcmp(head->masks[i].name,
                       stars_logger_field_names
                           [stars_logger_field_accelerations]) == 0) {
-      size = 3 * sizeof(float);
+      size = sizeof(gp.a_grav);
       stars_logger_local_to_global[stars_logger_field_accelerations] = i;
 
     } else if (strcmp(head->masks[i].name,
                       stars_logger_field_names[stars_logger_field_masses]) ==
                0) {
-      size = sizeof(float);
+      size = sizeof(p.mass);
       stars_logger_local_to_global[stars_logger_field_masses] = i;
 
     } else if (strcmp(head->masks[i].name,
                       stars_logger_field_names
                           [stars_logger_field_smoothing_lengths]) == 0) {
-      size = sizeof(float);
+      size = sizeof(p.h);
       stars_logger_local_to_global[stars_logger_field_smoothing_lengths] = i;
 
     } else if (strcmp(
                    head->masks[i].name,
                    stars_logger_field_names[stars_logger_field_particle_ids]) ==
                0) {
-      size = sizeof(uint64_t);
+      size = sizeof(p.id);
       stars_logger_local_to_global[stars_logger_field_particle_ids] = i;
     }
 
@@ -117,11 +120,10 @@ stars_logger_reader_populate_mask_data(struct header *head) {
  * #stars_logger_fields).
  */
 __attribute__((always_inline)) INLINE static void
-stars_logger_interpolate_field(const double t_before,
-                               const struct logger_field *before,
-                               const double t_after,
-                               const struct logger_field *after, void *output,
-                               const double t, const int field) {
+stars_logger_interpolate_field(
+    const double t_before, const struct logger_field *restrict before,
+    const double t_after, const struct logger_field *restrict after,
+    void *restrict output, const double t, const int field) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check the times */
@@ -191,7 +193,7 @@ stars_logger_interpolate_field(const double t_before,
       for (int i = 0; i < 3; i++) {
         float *a = (float *)output;
         const float *a_bef = (float *)before->field;
-        const float *a_aft = (float *)before->field;
+        const float *a_aft = (float *)after->field;
         a[i] = wa * a_aft[i] + wb * a_bef[i];
       }
       break;

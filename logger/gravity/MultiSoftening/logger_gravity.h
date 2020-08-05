@@ -38,37 +38,38 @@ extern int gravity_logger_local_to_global[gravity_logger_field_count];
  */
 __attribute__((always_inline)) INLINE static void
 gravity_logger_reader_populate_mask_data(struct header *head) {
+  struct gpart p;
 
   for (int i = 0; i < head->masks_count; i++) {
     int size = 0;
     if (strcmp(head->masks[i].name,
                gravity_logger_field_names[gravity_logger_field_coordinates]) ==
         0) {
-      size = 3 * sizeof(double);
+      size = sizeof(p.x);
       gravity_logger_local_to_global[gravity_logger_field_coordinates] = i;
     } else if (strcmp(head->masks[i].name,
                       gravity_logger_field_names
                           [gravity_logger_field_velocities]) == 0) {
-      size = 3 * sizeof(float);
+      size = sizeof(p.v_full);
       gravity_logger_local_to_global[gravity_logger_field_velocities] = i;
 
     } else if (strcmp(head->masks[i].name,
                       gravity_logger_field_names
                           [gravity_logger_field_accelerations]) == 0) {
-      size = 3 * sizeof(float);
+      size = sizeof(p.a_grav);
       gravity_logger_local_to_global[gravity_logger_field_accelerations] = i;
 
     } else if (strcmp(
                    head->masks[i].name,
                    gravity_logger_field_names[gravity_logger_field_masses]) ==
                0) {
-      size = sizeof(float);
+      size = sizeof(p.mass);
       gravity_logger_local_to_global[gravity_logger_field_masses] = i;
 
     } else if (strcmp(head->masks[i].name,
                       gravity_logger_field_names
                           [gravity_logger_field_particle_ids]) == 0) {
-      size = sizeof(uint64_t);
+      size = sizeof(p.id_or_neg_offset);
       gravity_logger_local_to_global[gravity_logger_field_particle_ids] = i;
     }
 
@@ -111,11 +112,10 @@ gravity_logger_reader_populate_mask_data(struct header *head) {
  * #gravity_logger_fields).
  */
 __attribute__((always_inline)) INLINE static void
-gravity_logger_interpolate_field(const double t_before,
-                                 const struct logger_field *before,
-                                 const double t_after,
-                                 const struct logger_field *after, void *output,
-                                 const double t, const int field) {
+gravity_logger_interpolate_field(
+    const double t_before, const struct logger_field *restrict before,
+    const double t_after, const struct logger_field *restrict after,
+    void *restrict output, const double t, const int field) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check the times */
@@ -185,7 +185,7 @@ gravity_logger_interpolate_field(const double t_before,
       for (int i = 0; i < 3; i++) {
         float *a = (float *)output;
         const float *a_bef = (float *)before->field;
-        const float *a_aft = (float *)before->field;
+        const float *a_aft = (float *)after->field;
         a[i] = wa * a_aft[i] + wb * a_bef[i];
       }
       break;
