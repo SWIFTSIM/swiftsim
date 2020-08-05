@@ -428,19 +428,20 @@ void prepare_array_parallel(
   H5Pset_dxpl_mpio(h_plist_id, H5FD_MPIO_COLLECTIVE);
 
   /* Set chunk size */
-  //h_err = H5Pset_chunk(h_prop, rank, chunk_shape);
-  //if (h_err < 0) {
+  // h_err = H5Pset_chunk(h_prop, rank, chunk_shape);
+  // if (h_err < 0) {
   //  error("Error while setting chunk size (%llu, %llu) for field '%s'.",
   //        chunk_shape[0], chunk_shape[1], props.name);
   //}
 
   /* Are we imposing some form of lossy compression filter? */
-  //if (lossy_compression != compression_write_lossless)
-  //  set_hdf5_lossy_compression(&h_prop, &h_type, lossy_compression, props.name);
+  // if (lossy_compression != compression_write_lossless)
+  //  set_hdf5_lossy_compression(&h_prop, &h_type, lossy_compression,
+  //  props.name);
 
   /* Impose check-sum to verify data corruption */
-  //h_err = H5Pset_fletcher32(h_prop);
-  //if (h_err < 0)
+  // h_err = H5Pset_fletcher32(h_prop);
+  // if (h_err < 0)
   //  error("Error while setting checksum options for field '%s'.", props.name);
 
   /* Create dataset */
