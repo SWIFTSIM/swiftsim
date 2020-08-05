@@ -38,55 +38,56 @@ extern int hydro_logger_local_to_global[hydro_logger_field_count];
  */
 __attribute__((always_inline)) INLINE static void
 hydro_logger_reader_populate_mask_data(struct header *head) {
+  struct part p;
 
   for (int i = 0; i < head->masks_count; i++) {
     int size = 0;
     if (strcmp(head->masks[i].name,
                hydro_logger_field_names[hydro_logger_field_coordinates]) == 0) {
-      size = 3 * sizeof(double);
+      size = sizeof(p.x);
       hydro_logger_local_to_global[hydro_logger_field_coordinates] = i;
     } else if (strcmp(
                    head->masks[i].name,
                    hydro_logger_field_names[hydro_logger_field_velocities]) ==
                0) {
-      size = 3 * sizeof(float);
+      size = sizeof(p.v);
       hydro_logger_local_to_global[hydro_logger_field_velocities] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names
                           [hydro_logger_field_accelerations]) == 0) {
-      size = 3 * sizeof(float);
+      size = sizeof(p.a_hydro);
       hydro_logger_local_to_global[hydro_logger_field_accelerations] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names[hydro_logger_field_masses]) ==
                0) {
-      size = sizeof(float);
+      size = sizeof(p.mass);
       hydro_logger_local_to_global[hydro_logger_field_masses] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names
                           [hydro_logger_field_smoothing_lengths]) == 0) {
-      size = sizeof(float);
+      size = sizeof(p.h);
       hydro_logger_local_to_global[hydro_logger_field_smoothing_lengths] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names[hydro_logger_field_entropies]) ==
                0) {
-      size = sizeof(float);
+      size = sizeof(p.entropy);
       hydro_logger_local_to_global[hydro_logger_field_entropies] = i;
 
     } else if (strcmp(
                    head->masks[i].name,
                    hydro_logger_field_names[hydro_logger_field_particle_ids]) ==
                0) {
-      size = sizeof(uint64_t);
+      size = sizeof(p.id);
       hydro_logger_local_to_global[hydro_logger_field_particle_ids] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names[hydro_logger_field_densities]) ==
                0) {
-      size = sizeof(float);
+      size = sizeof(p.rho);
       hydro_logger_local_to_global[hydro_logger_field_densities] = i;
     }
 
@@ -129,11 +130,10 @@ hydro_logger_reader_populate_mask_data(struct header *head) {
  * #hydro_logger_fields).
  */
 __attribute__((always_inline)) INLINE static void
-hydro_logger_interpolate_field(const double t_before,
-                               const struct logger_field *before,
-                               const double t_after,
-                               const struct logger_field *after, void *output,
-                               const double t, const int field) {
+hydro_logger_interpolate_field(
+    const double t_before, const struct logger_field *restrict before,
+    const double t_after, const struct logger_field *restrict after,
+    void *restrict output, const double t, const int field) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check the times */
@@ -205,7 +205,7 @@ hydro_logger_interpolate_field(const double t_before,
       for (int i = 0; i < 3; i++) {
         float *a = (float *)output;
         const float *a_bef = (float *)before->field;
-        const float *a_aft = (float *)before->field;
+        const float *a_aft = (float *)after->field;
         a[i] = wa * a_aft[i] + wb * a_bef[i];
       }
       break;
