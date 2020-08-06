@@ -792,7 +792,7 @@ black_holes_store_potential_in_bpart(struct bpart* bp, const struct gpart* gp) {
   if (bp->gpart != gp) error("Copying potential to the wrong black hole!");
 #endif
 
-  bp->reposition.potential = gp->potential;
+  bp->reposition.potential = gravity_get_comoving_potential(gp);
 }
 
 /**
@@ -805,7 +805,7 @@ black_holes_store_potential_in_bpart(struct bpart* bp, const struct gpart* gp) {
 __attribute__((always_inline)) INLINE static void
 black_holes_store_potential_in_part(struct black_holes_part_data* p_data,
                                     const struct gpart* gp) {
-  p_data->potential = gp->potential;
+  p_data->potential = gravity_get_comoving_potential(gp);
 }
 
 /**

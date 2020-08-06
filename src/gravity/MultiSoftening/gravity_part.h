@@ -37,8 +37,10 @@ struct gpart {
   /*! Particle acceleration. */
   float a_grav[3];
 
+#ifndef SWIFT_GRAVITY_NO_POTENTIAL
   /*! Gravitational potential */
   float potential;
+#endif
 
   /*! Particle mass. */
   float mass;
@@ -105,7 +107,6 @@ struct gpart {
   long long num_interacted_p2p;
   long long num_interacted_pm;
 #endif
-
-} SWIFT_STRUCT_ALIGN;
+};
 
 #endif /* SWIFT_MULTI_SOFTENING_GRAVITY_PART_H */
