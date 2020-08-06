@@ -60,7 +60,9 @@ __attribute__((always_inline)) INLINE static float gravity_get_softening(
 __attribute__((always_inline)) INLINE static void
 gravity_add_comoving_potential(struct gpart* restrict gp, float pot) {
 
+#ifndef SWIFT_GRAVITY_NO_POTENTIAL
   gp->potential += pot;
+#endif
 }
 
 /**
@@ -71,7 +73,11 @@ gravity_add_comoving_potential(struct gpart* restrict gp, float pot) {
 __attribute__((always_inline)) INLINE static float
 gravity_get_comoving_potential(const struct gpart* restrict gp) {
 
+#ifndef SWIFT_GRAVITY_NO_POTENTIAL
   return gp->potential;
+#else
+  return 0.f;
+#endif
 }
 
 /**
@@ -84,7 +90,11 @@ __attribute__((always_inline)) INLINE static float
 gravity_get_physical_potential(const struct gpart* restrict gp,
                                const struct cosmology* cosmo) {
 
+#ifndef SWIFT_GRAVITY_NO_POTENTIAL
   return gp->potential * cosmo->a_inv;
+#else
+  return 0.f;
+#endif
 }
 
 /**
@@ -141,7 +151,9 @@ __attribute__((always_inline)) INLINE static void gravity_init_gpart(
   gp->a_grav[0] = 0.f;
   gp->a_grav[1] = 0.f;
   gp->a_grav[2] = 0.f;
+#ifndef SWIFT_GRAVITY_NO_POTENTIAL
   gp->potential = 0.f;
+#endif
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   gp->potential_PM = 0.f;
@@ -186,8 +198,10 @@ __attribute__((always_inline)) INLINE static void gravity_end_force(
     struct gpart* gp, const float const_G, const float potential_normalisation,
     const int periodic, const int with_self_gravity) {
 
+#ifndef SWIFT_GRAVITY_NO_POTENTIAL
   /* Apply the periodic correction to the peculiar potential */
   if (periodic) gp->potential += potential_normalisation;
+#endif
 
   /* Record the norm of the acceleration for the adaptive opening criteria.
    * Will always be an (active) timestep behind. */
@@ -206,7 +220,9 @@ __attribute__((always_inline)) INLINE static void gravity_end_force(
   gp->a_grav[0] *= const_G;
   gp->a_grav[1] *= const_G;
   gp->a_grav[2] *= const_G;
+#ifndef SWIFT_GRAVITY_NO_POTENTIAL
   gp->potential *= const_G;
+#endif
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   gp->potential_PM *= const_G;
