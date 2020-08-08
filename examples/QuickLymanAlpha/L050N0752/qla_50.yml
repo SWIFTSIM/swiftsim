@@ -84,7 +84,7 @@ LineOfSight:
   scale_factor_first:  0.1
   delta_time:          1.1
 
-# Quick Lyman-alpha cooling (EAGLE with fixed primoridal Z)
+# Quick Lyman-alpha cooling (EAGLE-XL with fixed primoridal Z)
 QLACooling:
   dir_name:                ./UV_dust1_CR1_G1_shield1.hdf5 # Location of the cooling tables
   H_reion_z:               7.5               # Redshift of Hydrogen re-ionization (Planck 2018)
