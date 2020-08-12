@@ -25,7 +25,7 @@
 struct chemistry_global_data {
 
   /* Initial metallicity Z */
-  float initial_metallicities[GEAR_CHEMISTRY_ELEMENT_COUNT];
+  double initial_metallicities[GEAR_CHEMISTRY_ELEMENT_COUNT];
 };
 
 /**
@@ -34,13 +34,13 @@ struct chemistry_global_data {
 struct chemistry_part_data {
 
   /*! Fraction of the particle mass in a given element */
-  float metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT];
+  double metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT];
 
   /*! Total mass of element in a particle */
-  float metal_mass[GEAR_CHEMISTRY_ELEMENT_COUNT];
+  double metal_mass[GEAR_CHEMISTRY_ELEMENT_COUNT];
 
   /*! Smoothed fraction of the particle mass in a given element */
-  float smoothed_metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT];
+  double smoothed_metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT];
 };
 
 /**
@@ -49,7 +49,7 @@ struct chemistry_part_data {
 struct chemistry_spart_data {
 
   /*! Fraction of the particle mass in a given element */
-  float metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT];
+  double metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT];
 };
 
 /**
