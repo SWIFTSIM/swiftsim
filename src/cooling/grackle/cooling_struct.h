@@ -76,7 +76,7 @@ struct cooling_function_data {
   float omega;
 
   /*! Duration for switching off cooling after an event (e.g. supernovae) */
-  float thermal_time;
+  double thermal_time;
 };
 
 /**
