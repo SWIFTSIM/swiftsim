@@ -93,7 +93,7 @@ struct cooling_xpart_data {
   float radiated_energy;
 
   /*! Last time the cooling was switch off */
-  float time_last_event;
+  double time_last_event;
 
 /* here all fractions are mass fraction */
 #if COOLING_GRACKLE_MODE >= 1
