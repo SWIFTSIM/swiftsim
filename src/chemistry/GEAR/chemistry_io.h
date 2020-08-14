@@ -48,11 +48,11 @@ INLINE static int chemistry_read_particles(struct part* parts,
   return 1;
 }
 
-INLINE static void convert_gas_metals(const struct engine *e,
-				      const struct part *p, 
-				      const struct xpart *xp, double *ret) {
+INLINE static void convert_gas_metals(const struct engine* e,
+                                      const struct part* p,
+                                      const struct xpart* xp, double* ret) {
 
-  for(int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     ret[0] = p->chemistry_data.metal_mass[i] / hydro_get_mass(p);
   }
 }
@@ -67,7 +67,7 @@ INLINE static void convert_gas_metals(const struct engine *e,
  * @return Returns the number of fields to write.
  */
 INLINE static int chemistry_write_particles(const struct part* parts,
-					    const struct xpart *xparts,
+                                            const struct xpart* xparts,
                                             struct io_props* list) {
 
   /* List what we want to write */

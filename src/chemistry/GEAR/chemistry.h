@@ -56,8 +56,7 @@ INLINE static void chemistry_copy_star_formation_properties(
         p->chemistry_data.smoothed_metal_mass_fraction[i];
 
     /* Remove the metals taken by the star. */
-    p->chemistry_data.metal_mass[i] *=
-      mass / (mass + sp->mass);    
+    p->chemistry_data.metal_mass[i] *= mass / (mass + sp->mass);
   }
 }
 

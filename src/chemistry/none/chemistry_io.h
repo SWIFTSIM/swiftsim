@@ -48,7 +48,7 @@ INLINE static int chemistry_read_particles(struct part* parts,
  * @return Returns the number of fields to write.
  */
 INLINE static int chemistry_write_particles(const struct part* parts,
-					    const struct xpart* xparts,
+                                            const struct xpart* xparts,
                                             struct io_props* list) {
 
   /* update list according to hydro_io */
