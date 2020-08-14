@@ -33,11 +33,13 @@ struct chemistry_global_data {
  */
 struct chemistry_part_data {
 
-  /*! Fraction of the particle mass in a given element */
-  double metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT];
+  union {
+    /*! Fraction of the particle mass in a given element */
+    double metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT];
 
-  /*! Total mass of element in a particle */
-  double metal_mass[GEAR_CHEMISTRY_ELEMENT_COUNT];
+    /*! Total mass of element in a particle */
+    double metal_mass[GEAR_CHEMISTRY_ELEMENT_COUNT];
+  };
 
   /*! Smoothed fraction of the particle mass in a given element */
   double smoothed_metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT];

@@ -1205,7 +1205,7 @@ void write_output_serial(struct engine* e,
               /* No inhibted particles: easy case */
               Nparticles = Ngas;
               hydro_write_particles(parts, xparts, list, &num_fields);
-              num_fields += chemistry_write_particles(parts, list + num_fields);
+              num_fields += chemistry_write_particles(parts, xparts, list + num_fields);
               if (with_cooling || with_temperature) {
                 num_fields += cooling_write_particles(
                     parts, xparts, list + num_fields, e->cooling_func);
@@ -1245,7 +1245,7 @@ void write_output_serial(struct engine* e,
               hydro_write_particles(parts_written, xparts_written, list,
                                     &num_fields);
               num_fields +=
-                  chemistry_write_particles(parts_written, list + num_fields);
+		chemistry_write_particles(parts_written, xparts_written, list + num_fields);
               if (with_cooling || with_temperature) {
                 num_fields +=
                     cooling_write_particles(parts_written, xparts_written,

@@ -48,14 +48,16 @@
 INLINE static void chemistry_copy_star_formation_properties(
     struct part* p, const struct xpart* xp, struct spart* sp) {
 
+  float mass = hydro_get_mass(p);
+
   /* Store the chemistry struct in the star particle */
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     sp->chemistry_data.metal_mass_fraction[i] =
         p->chemistry_data.smoothed_metal_mass_fraction[i];
 
     /* Remove the metals taken by the star. */
-    p->chemistry_data.metal_mass[i] -=
-        sp->chemistry_data.metal_mass_fraction[i] * sp->mass;
+    p->chemistry_data.metal_mass[i] *=
+      mass / (mass + sp->mass);    
   }
 }
 
