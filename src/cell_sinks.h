@@ -29,7 +29,7 @@ struct cell_sinks {
 
   /*! Minimum end of (integer) time step in this cell for sink tasks. */
   integertime_t ti_end_min;
-    
+
   /*! Maximum beginning of (integer) time step in this cell for sink
    * tasks. */
   integertime_t ti_beg_max;
@@ -39,7 +39,7 @@ struct cell_sinks {
 
   /*! Nr of #sink this cell can hold after addition of new one. */
   int count_total;
-  
+
   /*! Is the #sink data of this cell being used in a sub-cell? */
   int hold;
 
