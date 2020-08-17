@@ -536,17 +536,23 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
       }
     }
 
+#ifndef STARS_NONE
+
     /* Make sure the gas density has been computed before the
      * stars compute theirs. */
     for (struct link *l = c->stars.density; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_rho, l->t);
     }
+#endif
+
+#ifndef BLACK_HOLES_NONE
 
     /* Make sure the part have been received before the BHs compute their
      * accretion rates (depends on particles' rho). */
     for (struct link *l = c->black_holes.density; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_rho, l->t);
     }
+#endif
   }
 
   /* Recurse? */

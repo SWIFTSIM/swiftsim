@@ -17,9 +17,6 @@ struct cell_sinks {
     /*! Pointer to the #sink data. */
     struct sink *parts;
 
-    /*! Nr of #sink in this cell. */
-    int count;
-
     /*! Nr of #sink this cell can hold after addition of new one. */
     int count_total;
 
@@ -45,6 +42,9 @@ struct cell_sinks {
 #ifdef SINK_NONE
   };
 #endif
+
+  /*! Nr of #sink in this cell. */
+  int count;
 };
 
 #endif /* SWIFT_CELL_SINKS_H */

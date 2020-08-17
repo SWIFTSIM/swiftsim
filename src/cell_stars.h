@@ -53,9 +53,6 @@ struct cell_stars {
     /*! Spin lock for star formation use. */
     swift_lock_type star_formation_lock;
 
-    /*! Nr of #spart in this cell. */
-    int count;
-
     /*! Nr of #spart this cell can hold after addition of new #spart. */
     int count_total;
 
@@ -119,6 +116,9 @@ struct cell_stars {
 #ifdef STARS_NONE
   };
 #endif
+
+  /*! Nr of #spart in this cell. */
+  int count;
 };
 
 #endif /* SWIFT_CELL_STARS_H */
