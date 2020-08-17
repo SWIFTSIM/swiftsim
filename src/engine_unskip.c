@@ -28,6 +28,7 @@
 #include "active.h"
 #include "cell.h"
 #include "memswap.h"
+#include "star_formation.h"
 
 /* Load the profiler header, if needed. */
 #ifdef WITH_PROFILER
@@ -257,7 +258,8 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
   struct cell *const cells_top = e->s->cells_top;
 
   /* What policies are we running? */
-  const int with_star_formation = e->policy & engine_policy_star_formation;
+  const int with_star_formation = swift_star_formation_model_creates_stars &&
+                                  (e->policy & engine_policy_star_formation);
 
   /* The current chunk of active cells */
   const int *const local_cells = (int *)map_data;
