@@ -404,13 +404,16 @@ void space_regrid(struct space *s, int verbose) {
     } else if (s->cells_top != NULL) {
       for (int k = 0; k < s->nr_cells; k++) {
         const struct cell *c = &s->cells_top[k];
-        if (c->nodeID == engine_rank && c->hydro.count > 0 && c->hydro.h_max > h_max) {
+        if (c->nodeID == engine_rank && c->hydro.count > 0 &&
+            c->hydro.h_max > h_max) {
           h_max = c->hydro.h_max;
         }
-        if (c->nodeID == engine_rank && c->stars.count > 0 && c->stars.h_max > h_max) {
+        if (c->nodeID == engine_rank && c->stars.count > 0 &&
+            c->stars.h_max > h_max) {
           h_max = c->stars.h_max;
         }
-        if (c->nodeID == engine_rank && c->black_holes.count > 0 && c->black_holes.h_max > h_max) {
+        if (c->nodeID == engine_rank && c->black_holes.count > 0 &&
+            c->black_holes.h_max > h_max) {
           h_max = c->black_holes.h_max;
         }
       }
