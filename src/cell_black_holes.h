@@ -73,26 +73,26 @@ struct cell_black_holes {
 #ifdef BLACK_HOLES_NONE
   };
 #endif
-  
+
   /*! Maximum end of (integer) time step in this cell for black tasks. */
   integertime_t ti_end_min;
-    
+
   /*! Maximum beginning of (integer) time step in this cell for black hole
    * tasks. */
   integertime_t ti_beg_max;
 
   /*! Spin lock for various uses (#bpart case). */
   swift_lock_type lock;
-  
+
   /*! Nr of #bpart this cell can hold after addition of new #bpart. */
   int count_total;
-  
+
   /*! Number of #bpart updated in this cell. */
   int updated;
-  
+
   /*! Is the #bpart data of this cell being used in a sub-cell? */
   int hold;
-  
+
   /*! Nr of #bpart in this cell. */
   int count;
 };

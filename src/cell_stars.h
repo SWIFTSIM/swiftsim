@@ -98,29 +98,27 @@ struct cell_stars {
   };
 #endif
 
-  
   /*! Maximum end of (integer) time step in this cell for star tasks. */
   integertime_t ti_end_min;
-    
+
   /*! Maximum beginning of (integer) time step in this cell for star tasks.
    */
   integertime_t ti_beg_max;
 
   /*! Spin lock for various uses (#spart case). */
   swift_lock_type lock;
-  
+
   /*! Nr of #spart this cell can hold after addition of new #spart. */
   int count_total;
-  
+
   /*! Number of #spart updated in this cell. */
   int updated;
 
   /*! Nr of #spart in this cell. */
   int count;
-  
+
   /*! Is the #spart data of this cell being used in a sub-cell? */
   int hold;
-
 };
 
 #endif /* SWIFT_CELL_STARS_H */
