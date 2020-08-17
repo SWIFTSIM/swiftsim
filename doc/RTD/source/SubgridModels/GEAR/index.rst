@@ -57,7 +57,7 @@ The code uses an iterative method in order to find the correct initial compositi
 In order to compile SWIFT with Grackle, you need to provide the options ``with-chemistry=GEAR`` and ``with-grackle=$GRACKLE_ROOT``
 where ``$GRACKLE_ROOT`` is the root of the install directory (not the ``lib``).
 
-You will need a Grackle version later than 3.1. To compile it, run
+You will need a Grackle version later than 3.1.1. To compile it, run
 the following commands from the root directory of Grackle:
 ``./configure; cd src/clib``.
 Update the variables ``LOCAL_HDF5_INSTALL`` and ``MACH_INSTALL_PREFIX`` in
