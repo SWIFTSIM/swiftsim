@@ -27,10 +27,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int gravity_logger_local_to_global[gravity_logger_field_count];
-int stars_logger_local_to_global[stars_logger_field_count];
-int hydro_logger_local_to_global[hydro_logger_field_count];
-
 /**
  * @brief Read a particle (of any type) record in the log file.
  *

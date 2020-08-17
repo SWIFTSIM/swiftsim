@@ -24,10 +24,13 @@
 /* local includes */
 #include "logger_loader_io.h"
 #include "logger_python_tools.h"
-#include "stars_io.h"
+#include "stars_logger.h"
 
 /* Index of the mask in the header mask array */
 extern int stars_logger_local_to_global[stars_logger_field_count];
+
+/* Size for each mask */
+extern const int stars_logger_field_size[stars_logger_field_count];
 
 /**
  * @brief Populate the mapping between the local mask index and the index in the header,
@@ -38,52 +41,37 @@ extern int stars_logger_local_to_global[stars_logger_field_count];
  */
 __attribute__((always_inline)) INLINE static void
 stars_logger_reader_populate_mask_data(struct header *head) {
-  struct spart p;
-  /* We need a gpart because the acceleration is not defined in the spart */
-  struct gpart gp;
 
   for (int i = 0; i < head->masks_count; i++) {
-    int size = 0;
     if (strcmp(head->masks[i].name,
                stars_logger_field_names[stars_logger_field_coordinates]) == 0) {
-      size = sizeof(p.x);
       stars_logger_local_to_global[stars_logger_field_coordinates] = i;
     } else if (strcmp(
                    head->masks[i].name,
                    stars_logger_field_names[stars_logger_field_velocities]) ==
                0) {
-      size = sizeof(p.v);
       stars_logger_local_to_global[stars_logger_field_velocities] = i;
 
     } else if (strcmp(head->masks[i].name,
                       stars_logger_field_names
                           [stars_logger_field_accelerations]) == 0) {
-      size = sizeof(gp.a_grav);
       stars_logger_local_to_global[stars_logger_field_accelerations] = i;
 
     } else if (strcmp(head->masks[i].name,
                       stars_logger_field_names[stars_logger_field_masses]) ==
                0) {
-      size = sizeof(p.mass);
       stars_logger_local_to_global[stars_logger_field_masses] = i;
 
     } else if (strcmp(head->masks[i].name,
                       stars_logger_field_names
                           [stars_logger_field_smoothing_lengths]) == 0) {
-      size = sizeof(p.h);
       stars_logger_local_to_global[stars_logger_field_smoothing_lengths] = i;
 
     } else if (strcmp(
                    head->masks[i].name,
                    stars_logger_field_names[stars_logger_field_particle_ids]) ==
                0) {
-      size = sizeof(p.id);
       stars_logger_local_to_global[stars_logger_field_particle_ids] = i;
-    }
-
-    /* Check that the size are compatible */
-    if (size != 0 && size != head->masks[i].size) {
-      error("Size are not compatible for the field %s", head->masks[i].name);
     }
   }
 

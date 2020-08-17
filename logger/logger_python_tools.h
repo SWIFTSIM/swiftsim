@@ -22,7 +22,6 @@
 #include "../config.h"
 
 /* Local includes. */
-#include "logger_gravity.h"
 #include "logger_tools.h"
 
 #if HAVE_PYTHON
