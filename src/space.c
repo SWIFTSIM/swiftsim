@@ -398,13 +398,13 @@ void space_regrid(struct space *s, int verbose) {
       for (int k = 0; k < s->nr_local_cells_with_particles; ++k) {
         const struct cell *c =
             &s->cells_top[s->local_cells_with_particles_top[k]];
-        if (c->hydro.h_max > h_max) {
+        if (c->hydro.count > 0 && c->hydro.h_max > h_max) {
           h_max = c->hydro.h_max;
         }
-        if (c->stars.h_max > h_max) {
+        if (c->stars.count > 0 && c->stars.h_max > h_max) {
           h_max = c->stars.h_max;
         }
-        if (c->black_holes.h_max > h_max) {
+        if (c->black_holes.count > 0 && c->black_holes.h_max > h_max) {
           h_max = c->black_holes.h_max;
         }
         if (c->sinks.r_cut_max > h_max) {
@@ -416,13 +416,13 @@ void space_regrid(struct space *s, int verbose) {
     } else if (s->cells_top != NULL) {
       for (int k = 0; k < s->nr_cells; k++) {
         const struct cell *c = &s->cells_top[k];
-        if (c->nodeID == engine_rank && c->hydro.h_max > h_max) {
+        if (c->nodeID == engine_rank && c->hydro.count > 0 && c->hydro.h_max > h_max) {
           h_max = c->hydro.h_max;
         }
-        if (c->nodeID == engine_rank && c->stars.h_max > h_max) {
+        if (c->nodeID == engine_rank && c->stars.count > 0 && c->stars.h_max > h_max) {
           h_max = c->stars.h_max;
         }
-        if (c->nodeID == engine_rank && c->black_holes.h_max > h_max) {
+        if (c->nodeID == engine_rank && c->black_holes.count > 0 && c->black_holes.h_max > h_max) {
           h_max = c->black_holes.h_max;
         }
         if (c->nodeID == engine_rank && c->sinks.r_cut_max > h_max) {
