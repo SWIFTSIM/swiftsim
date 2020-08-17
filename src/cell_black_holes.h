@@ -58,9 +58,6 @@ struct cell_black_holes {
     /*! Spin lock for various uses (#bpart case). */
     swift_lock_type lock;
 
-    /*! Nr of #bpart in this cell. */
-    int count;
-
     /*! Nr of #bpart this cell can hold after addition of new #bpart. */
     int count_total;
 
@@ -96,6 +93,9 @@ struct cell_black_holes {
 #ifdef BLACK_HOLES_NONE
   };
 #endif
+
+  /*! Nr of #bpart in this cell. */
+  int count;
 };
 
 #endif /* SWIFT_CELL_BLACK_HOLES_H */
