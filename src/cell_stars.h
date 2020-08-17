@@ -44,17 +44,23 @@ struct cell_stars {
     /*! Implicit tasks marking the exit of the stellar physics block of tasks */
     struct task *stars_out;
 
-    /*! Last (integer) time the cell's spart were drifted forward in time. */
-    integertime_t ti_old_part;
+    /*! Pointer for the sorted indices. */
+    struct sort_entry *sort;
 
-    /*! Spin lock for various uses (#spart case). */
-    swift_lock_type lock;
+    /*! Bit mask of sort directions that will be needed in the next timestep. */
+    uint16_t requires_sorts;
 
-    /*! Spin lock for star formation use. */
-    swift_lock_type star_formation_lock;
+    /*! Bit-mask indicating the sorted directions */
+    uint16_t sorted;
 
-    /*! Nr of #spart this cell can hold after addition of new #spart. */
-    int count_total;
+    /*! Bit-mask indicating the sorted directions */
+    uint16_t sort_allocated;
+
+    /*! Bit mask of sorts that need to be computed for this cell. */
+    uint16_t do_sort;
+
+    /*! Star formation history struct */
+    struct star_formation_history sfh;
 
     /*! Max smoothing length in this cell. */
     float h_max;
@@ -74,20 +80,14 @@ struct cell_stars {
     /*! Values of dx_max_sort before the drifts, used for sub-cell tasks. */
     float dx_max_sort_old;
 
-    /*! Pointer for the sorted indices. */
-    struct sort_entry *sort;
 
-    /*! Bit mask of sort directions that will be needed in the next timestep. */
-    uint16_t requires_sorts;
+#ifdef STARS_NONE
+  };
+#endif
 
-    /*! Bit-mask indicating the sorted directions */
-    uint16_t sorted;
 
-    /*! Bit-mask indicating the sorted directions */
-    uint16_t sort_allocated;
-
-    /*! Bit mask of sorts that need to be computed for this cell. */
-    uint16_t do_sort;
+    /*! Last (integer) time the cell's spart were drifted forward in time. */
+    integertime_t ti_old_part;
 
     /*! Maximum end of (integer) time step in this cell for star tasks. */
     integertime_t ti_end_min;
@@ -99,26 +99,28 @@ struct cell_stars {
      */
     integertime_t ti_beg_max;
 
+    /*! Spin lock for star formation use. */
+    swift_lock_type star_formation_lock;
+
+    /*! Nr of #spart this cell can hold after addition of new #spart. */
+    int count_total;
+
     /*! Number of #spart updated in this cell. */
     int updated;
-
-    /*! Is the #spart data of this cell being used in a sub-cell? */
-    int hold;
-
-    /*! Star formation history struct */
-    struct star_formation_history sfh;
 
 #ifdef SWIFT_DEBUG_CHECKS
     /*! Last (integer) time the cell's sort arrays were updated. */
     integertime_t ti_sort;
 #endif
 
-#ifdef STARS_NONE
-  };
-#endif
+  /*! Spin lock for various uses (#spart case). */
+  swift_lock_type lock;
 
   /*! Nr of #spart in this cell. */
   int count;
+
+  /*! Is the #spart data of this cell being used in a sub-cell? */
+  int hold;
 };
 
 #endif /* SWIFT_CELL_STARS_H */
