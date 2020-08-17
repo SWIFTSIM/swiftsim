@@ -1,7 +1,7 @@
 # Define the system of units to use internally. 
 InternalUnitSystem:
-  UnitMass_in_cgs:     1.989e43    # 10^10 M_sun in grams
-  UnitLength_in_cgs:   3.085678e21 # kpc in centimeters
+  UnitMass_in_cgs:     1.98841e43    # 10^10 M_sun in grams
+  UnitLength_in_cgs:   3.08567758e24 # Mpc in centimeters
   UnitVelocity_in_cgs: 1e5           # km/s in centimeters per second
   UnitCurrent_in_cgs:  1             # Amperes
   UnitTemp_in_cgs:     1             # Kelvin
@@ -49,7 +49,6 @@ Statistics:
 # Parameters for the self-gravity scheme
 Gravity:
   eta:                    0.002    # Constant dimensionless multiplier for time integration.
-  theta:                  0.6     # Opening angle (Multipole acceptance criterion)
   MAC:                           geometric  # Choice of mulitpole acceptance criterion: 'adaptive' OR 'geometric'.
   epsilon_fmm:                   0.001     # Tolerance parameter for the adaptive multipole acceptance criterion.
   theta_cr:                      0.7       # Opening angle for the purely gemoetric criterion.
