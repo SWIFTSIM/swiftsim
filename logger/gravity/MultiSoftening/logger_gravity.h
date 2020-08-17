@@ -22,12 +22,15 @@
 #include "../config.h"
 
 /* local includes */
-#include "gravity_io.h"
+#include "gravity_logger.h"
 #include "logger_loader_io.h"
 #include "logger_python_tools.h"
 
 /* Index of the mask in the header mask array */
 extern int gravity_logger_local_to_global[gravity_logger_field_count];
+
+/* Size for each mask */
+extern const int gravity_logger_field_size[gravity_logger_field_count];
 
 /**
  * @brief Populate the mapping between the local mask index and the index in the header,
@@ -38,45 +41,34 @@ extern int gravity_logger_local_to_global[gravity_logger_field_count];
  */
 __attribute__((always_inline)) INLINE static void
 gravity_logger_reader_populate_mask_data(struct header *head) {
-  struct gpart p;
 
   for (int i = 0; i < head->masks_count; i++) {
-    int size = 0;
     if (strcmp(head->masks[i].name,
                gravity_logger_field_names[gravity_logger_field_coordinates]) ==
         0) {
-      size = sizeof(p.x);
       gravity_logger_local_to_global[gravity_logger_field_coordinates] = i;
     } else if (strcmp(head->masks[i].name,
                       gravity_logger_field_names
                           [gravity_logger_field_velocities]) == 0) {
-      size = sizeof(p.v_full);
       gravity_logger_local_to_global[gravity_logger_field_velocities] = i;
 
     } else if (strcmp(head->masks[i].name,
                       gravity_logger_field_names
                           [gravity_logger_field_accelerations]) == 0) {
-      size = sizeof(p.a_grav);
       gravity_logger_local_to_global[gravity_logger_field_accelerations] = i;
 
     } else if (strcmp(
                    head->masks[i].name,
                    gravity_logger_field_names[gravity_logger_field_masses]) ==
                0) {
-      size = sizeof(p.mass);
       gravity_logger_local_to_global[gravity_logger_field_masses] = i;
 
     } else if (strcmp(head->masks[i].name,
                       gravity_logger_field_names
                           [gravity_logger_field_particle_ids]) == 0) {
-      size = sizeof(p.id_or_neg_offset);
       gravity_logger_local_to_global[gravity_logger_field_particle_ids] = i;
     }
 
-    /* Check that the size are compatible */
-    if (size != 0 && size != head->masks[i].size) {
-      error("Size are not compatible for the field %s", head->masks[i].name);
-    }
   }
 
   /* Now set the first and second derivatives */

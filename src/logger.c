@@ -41,7 +41,7 @@
 #include "dump.h"
 #include "engine.h"
 #include "error.h"
-#include "gravity_io.h"
+#include "gravity_logger.h"
 #include "hydro_io.h"
 #include "stars_io.h"
 #include "units.h"

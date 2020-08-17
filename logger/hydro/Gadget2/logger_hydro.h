@@ -22,12 +22,15 @@
 #include "../config.h"
 
 /* local includes */
-#include "hydro_io.h"
+#include "hydro_logger.h"
 #include "logger_loader_io.h"
 #include "logger_python_tools.h"
 
 /* Index of the mask in the header mask array */
 extern int hydro_logger_local_to_global[hydro_logger_field_count];
+
+/* Size for each mask */
+extern const int hydro_logger_field_size[hydro_logger_field_count];
 
 /**
  * @brief Populate the mapping between the local mask index and the index in the header,
@@ -38,62 +41,47 @@ extern int hydro_logger_local_to_global[hydro_logger_field_count];
  */
 __attribute__((always_inline)) INLINE static void
 hydro_logger_reader_populate_mask_data(struct header *head) {
-  struct part p;
 
   for (int i = 0; i < head->masks_count; i++) {
-    int size = 0;
     if (strcmp(head->masks[i].name,
                hydro_logger_field_names[hydro_logger_field_coordinates]) == 0) {
-      size = sizeof(p.x);
       hydro_logger_local_to_global[hydro_logger_field_coordinates] = i;
     } else if (strcmp(
                    head->masks[i].name,
                    hydro_logger_field_names[hydro_logger_field_velocities]) ==
                0) {
-      size = sizeof(p.v);
       hydro_logger_local_to_global[hydro_logger_field_velocities] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names
                           [hydro_logger_field_accelerations]) == 0) {
-      size = sizeof(p.a_hydro);
       hydro_logger_local_to_global[hydro_logger_field_accelerations] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names[hydro_logger_field_masses]) ==
                0) {
-      size = sizeof(p.mass);
       hydro_logger_local_to_global[hydro_logger_field_masses] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names
                           [hydro_logger_field_smoothing_lengths]) == 0) {
-      size = sizeof(p.h);
       hydro_logger_local_to_global[hydro_logger_field_smoothing_lengths] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names[hydro_logger_field_entropies]) ==
                0) {
-      size = sizeof(p.entropy);
       hydro_logger_local_to_global[hydro_logger_field_entropies] = i;
 
     } else if (strcmp(
                    head->masks[i].name,
                    hydro_logger_field_names[hydro_logger_field_particle_ids]) ==
                0) {
-      size = sizeof(p.id);
       hydro_logger_local_to_global[hydro_logger_field_particle_ids] = i;
 
     } else if (strcmp(head->masks[i].name,
                       hydro_logger_field_names[hydro_logger_field_densities]) ==
                0) {
-      size = sizeof(p.rho);
       hydro_logger_local_to_global[hydro_logger_field_densities] = i;
-    }
-
-    /* Check that the size are compatible */
-    if (size != 0 && size != head->masks[i].size) {
-      error("Size are not compatible for the field %s", head->masks[i].name);
     }
   }
 
