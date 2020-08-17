@@ -51,6 +51,7 @@
 #include "debug.h"
 #include "error.h"
 #include "proxy.h"
+#include "star_formation.h"
 #include "timers.h"
 
 /**
@@ -1019,7 +1020,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
     else if (t_type == task_type_star_formation) {
       if (cell_is_active_hydro(t->ci, e)) {
         cell_activate_star_formation_tasks(t->ci, s, with_feedback);
-        cell_activate_super_spart_drifts(t->ci, s);
+        if (swift_star_formation_model_creates_stars)
+          cell_activate_super_spart_drifts(t->ci, s);
       }
     }
   }
