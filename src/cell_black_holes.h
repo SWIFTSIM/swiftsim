@@ -55,12 +55,6 @@ struct cell_black_holes {
     /*! Last (integer) time the cell's bpart were drifted forward in time. */
     integertime_t ti_old_part;
 
-    /*! Spin lock for various uses (#bpart case). */
-    swift_lock_type lock;
-
-    /*! Nr of #bpart this cell can hold after addition of new #bpart. */
-    int count_total;
-
     /*! Max smoothing length in this cell. */
     float h_max;
 
@@ -72,6 +66,18 @@ struct cell_black_holes {
 
     /*! Values of dx_max before the drifts, used for sub-cell tasks. */
     float dx_max_part_old;
+
+
+#ifdef BLACK_HOLES_NONE
+  };
+#endif
+
+
+    /*! Spin lock for various uses (#bpart case). */
+    swift_lock_type lock;
+
+    /*! Nr of #bpart this cell can hold after addition of new #bpart. */
+    int count_total;
 
     /*! Maximum end of (integer) time step in this cell for black tasks. */
     integertime_t ti_end_min;
@@ -89,10 +95,6 @@ struct cell_black_holes {
 
     /*! Is the #bpart data of this cell being used in a sub-cell? */
     int hold;
-
-#ifdef BLACK_HOLES_NONE
-  };
-#endif
 
   /*! Nr of #bpart in this cell. */
   int count;
