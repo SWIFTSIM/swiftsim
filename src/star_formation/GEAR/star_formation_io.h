@@ -131,7 +131,9 @@ INLINE static void starformation_init_backend(
   starform->min_mass_frac_plus_one += 1.;
 
   /* Get the jeans factor */
-  starform->n_jeans_2_3 = pow(pressure_floor_get_jeans_factor(), 2. / 3.);
+  starform->n_jeans_2_3 = parser_get_param_float(
+      parameter_file, "GEARPressureFloor:jeans_factor");
+  starform->n_jeans_2_3 = pow(starform->n_jeans_2_3, 2. / 3.);
 
   /* Apply unit change */
   starform->maximal_temperature *=

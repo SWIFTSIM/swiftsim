@@ -39,18 +39,6 @@ struct unit_system;
 struct pressure_floor_properties {};
 
 /**
- * @brief Provides the jeans factor/
- *
- * @param props The #pressure_floor_properties.
- *
- * @return The Jeans factor.
- */
-__attribute__((always_inline)) static INLINE float
-pressure_floor_get_jeans_factor(void) {
-  return 0;
-}
-
-/**
  * @brief Compute the physical pressure floor of a given #part.
  *
  * Note that the particle is not updated!!
