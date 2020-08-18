@@ -2,7 +2,7 @@ from h5py import File
 import numpy as np
 import matplotlib
 from glob import glob
-# matplotlib.use("Agg")
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # Plot parameters
@@ -107,5 +107,4 @@ plt.legend(loc="right", fontsize=8, frameon=False,
 plt.xlabel("${\\rm{Time~[Myr]}}$", labelpad=0)
 plt.ylabel("${\\rm{Internal ~Energy ~(u ~m_H / k_B) ~[K]}}$")
 
-plt.show()
 plt.savefig("energy.png", dpi=200)
