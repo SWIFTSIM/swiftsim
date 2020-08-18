@@ -11,7 +11,7 @@ TimeIntegration:
   time_begin: 0.    # The starting time of the simulation (in internal units).
   time_end:   0.25  # The end time of the simulation (in internal units).
   dt_min:     1e-5  # The minimal time-step size of the simulation (in internal units).
-  dt_max:     4.9e-04  # The maximal time-step size of the simulation (in internal units).
+  dt_max:     1e-2  # The maximal time-step size of the simulation (in internal units).
 
 # Parameters governing the snapshots
 Snapshots:
@@ -23,8 +23,6 @@ Snapshots:
 Statistics:
   delta_time:          1e-3 # Time between statistics output
 
-Scheduler:
-  tasks_per_cell: 1000
 # Parameters for the hydrodynamics scheme
 SPH:
   resolution_eta:        1.2348   # Target smoothing length in units of the mean inter-particle separation (1.2348 == 48Ngbs with the cubic spline kernel).

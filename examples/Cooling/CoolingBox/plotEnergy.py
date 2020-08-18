@@ -2,7 +2,7 @@ from h5py import File
 import numpy as np
 import matplotlib
 from glob import glob
-# matplotlib.use("Agg")
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # Plot parameters
