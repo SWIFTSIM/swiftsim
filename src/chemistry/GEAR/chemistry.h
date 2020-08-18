@@ -179,6 +179,7 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
     cpd->smoothed_metal_mass_fraction[i] = 0.f;
 
     /* Convert the total mass into mass fraction */
+    /* Now the metal mass is not available anymore */
     cpd->metal_mass_fraction[i] = cpd->metal_mass[i] / p->mass;
   }
 }
@@ -216,6 +217,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
     cpd->smoothed_metal_mass_fraction[i] *= factor;
 
     /* Convert the mass fraction into a total mass */
+    /* Now the metal mass fraction is not available anymore */
     cpd->metal_mass[i] = m * cpd->metal_mass_fraction[i];
   }
 }
