@@ -5397,6 +5397,7 @@ void engine_clean(struct engine *e, const int fof, const int restart) {
   proxy_free_mpi_type();
   task_free_mpi_comms();
   mpicollect_free_MPI_type();
+  partition_free_celllist(e->reparttype);
 #endif
 
   /* Close files */
