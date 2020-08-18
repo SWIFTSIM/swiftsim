@@ -23,6 +23,9 @@ struct cell_sinks {
     /*! Maximum end of (integer) time step in this cell for sink tasks. */
     integertime_t ti_end_max;
 
+    /*! Nr of #sink this cell can hold after addition of new one. */
+    int count_total;
+
 #ifdef SINK_NONE
   };
 #endif
@@ -36,9 +39,6 @@ struct cell_sinks {
 
   /*! Spin lock for various uses (#sink case). */
   swift_lock_type lock;
-
-  /*! Nr of #sink this cell can hold after addition of new one. */
-  int count_total;
 
   /*! Is the #sink data of this cell being used in a sub-cell? */
   int hold;
