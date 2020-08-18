@@ -61,6 +61,9 @@ struct cell_stars {
     /*! Star formation history struct */
     struct star_formation_history sfh;
 
+    /*! Nr of #spart this cell can hold after addition of new #spart. */
+    int count_total;
+
     /*! Values of h_max before the drifts, used for sub-cell tasks. */
     float h_max_old;
 
@@ -107,9 +110,6 @@ struct cell_stars {
 
   /*! Max smoothing length in this cell. */
   float h_max;
-
-  /*! Nr of #spart this cell can hold after addition of new #spart. */
-  int count_total;
 
   /*! Number of #spart updated in this cell. */
   int updated;

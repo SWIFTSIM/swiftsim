@@ -58,6 +58,9 @@ struct cell_black_holes {
     /*! Maximum end of (integer) time step in this cell for black hole tasks. */
     integertime_t ti_end_max;
 
+    /*! Nr of #bpart this cell can hold after addition of new #bpart. */
+    int count_total;
+
     /*! Values of h_max before the drifts, used for sub-cell tasks. */
     float h_max_old;
 
@@ -83,9 +86,6 @@ struct cell_black_holes {
 
   /*! Max smoothing length in this cell. */
   float h_max;
-
-  /*! Nr of #bpart this cell can hold after addition of new #bpart. */
-  int count_total;
 
   /*! Number of #bpart updated in this cell. */
   int updated;
