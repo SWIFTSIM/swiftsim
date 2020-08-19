@@ -1326,8 +1326,7 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
     sort_active_i = sort_i;
     count_active_i = count_i;
   } else if (cell_is_active_hydro(ci, e)) {
-    if (swift_memalign("sort_active", (void **)&sort_active_i,
-                       SWIFT_CACHE_ALIGNMENT,
+    if (posix_memalign((void **)&sort_active_i, SWIFT_CACHE_ALIGNMENT,
                        sizeof(struct sort_entry) * count_i) != 0)
       error("Failed to allocate active sortlists.");
 
@@ -1346,8 +1345,7 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
     sort_active_j = sort_j;
     count_active_j = count_j;
   } else if (cell_is_active_hydro(cj, e)) {
-    if (swift_memalign("sort_active", (void **)&sort_active_j,
-                       SWIFT_CACHE_ALIGNMENT,
+    if (posix_memalign((void **)&sort_active_j, SWIFT_CACHE_ALIGNMENT,
                        sizeof(struct sort_entry) * count_j) != 0)
       error("Failed to allocate active sortlists.");
 
@@ -1748,9 +1746,9 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
 
   /* Clean-up if necessary */  // MATTHIEU: temporary disable this optimization
   if (cell_is_active_hydro(ci, e))  // && !cell_is_all_active_hydro(ci, e))
-    swift_free("sort_active", sort_active_i);
+    free(sort_active_i);
   if (cell_is_active_hydro(cj, e))  // && !cell_is_all_active_hydro(cj, e))
-    swift_free("sort_active", sort_active_j);
+    free(sort_active_j);
 
   TIMER_TOC(TIMER_DOPAIR);
 }
@@ -1867,7 +1865,7 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
   /* Set up indt. */
   int *indt = NULL;
   int countdt = 0, firstdt = 0;
-  if (swift_memalign("indt", (void **)&indt, VEC_SIZE * sizeof(int),
+  if (posix_memalign((void **)&indt, VEC_SIZE * sizeof(int),
                      count * sizeof(int)) != 0)
     error("Failed to allocate indt.");
   for (int k = 0; k < count; k++)
@@ -2020,7 +2018,7 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
     }
   } /* loop over all particles. */
 
-  swift_free("indt", indt);
+  free(indt);
 
   TIMER_TOC(TIMER_DOSELF);
 }
@@ -2079,7 +2077,7 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
   /* Set up indt. */
   int *indt = NULL;
   int countdt = 0, firstdt = 0;
-  if (swift_memalign("indt", (void **)&indt, VEC_SIZE * sizeof(int),
+  if (posix_memalign((void **)&indt, VEC_SIZE * sizeof(int),
                      count * sizeof(int)) != 0)
     error("Failed to allocate indt.");
   for (int k = 0; k < count; k++)
@@ -2212,7 +2210,7 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
     }
   } /* loop over all particles. */
 
-  swift_free("indt", indt);
+  free(indt);
 
   TIMER_TOC(TIMER_DOSELF);
 }
