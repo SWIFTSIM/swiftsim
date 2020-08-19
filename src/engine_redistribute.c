@@ -647,7 +647,8 @@ void engine_redistribute(struct engine *e) {
   /* Allocate temporary arrays to store the counts of particles to be sent
    * and the destination of each particle */
   int *counts;
-  if ((counts = (int *)calloc(sizeof(int), nr_nodes * nr_nodes)) == NULL)
+  if ((counts = (int *)swift_calloc("counts", sizeof(int),
+                                    nr_nodes * nr_nodes)) == NULL)
     error("Failed to allocate counts temporary buffer.");
 
   int *dest;
@@ -656,7 +657,7 @@ void engine_redistribute(struct engine *e) {
 
   /* Simple index of node IDs, used for mappers over nodes. */
   int *nodes = NULL;
-  if ((nodes = (int *)malloc(sizeof(int) * nr_nodes)) == NULL)
+  if ((nodes = (int *)swift_malloc("nodes", sizeof(int) * nr_nodes)) == NULL)
     error("Failed to allocate nodes temporary buffer.");
   for (int k = 0; k < nr_nodes; k++) nodes[k] = k;
 
@@ -726,7 +727,8 @@ void engine_redistribute(struct engine *e) {
 
   /* Get destination of each s-particle */
   int *s_counts;
-  if ((s_counts = (int *)calloc(sizeof(int), nr_nodes * nr_nodes)) == NULL)
+  if ((s_counts = (int *)swift_calloc("s_counts", sizeof(int),
+                                      nr_nodes * nr_nodes)) == NULL)
     error("Failed to allocate s_counts temporary buffer.");
 
   int *s_dest;
@@ -792,7 +794,8 @@ void engine_redistribute(struct engine *e) {
 
   /* Get destination of each b-particle */
   int *b_counts;
-  if ((b_counts = (int *)calloc(sizeof(int), nr_nodes * nr_nodes)) == NULL)
+  if ((b_counts = (int *)swift_calloc("b_counts", sizeof(int),
+                                      nr_nodes * nr_nodes)) == NULL)
     error("Failed to allocate b_counts temporary buffer.");
 
   int *b_dest;
@@ -858,7 +861,8 @@ void engine_redistribute(struct engine *e) {
 
   /* Get destination of each g-particle */
   int *g_counts;
-  if ((g_counts = (int *)calloc(sizeof(int), nr_nodes * nr_nodes)) == NULL)
+  if ((g_counts = (int *)swift_calloc("g_counts", sizeof(int),
+                                      nr_nodes * nr_nodes)) == NULL)
     error("Failed to allocate g_gcount temporary buffer.");
 
   int *g_dest;
@@ -1145,13 +1149,13 @@ void engine_redistribute(struct engine *e) {
 
   threadpool_map(&e->threadpool, engine_redistribute_relink_mapper, nodes,
                  nr_nodes, sizeof(int), 1, &relink_data);
-  free(nodes);
+  swift_free("nodes", nodes);
 
   /* Clean up the counts now we are done. */
-  free(counts);
-  free(g_counts);
-  free(s_counts);
-  free(b_counts);
+  swift_free("counts", counts);
+  swift_free("g_counts", g_counts);
+  swift_free("s_counts", s_counts);
+  swift_free("b_counts", b_counts);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Verify that all parts are in the right place. */
