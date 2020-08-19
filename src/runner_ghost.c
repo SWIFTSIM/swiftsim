@@ -997,17 +997,13 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
     float *h_0 = NULL;
     float *left = NULL;
     float *right = NULL;
-    if ((pid = (int *)swift_malloc("ghost", sizeof(int) * c->hydro.count)) ==
-        NULL)
+    if ((pid = (int *)malloc(sizeof(int) * c->hydro.count)) == NULL)
       error("Can't allocate memory for pid.");
-    if ((h_0 = (float *)swift_malloc("ghost",
-                                     sizeof(float) * c->hydro.count)) == NULL)
+    if ((h_0 = (float *)malloc(sizeof(float) * c->hydro.count)) == NULL)
       error("Can't allocate memory for h_0.");
-    if ((left = (float *)swift_malloc("ghost",
-                                      sizeof(float) * c->hydro.count)) == NULL)
+    if ((left = (float *)malloc(sizeof(float) * c->hydro.count)) == NULL)
       error("Can't allocate memory for left.");
-    if ((right = (float *)swift_malloc("ghost",
-                                       sizeof(float) * c->hydro.count)) == NULL)
+    if ((right = (float *)malloc(sizeof(float) * c->hydro.count)) == NULL)
       error("Can't allocate memory for right.");
     for (int k = 0; k < c->hydro.count; k++)
       if (part_is_active(&parts[k], e)) {
@@ -1370,10 +1366,10 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
     }
 
     /* Be clean */
-    swift_free("ghost", left);
-    swift_free("ghost", right);
-    swift_free("ghost", pid);
-    swift_free("ghost", h_0);
+    free(left);
+    free(right);
+    free(pid);
+    free(h_0);
   }
 
   /* Update h_max */
