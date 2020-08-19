@@ -3228,7 +3228,8 @@ void engine_makeproxies(struct engine *e) {
 
   /* Prepare the proxies and the proxy index. */
   if (e->proxy_ind == NULL)
-    if ((e->proxy_ind = (int *)malloc(sizeof(int) * e->nr_nodes)) == NULL)
+    if ((e->proxy_ind = (int *)swift_malloc("engine.proxy_ind",
+                                            sizeof(int) * e->nr_nodes)) == NULL)
       error("Failed to allocate proxy index.");
   for (int k = 0; k < e->nr_nodes; k++) e->proxy_ind[k] = -1;
   e->nr_proxies = 0;
@@ -4317,8 +4318,8 @@ void engine_config(int restart, int fof, struct engine *e,
     error("SWIFT was not compiled with MPI support.");
 #else
     e->policy |= engine_policy_mpi;
-    if ((e->proxies = (struct proxy *)calloc(sizeof(struct proxy),
-                                             engine_maxproxies)) == NULL)
+    if ((e->proxies = (struct proxy *)swift_calloc(
+             "engine.proxy", sizeof(struct proxy), engine_maxproxies)) == NULL)
       error("Failed to allocate memory for proxies.");
     e->nr_proxies = 0;
 
@@ -5443,8 +5444,8 @@ void engine_clean(struct engine *e, const int fof, const int restart) {
   for (int i = 0; i < e->nr_proxies; ++i) {
     proxy_clean(&e->proxies[i]);
   }
-  free(e->proxy_ind);
-  free(e->proxies);
+  swift_free("engine.proxy_ind", e->proxy_ind);
+  swift_free("engine.proxy", e->proxies);
 
   /* Free types */
   part_free_mpi_types();

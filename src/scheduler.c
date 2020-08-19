@@ -1797,35 +1797,35 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
 
           count = size =
               t->ci->mpi.pcell_size * sizeof(struct pcell_step_hydro);
-          buff = t->buff = malloc(count);
+          buff = t->buff = swift_malloc("recv.tend_part", count);
 
         } else if (t->subtype == task_subtype_tend_gpart) {
 
           count = size = t->ci->mpi.pcell_size * sizeof(struct pcell_step_grav);
-          buff = t->buff = malloc(count);
+          buff = t->buff = swift_malloc("recv.tend_gpart", count);
 
         } else if (t->subtype == task_subtype_tend_spart) {
 
           count = size =
               t->ci->mpi.pcell_size * sizeof(struct pcell_step_stars);
-          buff = t->buff = malloc(count);
+          buff = t->buff = swift_malloc("recv.tend_spart", count);
 
         } else if (t->subtype == task_subtype_tend_bpart) {
 
           count = size =
               t->ci->mpi.pcell_size * sizeof(struct pcell_step_black_holes);
-          buff = t->buff = malloc(count);
+          buff = t->buff = swift_malloc("recv.tend_bpart", count);
 
         } else if (t->subtype == task_subtype_part_swallow) {
 
           count = size =
               t->ci->hydro.count * sizeof(struct black_holes_part_data);
-          buff = t->buff = malloc(count);
+          buff = t->buff = swift_malloc("recv.part_swallow", count);
 
         } else if (t->subtype == task_subtype_bpart_merger) {
           count = size =
               sizeof(struct black_holes_bpart_data) * t->ci->black_holes.count;
-          buff = t->buff = malloc(count);
+          buff = t->buff = swift_malloc("recv.bpart_merger", count);
 
         } else if (t->subtype == task_subtype_xv ||
                    t->subtype == task_subtype_rho ||
@@ -1865,12 +1865,12 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
           count = t->ci->mpi.pcell_size;
           size = count * sizeof(struct gravity_tensors);
           type = multipole_mpi_type;
-          buff = t->buff = malloc(size);
+          buff = t->buff = swift_malloc("recv.multipole", size);
 
         } else if (t->subtype == task_subtype_sf_counts) {
 
           count = size = t->ci->mpi.pcell_size * sizeof(struct pcell_sf);
-          buff = t->buff = malloc(count);
+          buff = t->buff = swift_malloc("recv.sf_counts", count);
 
         } else {
           error("Unknown communication sub-type");
@@ -1905,27 +1905,27 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
 
           size = count =
               t->ci->mpi.pcell_size * sizeof(struct pcell_step_hydro);
-          buff = t->buff = malloc(size);
+          buff = t->buff = swift_malloc("send.tend_part", size);
           cell_pack_end_step_hydro(t->ci, (struct pcell_step_hydro *)buff);
 
         } else if (t->subtype == task_subtype_tend_gpart) {
 
           size = count = t->ci->mpi.pcell_size * sizeof(struct pcell_step_grav);
-          buff = t->buff = malloc(size);
+          buff = t->buff = swift_malloc("send.tend_gpart", size);
           cell_pack_end_step_grav(t->ci, (struct pcell_step_grav *)buff);
 
         } else if (t->subtype == task_subtype_tend_spart) {
 
           size = count =
               t->ci->mpi.pcell_size * sizeof(struct pcell_step_stars);
-          buff = t->buff = malloc(size);
+          buff = t->buff = swift_malloc("send.tend_spart", size);
           cell_pack_end_step_stars(t->ci, (struct pcell_step_stars *)buff);
 
         } else if (t->subtype == task_subtype_tend_bpart) {
 
           size = count =
               t->ci->mpi.pcell_size * sizeof(struct pcell_step_black_holes);
-          buff = t->buff = malloc(size);
+          buff = t->buff = swift_malloc("send.tend_bpart", size);
           cell_pack_end_step_black_holes(t->ci,
                                          (struct pcell_step_black_holes *)buff);
 
@@ -1933,14 +1933,14 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
 
           size = count =
               t->ci->hydro.count * sizeof(struct black_holes_part_data);
-          buff = t->buff = malloc(size);
+          buff = t->buff = swift_malloc("send.part_swallow", size);
           cell_pack_part_swallow(t->ci, (struct black_holes_part_data *)buff);
 
         } else if (t->subtype == task_subtype_bpart_merger) {
 
           size = count =
               sizeof(struct black_holes_bpart_data) * t->ci->black_holes.count;
-          buff = t->buff = malloc(size);
+          buff = t->buff = swift_malloc("send.bpart_merger", size);
           cell_pack_bpart_swallow(t->ci,
                                   (struct black_holes_bpart_data *)t->buff);
 
@@ -1982,7 +1982,7 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
           count = t->ci->mpi.pcell_size;
           size = count * sizeof(struct gravity_tensors);
           type = multipole_mpi_type;
-          buff = t->buff = malloc(size);
+          buff = t->buff = swift_malloc("send.multipole", size);
           cell_pack_multipoles(t->ci, (struct gravity_tensors *)buff);
 
         } else if (t->subtype == task_subtype_sf_counts) {
