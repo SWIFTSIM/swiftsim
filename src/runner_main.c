@@ -376,39 +376,41 @@ void *runner_main(void *data) {
 #ifdef WITH_MPI
         case task_type_send:
           if (t->subtype == task_subtype_tend_part) {
-            free(t->buff);
+            swift_free("send.tend_part", t->buff);
           } else if (t->subtype == task_subtype_tend_gpart) {
-            free(t->buff);
+            swift_free("send.tend_gpart", t->buff);
           } else if (t->subtype == task_subtype_tend_spart) {
-            free(t->buff);
+            swift_free("send.tend_spart", t->buff);
           } else if (t->subtype == task_subtype_tend_bpart) {
-            free(t->buff);
+            swift_free("send.tend_bpart", t->buff);
           } else if (t->subtype == task_subtype_sf_counts) {
-            free(t->buff);
+            swift_free("send.sf_counts", t->buff);
           } else if (t->subtype == task_subtype_part_swallow) {
-            free(t->buff);
+            swift_free("send.part_swallow", t->buff);
           } else if (t->subtype == task_subtype_bpart_merger) {
-            free(t->buff);
+            swift_free("send.bpart_merger", t->buff);
+          } else if (t->subtype == task_subtype_multipole) {
+            swift_free("send.multipole", t->buff);
           }
           break;
         case task_type_recv:
           if (t->subtype == task_subtype_tend_part) {
             cell_unpack_end_step_hydro(ci, (struct pcell_step_hydro *)t->buff);
-            free(t->buff);
+            swift_free("recv.tend_part", t->buff);
           } else if (t->subtype == task_subtype_tend_gpart) {
             cell_unpack_end_step_grav(ci, (struct pcell_step_grav *)t->buff);
-            free(t->buff);
+            swift_free("recv.tend_gpart", t->buff);
           } else if (t->subtype == task_subtype_tend_spart) {
             cell_unpack_end_step_stars(ci, (struct pcell_step_stars *)t->buff);
-            free(t->buff);
+            swift_free("recv.tend_spart", t->buff);
           } else if (t->subtype == task_subtype_tend_bpart) {
             cell_unpack_end_step_black_holes(
                 ci, (struct pcell_step_black_holes *)t->buff);
-            free(t->buff);
+            swift_free("recv.tend_bpart", t->buff);
           } else if (t->subtype == task_subtype_sf_counts) {
             cell_unpack_sf_counts(ci, (struct pcell_sf *)t->buff);
             cell_clear_stars_sort_flags(ci, /*clear_unused_flags=*/0);
-            free(t->buff);
+            swift_free("recv.sf_counts", t->buff);
           } else if (t->subtype == task_subtype_xv) {
             runner_do_recv_part(r, ci, 1, 1);
           } else if (t->subtype == task_subtype_rho) {
@@ -418,11 +420,11 @@ void *runner_main(void *data) {
           } else if (t->subtype == task_subtype_part_swallow) {
             cell_unpack_part_swallow(ci,
                                      (struct black_holes_part_data *)t->buff);
-            free(t->buff);
+            swift_free("recv.part_swallow", t->buff);
           } else if (t->subtype == task_subtype_bpart_merger) {
             cell_unpack_bpart_swallow(ci,
                                       (struct black_holes_bpart_data *)t->buff);
-            free(t->buff);
+            swift_free("recv.bpart_merger", t->buff);
           } else if (t->subtype == task_subtype_limiter) {
             runner_do_recv_part(r, ci, 0, 1);
           } else if (t->subtype == task_subtype_gpart) {
@@ -437,7 +439,7 @@ void *runner_main(void *data) {
             runner_do_recv_bpart(r, ci, 0, 1);
           } else if (t->subtype == task_subtype_multipole) {
             cell_unpack_multipoles(ci, (struct gravity_tensors *)t->buff);
-            free(t->buff);
+            swift_free("recv.multipole", t->buff);
           } else {
             error("Unknown/invalid task subtype (%d).", t->subtype);
           }
