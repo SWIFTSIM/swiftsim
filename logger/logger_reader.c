@@ -270,7 +270,7 @@ void logger_reader_read_field(struct logger_reader *reader, double time,
   }
 
   /* Offset of the field read before the requested time. */
-  size_t offset_before = 0;
+  size_t offset_before = offset_last_full_record;
 
   /* Record's header information */
   size_t mask, h_offset;
@@ -298,14 +298,11 @@ void logger_reader_read_field(struct logger_reader *reader, double time,
                              field_count, field, &mask, &h_offset);
 
   /* Deal with the first derivative. */
-  void *first_deriv = NULL;
+  const size_t size_first = mask_first == NULL ? 0 : mask_first->size;
+  char first_deriv[size_first];
 
-  if (mask_first != NULL && mask & mask_first->mask) {
-    first_deriv = malloc(mask_first->size);
-    if (first_deriv == NULL) {
-      error("Failed to allocate a first derivative.");
-    }
-
+  int first_found = mask_first != NULL && mask & mask_first->mask;
+  if (first_found) {
     /* Read the first derivative */
     logger_particle_read_field(reader, offset_before, first_deriv,
                                local_to_global, field_count, first, &mask,
@@ -313,14 +310,11 @@ void logger_reader_read_field(struct logger_reader *reader, double time,
   }
 
   /* Deal with the second derivative. */
-  void *second_deriv = NULL;
+  const size_t size_second = mask_second == NULL ? 0 : mask_second->size;
+  char second_deriv[size_second];
 
-  if (mask_second != NULL && mask & mask_second->mask) {
-    second_deriv = malloc(mask_second->size);
-    if (second_deriv == NULL) {
-      error("Failed to allocate a second derivative.");
-    }
-
+  int second_found = mask_second != NULL && mask & mask_second->mask;
+  if (second_found) {
     /* Read the first derivative */
     logger_particle_read_field(reader, offset_before, second_deriv,
                                local_to_global, field_count, second, &mask,
@@ -348,32 +342,28 @@ void logger_reader_read_field(struct logger_reader *reader, double time,
         break;
       }
 
+      /* Check if we can still move forward */
+      if (h_offset == 0) {
+        error("There is no record after the current one");
+      }
+
       /* Go to the next record. */
       offset += h_offset;
     }
 
     /* Output after the requested time. */
-    void *output_after = malloc(mask_field->size);
-    if (output_after == NULL) {
-      error(
-          "Failed to allocate a field for the output after the requested "
-          "time.");
-    }
+    char output_after[mask_field->size];
 
     /* Read the field */
     logger_particle_read_field(reader, offset, output_after, local_to_global,
                                field_count, field, &mask, &h_offset);
 
     /* Deal with the first derivative. */
-    void *first_deriv_after = NULL;
+    char first_deriv_after[size_first];
 
     /* Did we find the derivative before and in this record? */
-    if (first_deriv != NULL && mask & mask_first->mask) {
-      first_deriv_after = malloc(mask_first->size);
-      if (first_deriv_after == NULL) {
-        error("Failed to allocate a first derivative.");
-      }
-
+    first_found = mask_first != NULL && first_found && mask & mask_first->mask;
+    if (first_found) {
       /* Read the first derivative */
       logger_particle_read_field(reader, offset, first_deriv_after,
                                  local_to_global, field_count, first, &mask,
@@ -381,15 +371,12 @@ void logger_reader_read_field(struct logger_reader *reader, double time,
     }
 
     /* Deal with the second derivative. */
-    void *second_deriv_after = NULL;
+    char second_deriv_after[size_second];
 
     /* Did we find the derivative before and in this record? */
-    if (second_deriv != NULL && mask & mask_second->mask) {
-      second_deriv_after = malloc(mask_second->size);
-      if (second_deriv_after == NULL) {
-        error("Failed to allocate a second derivative.");
-      }
-
+    second_found =
+        mask_second != NULL && second_found && mask & mask_second->mask;
+    if (second_found) {
       /* Read the second derivative */
       logger_particle_read_field(reader, offset, second_deriv_after,
                                  local_to_global, field_count, second, &mask,
@@ -404,11 +391,11 @@ void logger_reader_read_field(struct logger_reader *reader, double time,
     struct logger_field before;
     struct logger_field after;
     before.field = output;
-    before.first_deriv = first_deriv;
-    before.second_deriv = second_deriv;
+    before.first_deriv = first_found ? first_deriv : NULL;
+    before.second_deriv = second_found ? second_deriv : NULL;
     after.field = output_after;
-    after.first_deriv = first_deriv_after;
-    after.second_deriv = second_deriv_after;
+    after.first_deriv = first_found ? first_deriv_after : NULL;
+    after.second_deriv = second_found ? second_deriv_after : NULL;
 
     /* Interpolate the data. */
     switch (type) {
@@ -427,23 +414,6 @@ void logger_reader_read_field(struct logger_reader *reader, double time,
       default:
         error("Particle type not implemented");
     }
-
-    /* Free some memory */
-    free(output_after);
-    if (first_deriv_after) {
-      free(first_deriv_after);
-    }
-    if (second_deriv_after) {
-      free(second_deriv_after);
-    }
-  }
-
-  /* Free the memory. */
-  if (first_deriv) {
-    free(first_deriv);
-  }
-  if (second_deriv) {
-    free(second_deriv);
   }
 }
 
