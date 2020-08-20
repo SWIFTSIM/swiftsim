@@ -33,9 +33,9 @@ extern int stars_logger_local_to_global[stars_logger_field_count];
 extern const int stars_logger_field_size[stars_logger_field_count];
 
 /**
- * @brief Populate the mapping between the local mask index and the index in the header,
- * as well as the derivatives for each field.
- * Also checks that the actual field sizes match the expected sizes.
+ * @brief Populate the mapping between the local mask index and the index in the
+ * header, as well as the derivatives for each field. Also checks that the
+ * actual field sizes match the expected sizes.
  *
  * @param head The #header.
  */
@@ -108,10 +108,12 @@ stars_logger_reader_populate_mask_data(struct header *head) {
  * #stars_logger_fields).
  */
 __attribute__((always_inline)) INLINE static void
-stars_logger_interpolate_field(
-    const double t_before, const struct logger_field *restrict before,
-    const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t, const int field) {
+stars_logger_interpolate_field(const double t_before,
+                               const struct logger_field *restrict before,
+                               const double t_after,
+                               const struct logger_field *restrict after,
+                               void *restrict output, const double t,
+                               const int field) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check the times */

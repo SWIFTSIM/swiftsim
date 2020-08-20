@@ -33,21 +33,21 @@
  *
  * @param reader The #logger_reader.
  * @param offset offset of the record to read.
- * @param output Array of buffer where the data are written (size given by
- * local_count).
+ * @param output Buffer for the requested field..
  * @param local_to_global The list converting local to global id for the fields
  * (e.g. gravity_logger_local_to_global)
  * @param local_count The number of element in logger_mask_id (e.g.
  * gravity_logger_field_count)
+ * @param field The request field (in local indexing).
  * @param mask (out) The mask of the record.
  * @param h_offset (out) Difference of offset with the next record.
  *
  * @return position after the record.
  */
-__attribute__((always_inline)) INLINE size_t
-logger_particle_read(const struct logger_reader *reader, size_t offset,
-                     void **output, const int *local_to_global,
-                     const int local_count, size_t *mask, size_t *h_offset) {
+__attribute__((always_inline)) INLINE size_t logger_particle_read_field(
+    const struct logger_reader *reader, size_t offset, void *output,
+    const int *local_to_global, const int local_count, int field, size_t *mask,
+    size_t *h_offset) {
 
   /* Get a few pointers. */
   const struct header *h = &reader->log.header;
@@ -59,14 +59,14 @@ logger_particle_read(const struct logger_reader *reader, size_t offset,
   /* Read the record's mask. */
   map = logger_loader_io_read_mask(h, (char *)map + offset, mask, h_offset);
 
-  /* Check that the mask is meaningful */
+  /* Check that the mask is within the limits. */
   if (*mask > (unsigned int)(1 << h->masks_count)) {
     error("Found an unexpected mask %zi", *mask);
   }
 
   /* Check if it is not a time record. */
   if (*mask == h->timestamp_mask) {
-    error("Unexpected timestamp while reading a particle: %lu.", *mask);
+    error("Cannot particle from timestep record.");
   }
 
   /* Read the record and copy it to a particle. */
@@ -78,8 +78,13 @@ logger_particle_read(const struct logger_reader *reader, size_t offset,
       continue;
     }
 
-    /* Read the data if needed and update the buffer position? */
-    map = logger_loader_io_read_data(map, h->masks[global].size, output[local]);
+    if (field == local) {
+      /* Read the data. */
+      map = logger_loader_io_read_data(map, h->masks[global].size, output);
+    } else {
+      /* Update the buffer's position. */
+      map += h->masks[global].size;
+    }
   }
   return map - reader->log.log.map;
 }
