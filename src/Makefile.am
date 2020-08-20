@@ -19,7 +19,7 @@
 AM_CFLAGS = $(HDF5_CPPFLAGS) $(GSL_INCS) $(FFTW_INCS) $(NUMA_INCS) $(GRACKLE_INCS) $(OPENMP_CFLAGS)
 
 # Assign a "safe" version number
-AM_LDFLAGS = $(HDF5_LDFLAGS) $(FFTW_LIBS) $(FCLIBS)
+AM_LDFLAGS = $(HDF5_LDFLAGS) $(FFTW_LIBS)
 
 # The git command, if available.
 GIT_CMD = @GIT_CMD@
