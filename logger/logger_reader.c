@@ -603,6 +603,68 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     }
   }
 
+  /* Do the dark matter. */
+  if (n_part[swift_type_dark_matter] != 0) {
+    struct index_data *data =
+        logger_index_get_data(&reader->index.index, swift_type_dark_matter);
+
+    /* Sort the fields in order to read the correct bits. */
+    logger_reader_global_to_local(
+        reader, global_fields_wanted, local_fields_wanted, local_first_deriv,
+        local_second_deriv, n_fields_wanted, swift_type_dark_matter);
+
+    /* Read the particles */
+    for (size_t i = 0; i < n_part[swift_type_dark_matter]; i++) {
+      /* Get the offset */
+      size_t offset = data[i].offset;
+
+      /* Sort the output into output_single. */
+      for (int field = 0; field < n_fields_wanted; field++) {
+        const int global = global_fields_wanted[field];
+        const int local = local_fields_wanted[field];
+        const int first = local_first_deriv[field];
+        const int second = local_second_deriv[field];
+        void *output_single = output[field] + i * h->masks[global].size;
+
+        /* Read the field. */
+        logger_reader_read_field(reader, time, reader->time.time_offset,
+                                 interp_type, offset, local, first, second,
+                                 output_single, swift_type_dark_matter);
+      }
+    }
+  }
+
+  /* Do the stars. */
+  if (n_part[swift_type_stars] != 0) {
+    struct index_data *data =
+        logger_index_get_data(&reader->index.index, swift_type_stars);
+
+    /* Sort the fields in order to read the correct bits. */
+    logger_reader_global_to_local(
+        reader, global_fields_wanted, local_fields_wanted, local_first_deriv,
+        local_second_deriv, n_fields_wanted, swift_type_stars);
+
+    /* Read the particles */
+    for (size_t i = 0; i < n_part[swift_type_stars]; i++) {
+      /* Get the offset */
+      size_t offset = data[i].offset;
+
+      /* Sort the output into output_single. */
+      for (int field = 0; field < n_fields_wanted; field++) {
+        const int global = global_fields_wanted[field];
+        const int local = local_fields_wanted[field];
+        const int first = local_first_deriv[field];
+        const int second = local_second_deriv[field];
+        void *output_single = output[field] + i * h->masks[global].size;
+
+        /* Read the field. */
+        logger_reader_read_field(reader, time, reader->time.time_offset,
+                                 interp_type, offset, local, first, second,
+                                 output_single, swift_type_stars);
+      }
+    }
+  }
+
   /* Free the memory. */
   free(local_fields_wanted);
   free(local_first_deriv);
@@ -683,9 +745,10 @@ size_t logger_reader_read_record(struct logger_reader *reader, void **output,
   /* The record is a particle. */
   if (*is_particle) {
 
+    size_t offset_tmp = offset;
     for (int i = 0; i < hydro_logger_field_count; i++) {
       offset = logger_particle_read_field(
-          reader, offset, output[i], hydro_logger_local_to_global,
+          reader, offset_tmp, output[i], hydro_logger_local_to_global,
           hydro_logger_field_count, i, &mask, &h_offset);
     }
 
