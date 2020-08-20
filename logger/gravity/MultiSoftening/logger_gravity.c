@@ -23,10 +23,10 @@
 #define member_size(type, member) sizeof(((type *)0)->member)
 
 const int gravity_logger_field_size[gravity_logger_field_count] = {
-    member_size(struct gpart, x),       // coordinates
-    member_size(struct gpart, v_full),  // velocities
-    member_size(struct gpart, a_grav),  // accelerations
-    member_size(struct gpart, mass),    // massses
+    member_size(struct gpart, x),                 // coordinates
+    member_size(struct gpart, v_full),            // velocities
+    member_size(struct gpart, a_grav),            // accelerations
+    member_size(struct gpart, mass),              // massses
     member_size(struct gpart, id_or_neg_offset),  // IDs
 };
 

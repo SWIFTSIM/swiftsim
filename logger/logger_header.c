@@ -210,8 +210,10 @@ void header_read(struct header *h, struct logger_logfile *log) {
     /* Check the field size */
     const int index = hydro_logger_local_to_global[i];
     if (h->masks[index].size != hydro_logger_field_size[i]) {
-      error("Field %s in hydro_logger_reader_populate_mask_data does not have the correct size",
-            hydro_logger_field_names[i]);
+      error(
+          "Field %s in hydro_logger_reader_populate_mask_data does not have "
+          "the correct size",
+          hydro_logger_field_names[i]);
     }
   }
 
@@ -228,10 +230,12 @@ void header_read(struct header *h, struct logger_logfile *log) {
     /* Check the field size */
     const int index = gravity_logger_local_to_global[i];
     if (h->masks[index].size != gravity_logger_field_size[i]) {
-      error("Field %s in gravity_logger_reader_populate_mask_data does not have the correct size",
-            gravity_logger_field_names[i]);
+      error(
+          "Field %s in gravity_logger_reader_populate_mask_data does not have "
+          "the correct size",
+          gravity_logger_field_names[i]);
     }
-}
+  }
 
   /* Stars */
   for (int i = 0; i < stars_logger_field_count; i++) {
@@ -246,8 +250,10 @@ void header_read(struct header *h, struct logger_logfile *log) {
     /* Check the field size */
     const int index = stars_logger_local_to_global[i];
     if (h->masks[index].size != stars_logger_field_size[i]) {
-      error("Field %s in stars_logger_reader_populate_mask_data does not have the correct size",
-            stars_logger_field_names[i]);
+      error(
+          "Field %s in stars_logger_reader_populate_mask_data does not have "
+          "the correct size",
+          stars_logger_field_names[i]);
     }
   }
 };

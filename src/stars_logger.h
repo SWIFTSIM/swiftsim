@@ -23,8 +23,8 @@
 #include "../config.h"
 
 /* Local includes */
-#include "align.h"
 #include "./const.h"
+#include "align.h"
 #include "logger.h"
 #include "part_type.h"
 #include "timeline.h"
