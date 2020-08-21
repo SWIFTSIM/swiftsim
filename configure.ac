@@ -2273,7 +2273,7 @@ case "$with_rt" in
       AC_DEFINE([RT_DEBUG], [1], [debugging scheme])
    ;;
    *)
-      AC_MSG_ERROR([Unknown ratiative transfer scheme: $with_rt])
+      AC_MSG_ERROR([Unknown radiative transfer scheme: $with_rt])
    ;;
 esac
 
