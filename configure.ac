@@ -2253,6 +2253,31 @@ AC_ARG_WITH([multipole-order],
 )
 AC_DEFINE_UNQUOTED([SELF_GRAVITY_MULTIPOLE_ORDER], [$with_multipole_order], [Multipole order])
 
+#  Radiative transfer scheme
+AC_ARG_WITH([rt],
+   [AS_HELP_STRING([--with-rt=<scheme>],
+      [Radiative transfer scheme to use @<:@none, M1closure, debug: none@:>@]
+   )],
+   [with_rt="$withval"],
+   [with_rt="none"]
+)
+
+case "$with_rt" in
+   none)
+      AC_DEFINE([RT_NONE], [1], [No radiative transfer scheme])
+   ;;
+   M1closure)
+      AC_DEFINE([RT_M1], [1], [M1 closure scheme])
+   ;;
+   debug)
+      AC_DEFINE([RT_DEBUG], [1], [debugging scheme])
+   ;;
+   *)
+      AC_MSG_ERROR([Unknown ratiative transfer scheme: $with_rt])
+   ;;
+esac
+
+
 # Check for git, needed for revision stamps.
 AC_PATH_PROG([GIT_CMD], [git])
 AC_SUBST([GIT_CMD])
