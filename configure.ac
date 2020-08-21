@@ -2256,7 +2256,7 @@ AC_DEFINE_UNQUOTED([SELF_GRAVITY_MULTIPOLE_ORDER], [$with_multipole_order], [Mul
 #  Radiative transfer scheme
 AC_ARG_WITH([rt],
    [AS_HELP_STRING([--with-rt=<scheme>],
-      [Radiative transfer scheme to use @<:@none, M1closure, debug: none@:>@]
+      [Radiative transfer scheme to use @<:@none, M1closure, debug default: none@:>@]
    )],
    [with_rt="$withval"],
    [with_rt="none"]
