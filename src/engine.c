@@ -428,7 +428,8 @@ void engine_repartition_trigger(struct engine *e) {
         if (abs_trigger > 1.f) abs_trigger = 0.f; /* Not relevant. */
         fprintf(timelog,
                 "# %d balance: %f, expected: %f (sys: %f, total: %f)\n",
-                e->step, balance, abs_trigger, (smaxtime - smintime) / smean,
+                e->step, balance, abs_trigger,
+                (smaxtime - smintime) / (smean + FLT_MAX),
                 (tmaxtime - tmintime) / tmean);
 
         fclose(timelog);
