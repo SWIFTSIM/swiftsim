@@ -946,6 +946,12 @@ int main(int argc, char *argv[]) {
     else
       bzero(&stars_properties, sizeof(struct stars_props));
 
+    if (with_hydro) {
+#ifdef NONE_SPH
+      error("Can't run with hydro when compiled without hydro model!");
+#endif
+    }
+
     /* Initialise the feedback properties */
     if (with_feedback) {
 #ifdef FEEDBACK_NONE
