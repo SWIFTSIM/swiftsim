@@ -41,6 +41,7 @@
 #include "cell.h"
 #include "engine.h"
 #include "error.h"
+#include "memswap.h"
 #include "memuse.h"
 #include "space.h"
 #include "threadpool.h"
@@ -48,6 +49,65 @@
 #ifdef WITH_MPI
 /* MPI data type for the communications */
 MPI_Datatype pcell_mpi_type;
+#endif
+
+#ifdef WITH_MPI
+
+struct unpack_tag_mapper_data {
+
+  struct space *s;
+  MPI_Request *reqs_in;
+  int *tags_in;
+  int *cell_ids_in;
+  int *offset_in;
+};
+
+void proxy_tags_wait_and_unpack_mapper(void *map_data, int num_elements,
+                                       void *extra_data) {
+
+  MPI_Request *reqs = (MPI_Request *)map_data;
+  struct unpack_tag_mapper_data *data =
+      (struct unpack_tag_mapper_data *)extra_data;
+  struct space *s = data->s;
+  MPI_Request *reqs_in = data->reqs_in;
+  int *restrict tags_in = data->tags_in;
+  int *restrict cell_ids_in = data->cell_ids_in;
+  int *restrict offset_in = data->offset_in;
+
+  /* Compute index in the shared cell index array for each local request */
+  ptrdiff_t *index = (ptrdiff_t *)malloc(num_elements * sizeof(ptrdiff_t));
+  for (int k = 0; k < num_elements; ++k) index[k] = &reqs[k] - reqs_in;
+
+  /* Any requests left to process? */
+  while (num_elements) {
+
+    for (int k = 0; k < num_elements; ++k) {
+
+      /* Has the data arrived? */
+      MPI_Status status;
+      int result;
+      if (MPI_Test(&reqs[k], &result, &status) != MPI_SUCCESS)
+        error("MPI_Test failed!");
+
+      /* Ok, we have data */
+      if (result) {
+
+        const int cell_id = cell_ids_in[index[k]];
+
+        /* Un-pack the tags received in this proxy */
+        cell_unpack_tags(&tags_in[offset_in[cell_id]], &s->cells_top[cell_id]);
+
+        /* Replace this request with the one at the end of the list */
+        reqs[k] = reqs[num_elements - 1];
+        index[k] = index[num_elements - 1];
+
+        /* One fewer request to process */
+        num_elements--;
+      }
+    }
+  }
+  free(index);
+}
 #endif
 
 /**
@@ -155,16 +215,13 @@ void proxy_tags_exchange(struct proxy *proxies, int num_proxies,
 
   tic2 = getticks();
 
-  /* Wait for each recv and unpack the tags into the local cells. */
-  for (int k = 0; k < num_reqs_in; k++) {
-    int pid = MPI_UNDEFINED;
-    MPI_Status status;
-    if (MPI_Waitany(num_reqs_in, reqs_in, &pid, &status) != MPI_SUCCESS ||
-        pid == MPI_UNDEFINED)
-      error("MPI_Waitany failed.");
-    const int cid = cids_in[pid];
-    cell_unpack_tags(&tags_in[offset_in[cid]], &s->cells_top[cid]);
-  }
+  /* Wait for each recv to come in from the proxies and unpack the tags of
+   * cells. */
+  struct unpack_tag_mapper_data unpack_data = {s, reqs_in, tags_in, cids_in,
+                                               offset_in};
+  threadpool_map(&s->e->threadpool, proxy_tags_wait_and_unpack_mapper, reqs_in,
+                 num_reqs_in, sizeof(MPI_Request), threadpool_auto_chunk_size,
+                 /*extra_data=*/&unpack_data);
 
   if (s->e->verbose)
     message("Cell unpack tags took %.3f %s.",
@@ -323,7 +380,73 @@ void proxy_cells_exchange_first_mapper(void *map_data, int num_elements,
   }
 }
 
-#endif  // WITH_MPI
+struct unpack_cell_mapper_data {
+
+  struct space *s;
+  const int with_gravity;
+  MPI_Request *reqs_in;
+  struct proxy *proxies;
+};
+
+void proxy_cells_wait_and_unpack_mapper(void *map_data, int num_elements,
+                                        void *extra_data) {
+
+  MPI_Request *reqs = (MPI_Request *)map_data;
+  struct unpack_cell_mapper_data *data =
+      (struct unpack_cell_mapper_data *)extra_data;
+  struct space *s = data->s;
+  const int with_gravity = data->with_gravity;
+  MPI_Request *reqs_in = data->reqs_in;
+  struct proxy *proxies = data->proxies;
+
+  /* Compute index in the shared proxy array for each local request */
+  ptrdiff_t *index = (ptrdiff_t *)malloc(num_elements * sizeof(ptrdiff_t));
+  for (int k = 0; k < num_elements; ++k) index[k] = &reqs[k] - reqs_in;
+
+  ticks tic = getticks();
+
+  /* Any request left to process? */
+  while (num_elements) {
+
+    for (int k = 0; k < num_elements; ++k) {
+
+      /* Has the data arrived? */
+      MPI_Status status;
+      int result;
+      if (MPI_Test(&reqs[k], &result, &status) != MPI_SUCCESS)
+        error("MPI_Test failed!");
+
+      /* Ok, we have data */
+      if (result) {
+
+        message("Waiting for data took %.3f %s.",
+                clocks_from_ticks(getticks() - tic), clocks_getunit());
+
+        ticks tic2 = getticks();
+
+        /* Un-pack the cells received in this proxy */
+        int count = 0;
+        for (int j = 0; j < (proxies + index[k])->nr_cells_in; j++)
+          count +=
+              cell_unpack(&(proxies + index[k])->pcells_in[count],
+                          (proxies + index[k])->cells_in[j], s, with_gravity);
+
+        message("Unpacking data took %.3f %s.",
+                clocks_from_ticks(getticks() - tic2), clocks_getunit());
+
+        /* Replace this request with the one at the end of the list */
+        reqs[k] = reqs[num_elements - 1];
+        index[k] = index[num_elements - 1];
+
+        /* One fewer request to process */
+        num_elements--;
+      }
+    }
+  }
+  free(index);
+}
+
+#endif /* WITH_MPI */
 
 /**
  * @brief Exchange the cell structures with all proxies.
@@ -417,18 +540,14 @@ void proxy_cells_exchange(struct proxy *proxies, int num_proxies,
 
   tic2 = getticks();
 
-  /* Wait for each pcell array to come in from the proxies. */
-  for (int k = 0; k < num_proxies; k++) {
-    int pid = MPI_UNDEFINED;
-    MPI_Status status;
-    if (MPI_Waitany(num_proxies, reqs_in, &pid, &status) != MPI_SUCCESS ||
-        pid == MPI_UNDEFINED)
-      error("MPI_Waitany failed.");
-    // message( "cell data from proxy %i has arrived." , pid );
-    for (int count = 0, j = 0; j < proxies[pid].nr_cells_in; j++)
-      count += cell_unpack(&proxies[pid].pcells_in[count],
-                           proxies[pid].cells_in[j], s, with_gravity);
-  }
+  /* Wait for each pcell array to come in from the proxies
+   * and unpack the cells. */
+  struct unpack_cell_mapper_data unpack_data = {s, with_gravity, reqs_in,
+                                                proxies};
+  threadpool_map(&s->e->threadpool, proxy_cells_wait_and_unpack_mapper, reqs_in,
+                 num_proxies, sizeof(MPI_Request),
+                 threadpool_uniform_chunk_size,
+                 /*extra_data=*/&unpack_data);
 
   if (s->e->verbose)
     message("Un-packing cells took %.3f %s.",
