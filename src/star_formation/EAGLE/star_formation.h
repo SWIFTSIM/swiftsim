@@ -275,42 +275,28 @@ INLINE static int star_formation_is_star_forming(
   /* Physical density of the particle */
   const double physical_density = hydro_get_physical_density(p, cosmo);
 
-  /* Deside whether we should form stars or not,
-   * first we deterime if we have the correct over density
-   * if that is true we calculate if either the maximum density
-   * threshold is reached or if the metallicity dependent
-   * threshold is reached, after this we calculate if the
-   * temperature is appropriate */
+  /* Deside whether we should form stars or not */
+
+  /* First, deterime if we have the correct over density */
   if (physical_density < rho_mean_b_times_min_over_den) return 0;
 
-  /* In this case there are actually multiple possibilities
-   * because we also need to check if the physical density exceeded
-   * the appropriate limit */
+  const double number_density_to_cgs =
+      units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
 
-  /* Get the Hydrogen number density (assuming primordial H abundance) */
-  const double n_H = physical_density * hydro_props->hydrogen_mass_fraction;
+  /* Get the Hydrogen mass fraction */
+  float const* metal_fraction =
+      chemistry_get_metal_mass_fraction_for_star_formation(p);
+  const double XH = metal_fraction[chemistry_element_H];
 
-  /* Get the density threshold for star formation */
-  const double Z =
-      chemistry_get_total_metal_mass_fraction_for_star_formation(p);
-  const double density_threshold =
-      star_formation_threshold(Z, starform, phys_const);
+  /* Get the subgrid properties
+   * Note these are both in physical frame already */
+  const double subgrid_rho = p->cooling_data.subgrid_dens;
+  const double subgrid_n_H = subgrid_rho * XH / phys_const->const_proton_mass;
+  const double subgrid_n_H_cgs = subgrid_n_H * number_density_to_cgs;
+  const float subgrid_T_cgs = p->cooling_data.subgrid_temp;
 
-  /* Check if it exceeded the minimum density */
-  if (n_H < density_threshold) return 0;
-
-  /* Calculate the entropy of the particle */
-  const double entropy = hydro_get_physical_entropy(p, xp, cosmo);
-
-  /* Calculate the entropy that will be used to calculate
-   * the off-set, this is the maximum between the entropy
-   * floor and the star formation polytropic EOS. */
-  const double entropy_eos = max(entropy_floor(p, cosmo, entropy_floor_props),
-                                 EOS_entropy(n_H, starform, physical_density));
-
-  /* Check the Schaye & Dalla Vecchia 2012 EOS-based temperature criterion */
-  return (entropy <
-          entropy_eos * starform->ten_to_entropy_margin_threshold_dex);
+  /* Second, determine whether we are cold and dense enough */
+  return (subgrid_T_cgs < 1000 && subgrid_n_H_cgs > 10);
 }
 
 /**
