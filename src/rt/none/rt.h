@@ -27,8 +27,6 @@
 /**
  * @brief Dummy function to test whether inclusions work properly.
  */
-void rt_dummy_function(void){
-  message("Called no RT scheme.");
-}
+void rt_dummy_function(void) { message("Called no RT scheme."); }
 
 #endif /* SWIFT_RT_NONE_H */

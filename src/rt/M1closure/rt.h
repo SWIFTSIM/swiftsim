@@ -27,8 +27,6 @@
 /**
  * @brief Dummy function to test whether inclusions work properly.
  */
-void rt_dummy_function(void){
-  message("Called M1 closure RT scheme.");
-}
+void rt_dummy_function(void) { message("Called M1 closure RT scheme."); }
 
 #endif /* SWIFT_RT_M1_H */
