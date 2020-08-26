@@ -33,44 +33,14 @@ extern int gravity_logger_local_to_global[gravity_logger_field_count];
 extern const int gravity_logger_field_size[gravity_logger_field_count];
 
 /**
- * @brief Populate the mapping between the local mask index and the index in the
- * header, as well as the derivatives for each field. Also checks that the
- * actual field sizes match the expected sizes.
+ * @brief Create the link between the fields and their derivatives.
  *
  * @param head The #header.
  */
 __attribute__((always_inline)) INLINE static void
-gravity_logger_reader_populate_mask_data(struct header *head) {
+gravity_logger_reader_link_derivatives(struct header *head) {
 
-  for (int i = 0; i < head->masks_count; i++) {
-    if (strcmp(head->masks[i].name,
-               gravity_logger_field_names[gravity_logger_field_coordinates]) ==
-        0) {
-      gravity_logger_local_to_global[gravity_logger_field_coordinates] = i;
-    } else if (strcmp(head->masks[i].name,
-                      gravity_logger_field_names
-                          [gravity_logger_field_velocities]) == 0) {
-      gravity_logger_local_to_global[gravity_logger_field_velocities] = i;
-
-    } else if (strcmp(head->masks[i].name,
-                      gravity_logger_field_names
-                          [gravity_logger_field_accelerations]) == 0) {
-      gravity_logger_local_to_global[gravity_logger_field_accelerations] = i;
-
-    } else if (strcmp(
-                   head->masks[i].name,
-                   gravity_logger_field_names[gravity_logger_field_masses]) ==
-               0) {
-      gravity_logger_local_to_global[gravity_logger_field_masses] = i;
-
-    } else if (strcmp(head->masks[i].name,
-                      gravity_logger_field_names
-                          [gravity_logger_field_particle_ids]) == 0) {
-      gravity_logger_local_to_global[gravity_logger_field_particle_ids] = i;
-    }
-  }
-
-  /* Now set the first and second derivatives */
+  /* Set the first and second derivatives */
   const int pos_id =
       gravity_logger_local_to_global[gravity_logger_field_coordinates];
   const int vel_id =
