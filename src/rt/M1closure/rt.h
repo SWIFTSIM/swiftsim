@@ -20,7 +20,7 @@
 #define SWIFT_RT_M1_H
 
 /**
- * @file src/rt/debug/rt.h
+ * @file src/rt/M1closure/rt.h
  * @brief Main header file for the M1 Closure radiative transfer scheme.
  */
 
