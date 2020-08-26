@@ -195,67 +195,77 @@ void header_read(struct header *h, struct logger_logfile *log) {
     h->masks[i].reader.second_deriv = -1;
   }
 
-  /* Check that the fields have the correct size and set the derivatives. */
   /* Hydro */
-  for (int i = 0; i < hydro_logger_field_count; i++) {
-    hydro_logger_local_to_global[i] = -1;
-  }
-  hydro_logger_reader_populate_mask_data(h);
-  for (int i = 0; i < hydro_logger_field_count; i++) {
-    /* Check if all the fields are set */
-    if (hydro_logger_local_to_global[i] == -1)
-      error("Field %s in hydro_logger_reader_populate_mask_data is not set",
-            hydro_logger_field_names[i]);
+  /* Set the link between local and global */
+  for (int j = 0; j < hydro_logger_field_count; j++) {
+    hydro_logger_local_to_global[j] = -1;
+    for (int i = 0; i < h->masks_count; i++) {
+      if (strcmp(h->masks[i].name, hydro_logger_field_names[j]) == 0) {
+        hydro_logger_local_to_global[j] = i;
+        break;
+      }
+    }
 
-    /* Check the field size */
-    const int index = hydro_logger_local_to_global[i];
-    if (h->masks[index].size != hydro_logger_field_size[i]) {
-      error(
-          "Field %s in hydro_logger_reader_populate_mask_data does not have "
-          "the correct size",
-          hydro_logger_field_names[i]);
+    /* Check if everything is fine. */
+    const int index = hydro_logger_local_to_global[j];
+    if (index == -1) {
+      error("Field %s in hydro is not set", hydro_logger_field_names[j]);
+    }
+    if (h->masks[index].size != hydro_logger_field_size[j]) {
+      error("Field %s in hydro does not have the correct size",
+            hydro_logger_field_names[j]);
     }
   }
+
+  hydro_logger_reader_link_derivatives(h);
 
   /* Gravity */
-  for (int i = 0; i < gravity_logger_field_count; i++) {
-    gravity_logger_local_to_global[i] = -1;
-  }
-  gravity_logger_reader_populate_mask_data(h);
-  for (int i = 0; i < gravity_logger_field_count; i++) {
-    if (gravity_logger_local_to_global[i] == -1)
-      error("Field %s in gravity_logger_reader_populate_mask_data is not set",
-            gravity_logger_field_names[i]);
 
-    /* Check the field size */
-    const int index = gravity_logger_local_to_global[i];
-    if (h->masks[index].size != gravity_logger_field_size[i]) {
-      error(
-          "Field %s in gravity_logger_reader_populate_mask_data does not have "
-          "the correct size",
-          gravity_logger_field_names[i]);
+  /* Set the link between local and global */
+  for (int j = 0; j < gravity_logger_field_count; j++) {
+    gravity_logger_local_to_global[j] = -1;
+    for (int i = 0; i < h->masks_count; i++) {
+      if (strcmp(h->masks[i].name, gravity_logger_field_names[j]) == 0) {
+        gravity_logger_local_to_global[j] = i;
+        break;
+      }
+    }
+
+    /* Check if everything is fine. */
+    const int index = gravity_logger_local_to_global[j];
+    if (index == -1) {
+      error("Field %s in gravity is not set", gravity_logger_field_names[j]);
+    }
+    if (h->masks[index].size != gravity_logger_field_size[j]) {
+      error("Field %s in gravity does not have the correct size",
+            gravity_logger_field_names[j]);
     }
   }
+
+  gravity_logger_reader_link_derivatives(h);
 
   /* Stars */
-  for (int i = 0; i < stars_logger_field_count; i++) {
-    stars_logger_local_to_global[i] = -1;
-  }
-  stars_logger_reader_populate_mask_data(h);
-  for (int i = 0; i < stars_logger_field_count; i++) {
-    if (stars_logger_local_to_global[i] == -1)
-      error("Field %s in stars_logger_reader_populate_mask_data is not set",
-            stars_logger_field_names[i]);
+  /* Set the link between local and global */
+  for (int j = 0; j < stars_logger_field_count; j++) {
+    stars_logger_local_to_global[j] = -1;
+    for (int i = 0; i < h->masks_count; i++) {
+      if (strcmp(h->masks[i].name, stars_logger_field_names[j]) == 0) {
+        stars_logger_local_to_global[j] = i;
+        break;
+      }
+    }
 
-    /* Check the field size */
-    const int index = stars_logger_local_to_global[i];
-    if (h->masks[index].size != stars_logger_field_size[i]) {
-      error(
-          "Field %s in stars_logger_reader_populate_mask_data does not have "
-          "the correct size",
-          stars_logger_field_names[i]);
+    /* Check if everything is fine. */
+    const int index = stars_logger_local_to_global[j];
+    if (index == -1) {
+      error("Field %s in stars is not set", stars_logger_field_names[j]);
+    }
+    if (h->masks[index].size != stars_logger_field_size[j]) {
+      error("Field %s in stars does not have the correct size.",
+            stars_logger_field_names[j]);
     }
   }
+  stars_logger_reader_link_derivatives(h);
 };
 
 /**
