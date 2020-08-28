@@ -35,6 +35,9 @@ struct cell_sinks {
     /*! Pointer to the #sink data. */
     struct sink *parts;
 
+    /*! The drift task for sinks */
+    struct task *drift;
+
     /*! Last (integer) time the cell's sink were drifted forward in time. */
     integertime_t ti_old_part;
 
@@ -43,6 +46,12 @@ struct cell_sinks {
 
     /*! Nr of #sink this cell can hold after addition of new one. */
     int count_total;
+
+    /*! Maximum part movement in this cell since last construction. */
+    float dx_max_part;
+
+    /*! Values of dx_max before the drifts, used for sub-cell tasks. */
+    float dx_max_part_old;
 
 #ifdef SINK_NONE
   };
@@ -57,6 +66,9 @@ struct cell_sinks {
 
   /*! Spin lock for various uses (#sink case). */
   swift_lock_type lock;
+
+  /*! Number of #sink updated in this cell. */
+  int updated;
 
   /*! Is the #sink data of this cell being used in a sub-cell? */
   int hold;
