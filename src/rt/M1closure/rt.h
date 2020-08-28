@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2019 Loic Hausammann (loic.hausammann@epfl.ch)
+ * Copyright (c) 2020 Mladen Ivkovic (mladen.ivkovic@hotmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,30 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_TASK_ORDER_GEAR_H
-#define SWIFT_TASK_ORDER_GEAR_H
+#ifndef SWIFT_RT_M1_H
+#define SWIFT_RT_M1_H
 
 /**
- * Is the star-formation task running before the feedback task?
+ * @file src/rt/M1closure/rt.h
+ * @brief Main header file for the M1 Closure radiative transfer scheme.
  */
-#define task_order_star_formation_before_feedback 0
 
 /**
- * @brief Place the star formation cell at the right place in the dependency
- * graph.
- *
- * In GEAR, star formation takes place after the feedback tasks (that are
- * finishing with the stars_out task).
- *
- * @param s The #scheduler.
- * @param c The #cell on which to act.
- * @param star_resort_cell The #cell where the stars re-sorting task is in this
- * hierarchy.
+ * @brief Dummy function to test whether inclusions work properly.
  */
-INLINE static void task_order_addunlock_star_formation_feedback(
-    struct scheduler *s, struct cell *c, struct cell *star_resort_cell) {
+void rt_dummy_function(void) { message("Called M1 closure RT scheme."); }
 
-  scheduler_addunlock(s, c->stars.stars_out, c->top->hydro.star_formation);
-}
-
-#endif /* SWIFT_TASK_ORDER_GEAR_H */
+#endif /* SWIFT_RT_M1_H */

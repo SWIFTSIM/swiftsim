@@ -81,9 +81,10 @@ enum engine_policy {
   engine_policy_timestep_sync = (1 << 22),
   engine_policy_logger = (1 << 23),
   engine_policy_line_of_sight = (1 << 24),
-  engine_policy_sinks = (1 << 25),
+  engine_policy_sink = (1 << 25),
+  engine_policy_rt = (1 << 26),
 };
-#define engine_maxpolicy 26
+#define engine_maxpolicy 27
 extern const char *engine_policy_names[engine_maxpolicy + 1];
 
 /**
@@ -107,7 +108,6 @@ enum engine_step_properties {
 #define engine_maxproxies 64
 #define engine_tasksreweight 1
 #define engine_parts_size_grow 1.05
-#define engine_max_proxy_centre_frac 0.5
 #define engine_redistribute_alloc_margin 1.2
 #define engine_rebuild_link_alloc_margin 1.2
 #define engine_foreign_alloc_margin 1.05

@@ -1215,6 +1215,7 @@ if test "x$with_grackle" != "xno"; then
    have_grackle="yes"
 
    echo $GRACKLE_LIBS
+   AS_VAR_APPEND([GRACKLE_LIBS], ["$FCLIBS"])
 
    AC_CHECK_LIB(
       [grackle],
@@ -1222,7 +1223,7 @@ if test "x$with_grackle" != "xno"; then
       [AC_DEFINE([HAVE_GRACKLE],1,[The GRACKLE library appears to be present.])
         AC_DEFINE([CONFIG_BFLOAT_8],1,[Use doubles in grackle])
       ],
-      [AC_MSG_ERROR(Cannot find grackle library!)],
+      [AC_MSG_ERROR(Cannot find grackle library! You need to have a version >= 3.1.1)],
       [$GRACKLE_LIBS])
 fi
 AC_SUBST([GRACKLE_LIBS])
@@ -1249,6 +1250,7 @@ if test "x$with_velociraptor" != "xno"; then
    fi
 
    have_velociraptor="yes"
+   AS_VAR_APPEND([VELOCIRAPTOR_LIBS], ["$FCLIBS"])
 
    AC_CHECK_LIB(
       [velociraptor],
@@ -1489,7 +1491,7 @@ AC_SUBST([NUMA_INCS])
 # As an example for this, see the call to AC_ARG_WITH for cooling.
 AC_ARG_WITH([subgrid],
 	[AS_HELP_STRING([--with-subgrid=<subgrid>],
-		[Master switch for subgrid methods. Inexperienced user should start here. Options are: @<:@none, GEAR, QLA, EAGLE default: none@:>@]
+		[Master switch for subgrid methods. Inexperienced user should start here. Options are: @<:@none, GEAR, QLA, EAGLE, EAGLE-XL default: none@:>@]
 	)],
 	[with_subgrid="$withval"],
 	[with_subgrid=none]
@@ -1504,7 +1506,6 @@ with_subgrid_pressure_floor=none
 with_subgrid_stars=none
 with_subgrid_star_formation=none
 with_subgrid_feedback=none
-with_subgrid_task_order=default
 with_subgrid_sink=none
 
 case "$with_subgrid" in
@@ -1521,8 +1522,7 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=GEAR
 	with_subgrid_feedback=GEAR
 	with_subgrid_black_holes=none
-	with_subgrid_task_order=GEAR
-  	with_subgrid_sink=none
+	with_subgrid_sink=none
 	enable_fof=no
    ;;
    QLA)
@@ -1534,8 +1534,7 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=QLA
 	with_subgrid_feedback=none
 	with_subgrid_black_holes=none
-	with_subgrid_task_order=default
-  	with_subgrid_sink=none
+	with_subgrid_sink=none
 	enable_fof=no
    ;;
    EAGLE)
@@ -1547,8 +1546,7 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=EAGLE
 	with_subgrid_feedback=EAGLE
 	with_subgrid_black_holes=EAGLE
-	with_subgrid_task_order=EAGLE
-  	with_subgrid_sink=none
+	with_subgrid_sink=none
 	enable_fof=yes
    ;;
    EAGLE-XL)
@@ -1560,7 +1558,6 @@ case "$with_subgrid" in
 	with_subgrid_star_formation=EAGLE
 	with_subgrid_feedback=EAGLE
 	with_subgrid_black_holes=EAGLE
-	with_subgrid_task_order=EAGLE
 	with_subgrid_sink=none
 	enable_fof=yes
    ;;
@@ -1623,7 +1620,7 @@ esac
 # Hydro scheme.
 AC_ARG_WITH([hydro],
    [AS_HELP_STRING([--with-hydro=<scheme>],
-      [Hydro dynamics to use @<:@gadget2, minimal, pressure-entropy, pressure-energy, pressure-energy-monaghan, default, gizmo-mfv, gizmo-mfm, shadowfax, planetary, anarchy-du, anarchy-pu default: gadget2@:>@]
+      [Hydro dynamics to use @<:@gadget2, minimal, pressure-entropy, pressure-energy, pressure-energy-monaghan, default, gizmo-mfv, gizmo-mfm, shadowfax, planetary, sphenix, anarchy-pu default: gadget2@:>@]
    )],
    [with_hydro="$withval"],
    [with_hydro="gadget2"]
@@ -2096,42 +2093,10 @@ case "$with_sink" in
    ;;
 esac
 
-# Task order
-AC_ARG_WITH([task-order],
-   [AS_HELP_STRING([--with-task-order=<model>],
-       [Task order to use @<:@default, EAGLE, GEAR default: default@:>@]
-   )],
-   [with_task_order="$withval"],
-   [with_task_order="default"]
-)
-
-if test "$with_subgrid" != "none"; then
-   if test "$with_task_order" != "default"; then
-      AC_MSG_ERROR([Cannot provide with-subgrid and with-task-order together])
-   else
-      with_task_order="$with_subgrid_task_order"
-   fi
-fi
-
-case "$with_task_order" in
-   EAGLE)
-       AC_DEFINE([TASK_ORDER_EAGLE], [1], [EAGLE task order])
-   ;;
-   default)
-       AC_DEFINE([TASK_ORDER_DEFAULT], [1], [Default (i.e. EAGLE/OWLS) task order])
-   ;;
-   GEAR)
-       AC_DEFINE([TASK_ORDER_GEAR], [1], [GEAR task order])
-   ;;
-   *)
-       AC_MSG_ERROR([Unknown task ordering: $with_task_order])
-   ;;
-esac
-
 #  External potential
 AC_ARG_WITH([ext-potential],
    [AS_HELP_STRING([--with-ext-potential=<pot>],
-      [external potential @<:@none, point-mass, point-mass-ring, point-mass-softened, isothermal, nfw, hernquist, disc-patch, sine-wave, constant, default: none@:>@]
+      [external potential @<:@none, point-mass, point-mass-ring, point-mass-softened, isothermal, nfw, nfw_mn, hernquist, disc-patch, sine-wave, constant, default: none@:>@]
    )],
    [with_potential="$withval"],
    [with_potential="none"]
@@ -2290,6 +2255,31 @@ AC_ARG_WITH([multipole-order],
 )
 AC_DEFINE_UNQUOTED([SELF_GRAVITY_MULTIPOLE_ORDER], [$with_multipole_order], [Multipole order])
 
+#  Radiative transfer scheme
+AC_ARG_WITH([rt],
+   [AS_HELP_STRING([--with-rt=<scheme>],
+      [Radiative transfer scheme to use @<:@none, M1closure, debug default: none@:>@. This is still work in progress, currently no scheme works.]
+   )],
+   [with_rt="$withval"],
+   [with_rt="none"]
+)
+
+case "$with_rt" in
+   none)
+      AC_DEFINE([RT_NONE], [1], [No radiative transfer scheme])
+   ;;
+   M1closure)
+      AC_DEFINE([RT_M1], [1], [M1 closure scheme])
+   ;;
+   debug)
+      AC_DEFINE([RT_DEBUG], [1], [debugging scheme])
+   ;;
+   *)
+      AC_MSG_ERROR([Unknown radiative transfer scheme: $with_rt])
+   ;;
+esac
+
+
 # Check for git, needed for revision stamps.
 AC_PATH_PROG([GIT_CMD], [git])
 AC_SUBST([GIT_CMD])
@@ -2397,7 +2387,7 @@ AC_MSG_RESULT([
    Star feedback model  : $with_feedback
    Sink particle model  : $with_sink
    Black holes model    : $with_black_holes
-   Task dependencies    : $with_task_order
+   Radiative transfer   : $with_rt
 
    Atomic operations in tasks  : $enable_atomics_within_tasks
    Individual timers           : $enable_timers

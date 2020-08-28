@@ -68,7 +68,6 @@
 #include "space_getsid.h"
 #include "star_formation.h"
 #include "stars.h"
-#include "task_order.h"
 #include "timers.h"
 #include "tools.h"
 #include "tracers.h"
@@ -2756,7 +2755,7 @@ void cell_activate_star_formation_tasks(struct cell *c, struct scheduler *s,
   scheduler_activate(s, c->hydro.star_formation);
 
   /* Activate the star resort tasks at whatever level they are */
-  if (task_order_star_formation_before_feedback && with_feedback) {
+  if (with_feedback) {
     cell_activate_star_resort_tasks(c, s);
   }
 }
@@ -3984,16 +3983,12 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
         /* Propagating new star counts? */
         if (with_star_formation && with_feedback) {
           if (ci_active && ci->hydro.count > 0) {
-            if (task_order_star_formation_before_feedback) {
-              scheduler_activate_recv(s, ci->mpi.recv, task_subtype_sf_counts);
-            }
+            scheduler_activate_recv(s, ci->mpi.recv, task_subtype_sf_counts);
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_spart);
           }
           if (cj_active && cj->hydro.count > 0) {
-            if (task_order_star_formation_before_feedback) {
-              scheduler_activate_send(s, cj->mpi.send, task_subtype_sf_counts,
-                                      ci_nodeID);
-            }
+            scheduler_activate_send(s, cj->mpi.send, task_subtype_sf_counts,
+                                    ci_nodeID);
             scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_spart,
                                     ci_nodeID);
           }
@@ -4057,16 +4052,12 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
         /* Propagating new star counts? */
         if (with_star_formation && with_feedback) {
           if (cj_active && cj->hydro.count > 0) {
-            if (task_order_star_formation_before_feedback) {
-              scheduler_activate_recv(s, cj->mpi.recv, task_subtype_sf_counts);
-            }
+            scheduler_activate_recv(s, cj->mpi.recv, task_subtype_sf_counts);
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_spart);
           }
           if (ci_active && ci->hydro.count > 0) {
-            if (task_order_star_formation_before_feedback) {
-              scheduler_activate_send(s, ci->mpi.send, task_subtype_sf_counts,
-                                      cj_nodeID);
-            }
+            scheduler_activate_send(s, ci->mpi.send, task_subtype_sf_counts,
+                                    cj_nodeID);
             scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_spart,
                                     cj_nodeID);
           }
@@ -6219,8 +6210,8 @@ struct spart *cell_add_spart(struct engine *e, struct cell *const c) {
       }
     }
 
-      /* Check that the cell was indeed drifted to this point to avoid future
-       * issues */
+    /* Check that the cell was indeed drifted to this point to avoid future
+     * issues */
 #ifdef SWIFT_DEBUG_CHECKS
     if (top->hydro.super != NULL && top->stars.count > 0 &&
         top->stars.ti_old_part != e->ti_current) {
@@ -6354,8 +6345,8 @@ struct gpart *cell_add_gpart(struct engine *e, struct cell *c) {
       }
     }
 
-      /* Check that the cell was indeed drifted to this point to avoid future
-       * issues */
+    /* Check that the cell was indeed drifted to this point to avoid future
+     * issues */
 #ifdef SWIFT_DEBUG_CHECKS
     if (top->grav.super != NULL && top->grav.count > 0 &&
         top->grav.ti_old_part != e->ti_current) {

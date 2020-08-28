@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2019 Loic Hausammann (loic.hausammann@epfl.ch)
+ * Copyright (c) 2020 Mladen Ivkovic (mladen.ivkovic@hotmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,22 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_TASK_ORDER_H
-#define SWIFT_TASK_ORDER_H
+#ifndef SWIFT_RT_DEBUG_H
+#define SWIFT_RT_DEBUG_H
 
-#include "../config.h"
+/**
+ * @file src/rt/debug/rt.h
+ * @brief Main header file for the debug radiative transfer scheme.
+ */
 
-/* Local includes */
-#include "scheduler.h"
+/**
+ * @brief Dummy function to test whether inclusions work properly.
+ */
+void rt_dummy_function(void) { message("Called debug RT scheme."); }
 
-#ifdef TASK_ORDER_DEFAULT
-#include "task_order/default/task_order.h"
-#elif TASK_ORDER_GEAR
-#include "task_order/GEAR/task_order.h"
-#elif TASK_ORDER_EAGLE
-#include "task_order/EAGLE/task_order.h"
-#else
-#error undefined task order
-#endif
-
-#endif /* SWIFT_TASK_ORDER_H */
+#endif /* SWIFT_RT_DEBUG_H */
