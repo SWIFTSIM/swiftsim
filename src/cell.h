@@ -874,6 +874,22 @@ cell_can_recurse_in_self_sinks_task(const struct cell *c) {
 }
 
 /**
+ * @brief Can a sub-self sinks task recurse to a lower level based
+ * on the status of the particles in the cell.
+ *
+ * @param c The #cell.
+ */
+__attribute__((always_inline)) INLINE static int
+cell_can_recurse_in_self_sinks_task(const struct cell *c) {
+
+  /* Is the cell split and not smaller than the smoothing length? */
+  // loic TODO: add cut off radius
+  return c->split &&
+         //(kernel_gamma * c->sinks.h_max_old < 0.5f * c->dmin) &&
+         (kernel_gamma * c->hydro.h_max_old < 0.5f * c->dmin);
+}
+
+/**
  * @brief Can a pair hydro task associated with a cell be split into smaller
  * sub-tasks.
  *
