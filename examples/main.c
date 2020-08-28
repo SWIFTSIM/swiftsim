@@ -1298,7 +1298,7 @@ int main(int argc, char *argv[]) {
     if (with_fof) engine_policies |= engine_policy_fof;
     if (with_logger) engine_policies |= engine_policy_logger;
     if (with_line_of_sight) engine_policies |= engine_policy_line_of_sight;
-    if (with_sink) engine_policies |= engine_policy_sink;
+    if (with_sink) engine_policies |= engine_policy_sinks;
     if (with_rt) engine_policies |= engine_policy_rt;
 
     /* Initialize the engine with the space and policies. */
