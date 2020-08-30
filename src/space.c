@@ -5181,6 +5181,7 @@ void space_first_init_sinks_mapper(void *restrict map_data, int count,
   struct sink *restrict sink = (struct sink *)map_data;
   const struct space *restrict s = (struct space *)extra_data;
   const struct engine *e = s->e;
+  const struct sink_props *props = e->sink_properties;
 
 #ifdef SWIFT_DEBUG_CHECKS
   const ptrdiff_t delta = sink - s->sinks;
@@ -5210,7 +5211,7 @@ void space_first_init_sinks_mapper(void *restrict map_data, int count,
   /* Initialise the rest */
   for (int k = 0; k < count; k++) {
 
-    sink_first_init_sink(&sink[k]);
+    sink_first_init_sink(&sink[k], props);
 
 #ifdef SWIFT_DEBUG_CHECKS
     if (sink[k].gpart && sink[k].gpart->id_or_neg_offset != -(k + delta))

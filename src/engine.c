@@ -89,6 +89,7 @@
 #include "runner.h"
 #include "serial_io.h"
 #include "single_io.h"
+#include "sink_properties.h"
 #include "sort_part.h"
 #include "star_formation.h"
 #include "star_formation_logger.h"
@@ -3855,6 +3856,7 @@ static void engine_dumper_init(struct engine *e) {
  * @param gravity The #gravity_props used for this run.
  * @param stars The #stars_props used for this run.
  * @param black_holes The #black_holes_props used for this run.
+ * @param sinks The #sink_props used for this run.
  * @param feedback The #feedback_props used for this run.
  * @param mesh The #pm_mesh used for the long-range periodic forces.
  * @param potential The properties of the external potential.
@@ -3875,6 +3877,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  const struct entropy_floor_properties *entropy_floor,
                  struct gravity_props *gravity, const struct stars_props *stars,
                  const struct black_holes_props *black_holes,
+                 const struct sink_props *sinks,
                  struct feedback_props *feedback, struct pm_mesh *mesh,
                  const struct external_potential *potential,
                  struct cooling_function_data *cooling_func,
@@ -3956,6 +3959,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   e->gravity_properties = gravity;
   e->stars_properties = stars;
   e->black_holes_properties = black_holes;
+  e->sink_properties = sinks;
   e->mesh = mesh;
   e->external_potential = potential;
   e->cooling_func = cooling_func;
@@ -5416,6 +5420,7 @@ void engine_clean(struct engine *e, const int fof, const int restart) {
     free((void *)e->output_options);
     free((void *)e->external_potential);
     free((void *)e->black_holes_properties);
+    free((void *)e->sink_properties);
     free((void *)e->stars_properties);
     free((void *)e->gravity_properties);
     free((void *)e->hydro_properties);
@@ -5483,6 +5488,7 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   starformation_struct_dump(e->star_formation, stream);
   feedback_struct_dump(e->feedback_props, stream);
   black_holes_struct_dump(e->black_holes_properties, stream);
+  sink_struct_dump(e->sink_properties, stream);
   chemistry_struct_dump(e->chemistry, stream);
 #ifdef WITH_FOF
   fof_struct_dump(e->fof_properties, stream);
@@ -5607,6 +5613,11 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
       (struct black_holes_props *)malloc(sizeof(struct black_holes_props));
   black_holes_struct_restore(black_holes_properties, stream);
   e->black_holes_properties = black_holes_properties;
+
+  struct sink_props *sink_properties =
+    (struct sink_props *)malloc(sizeof(struct sink_props));
+  sink_struct_restore(sink_properties, stream);
+  e->sink_properties = sink_properties;
 
   struct chemistry_global_data *chemistry =
       (struct chemistry_global_data *)malloc(
