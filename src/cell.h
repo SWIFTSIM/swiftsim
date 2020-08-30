@@ -798,6 +798,13 @@ struct cell {
     /*! The drift task for sinks */
     struct task *drift;
 
+    /*! Implicit tasks marking the entry of the sink block of tasks
+     */
+    struct task *sink_in;
+
+    /*! Implicit tasks marking the exit of the sink block of tasks */
+    struct task *sink_out;
+
   } sinks;
 
 #ifdef WITH_MPI
