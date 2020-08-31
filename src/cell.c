@@ -3608,11 +3608,13 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
 
   /* Store the current dx_max and h_max values. */
   ci->sinks.dx_max_part_old = ci->sinks.dx_max_part;
+  ci->sinks.h_max_old = ci->sinks.h_max;
   ci->hydro.dx_max_part_old = ci->hydro.dx_max_part;
   ci->hydro.h_max_old = ci->hydro.h_max;
 
   if (cj != NULL) {
     cj->sinks.dx_max_part_old = cj->sinks.dx_max_part;
+    cj->sinks.h_max_old = cj->sinks.h_max;
     cj->hydro.dx_max_part_old = cj->hydro.dx_max_part;
     cj->hydro.h_max_old = cj->hydro.h_max;
   }
@@ -5664,6 +5666,7 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
   struct sink *const sinks = c->sinks.parts;
 
   float dx_max = 0.f, dx2_max = 0.f;
+  float cell_h_max = 0.f;
 
   /* Drift irrespective of cell flags? */
   force = (force || cell_get_flag(c, cell_flag_do_sink_drift));
@@ -5703,10 +5706,12 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
 
         /* Update */
         dx_max = max(dx_max, cp->sinks.dx_max_part);
+        cell_h_max = max(cell_h_max, cp->sinks.h_max);
       }
     }
 
     /* Store the values */
+    c->sinks.h_max = cell_h_max;
     c->sinks.dx_max_part = dx_max;
 
     /* Update the time of the last drift */
@@ -5771,11 +5776,16 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
         }
       }
 
+      /* sp->h does not need to be limited. */
+
       /* Compute (square of) motion since last cell construction */
       const float dx2 = sink->x_diff[0] * sink->x_diff[0] +
                         sink->x_diff[1] * sink->x_diff[1] +
                         sink->x_diff[2] * sink->x_diff[2];
       dx2_max = max(dx2_max, dx2);
+
+      /* Maximal smoothing length */
+      cell_h_max = max(cell_h_max, sink->h);
 
       /* Get ready for a density calculation */
       if (sink_is_active(sink, e)) {
@@ -5787,6 +5797,7 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
     dx_max = sqrtf(dx2_max);
 
     /* Store the values */
+    c->sinks.h_max = cell_h_max;
     c->sinks.dx_max_part = dx_max;
 
     /* Update the time of the last drift */
