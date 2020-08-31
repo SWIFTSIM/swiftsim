@@ -1854,6 +1854,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
   const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
   const int with_feedback = (e->policy & engine_policy_feedback);
   const int with_black_holes = (e->policy & engine_policy_black_holes);
+  const int with_rt = (e->policy & engine_policy_rt);
 #ifdef EXTRA_HYDRO_LOOP
   struct task *t_gradient = NULL;
 #endif
@@ -1866,6 +1867,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
   struct task *t_do_gas_swallow = NULL;
   struct task *t_do_bh_swallow = NULL;
   struct task *t_bh_feedback = NULL;
+  struct task *t_rt_inject = NULL;
 
   for (int ind = 0; ind < num_elements; ind++) {
 
@@ -1936,6 +1938,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               flags, 0, ci, NULL);
       }
 
+      if (with_rt) {
+        t_rt_inject = scheduler_addtask(sched, task_type_self, task_subtype_rt_inject, flags, 0, ci, NULL);
+      }
+
       /* Link the tasks to the cells */
       engine_addlink(e, &ci->hydro.force, t_force);
       if (with_timestep_limiter) {
@@ -1951,6 +1957,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &ci->black_holes.do_gas_swallow, t_do_gas_swallow);
         engine_addlink(e, &ci->black_holes.do_bh_swallow, t_do_bh_swallow);
         engine_addlink(e, &ci->black_holes.feedback, t_bh_feedback);
+      }
+      if (with_rt){
+        engine_addlink(e, &ci->hydro.rt_inject, t_rt_inject);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2039,6 +2048,11 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       if (with_timestep_sync && with_black_holes && bcount_i > 0) {
         scheduler_addunlock(sched, t_bh_feedback, ci->super->timestep_sync);
       }
+
+      if (with_rt) {
+        scheduler_addunlock(sched, ci->hydro.super->stars.stars_out, t_rt_inject);
+        scheduler_addunlock(sched, t_rt_inject, ci->super->timestep);
+      }
     }
 
     /* Otherwise, pair interaction? */
@@ -2097,6 +2111,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             sched, task_type_pair, task_subtype_bh_feedback, flags, 0, ci, cj);
       }
 
+      if (with_rt) {
+        t_rt_inject = 
+            scheduler_addtask(sched, task_type_pair, task_subtype_rt_inject, 
+                              flags, 0, ci, cj);
+      }
+
+
       engine_addlink(e, &ci->hydro.force, t_force);
       engine_addlink(e, &cj->hydro.force, t_force);
       if (with_timestep_limiter) {
@@ -2120,6 +2141,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &cj->black_holes.do_bh_swallow, t_do_bh_swallow);
         engine_addlink(e, &ci->black_holes.feedback, t_bh_feedback);
         engine_addlink(e, &cj->black_holes.feedback, t_bh_feedback);
+      }
+      if (with_rt){
+        engine_addlink(e, &ci->hydro.rt_inject, t_rt_inject);
+        engine_addlink(e, &cj->hydro.rt_inject, t_rt_inject);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2240,6 +2265,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             (bcount_i > 0 || bcount_j > 0)) {
           scheduler_addunlock(sched, t_bh_feedback, ci->super->timestep_sync);
         }
+
+        if (with_rt) {
+          scheduler_addunlock(sched, ci->hydro.super->stars.stars_out, t_rt_inject);
+          scheduler_addunlock(sched, t_rt_inject, ci->super->timestep);
+        }
+
       } else /*(ci->nodeID != nodeID) */ {
         if (with_feedback) {
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
@@ -2313,9 +2344,15 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 cj->hydro.super->black_holes.black_holes_out);
           }
 
+          if (with_rt) {
+            scheduler_addunlock(sched, cj->hydro.super->stars.stars_out, t_rt_inject);
+            scheduler_addunlock(sched, t_rt_inject, cj->super->timestep);
+          }
+
           if (with_timestep_limiter) {
             scheduler_addunlock(sched, cj->hydro.super->hydro.drift, t_limiter);
           }
+
         }
 
         if (ci->super != cj->super) {
@@ -2402,6 +2439,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               task_subtype_bh_feedback, flags, 0, ci, NULL);
       }
 
+      if (with_rt) {
+        t_rt_inject = 
+            scheduler_addtask(sched, task_type_self, 
+                              task_subtype_rt_inject, flags, 0, ci, NULL);
+      }
+
+
       /* Add the link between the new loop and the cell */
       engine_addlink(e, &ci->hydro.force, t_force);
       if (with_timestep_limiter) {
@@ -2417,6 +2461,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &ci->black_holes.do_gas_swallow, t_do_gas_swallow);
         engine_addlink(e, &ci->black_holes.do_bh_swallow, t_do_bh_swallow);
         engine_addlink(e, &ci->black_holes.feedback, t_bh_feedback);
+      }
+      if (with_rt){
+        engine_addlink(e, &ci->hydro.rt_inject, t_rt_inject);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2511,6 +2558,11 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       if (with_timestep_sync && with_black_holes && bcount_i > 0) {
         scheduler_addunlock(sched, t_bh_feedback, ci->super->timestep_sync);
       }
+
+      if (with_rt) {
+        scheduler_addunlock(sched, ci->hydro.super->stars.stars_out, t_rt_inject);
+        scheduler_addunlock(sched, t_rt_inject, ci->super->timestep);
+      }
     }
 
     /* Otherwise, sub-pair interaction? */
@@ -2573,6 +2625,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               task_subtype_bh_feedback, flags, 0, ci, cj);
       }
 
+      if (with_rt) {
+        t_rt_inject = 
+            scheduler_addtask(sched, task_type_pair, task_subtype_rt_inject, 
+                              flags, 0, ci, cj);
+      }
+
       engine_addlink(e, &ci->hydro.force, t_force);
       engine_addlink(e, &cj->hydro.force, t_force);
       if (with_timestep_limiter) {
@@ -2596,6 +2654,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &cj->black_holes.do_bh_swallow, t_do_bh_swallow);
         engine_addlink(e, &ci->black_holes.feedback, t_bh_feedback);
         engine_addlink(e, &cj->black_holes.feedback, t_bh_feedback);
+      }
+      if (with_rt){
+        engine_addlink(e, &ci->hydro.rt_inject, t_rt_inject);
+        engine_addlink(e, &cj->hydro.rt_inject, t_rt_inject);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2715,6 +2777,11 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             (bcount_i > 0 || bcount_j > 0)) {
           scheduler_addunlock(sched, t_bh_feedback, ci->super->timestep_sync);
         }
+
+        if (with_rt) {
+          scheduler_addunlock(sched, ci->hydro.super->stars.stars_out, t_rt_inject);
+          scheduler_addunlock(sched, t_rt_inject, ci->super->timestep);
+        }
       } else /* ci->nodeID != nodeID */ {
 
         if (with_feedback) {
@@ -2787,6 +2854,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 t_bh_feedback);
             scheduler_addunlock(sched, t_bh_feedback,
                                 cj->hydro.super->black_holes.black_holes_out);
+          }
+          if (with_rt) {
+            scheduler_addunlock(sched, cj->hydro.super->stars.stars_out, t_rt_inject);
+            scheduler_addunlock(sched, t_rt_inject, cj->super->timestep);
           }
 
           if (with_timestep_limiter) {
