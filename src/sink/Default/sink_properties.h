@@ -31,7 +31,7 @@ struct sink_props {
 /**
  * @brief Initialise the sink properties from the parameter file.
  *
- * @param bp The #sink_props.
+ * @param sp The #sink_props.
  * @param phys_const The physical constants in the internal unit system.
  * @param us The internal unit system.
  * @param params The parsed parameters.
