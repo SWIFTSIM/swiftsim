@@ -2053,8 +2053,8 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->type == task_type_stars_resort || t->type == task_type_extra_ghost ||
         t->type == task_type_stars_ghost ||
         t->type == task_type_stars_ghost_in ||
-        t->type == task_type_stars_ghost_out ||
-        t->type == task_type_sink_in || t->type == task_type_sink_out ||
+        t->type == task_type_stars_ghost_out || t->type == task_type_sink_in ||
+        t->type == task_type_sink_out ||
         t->type == task_type_bh_swallow_ghost1 ||
         t->type == task_type_bh_swallow_ghost2 ||
         t->type == task_type_bh_swallow_ghost3 || t->type == task_type_bh_in ||
@@ -5616,7 +5616,7 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
   e->black_holes_properties = black_holes_properties;
 
   struct sink_props *sink_properties =
-    (struct sink_props *)malloc(sizeof(struct sink_props));
+      (struct sink_props *)malloc(sizeof(struct sink_props));
   sink_struct_restore(sink_properties, stream);
   e->sink_properties = sink_properties;
 

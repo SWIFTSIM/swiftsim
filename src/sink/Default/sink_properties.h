@@ -44,9 +44,7 @@ INLINE static void sink_props_init(struct sink_props *sp,
                                    const struct cosmology *cosmo) {
 
   sp->cut_off_radius =
-    parser_get_param_float(params, "DefaultSink:cut_off_radius");
-
-
+      parser_get_param_float(params, "DefaultSink:cut_off_radius");
 }
 
 /**
@@ -56,10 +54,10 @@ INLINE static void sink_props_init(struct sink_props *sp,
  * @param props the sink properties struct
  * @param stream the file stream
  */
-INLINE static void sink_struct_dump(
-    const struct sink_props *props, FILE *stream) {
-  restart_write_blocks((void *)props, sizeof(struct sink_props), 1,
-                       stream, "sink props", "Sink props");
+INLINE static void sink_struct_dump(const struct sink_props *props,
+                                    FILE *stream) {
+  restart_write_blocks((void *)props, sizeof(struct sink_props), 1, stream,
+                       "sink props", "Sink props");
 }
 
 /**
@@ -69,10 +67,10 @@ INLINE static void sink_struct_dump(
  * @param props the sink properties struct
  * @param stream the file stream
  */
-INLINE static void sink_struct_restore(
-    const struct sink_props *props, FILE *stream) {
-  restart_read_blocks((void *)props, sizeof(struct sink_props), 1,
-                      stream, NULL, "Sink props");
+INLINE static void sink_struct_restore(const struct sink_props *props,
+                                       FILE *stream) {
+  restart_read_blocks((void *)props, sizeof(struct sink_props), 1, stream, NULL,
+                      "Sink props");
 }
 
 #endif /* SWIFT_DEFAULT_SINK_PROPERTIES_H */

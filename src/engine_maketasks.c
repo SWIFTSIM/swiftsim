@@ -1243,12 +1243,12 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
       if (with_sinks) {
 
         c->sinks.sink_in =
-          scheduler_addtask(s, task_type_sink_in, task_subtype_none, 0,
-                            /* implicit = */ 1, c, NULL);
+            scheduler_addtask(s, task_type_sink_in, task_subtype_none, 0,
+                              /* implicit = */ 1, c, NULL);
 
         c->sinks.sink_out =
-          scheduler_addtask(s, task_type_sink_out, task_subtype_none, 0,
-                            /* implicit = */ 1, c, NULL);
+            scheduler_addtask(s, task_type_sink_out, task_subtype_none, 0,
+                              /* implicit = */ 1, c, NULL);
 
         /* TODO */
         scheduler_addunlock(s, c->sinks.sink_in, c->sinks.sink_out);

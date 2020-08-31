@@ -991,8 +991,7 @@ int main(int argc, char *argv[]) {
 
     /* Initialise the sink properties */
     if (with_sink) {
-      sink_props_init(&sink_properties, &prog_const, &us, params,
-                      &cosmo);
+      sink_props_init(&sink_properties, &prog_const, &us, params, &cosmo);
     } else
       bzero(&sink_properties, sizeof(struct sink_props));
 
@@ -1317,8 +1316,7 @@ int main(int argc, char *argv[]) {
                 N_total[swift_type_dark_matter_background], engine_policies,
                 talking, &reparttype, &us, &prog_const, &cosmo,
                 &hydro_properties, &entropy_floor, &gravity_properties,
-                &stars_properties, &black_holes_properties,
-                &sink_properties,
+                &stars_properties, &black_holes_properties, &sink_properties,
                 &feedback_properties, &mesh, &potential, &cooling_func,
                 &starform, &chemistry, &fof_properties, &los_properties);
     engine_config(/*restart=*/0, /*fof=*/0, &e, params, nr_nodes, myrank,
