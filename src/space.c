@@ -382,6 +382,7 @@ void space_regrid(struct space *s, int verbose) {
   const size_t nr_parts = s->nr_parts;
   const size_t nr_sparts = s->nr_sparts;
   const size_t nr_bparts = s->nr_bparts;
+  const size_t nr_sinks = s->nr_sinks;
   const ticks tic = getticks();
   const integertime_t ti_current = (s->e != NULL) ? s->e->ti_current : 0;
 
@@ -404,6 +405,9 @@ void space_regrid(struct space *s, int verbose) {
         if (c->black_holes.h_max > h_max) {
           h_max = c->black_holes.h_max;
         }
+        if (c->sinks.h_max > h_max) {
+          h_max = c->sinks.h_max;
+        }
       }
 
       /* Can we instead use all the top-level cells? */
@@ -419,6 +423,9 @@ void space_regrid(struct space *s, int verbose) {
         if (c->nodeID == engine_rank && c->black_holes.h_max > h_max) {
           h_max = c->black_holes.h_max;
         }
+        if (c->nodeID == engine_rank && c->sinks.h_max > h_max) {
+          h_max = c->sinks.h_max;
+        }
       }
 
       /* Last option: run through the particles */
@@ -431,6 +438,9 @@ void space_regrid(struct space *s, int verbose) {
       }
       for (size_t k = 0; k < nr_bparts; k++) {
         if (s->bparts[k].h > h_max) h_max = s->bparts[k].h;
+      }
+      for (size_t k = 0; k < nr_sinks; k++) {
+        if (s->sinks[k].h > h_max) h_max = s->sinks[k].h;
       }
     }
   }
@@ -3768,6 +3778,7 @@ void space_split_recursive(struct space *s, struct cell *c,
   const int depth = c->depth;
   int maxdepth = 0;
   float h_max = 0.0f;
+  float sinks_h_max = 0.f;
   float stars_h_max = 0.f;
   float black_holes_h_max = 0.f;
   integertime_t ti_hydro_end_min = max_nr_timesteps, ti_hydro_end_max = 0,
@@ -3936,6 +3947,7 @@ void space_split_recursive(struct space *s, struct cell *c,
       cp->stars.h_max = 0.f;
       cp->stars.dx_max_part = 0.f;
       cp->stars.dx_max_sort = 0.f;
+      cp->sinks.h_max = 0.f;
       cp->sinks.dx_max_part = 0.f;
       cp->black_holes.h_max = 0.f;
       cp->black_holes.dx_max_part = 0.f;
@@ -3994,6 +4006,7 @@ void space_split_recursive(struct space *s, struct cell *c,
         h_max = max(h_max, cp->hydro.h_max);
         stars_h_max = max(stars_h_max, cp->stars.h_max);
         black_holes_h_max = max(black_holes_h_max, cp->black_holes.h_max);
+        sinks_h_max = max(sinks_h_max, cp->sinks.h_max);
 
         ti_hydro_end_min = min(ti_hydro_end_min, cp->hydro.ti_end_min);
         ti_hydro_end_max = max(ti_hydro_end_max, cp->hydro.ti_end_max);
@@ -4248,6 +4261,8 @@ void space_split_recursive(struct space *s, struct cell *c,
       ti_sinks_end_max = max(ti_sinks_end_max, ti_end);
       ti_sinks_beg_max = max(ti_sinks_beg_max, ti_beg);
 
+      sinks_h_max = max(sinks_h_max, sinks[k].h);
+
       /* Reset x_diff */
       sinks[k].x_diff[0] = 0.f;
       sinks[k].x_diff[1] = 0.f;
@@ -4327,6 +4342,7 @@ void space_split_recursive(struct space *s, struct cell *c,
   c->sinks.ti_end_min = ti_sinks_end_min;
   c->sinks.ti_end_max = ti_sinks_end_max;
   c->sinks.ti_beg_max = ti_sinks_beg_max;
+  c->sinks.h_max = sinks_h_max;
   c->black_holes.ti_end_min = ti_black_holes_end_min;
   c->black_holes.ti_end_max = ti_black_holes_end_max;
   c->black_holes.ti_beg_max = ti_black_holes_beg_max;
