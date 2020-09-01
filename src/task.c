@@ -106,7 +106,9 @@ const char *taskID_names[task_type_count] = {"none",
                                              "sink_in",
                                              "sink_out",
                                              "rt_in",
-                                             "rt_out"};
+                                             "rt_out",
+                                             "sink_formation",
+};
 
 /* Sub-task type names. */
 const char *subtaskID_names[task_subtype_count] = {"none",
@@ -140,12 +142,14 @@ const char *subtaskID_names[task_subtype_count] = {"none",
                                                    "do_bh_swallow",
                                                    "bh_feedback",
                                                    "sink",
-                                                   "rt_inject"};
+                                                   "rt_inject",
+                                                   "sink_compute_formation",
+};
 
 const char *task_category_names[task_category_count] = {
     "drift",       "sort",    "hydro",          "gravity", "feedback",
     "black holes", "cooling", "star formation", "limiter", "time integration",
-    "mpi",         "fof",     "others"};
+    "mpi",         "fof",     "others", "sink_formation"};
 
 #ifdef WITH_MPI
 /* MPI communicators for the subtypes. */
@@ -207,6 +211,7 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
       break;
 
     case task_type_star_formation:
+    case task_type_sink_formation:
       return task_action_all;
 
     case task_type_drift_spart:
@@ -607,6 +612,12 @@ void task_unlock(struct task *t) {
       cell_gunlocktree(ci);
       break;
 
+    case task_type_sink_formation:
+      cell_unlocktree(ci);
+      cell_sink_unlocktree(ci);
+      cell_gunlocktree(ci);
+      break;
+
     default:
       break;
   }
@@ -883,6 +894,22 @@ int task_lock(struct task *t) {
         cell_sunlocktree(ci);
         return 0;
       }
+      break;
+
+    case task_type_sink_formation:
+      /* Lock the gas, gravity and star particles */
+      if (ci->hydro.hold || ci->sinks.hold || ci->grav.phold) return 0;
+      if (cell_locktree(ci) != 0) return 0;
+      if (cell_sink_locktree(ci) != 0) {
+        cell_unlocktree(ci);
+        return 0;
+      }
+      if (cell_glocktree(ci) != 0) {
+        cell_unlocktree(ci);
+        cell_sink_unlocktree(ci);
+        return 0;
+      }
+      break;
 
     default:
       break;
@@ -1410,6 +1437,9 @@ enum task_categories task_get_category(const struct task *t) {
 
     case task_type_star_formation:
       return task_category_star_formation;
+
+    case task_type_sink_formation:
+      return task_category_sink_formation;
 
     case task_type_drift_part:
     case task_type_drift_spart:
