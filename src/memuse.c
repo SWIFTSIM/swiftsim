@@ -130,9 +130,6 @@ static void memuse_log_reallocate(size_t ind) {
              sizeof(struct memuse_log_entry) * MEMUSE_INITLOG)) == NULL)
       error("Failed to allocate memuse log.");
 
-    /* Initialize the lock, we need it next time. */
-    lock_init(&realloc_lock);
-
     /* Last action. */
     memuse_log_size = MEMUSE_INITLOG;
 
