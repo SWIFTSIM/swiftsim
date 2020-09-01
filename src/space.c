@@ -613,6 +613,8 @@ void space_regrid(struct space *s, int verbose) {
         error("Failed to init spinlock for stars.");
       if (lock_init(&s->cells_top[k].sinks.lock) != 0)
         error("Failed to init spinlock for sinks.");
+      if (lock_init(&s->cells_top[k].sinks.sink_formation_lock) != 0)
+        error("Failed to init spinlock for sink formation.");
       if (lock_init(&s->cells_top[k].black_holes.lock) != 0)
         error("Failed to init spinlock for black holes.");
       if (lock_init(&s->cells_top[k].stars.star_formation_lock) != 0)
@@ -4421,6 +4423,7 @@ void space_recycle(struct space *s, struct cell *c) {
   if (lock_destroy(&c->hydro.lock) != 0 || lock_destroy(&c->grav.plock) != 0 ||
       lock_destroy(&c->grav.mlock) != 0 || lock_destroy(&c->stars.lock) != 0 ||
       lock_destroy(&c->sinks.lock) != 0 ||
+      lock_destroy(&c->sinks.sink_formation_lock) != 0 ||
       lock_destroy(&c->black_holes.lock) != 0 ||
       lock_destroy(&c->grav.star_formation_lock) != 0 ||
       lock_destroy(&c->stars.star_formation_lock) != 0)
@@ -4476,6 +4479,7 @@ void space_recycle_list(struct space *s, struct cell *cell_list_begin,
         lock_destroy(&c->grav.mlock) != 0 ||
         lock_destroy(&c->stars.lock) != 0 ||
         lock_destroy(&c->sinks.lock) != 0 ||
+        lock_destroy(&c->sinks.sink_formation_lock) != 0 ||
         lock_destroy(&c->black_holes.lock) != 0 ||
         lock_destroy(&c->stars.star_formation_lock) != 0 ||
         lock_destroy(&c->grav.star_formation_lock) != 0)
@@ -4579,6 +4583,7 @@ void space_getcells(struct space *s, int nr_cells, struct cell **cells) {
         lock_init(&cells[j]->grav.mlock) != 0 ||
         lock_init(&cells[j]->stars.lock) != 0 ||
         lock_init(&cells[j]->sinks.lock) != 0 ||
+        lock_init(&cells[j]->sinks.sink_formation_lock) != 0 ||
         lock_init(&cells[j]->black_holes.lock) != 0 ||
         lock_init(&cells[j]->stars.star_formation_lock) != 0 ||
         lock_init(&cells[j]->grav.star_formation_lock) != 0)
