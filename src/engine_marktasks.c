@@ -992,6 +992,14 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         cell_activate_super_spart_drifts(t->ci, s);
       }
     }
+
+    /* Subgrid tasks: star formation */
+    else if (t_type == task_type_sink_formation) {
+      if (cell_is_active_hydro(t->ci, e)) {
+        cell_activate_sink_formation_tasks(t->ci, s);
+        cell_activate_super_sink_drifts(t->ci, s);
+      }
+    }
   }
 }
 
