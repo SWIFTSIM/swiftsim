@@ -1031,7 +1031,7 @@ void space_allocate_extras(struct space *s, int verbose) {
     if (nr_actual_sinks + expected_num_extra_sinks > size_sinks) {
 
       size_sinks = (nr_actual_sinks + expected_num_extra_sinks) *
-                    engine_redistribute_alloc_margin;
+                   engine_redistribute_alloc_margin;
 
       if (verbose)
         message("Re-allocating sparts array from %zd to %zd", s->size_sinks,
