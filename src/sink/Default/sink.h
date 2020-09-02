@@ -23,6 +23,7 @@
 
 /* Local includes */
 #include "minmax.h"
+#include "random.h"
 #include "sink_part.h"
 #include "sink_properties.h"
 
@@ -113,7 +114,7 @@ INLINE static int sink_is_forming(
     const struct cooling_function_data* restrict cooling,
     const struct entropy_floor_properties* restrict entropy_floor) {
 
-  return 0;
+  return 1;
 }
 
 /**
@@ -133,8 +134,10 @@ INLINE static int sink_should_convert_to_sink(
     const struct part* p, const struct xpart* xp,
     const struct sink_props* sink_props, const struct engine* e,
     const double dt_sink) {
+  const float random_number =
+    random_unit_interval(p->id, e->ti_current, random_number_star_formation);
 
-  return 0;
+  return random_number < 5e-4;
 }
 
 /**
@@ -159,6 +162,8 @@ INLINE static void sink_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling) {}
+    const struct cooling_function_data* restrict cooling) {
+  sink->formation_time = e->ti_current;
+}
 
 #endif /* SWIFT_DEFAULT_SINK_H */

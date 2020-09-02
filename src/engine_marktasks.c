@@ -1035,7 +1035,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         scheduler_activate(s, t);
     }
 
-    /* Subgrid tasks: star formation */
+    /* Subgrid tasks: sink formation */
     else if (t_type == task_type_sink_formation) {
       if (cell_is_active_hydro(t->ci, e)) {
         cell_activate_sink_formation_tasks(t->ci, s);
