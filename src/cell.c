@@ -3672,13 +3672,11 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
   /* Self interaction? */
   if (cj == NULL) {
 
-    const int ci_active = cell_is_active_sinks(ci, e) ||
-      cell_is_active_hydro(ci, e);
+    const int ci_active =
+        cell_is_active_sinks(ci, e) || cell_is_active_hydro(ci, e);
 
     /* Do anything? */
-    if (!ci_active || ci->hydro.count == 0 ||
-        ci->sinks.count == 0)
-      return;
+    if (!ci_active || ci->hydro.count == 0 || ci->sinks.count == 0) return;
 
     /* Recurse? */
     if (cell_can_recurse_in_self_sinks_task(ci)) {
@@ -4860,21 +4858,20 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
 
   if (c->sinks.drift != NULL)
     if (cell_is_active_sinks(c, e) || cell_is_active_hydro(c, e)) {
-    cell_activate_drift_sink(c, s);
-  }
+      cell_activate_drift_sink(c, s);
+    }
 
   /* Unskip all the other task types. */
   if (c->nodeID == nodeID)
     if (cell_is_active_sinks(c, e) || cell_is_active_hydro(c, e)) {
-    if (c->sinks.sink_in != NULL) scheduler_activate(s, c->sinks.sink_in);
-    if (c->sinks.sink_out != NULL) scheduler_activate(s, c->sinks.sink_out);
-    if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
-    if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
-    if (c->timestep != NULL) scheduler_activate(s, c->timestep);
+      if (c->sinks.sink_in != NULL) scheduler_activate(s, c->sinks.sink_in);
+      if (c->sinks.sink_out != NULL) scheduler_activate(s, c->sinks.sink_out);
+      if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
+      if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
+      if (c->timestep != NULL) scheduler_activate(s, c->timestep);
 #ifdef WITH_LOGGER
-    if (c->logger != NULL) scheduler_activate(s, c->logger);
+      if (c->logger != NULL) scheduler_activate(s, c->logger);
 #endif
-
     }
 
   return rebuild;
@@ -6219,7 +6216,6 @@ void cell_recursively_shift_sparts(struct cell *c,
   }
 }
 
-
 /**
  * @brief Recursively update the pointer and counter for #sink after the
  * addition of a new particle.
@@ -6231,8 +6227,8 @@ void cell_recursively_shift_sparts(struct cell *c,
  * particle was added?
  */
 void cell_recursively_shift_sinks(struct cell *c,
-                                   const int progeny_list[space_cell_maxdepth],
-                                   const int main_branch) {
+                                  const int progeny_list[space_cell_maxdepth],
+                                  const int main_branch) {
   if (c->split) {
     /* No need to recurse in progenies located before the insestion point */
     const int first_progeny = main_branch ? progeny_list[(int)c->depth] : 0;
@@ -6240,7 +6236,7 @@ void cell_recursively_shift_sinks(struct cell *c,
     for (int k = first_progeny; k < 8; ++k) {
       if (c->progeny[k] != NULL)
         cell_recursively_shift_sinks(c->progeny[k], progeny_list,
-                                      main_branch && (k == first_progeny));
+                                     main_branch && (k == first_progeny));
     }
   }
 
@@ -7113,7 +7109,7 @@ struct spart *cell_spawn_new_spart_from_part(struct engine *e, struct cell *c,
  * time-bin as the original #part.
  */
 struct sink *cell_convert_part_to_sink(struct engine *e, struct cell *c,
-                                         struct part *p, struct xpart *xp) {
+                                       struct part *p, struct xpart *xp) {
   /* Quick cross-check */
   if (c->nodeID != e->nodeID)
     error("Can't remove a particle in a foreign cell.");

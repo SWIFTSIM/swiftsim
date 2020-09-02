@@ -143,9 +143,13 @@ const char *subtaskID_names[task_subtype_count] = {"none",
                                                    "sink_compute_formation"};
 
 const char *task_category_names[task_category_count] = {
-    "drift",       "sort",    "hydro",          "gravity", "feedback",
-    "black holes", "cooling", "star formation", "limiter", "time integration",
-    "mpi",         "fof",     "others", "sink_formation"};
+    "drift",    "sort",
+    "hydro",    "gravity",
+    "feedback", "black holes",
+    "cooling",  "star formation",
+    "limiter",  "time integration",
+    "mpi",      "fof",
+    "others",   "sink_formation"};
 
 #ifdef WITH_MPI
 /* MPI communicators for the subtypes. */
