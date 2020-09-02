@@ -1284,7 +1284,8 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
                               /* implicit = */ 1, c, NULL);
 
         /* TODO */
-        scheduler_addunlock(s, c->sinks.sink_in, c->sinks.sink_out);
+        scheduler_addunlock(s, c->sinks.sink_in, c->top->hydro.sink_formation);
+        scheduler_addunlock(s, c->top->hydro.sink_formation, c->sinks.sink_out);
 
         /* Link to the main tasks */
         scheduler_addunlock(s, c->super->kick2, c->sinks.sink_in);
