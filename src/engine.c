@@ -1593,8 +1593,8 @@ int engine_estimate_nr_tasks(const struct engine *e) {
 #endif
   }
   if (e->policy & engine_policy_sinks) {
-    /* 1 drift, 2 kicks, 1 time-step */
-    n1 += 4;
+    /* 1 drift, 2 kicks, 1 time-step, 1 sink formation */
+    n1 += 5;
   }
   if (e->policy & engine_policy_fof) {
     n1 += 2;
