@@ -431,7 +431,6 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
   if (timer) TIMER_TOC(timer_do_star_formation);
 }
 
-
 /**
  * @brief Creates sink particles.
  *
@@ -488,9 +487,8 @@ void runner_do_sink_formation(struct runner *r, struct cell *c) {
       if (part_is_active(p, e)) {
 
         /* Is this particle star forming? */
-        if (sink_is_forming(p, xp, sink_props, phys_const, cosmo,
-                            hydro_props, us, cooling,
-                            entropy_floor)) {
+        if (sink_is_forming(p, xp, sink_props, phys_const, cosmo, hydro_props,
+                            us, cooling, entropy_floor)) {
 
           /* Time-step size for this particle */
           double dt_sink;
@@ -507,8 +505,7 @@ void runner_do_sink_formation(struct runner *r, struct cell *c) {
           }
 
           /* Are we forming a sink particle? */
-          if (sink_should_convert_to_sink(p, xp, sink_props, e,
-                                          dt_sink)) {
+          if (sink_should_convert_to_sink(p, xp, sink_props, e, dt_sink)) {
 
             /* Convert the gas particle to a sink particle */
             struct sink *sink = NULL;
@@ -520,9 +517,9 @@ void runner_do_sink_formation(struct runner *r, struct cell *c) {
             if (sink != NULL) {
 
               /* Copy the properties of the gas particle to the star particle */
-              sink_copy_properties(
-                  p, xp, sink, e, sink_props, cosmo, with_cosmology, phys_const,
-                  hydro_props, us, cooling);
+              sink_copy_properties(p, xp, sink, e, sink_props, cosmo,
+                                   with_cosmology, phys_const, hydro_props, us,
+                                   cooling);
             }
           }
         }

@@ -1063,7 +1063,7 @@ struct gpart *cell_convert_spart_to_gpart(const struct engine *e,
 struct spart *cell_convert_part_to_spart(struct engine *e, struct cell *c,
                                          struct part *p, struct xpart *xp);
 struct sink *cell_convert_part_to_sink(struct engine *e, struct cell *c,
-                                         struct part *p, struct xpart *xp);
+                                       struct part *p, struct xpart *xp);
 void cell_reorder_extra_parts(struct cell *c, const ptrdiff_t parts_offset);
 void cell_reorder_extra_gparts(struct cell *c, struct part *parts,
                                struct spart *sparts);
