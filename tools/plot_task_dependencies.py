@@ -150,6 +150,7 @@ def taskIsBlackHoles(name):
         return True
     return False
 
+
 def taskIsStars(name):
     """
     Does the task concern stars?
@@ -166,6 +167,7 @@ def taskIsStars(name):
         return True
 
     return False
+
 
 def taskIsHydro(name):
     """
@@ -217,6 +219,21 @@ def taskIsGravity(name):
     if "gpart" in name:
         return True
     if "grav" in name:
+        return True
+    return False
+
+
+def taskIsSink(name):
+    """
+    Does the task concern the sink particles?
+
+    Parameters
+    ----------
+
+    name: str
+        Task name
+    """
+    if "sink" in name:
         return True
     return False
 
@@ -318,6 +335,9 @@ def writeTask(f, name, implicit, mpi, with_calls):
 
     if taskIsGravity(name):
         txt += "color=red3,"
+
+    if taskIsSink(name):
+        txt += "color=lightseagreen,"
 
     if with_calls:
         func = getFunctionCalls(name)
