@@ -117,27 +117,6 @@ struct star_formation {
   /*! Critical overdensity */
   double min_over_den;
 
-  /*! Density threshold to form stars (internal units) */
-  double density_threshold;
-
-  /*! Density threshold to form stars in user units */
-  double density_threshold_HpCM3;
-
-  /*! Maximum density threshold to form stars (internal units) */
-  double density_threshold_max;
-
-  /*! Maximum density threshold to form stars (H atoms per cm^3) */
-  double density_threshold_max_HpCM3;
-
-  /*! Reference metallicity for metal-dependant threshold */
-  double Z0;
-
-  /*! Inverse of reference metallicity */
-  double Z0_inv;
-
-  /*! critical density Metallicity power law (internal units) */
-  double n_Z0;
-
   /* Internal EoS properties ----------------------------------------------- */
 
   /*! Polytropic index */
@@ -180,36 +159,6 @@ struct star_formation {
   /*! Max physical density (internal units) */
   double gas_density_direct;
 };
-
-/**
- * @brief Computes the density threshold for star-formation fo a given total
- * metallicity.
- *
- * Follows Schaye (2004) eq. 19 and 24 (see also Schaye et al. 2015, eq. 2).
- *
- * @param Z The metallicity (metal mass fraction).
- * @param starform The properties of the star formation model.
- * @param phys_const The physical constants.
- * @return The physical density threshold for star formation in internal units.
- */
-INLINE static double star_formation_threshold(
-    const double Z, const struct star_formation* starform,
-    const struct phys_const* phys_const) {
-
-  double density_threshold;
-
-  /* Schaye (2004), eq. 19 and 24 */
-  if (Z > 0.) {
-    density_threshold = starform->density_threshold *
-                        powf(Z * starform->Z0_inv, starform->n_Z0);
-    density_threshold = min(density_threshold, starform->density_threshold_max);
-  } else {
-    density_threshold = starform->density_threshold_max;
-  }
-
-  /* Convert to mass density */
-  return density_threshold * phys_const->const_proton_mass;
-}
 
 /**
  * @brief Compute the pressure on the polytropic equation of state for a given
@@ -267,8 +216,8 @@ INLINE static int star_formation_is_star_forming(
     const struct cooling_function_data* restrict cooling,
     const struct entropy_floor_properties* restrict entropy_floor_props) {
 
-  /* Minimal density (converted from mean baryonic density) for star formation
-   */
+  /* Minimal density (converted from mean baryonic density)
+   * for star formation */
   const double rho_mean_b_times_min_over_den =
       cosmo->mean_density_Omega_b * starform->min_over_den;
 
@@ -296,7 +245,8 @@ INLINE static int star_formation_is_star_forming(
   const float subgrid_T_cgs = p->cooling_data.subgrid_temp;
 
   /* Second, determine whether we are cold and dense enough */
-  return (subgrid_T_cgs < 1000 && subgrid_n_H_cgs > 10);
+  return ((subgrid_T_cgs < 1000) ||
+          (subgrid_T_cgs < 31623 && subgrid_n_H_cgs > 10));
 }
 
 /**
