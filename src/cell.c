@@ -3671,8 +3671,12 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
 
   /* Self interaction? */
   if (cj == NULL) {
+
+    const int ci_active = cell_is_active_sinks(ci, e) ||
+      cell_is_active_hydro(ci, e);
+
     /* Do anything? */
-    if (!cell_is_active_sinks(ci, e) || ci->hydro.count == 0 ||
+    if (!ci_active || ci->hydro.count == 0 ||
         ci->sinks.count == 0)
       return;
 
@@ -3693,6 +3697,7 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
       /* We have reached the bottom of the tree: activate drift */
       cell_activate_drift_sink(ci, s);
       cell_activate_drift_part(ci, s);
+      if (with_timestep_sync) cell_activate_sync_part(ci, s);
     }
   }
 
@@ -4142,6 +4147,9 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
 
     if (c->top->hydro.star_formation != NULL) {
       cell_activate_star_formation_tasks(c->top, s, with_feedback);
+    }
+    if (c->top->hydro.sink_formation != NULL) {
+      cell_activate_sink_formation_tasks(c->top, s);
     }
   }
 
@@ -4850,25 +4858,24 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
   const int nodeID = e->nodeID;
   int rebuild = 0;
 
-  if (c->sinks.drift != NULL && cell_is_active_sinks(c, e)) {
+  if (c->sinks.drift != NULL)
+    if (cell_is_active_sinks(c, e) || cell_is_active_hydro(c, e)) {
     cell_activate_drift_sink(c, s);
   }
 
   /* Unskip all the other task types. */
-  if (c->nodeID == nodeID && cell_is_active_sinks(c, e)) {
-    if (c->sinks.sink_in != NULL) scheduler_activate(s, c->sinks.sink_in);
-    if (c->sinks.sink_out != NULL) scheduler_activate(s, c->sinks.sink_out);
-    if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
-    if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
-    if (c->timestep != NULL) scheduler_activate(s, c->timestep);
+  if (c->nodeID == nodeID)
+    if (cell_is_active_sinks(c, e) || cell_is_active_hydro(c, e)) {
+      if (c->sinks.sink_in != NULL) scheduler_activate(s, c->sinks.sink_in);
+      if (c->sinks.sink_out != NULL) scheduler_activate(s, c->sinks.sink_out);
+      if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
+      if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
+      if (c->timestep != NULL) scheduler_activate(s, c->timestep);
 #ifdef WITH_LOGGER
-    if (c->logger != NULL) scheduler_activate(s, c->logger);
+      if (c->logger != NULL) scheduler_activate(s, c->logger);
 #endif
 
-    if (c->top->hydro.sink_formation != NULL) {
-      cell_activate_sink_formation_tasks(c->top, s);
     }
-  }
 
   return rebuild;
 }
@@ -5715,7 +5722,7 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
   const int periodic = e->s->periodic;
   const double dim[3] = {e->s->dim[0], e->s->dim[1], e->s->dim[2]};
   const int with_cosmology = (e->policy & engine_policy_cosmology);
-  const integertime_t ti_old_bpart = c->sinks.ti_old_part;
+  const integertime_t ti_old_sink = c->sinks.ti_old_part;
   const integertime_t ti_current = e->ti_current;
   struct sink *const sinks = c->sinks.parts;
 
@@ -5730,7 +5737,7 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
   if (c->nodeID != engine_rank) error("Drifting a foreign cell is nope.");
 
   /* Check that we are actually going to move forward. */
-  if (ti_current < ti_old_bpart) error("Attempt to drift to the past");
+  if (ti_current < ti_old_sink) error("Attempt to drift to the past");
 #endif
 
   /* Early abort? */
@@ -5771,15 +5778,15 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
     /* Update the time of the last drift */
     c->sinks.ti_old_part = ti_current;
 
-  } else if (!c->split && force && ti_current > ti_old_bpart) {
+  } else if (!c->split && force && ti_current > ti_old_sink) {
 
     /* Drift from the last time the cell was drifted to the current time */
     double dt_drift;
     if (with_cosmology) {
       dt_drift =
-          cosmology_get_drift_factor(e->cosmology, ti_old_bpart, ti_current);
+          cosmology_get_drift_factor(e->cosmology, ti_old_sink, ti_current);
     } else {
-      dt_drift = (ti_current - ti_old_bpart) * e->time_base;
+      dt_drift = (ti_current - ti_old_sink) * e->time_base;
     }
 
     /* Loop over all the star particles in the cell */
@@ -5793,7 +5800,7 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
       if (sink_is_inhibited(sink, e)) continue;
 
       /* Drift... */
-      drift_sink(sink, dt_drift, ti_old_bpart, ti_current);
+      drift_sink(sink, dt_drift, ti_old_sink, ti_current);
 
 #ifdef SWIFT_DEBUG_CHECKS
       /* Make sure the particle does not drift by more than a box length. */
@@ -5817,6 +5824,12 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
           /* Re-check that the particle has not been removed
            * by another thread before we do the deed. */
           if (!sink_is_inhibited(sink, e)) {
+
+#ifdef WITH_LOGGER
+            if (e->policy & engine_policy_logger) {
+              error("Logging of sink particles is not yet implemented.");
+            }
+#endif
 
             /* Remove the particle entirely */
             // cell_remove_sink(e, c, bp);
@@ -6464,7 +6477,7 @@ struct sink *cell_add_sink(struct engine *e, struct cell *const c) {
   /* Are there any extra particles left? */
   if (top->sinks.count == top->sinks.count_total) {
 
-    message("We ran out of free sink particles!");
+    error("We ran out of free sink particles!");
 
     /* Release the local lock before exiting. */
     if (lock_unlock(&top->sinks.sink_formation_lock) != 0)
@@ -6508,7 +6521,7 @@ struct sink *cell_add_sink(struct engine *e, struct cell *const c) {
    */
   struct cell *top2 = c;
   while (top2->parent != NULL) {
-    top2->stars.ti_old_part = e->ti_current;
+    top2->sinks.ti_old_part = e->ti_current;
     top2 = top2->parent;
   }
   top2->sinks.ti_old_part = e->ti_current;
@@ -7256,6 +7269,62 @@ void cell_reorder_extra_sparts(struct cell *c, const ptrdiff_t sparts_offset) {
       error("Extra particle before the end of the regular array");
     }
     if (sparts[i].time_bin != time_bin_not_created && i >= c->stars.count) {
+      error("Regular particle after the end of the regular array");
+    }
+  }
+#endif
+}
+
+/**
+ * @brief Re-arrange the #sink in a top-level cell such that all the extra
+ * ones for on-the-fly creation are located at the end of the array.
+ *
+ * @param c The #cell to sort.
+ * @param sinks_offset The offset between the first #sink in the array and
+ * the first #sink in the global array in the space structure (for
+ * re-linking).
+ */
+void cell_reorder_extra_sinks(struct cell *c, const ptrdiff_t sinks_offset) {
+  struct sink *sinks = c->sinks.parts;
+  const int count_real = c->sinks.count;
+
+  if (c->depth != 0 || c->nodeID != engine_rank)
+    error("This function should only be called on local top-level cells!");
+
+  int first_not_extra = count_real;
+
+  /* Find extra particles */
+  for (int i = 0; i < count_real; ++i) {
+    if (sinks[i].time_bin == time_bin_not_created) {
+      /* Find the first non-extra particle after the end of the
+         real particles */
+      while (sinks[first_not_extra].time_bin == time_bin_not_created) {
+        ++first_not_extra;
+      }
+
+#ifdef SWIFT_DEBUG_CHECKS
+      if (first_not_extra >= count_real + space_extra_sinks)
+        error("Looking for extra particles beyond this cell's range!");
+#endif
+
+      /* Swap everything, including g-part pointer */
+      memswap(&sinks[i], &sinks[first_not_extra], sizeof(struct sink));
+      if (sinks[i].gpart)
+        sinks[i].gpart->id_or_neg_offset = -(i + sinks_offset);
+      sinks[first_not_extra].gpart = NULL;
+#ifdef SWIFT_DEBUG_CHECKS
+      if (sinks[first_not_extra].time_bin != time_bin_not_created)
+        error("Incorrect swap occured!");
+#endif
+    }
+  }
+
+#ifdef SWIFT_DEBUG_CHECKS
+  for (int i = 0; i < c->sinks.count_total; ++i) {
+    if (sinks[i].time_bin == time_bin_not_created && i < c->sinks.count) {
+      error("Extra particle before the end of the regular array");
+    }
+    if (sinks[i].time_bin != time_bin_not_created && i >= c->sinks.count) {
       error("Regular particle after the end of the regular array");
     }
   }

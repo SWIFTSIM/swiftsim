@@ -1056,6 +1056,7 @@ void cell_reorder_extra_parts(struct cell *c, const ptrdiff_t parts_offset);
 void cell_reorder_extra_gparts(struct cell *c, struct part *parts,
                                struct spart *sparts);
 void cell_reorder_extra_sparts(struct cell *c, const ptrdiff_t sparts_offset);
+void cell_reorder_extra_sinks(struct cell *c, const ptrdiff_t sinks_offset);
 int cell_can_use_pair_mm(const struct cell *ci, const struct cell *cj,
                          const struct engine *e, const struct space *s,
                          const int use_rebuild_data, const int is_tree_walk);
