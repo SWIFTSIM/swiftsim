@@ -411,27 +411,29 @@ static PyTypeObject PyObjectReader_Type = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_name = "liblogger.Reader",
     .tp_basicsize = sizeof(PyObjectReader),
     .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_doc = "Deals with a logger file and provides the data through"
-    " its different methods.\n\n"
-    "Parameters\n"
-    "----------\n\n"
-    "basename: str\n"
-    "    Basename of the logfile.\n"
-    "verbose: int (optional)\n"
-    "    Verbose level\n\n"
-    "Methods\n"
-    "-------\n\n"
-    "get_time_limits\n"
-    "    Provides the initial and final time of the simulation\n"
-    "get_particle_data\n"
-    "    Reads some particle's data from the logfile\n\n"
-    "Examples\n"
-    "--------\n\n"
-    ">>> import liblogger as logger\n"
-    ">>> with logger.Reader(\"index_0000\") as reader:\n"
-    ">>>    t0, t1 = reader.get_time_limits()\n"
-    ">>>    pos, ent = reader.get_particle_data([\"Coordinates\", \"Entropies\"]"
-    ", 0.5 * (t0 + t1))\n",
+    .tp_doc =
+        "Deals with a logger file and provides the data through"
+        " its different methods.\n\n"
+        "Parameters\n"
+        "----------\n\n"
+        "basename: str\n"
+        "    Basename of the logfile.\n"
+        "verbose: int (optional)\n"
+        "    Verbose level\n\n"
+        "Methods\n"
+        "-------\n\n"
+        "get_time_limits\n"
+        "    Provides the initial and final time of the simulation\n"
+        "get_particle_data\n"
+        "    Reads some particle's data from the logfile\n\n"
+        "Examples\n"
+        "--------\n\n"
+        ">>> import liblogger as logger\n"
+        ">>> with logger.Reader(\"index_0000\") as reader:\n"
+        ">>>    t0, t1 = reader.get_time_limits()\n"
+        ">>>    pos, ent = reader.get_particle_data([\"Coordinates\", "
+        "\"Entropies\"]"
+        ", 0.5 * (t0 + t1))\n",
     .tp_init = (initproc)Reader_init,
     .tp_dealloc = (destructor)Reader_dealloc,
     .tp_new = Reader_new,
