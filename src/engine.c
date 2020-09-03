@@ -1604,6 +1604,9 @@ int engine_estimate_nr_tasks(const struct engine *e) {
     n1 += 1;
   }
 #endif
+  if (e->policy & engine_policy_rt) {
+    n1 += 14;
+  }
 
 #ifdef WITH_MPI
 
