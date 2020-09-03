@@ -185,7 +185,7 @@ Adding your Task to the System
 Now the tricky part happens.
 SWIFT is able to deal automatically with the conflicts between tasks, but unfortunately cannot understand the dependencies.
 
-To implement your new task in the task system, you will need to modify a few functions in ``engine.c``.
+To implement your new task in the task system, you will need to modify a few functions in ``engine_maketasks.c``.
 
 First, you will need to add mainly two functions: ``scheduler_addtask`` and ``scheduler_addunlocks`` in the ``engine_make_hierarchical_tasks_*`` functions (depending on the type of task you implement, you will need to write it to a different function).
 
@@ -205,13 +205,18 @@ and the second kick cannot be done before the cooling::
 
 
 The next step is to activate your task
-in ``engine_marktasks_mapper``::
+in ``engine_marktasks_mapper`` in ``engine_marktasks.c``::
 
   else if (t->type == task_type_cooling || t->type == task_type_sourceterms) {
     if (cell_is_active_hydro(t->ci, e)) scheduler_activate(s, t);
   }
 
-Then you will need to update the estimate for the number of tasks in ``engine_estimate_nr_tasks`` by modifying ``n1`` or ``n2``.
+Then you will need to update the estimate for the number of tasks in ``engine_estimate_nr_tasks`` in ``engine.c`` by modifying ``n1`` or ``n2``,
+and give the task an estimate of the computational cost that it will have in ``scheduler_reweight`` in  ``scheduler.c``::
+
+      case task_type_cooling:
+        cost = wscale * count_i;
+        break;
 
 Initially, the engine will need to skip the task that updates the particles.
 It is the case for the cooling, therefore you will need to add it in ``engine_skip_force_and_kick``.
