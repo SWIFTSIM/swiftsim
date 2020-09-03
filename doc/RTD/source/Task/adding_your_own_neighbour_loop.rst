@@ -5,11 +5,11 @@
 .. _task_adding_your_own_neighbour_loop:
 .. highlight:: c
 
-Adding a Neighbour Loop Task
-============================
+Adding a Particle Interactoin/Neighbour Loop Task
+=================================================
 
 There are quite a few subtle and not so subtle differences when adding tasks that include
-particle neighbour loops and particle interactions compared to "independent" tasks, where
+particle neighbour loops and/or particle interactions compared to "independent" tasks, where
 no particles interact with each other, but work is done on them individually.
 
 Particle interactions are handled on a cell basis. If only particles of one cell
