@@ -18,3 +18,4 @@ Everything is described in :ref:`Analysis_Tools`.
    :caption: Contents:
 
    adding_your_own
+   adding_to_dependency_plotting_tool
