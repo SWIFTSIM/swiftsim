@@ -224,7 +224,7 @@ It is the case for the cooling, therefore you will need to add it in ``engine_sk
 Implementing your Task
 ----------------------
 
-The last part is situated in ``runner.c``.
+The last part is situated in ``runner_main.c``.
 
 You will need to implement a function ``runner_do_cooling``
 (do not forget to time it)::
