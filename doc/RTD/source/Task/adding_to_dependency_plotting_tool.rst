@@ -18,7 +18,7 @@ need to modify the ``tools/plot_task_dependencies.py`` script.
 
 
 
-Colouring In the Task Nodes
+Colouring in the Task Nodes
 ---------------------------
 
 First, the script needs to identify the task types with which it is working.
@@ -63,7 +63,7 @@ Adding Clusters
 
 In certain cases it makes sense to group some tasks together, for example the self 
 and pair tasks when computing hydro densities, gradients, or forces. To do this, 
-you'll need to modify the function ``task_get_group_name`` in ``task.c``. The group
+you'll need to modify the function ``task_get_group_name`` in ``src/task.c``. The group
 is determined by the task subtype, e.g.
 
 .. code-block:: c

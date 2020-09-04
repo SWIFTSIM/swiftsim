@@ -1,11 +1,10 @@
 .. Neighbour Loop Task
-   Loic Hausammann 17th July 2018
    Mladen Ivkovic Sep 2020
 
 .. _task_adding_your_own_neighbour_loop:
 .. highlight:: c
 
-Adding a Particle Interactoin/Neighbour Loop Task
+Adding a Particle Interaction/Neighbour Loop Task
 =================================================
 
 There are quite a few subtle and not so subtle differences when adding tasks that include
@@ -36,29 +35,14 @@ stay at the end as it is a counter of the number of elements.
 For example::
 
     enum task_subtypes {
-      task_subtype_none = 0,
-      task_subtype_density,
-      task_subtype_gradient,
-      task_subtype_force,
-      task_subtype_limiter,
-      task_subtype_grav,
-      task_subtype_external_grav,
-      task_subtype_tend_part,
-      task_subtype_tend_gpart,
-      task_subtype_tend_spart,
-      task_subtype_tend_sink,
-      task_subtype_tend_bpart,
-      task_subtype_xv,
-      task_subtype_rho,
-      task_subtype_part_swallow,
-      task_subtype_bpart_merger,
-      task_subtype_gpart,
-      task_subtype_multipole,
-      task_subtype_spart,
-      task_subtype_stars_density,
-      task_subtype_stars_feedback,
-      task_subtype_new_iact,
-      task_subtype_count
+      task_subtype_none = 0,        task_subtype_density,           task_subtype_gradient,
+      task_subtype_force,           task_subtype_limiter,           task_subtype_grav,
+      task_subtype_external_grav,   task_subtype_tend_part,         task_subtype_tend_gpart,
+      task_subtype_tend_spart,      task_subtype_tend_sink,         task_subtype_tend_bpart,
+      task_subtype_xv,              task_subtype_rho,               task_subtype_part_swallow,
+      task_subtype_bpart_merger,    task_subtype_gpart,             task_subtype_multipole,
+      task_subtype_spart,           task_subtype_stars_density,     task_subtype_stars_feedback,
+      task_subtype_new_iact,        task_subtype_count
     } __attribute__((packed));
 
 
@@ -66,32 +50,15 @@ In ``task.c``, you will find an array containing the name of each task and need 
 Be careful with the order that should be the same than in the previous list.
 For example::
 
-    const char *subtaskID_names[task_subtype_count] = {"none",
-                                                       "density",
-                                                       "gradient",
-                                                       "force",
-                                                       "limiter",
-                                                       "grav",
-                                                       "external_grav",
-                                                       "tend_part",
-                                                       "tend_gpart",
-                                                       "tend_spart",
-                                                       "tend_sink",
-                                                       "tend_bpart",
-                                                       "xv",
-                                                       "rho",
-                                                       "part_swallow",
-                                                       "bpart_merger",
-                                                       "gpart",
-                                                       "multipole",
-                                                       "spart",
-                                                       "stars_density",
-                                                       "stars_feedback",
-                                                       "sf_count",
-                                                       "bpart_rho",
-                                                       "sink",
-                                                       "new_iact"
-                                                       };
+    const char *subtaskID_names[task_subtype_count] = {
+            "none",         "density",      "gradient",         "force", 
+            "limiter",      "grav",         "external_grav",    "tend_part",
+            "tend_gpart",   "tend_spart",   "tend_sink",        "tend_bpart",
+            "xv",           "rho",          "part_swallow",     "bpart_merger",
+            "gpart",        "multipole",    "spart",            "stars_density",
+            "stars_feedback","sf_count",    "bpart_rho",        "sink",
+            "new_iact"
+   };
 
 
 
@@ -100,8 +67,9 @@ Adding it to the Cells
 
 Each cell contains a list to its tasks and therefore you need to provide a link for it.
 
-In ``cell.h``, add a pointer to a task in the structure.
-In order to stay clean, please put the new task in the same group than the other tasks.
+In ``cell.h``, add a pointer to a task in the ``struct cell``.  In order to stay clean, 
+please put the new task in the same group (e.g. ``struct hydro{...}`` inside ``struct cell``)
+than the other tasks.
 We won't be adding just one task though, but an entire (linked) list of them, since we're
 going to need a ``self`` type task and multiple ``pair`` type tasks to have a complete
 neighbour loop. So instead of pointing to a single task, we store a struct ``link`` in
@@ -110,12 +78,26 @@ the cell struct.  For example::
   struct cell {
     /* Lot of stuff before. */
     
-    /*! My new interaction task */
-    struct link *new_iact;
+    /*! Hydro variables */
+    struct {
+        /*! Pointer to the #part data. */
+        struct part *parts;
 
-    /*! The second kick task */
-    struct task *kick2;
-    
+        /*! Pointer to the #xpart data. */
+        struct xpart *xparts;
+
+        /* Lot of stuff */
+
+        /*! Task for sorting the stars again after a SF event */
+        struct task *stars_resort;
+
+        /*! My new interaction task */
+        struct link *new_iact;
+
+        /* Lot of stuff after */
+
+    } hydro;
+
     /* Lot of stuff after */
   }
 
