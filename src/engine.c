@@ -430,7 +430,7 @@ void engine_repartition_trigger(struct engine *e) {
         fprintf(timelog,
                 "# %d balance: %f, expected: %f (sys: %f, total: %f)\n",
                 e->step, balance, abs_trigger,
-                (smaxtime - smintime) / (smean + FLT_MAX),
+                (smaxtime - smintime) / (smean + FLT_MIN),
                 (tmaxtime - tmintime) / tmean);
 
         fclose(timelog);
