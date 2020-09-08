@@ -346,6 +346,10 @@ and ``task_type_sub_pair`` as well.
 Initially, the engine will need to skip the task that updates the particles.
 If this is the case for your task, you will need to add it in ``engine_skip_force_and_kick``.
 
+Finally, you also need to initialize your new variables and pointers in 
+``space_rebuild_recycle_mapper`` in ``space.c``. Additionally, you need to 
+initialize the ``link`` structs in ``cell_clean_links`` in ``cell.c``.
+
 
 
 
