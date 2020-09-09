@@ -3875,7 +3875,7 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
         const int ci_nodeID = e->nodeID;
 #endif
         /* Only activate tasks that involve a local active cell. */
-        if (ci_active && ci_nodeID == e->nodeID){
+        if (ci_active && ci_nodeID == e->nodeID) {
           scheduler_activate(s, t);
         }
       }
@@ -3929,7 +3929,6 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
     }
   }
 }
-
 
 /**
  * @brief Un-skips all the hydro tasks associated with a given cell and checks
@@ -4927,7 +4926,7 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
   int counter = 0;
 
   for (struct link *l = c->hydro.rt_inject; l != NULL; l = l->next) {
-    counter ++;
+    counter++;
     struct task *t = l->t;
     struct cell *ci = t->ci;
     struct cell *cj = t->cj;
@@ -4959,7 +4958,6 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
 
   return rebuild;
 }
-
 
 /**
  * @brief Set the super-cell pointers for all cells in a hierarchy.
