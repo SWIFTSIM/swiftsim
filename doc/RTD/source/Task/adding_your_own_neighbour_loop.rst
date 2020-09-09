@@ -324,7 +324,15 @@ in ``engine_marktasks_mapper`` in ``engine_marktasks.c``::
 
 
 Then you will need to update the estimate for the number of tasks in 
-``engine_estimate_nr_tasks`` in ``engine.c`` by modifying ``n1`` or ``n2``,
+``engine_estimate_nr_tasks`` in ``engine.c`` by modifying ``n1`` or ``n2``.
+``n1`` is the expected maximal number of tasks per top-level/super cell. ``n2``
+``n2`` is the expected maximum number of tasks for all other cells, independent
+of the depth of the tree. Most likely ``n2`` won't need updating, and you will
+only need to update ``n1``. As to how to update ``n1``, you just need to count
+the number of tasks that you will be adding, e.g. 1 self + (3^3-1)/2 = 13 pair 
+tasks + 1 ghost, etc... All these numbers can be overwritten at run time by 
+the user anyway in the parameter file (``Scheduler: tasks_per_cell``).
+
 and give the task an estimate of the computational cost that it will have in 
 ``scheduler_reweight`` in  ``scheduler.c``::
 
@@ -341,6 +349,7 @@ and give the task an estimate of the computational cost that it will have in
 
 Similarly, you'll need to update ``case task_type_sub_self``, ``task_type_pair``, 
 and ``task_type_sub_pair`` as well.
+
 
 
 Initially, the engine will need to skip the task that updates the particles.
@@ -512,3 +521,11 @@ Now that you have done the easiest part, you can start debugging by implementing
 test and/or an example. Before creating your merge request with your new task, do 
 not forget the most funny part that consists in writing a nice and beautiful 
 documentation ;)
+
+
+Things to Keep in Mind
+----------------------
+
+- If you are inserting a new neighbour loop in between existing loops, or want to
+  insert more than one neighbour loop, usually a new ghost task in between them is
+  aslo needed.
