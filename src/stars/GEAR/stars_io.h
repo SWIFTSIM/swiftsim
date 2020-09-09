@@ -20,7 +20,6 @@
 #define SWIFT_GEAR_STARS_IO_H
 
 #include "io_properties.h"
-#include "rt_io.h"
 #include "stars_part.h"
 
 /**
@@ -163,7 +162,6 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                  UNIT_CONV_NO_UNITS, sparts, ids_ngbs_force);
 #endif
 
-  rt_write_stars(sparts, list, num_fields);
 }
 
 /**
