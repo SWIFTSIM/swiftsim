@@ -16,7 +16,7 @@ interact with each other, the task is referred to as a  ``self`` task. When part
 two different cells interact with each other, we call the task type ``pair``. For a 
 particle neighbour loop, one typically requires both ``self`` and ``pair`` tasks.
 Furthermore, sometimes interaction tasks which have too much of a workload can get split 
-into smaller units of work with tasks of the typ ``sub_self`` and ``sub_pair``.
+into smaller units of work with tasks of the type ``sub_self`` and ``sub_pair``.
 
 For the next paragraphs, let's assume that we want to implement the task ``new_iact``.
 
@@ -528,4 +528,4 @@ Things to Keep in Mind
 
 - If you are inserting a new neighbour loop in between existing loops, or want to
   insert more than one neighbour loop, usually a new ghost task in between them is
-  aslo needed.
+  also needed.
