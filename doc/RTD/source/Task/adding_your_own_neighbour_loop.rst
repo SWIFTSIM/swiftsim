@@ -529,3 +529,5 @@ Things to Keep in Mind
 - If you are inserting a new neighbour loop in between existing loops, or want to
   insert more than one neighbour loop, usually a new ghost task in between them is
   also needed.
+
+- Neighbour loops may also require MPI communication tasks.
