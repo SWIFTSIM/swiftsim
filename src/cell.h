@@ -51,6 +51,10 @@
 struct engine;
 struct scheduler;
 
+extern long long sort_array_counts;
+extern long long sort_array_memory;
+extern long long sort_array_directions;
+
 /* Max tag size set to 2^29 to take into account some MPI implementations
  * that use 2^31 as the upper bound on MPI tags and the fact that
  * cell_next_tag is multiplied by 2 when passed to an MPI function.
@@ -1088,6 +1092,20 @@ __attribute__((always_inline)) INLINE static void cell_malloc_hydro_sorts(
                                (count + 1))) == NULL)
       error("Failed to allocate sort memory.");
 
+    long long mem = sizeof(struct sort_entry) * num_arrays_wanted * (count + 1);
+    long long dir = num_arrays_wanted;
+
+    atomic_inc(&sort_array_counts);
+    atomic_add(&sort_array_memory, mem);
+    atomic_add(&sort_array_directions, dir);
+
+    mem = sizeof(struct sort_entry) * num_already_allocated * (count + 1);
+    dir = num_already_allocated;
+
+    atomic_dec(&sort_array_counts);
+    atomic_sub(&sort_array_memory, mem);
+    atomic_sub(&sort_array_directions, dir);
+
     /* Now, copy the already existing arrays */
     int from = 0;
     int to = 0;
@@ -1120,6 +1138,13 @@ __attribute__((always_inline)) INLINE static void cell_malloc_hydro_sorts(
                "hydro.sort",
                sizeof(struct sort_entry) * num_arrays * (count + 1))) == NULL)
         error("Failed to allocate sort memory.");
+
+      long long mem = sizeof(struct sort_entry) * num_arrays * (count + 1);
+      long long dir = num_arrays;
+
+      atomic_inc(&sort_array_counts);
+      atomic_add(&sort_array_memory, mem);
+      atomic_add(&sort_array_directions, dir);
     }
   }
 }
@@ -1135,6 +1160,17 @@ __attribute__((always_inline)) INLINE static void cell_free_hydro_sorts(
 #ifndef NONE_SPH
   if (c->hydro.sort != NULL) {
     swift_free("hydro.sort", c->hydro.sort);
+
+    const int num_arrays = intrinsics_popcount(c->hydro.sort_allocated);
+    const int count = c->hydro.count;
+
+    long long mem = sizeof(struct sort_entry) * num_arrays * (count + 1);
+    long long dir = num_arrays;
+
+    atomic_dec(&sort_array_counts);
+    atomic_sub(&sort_array_memory, mem);
+    atomic_sub(&sort_array_directions, dir);
+
     c->hydro.sort = NULL;
     c->hydro.sort_allocated = 0;
   }

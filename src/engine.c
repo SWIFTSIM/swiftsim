@@ -143,6 +143,10 @@ extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
 extern int engine_max_parts_per_cooling;
 
+long long sort_array_counts;
+long long sort_array_memory;
+long long sort_array_directions;
+
 /**
  * @brief Link a density/force task to a cell.
  *
@@ -2775,6 +2779,12 @@ void engine_step(struct engine *e) {
   e->systime_last_step = end_systime - start_systime;
 #endif
 
+  message(
+      "SORT number of arrays: %lld number of directions: %lld mem usage: %lld "
+      "MB",
+      sort_array_counts, sort_array_directions,
+      sort_array_memory / (1024 * 1024));
+
   /* Since the time-steps may have changed because of the limiter's
    * action, we need to communicate the new time-step sizes */
   if ((e->policy & engine_policy_timestep_sync) ||
@@ -3958,6 +3968,10 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  const struct chemistry_global_data *chemistry,
                  struct fof_props *fof_properties,
                  struct los_props *los_properties) {
+
+  sort_array_counts = 0;
+  sort_array_memory = 0;
+  sort_array_directions = 0;
 
   /* Clean-up everything */
   bzero(e, sizeof(struct engine));
