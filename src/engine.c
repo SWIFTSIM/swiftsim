@@ -267,11 +267,13 @@ void engine_repartition(struct engine *e) {
  */
 void engine_repartition_trigger(struct engine *e) {
 
+  static int opened = 0;
+  if (e->restarting) opened = 1;
+
+  
 #ifdef WITH_MPI
 
   const ticks tic = getticks();
-  static int opened = 0;
-  if (e->restarting) opened = 1;
 
   /* Do nothing if there have not been enough steps since the last repartition
    * as we don't want to repeat this too often or immediately after a
@@ -453,7 +455,32 @@ void engine_repartition_trigger(struct engine *e) {
   if (e->verbose)
     message("took %.3f %s", clocks_from_ticks(getticks() - tic),
             clocks_getunit());
+#else
+
+
+
+      /* Get the resident size of the process for the memory logs. */
+      long size, resident, shared, text, library, data, dirty;
+      memuse_use(&size, &resident, &shared, &text, &data, &library, &dirty);
+  
+        /* Keep logs of all CPU times and resident memory size for debugging
+         * load issues. */
+        FILE *memlog = NULL;
+        if (!opened) {
+          memlog = fopen("rank_memory_balance.log", "w");
+          fprintf(memlog, "# step rank resident\n");
+
+          opened = 1;
+        } else {
+          memlog = fopen("rank_memory_balance.log", "a");
+        }
+
+        fprintf(memlog, "# %d mean resident memory: %f, balance: %f\n", e->step,
+                (double)resident, 0.);
+        fclose(memlog);
+
 #endif
+	
 }
 
 /**
@@ -2666,10 +2693,10 @@ void engine_step(struct engine *e) {
       engine_drift_top_multipoles(e);
   }
 
-#ifdef WITH_MPI
+  //#ifdef WITH_MPI
   /* Repartition the space amongst the nodes? */
   engine_repartition_trigger(e);
-#endif
+  //#endif
 
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
   engine_prepare(e);
