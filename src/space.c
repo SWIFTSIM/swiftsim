@@ -211,9 +211,9 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->stars.dx_max_sort = 0.f;
     c->black_holes.dx_max_part = 0.f;
     c->hydro.sorted = 0;
-    c->hydro.sort_allocated = 0;
+    // c->hydro.sort_allocated = 0;
     c->stars.sorted = 0;
-    c->hydro.count = 0;
+    // c->hydro.count = 0;
     c->hydro.count_total = 0;
     c->hydro.updated = 0;
     c->grav.count = 0;
@@ -302,6 +302,7 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
 
     cell_free_hydro_sorts(c);
     cell_free_stars_sorts(c);
+    c->hydro.count = 0;
 #if WITH_MPI
     c->mpi.tag = -1;
     c->mpi.recv = NULL;
