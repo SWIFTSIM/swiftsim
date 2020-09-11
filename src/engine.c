@@ -270,7 +270,6 @@ void engine_repartition_trigger(struct engine *e) {
   static int opened = 0;
   if (e->restarting) opened = 1;
 
-  
 #ifdef WITH_MPI
 
   const ticks tic = getticks();
@@ -457,30 +456,27 @@ void engine_repartition_trigger(struct engine *e) {
             clocks_getunit());
 #else
 
+  /* Get the resident size of the process for the memory logs. */
+  long size, resident, shared, text, library, data, dirty;
+  memuse_use(&size, &resident, &shared, &text, &data, &library, &dirty);
 
+  /* Keep logs of all CPU times and resident memory size for debugging
+   * load issues. */
+  FILE *memlog = NULL;
+  if (!opened) {
+    memlog = fopen("rank_memory_balance.log", "w");
+    fprintf(memlog, "# step rank resident\n");
 
-      /* Get the resident size of the process for the memory logs. */
-      long size, resident, shared, text, library, data, dirty;
-      memuse_use(&size, &resident, &shared, &text, &data, &library, &dirty);
-  
-        /* Keep logs of all CPU times and resident memory size for debugging
-         * load issues. */
-        FILE *memlog = NULL;
-        if (!opened) {
-          memlog = fopen("rank_memory_balance.log", "w");
-          fprintf(memlog, "# step rank resident\n");
+    opened = 1;
+  } else {
+    memlog = fopen("rank_memory_balance.log", "a");
+  }
 
-          opened = 1;
-        } else {
-          memlog = fopen("rank_memory_balance.log", "a");
-        }
-
-        fprintf(memlog, "# %d mean resident memory: %f, balance: %f\n", e->step,
-                (double)resident, 0.);
-        fclose(memlog);
+  fprintf(memlog, "# %d mean resident memory: %f, balance: %f\n", e->step,
+          (double)resident, 0.);
+  fclose(memlog);
 
 #endif
-	
 }
 
 /**
