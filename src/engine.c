@@ -145,6 +145,12 @@ long long sort_array_counts;
 long long sort_array_memory;
 long long sort_array_directions;
 
+long long max_ghost_memory;
+long long max_dopair2_memory;
+long long max_doself1_memory;
+long long max_doself2_memory;
+
+
 /**
  * @brief Link a density/force task to a cell.
  *
@@ -2176,6 +2182,11 @@ void engine_launch(struct engine *e, const char *call) {
   space_reset_task_counters(e->s);
 #endif
 
+  max_ghost_memory = 0;
+  max_dopair2_memory = 0;
+  max_doself1_memory = 0;
+  max_doself2_memory = 0;
+  
   /* Prepare the scheduler. */
   atomic_inc(&e->sched.waiting);
 
@@ -2762,6 +2773,11 @@ void engine_step(struct engine *e) {
       sort_array_counts, sort_array_directions,
       sort_array_memory / (1024 * 1024));
 
+  message("GHOST max mem usage: %lld MB", max_ghost_memory / (1024. * 1024.));
+  message("DOPAIR2 max mem usage: %lld MB", max_dopair2_memory/ (1024. * 1024.));
+  message("DOSELF1 max mem usage: %lld MB", max_doself1_memory/ (1024. * 1024.));
+  message("DOSELF2 max mem usage: %lld MB", max_doself2_memory/ (1024. * 1024.));
+  
   /* Since the time-steps may have changed because of the limiter's
    * action, we need to communicate the new time-step sizes */
   if ((e->policy & engine_policy_timestep_sync) ||
