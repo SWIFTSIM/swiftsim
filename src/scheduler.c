@@ -80,6 +80,10 @@ static void scheduler_extend_unlocks(struct scheduler *s) {
   while (s->completed_unlock_writes < s->size_unlocks)
     ;
 
+  message("Reallocating the unlock array from %zd to %zd MB",
+	  s->size_unlocks * sizeof(struct task *) / (1024 *  1024),
+	  size_unlocks_new * sizeof(struct task *) / (1024 *  1024));
+  
   /* Copy the buffers. */
   memcpy(unlocks_new, s->unlocks, sizeof(struct task *) * s->size_unlocks);
   memcpy(unlock_ind_new, s->unlock_ind, sizeof(int) * s->size_unlocks);
