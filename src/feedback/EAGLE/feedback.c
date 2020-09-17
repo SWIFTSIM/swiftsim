@@ -346,8 +346,15 @@ INLINE static void compute_SNII_feedback(
       error("f_E is not in the valid range! f_E=%f sp->id=%lld", f_E, sp->id);
 #endif
 
-    /* Store all of this in the star for delivery onto the gas */
-    sp->f_E = f_E;
+    /* Current total f_E for this star */
+    double star_f_E = sp->f_E * sp->number_of_SNII_events;
+
+    /* New total */
+    star_f_E = (star_f_E + f_E) / (sp->number_of_SNII_events + 1.);
+
+    /* Store all of this in the star for delivery onto the gas and recording */
+    sp->f_E = star_f_E;
+    sp->number_of_SNII_events++;
     sp->feedback_data.to_distribute.SNII_heating_probability = prob;
     sp->feedback_data.to_distribute.SNII_delta_u = delta_u;
   }
