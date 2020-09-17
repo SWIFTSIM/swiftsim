@@ -333,15 +333,15 @@ void initial_mass_function_compute_coefficients(
  *
  * @param imf The #initial_mass_function.
  * @param params The #swift_params.
+ * @param filename The filename of the chemistry table.
  */
 void initial_mass_function_read_from_table(struct initial_mass_function *imf,
-                                           struct swift_params *params) {
+                                           struct swift_params *params,
+                                           const char *filename) {
 
   hid_t file_id, group_id;
 
   /* Open IMF group */
-  char filename[FILENAME_BUFFER_SIZE];
-  parser_get_param_string(params, "GEARFeedback:yields_table", filename);
   h5_open_group(filename, "Data/IMF", &file_id, &group_id);
 
   /* Read number of parts */
@@ -440,14 +440,16 @@ void initial_mass_function_read_from_params(struct initial_mass_function *imf,
  * @param phys_const The #phys_const.
  * @param us The #unit_system.
  * @param params The #swift_params.
+ * @param filename The filename of the chemistry table.
  */
 void initial_mass_function_init(struct initial_mass_function *imf,
                                 const struct phys_const *phys_const,
                                 const struct unit_system *us,
-                                struct swift_params *params) {
+                                struct swift_params *params,
+                                const char *filename) {
 
   /* Read the parameters from the yields table */
-  initial_mass_function_read_from_table(imf, params);
+  initial_mass_function_read_from_table(imf, params, filename);
 
   /* Overwrites the parameters if found in the params file */
   initial_mass_function_read_from_params(imf, params);

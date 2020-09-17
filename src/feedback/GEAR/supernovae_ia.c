@@ -168,17 +168,17 @@ float supernovae_ia_get_number_per_unit_mass(const struct supernovae_ia *snia,
  * @param snia The #supernovae_ia model.
  * @param params The #swift_params.
  * @param sm The #stellar_model.
+ * @param filename The filename of the chemistry table.
  */
 void supernovae_ia_read_yields(struct supernovae_ia *snia,
                                struct swift_params *params,
-                               const struct stellar_model *sm) {
+                               const struct stellar_model *sm,
+                               const char *filename) {
 
   hid_t file_id, group_id;
   const int number_labels = GEAR_CHEMISTRY_ELEMENT_COUNT + 2;
 
   /* Open IMF group */
-  char filename[FILENAME_BUFFER_SIZE];
-  parser_get_param_string(params, "GEARFeedback:yields_table", filename);
   h5_open_group(filename, "Data/SNIa/Metals", &file_id, &group_id);
 
   /* Read the yields */
@@ -242,15 +242,15 @@ void supernovae_ia_init_companion(struct supernovae_ia *snia) {
  *
  * @param snia The #supernovae_ia model.
  * @param params The simulation parameters.
+ * @param filename The filename of the chemistry table.
  */
 void supernovae_ia_read_from_tables(struct supernovae_ia *snia,
-                                    struct swift_params *params) {
+                                    struct swift_params *params,
+                                    const char *filename) {
 
   hid_t file_id, group_id;
 
   /* Open IMF group */
-  char filename[FILENAME_BUFFER_SIZE];
-  parser_get_param_string(params, "GEARFeedback:yields_table", filename);
   h5_open_group(filename, "Data/SNIa", &file_id, &group_id);
 
   /* Read the exponent of the IMF for companion */
@@ -367,13 +367,13 @@ void supernovae_ia_init(struct supernovae_ia *snia,
                         const struct stellar_model *sm) {
 
   /* Read the parameters from the tables */
-  supernovae_ia_read_from_tables(snia, params);
+  supernovae_ia_read_from_tables(snia, params, sm->yields_table);
 
   /* Read the parameters from the params file */
   supernovae_ia_read_from_params(snia, params);
 
   /* Read the yields */
-  supernovae_ia_read_yields(snia, params, sm);
+  supernovae_ia_read_yields(snia, params, sm, sm->yields_table);
 
   /* Get the IMF parameters */
   snia->progenitor_exponent = initial_mass_function_get_exponent(

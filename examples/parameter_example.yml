@@ -527,8 +527,10 @@ EAGLEFeedback:
 
 # GEAR feedback model
 GEARFeedback:
-  supernovae_energy_erg: 0.135e51                            # Energy released by a single supernovae.
+  supernovae_energy_erg: 0.135e51                          # Energy released by a single supernovae.
   yields_table: chemistry-AGB+OMgSFeZnSrYBaEu-16072013.h5  # Table containing the yields.
+  yields_table: chemistry-PopIII.hdf5                      # Table containing the yields of the first stars.
+  metallicity_max_first_stars: 1e-5                        # Maximal metallicity (in mass fraction) for a first star.
   discrete_yields: 0                                       # Should we use discrete yields or the IMF integrated one?
 
 

@@ -435,10 +435,6 @@ void stellar_evolution_props_init(struct stellar_model* sm,
                                   struct swift_params* params,
                                   const struct cosmology* cosmo) {
 
-  /* Get filename. */
-  parser_get_param_string(params, "GEARFeedback:yields_table",
-                          sm->yields_table);
-
   /* Read the list of elements */
   stellar_evolution_read_elements(sm, params);
 
@@ -447,10 +443,10 @@ void stellar_evolution_props_init(struct stellar_model* sm,
       parser_get_param_int(params, "GEARFeedback:discrete_yields");
 
   /* Initialize the initial mass function */
-  initial_mass_function_init(&sm->imf, phys_const, us, params);
+  initial_mass_function_init(&sm->imf, phys_const, us, params, sm->yields_table);
 
   /* Initialize the lifetime model */
-  lifetime_init(&sm->lifetime, phys_const, us, params);
+  lifetime_init(&sm->lifetime, phys_const, us, params, sm->yields_table);
 
   /* Initialize the supernovae Ia model */
   supernovae_ia_init(&sm->snia, phys_const, us, params, sm);
