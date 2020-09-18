@@ -318,23 +318,6 @@ void supernovae_ii_read_yields(struct supernovae_ii *snii,
   h5_close_group(file_id, group_id);
 };
 
-/**
- * @brief Reads the supernovae II parameters from parameters file.
- *
- * @param snii The #supernovae_ii model.
- * @param params The simulation parameters.
- */
-void supernovae_ii_read_from_params(struct supernovae_ii *snii,
-                                    struct swift_params *params) {
-
-  /* Read the minimal mass of a supernovae */
-  snii->mass_min = parser_get_opt_param_float(
-      params, "GEARSupernovaeII:min_mass", snii->mass_min);
-
-  /* Read the maximal mass of a supernovae */
-  snii->mass_max = parser_get_opt_param_float(
-      params, "GEARSupernovaeII:max_mass", snii->mass_max);
-}
 
 /**
  * @brief Reads the supernovae II parameters from tables.
@@ -374,9 +357,6 @@ void supernovae_ii_init(struct supernovae_ii *snii, struct swift_params *params,
 
   /* Read the parameters from the tables */
   supernovae_ii_read_from_tables(snii, params, sm->yields_table);
-
-  /* Read the parameters from the params file */
-  supernovae_ii_read_from_params(snii, params);
 
   /* Read the supernovae yields */
   supernovae_ii_read_yields(snii, params, sm, /* restart */ 0);

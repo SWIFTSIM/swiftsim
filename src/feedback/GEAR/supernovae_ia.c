@@ -176,18 +176,24 @@ void supernovae_ia_read_yields(struct supernovae_ia *snia,
                                const char *filename) {
 
   hid_t file_id, group_id;
-  const int number_labels = GEAR_CHEMISTRY_ELEMENT_COUNT + 2;
 
   /* Open IMF group */
   h5_open_group(filename, "Data/SNIa/Metals", &file_id, &group_id);
 
+  /* Get the number of elements. */
+  const hid_t attr = H5Aopen(group_id, "elts", H5P_DEFAULT);
+  if (attr < 0) error("Error while opening attribute elts in Data/SNIa/Metals");
+
+  size_t nval = io_get_number_element_in_attribute(attr);
+  H5Aclose(attr);
+
   /* Read the yields */
-  float *yields = (float *)malloc(sizeof(float) * number_labels);
-  io_read_array_attribute(group_id, "data", FLOAT, yields, number_labels);
+  float *yields = (float *)malloc(sizeof(float) * nval);
+  io_read_array_attribute(group_id, "data", FLOAT, yields, nval);
 
   /* Read the labels */
-  char labels[(GEAR_CHEMISTRY_ELEMENT_COUNT + 2) * GEAR_LABELS_SIZE] = "";
-  io_read_string_array_attribute(group_id, "elts", labels, number_labels,
+  char *labels = malloc(nval * GEAR_LABELS_SIZE);
+  io_read_string_array_attribute(group_id, "elts", labels, nval,
                                  GEAR_LABELS_SIZE);
 
   /* Save the yields */
@@ -195,7 +201,7 @@ void supernovae_ia_read_yields(struct supernovae_ia *snia,
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     int found = 0;
     /* Loop over SNIa yields labels */
-    for (int j = 0; j < number_labels; j++) {
+    for (size_t j = 0; j < nval; j++) {
       const char *s1 = labels + j * GEAR_LABELS_SIZE;
       const char *s2 = stellar_evolution_get_element_name(sm, i);
       if (strcmp(s1, s2) == 0) {
@@ -207,13 +213,14 @@ void supernovae_ia_read_yields(struct supernovae_ia *snia,
 
     /* Check if found an element */
     if (!found) {
-      error("Cannot find element %s in SNIa yields",
+      error("Cannot find element '%s' in SNIa yields",
             stellar_evolution_get_element_name(sm, i));
     }
   }
 
   /* Cleanup everything */
   free(yields);
+  free(labels);
   h5_close_group(file_id, group_id);
 };
 
@@ -296,62 +303,6 @@ void supernovae_ia_read_from_tables(struct supernovae_ia *snia,
 }
 
 /**
- * @brief Reads the supernovae Ia parameters from the parameters file.
- *
- * @param snia The #supernovae_ia model.
- * @param params The simulation parameters.
- */
-void supernovae_ia_read_from_params(struct supernovae_ia *snia,
-                                    struct swift_params *params) {
-
-  /* Read the exponent of the IMF for companion */
-  snia->companion_exponent = parser_get_opt_param_float(
-      params, "GEARSupernovaeIa:exponent", snia->companion_exponent);
-
-  /* Read the minimal mass for a white dwarf */
-  snia->mass_min_progenitor = parser_get_opt_param_float(
-      params, "GEARSupernovaeIa:min_mass_white_dwarf_progenitor",
-      snia->mass_min_progenitor);
-
-  /* Read the maximal mass for a white dwarf */
-  snia->mass_max_progenitor = parser_get_opt_param_float(
-      params, "GEARSupernovaeIa:max_mass_white_dwarf_progenitor",
-      snia->mass_max_progenitor);
-
-  /* Read the maximal mass of a red giant companion */
-  snia->companion[0].mass_max =
-      parser_get_opt_param_float(params, "GEARSupernovaeIa:max_mass_red_giant",
-                                 snia->companion[0].mass_max);
-
-  /* Read the minimal mass of a red giant companion */
-  snia->companion[0].mass_min =
-      parser_get_opt_param_float(params, "GEARSupernovaeIa:min_mass_red_giant",
-                                 snia->companion[0].mass_min);
-
-  /* Read the coefficient of the main sequence companion */
-  snia->companion[0].coef = parser_get_opt_param_float(
-      params, "GEARSupernovaeIa:coef_red_giant", snia->companion[0].coef);
-
-  /* Read the maximal mass of a main sequence companion */
-  snia->companion[1].mass_max = parser_get_opt_param_float(
-      params, "GEARSupernovaeIa:max_mass_main_sequence",
-      snia->companion[1].mass_max);
-
-  /* Read the minimal mass of a main sequence companion */
-  snia->companion[1].mass_min = parser_get_opt_param_float(
-      params, "GEARSupernovaeIa:min_mass_main_sequence",
-      snia->companion[1].mass_min);
-
-  /* Read the coefficient of the main sequence companion */
-  snia->companion[1].coef = parser_get_opt_param_float(
-      params, "GEARSupernovaeIa:coef_main_sequence", snia->companion[1].coef);
-
-  /* Read the mass of a white dwarf */
-  snia->mass_white_dwarf = parser_get_opt_param_float(
-      params, "GEARSupernovaeIa:white_dwarf_mass", snia->mass_white_dwarf);
-}
-
-/**
  * @brief Initialize the #supernovae_ia structure.
  *
  * @param snia The #supernovae_ia model.
@@ -368,9 +319,6 @@ void supernovae_ia_init(struct supernovae_ia *snia,
 
   /* Read the parameters from the tables */
   supernovae_ia_read_from_tables(snia, params, sm->yields_table);
-
-  /* Read the parameters from the params file */
-  supernovae_ia_read_from_params(snia, params);
 
   /* Read the yields */
   supernovae_ia_read_yields(snia, params, sm, sm->yields_table);

@@ -156,28 +156,6 @@ __attribute__((always_inline)) INLINE static void lifetime_read_from_tables(
 }
 
 /**
- * @brief Read lifetime parameters from params.
- *
- * @param lt The #lifetime.
- * @param params The #swift_params.
- */
-__attribute__((always_inline)) INLINE static void lifetime_read_from_params(
-    struct lifetime* lt, struct swift_params* params) {
-
-  /* Read quadratic terms */
-  parser_get_opt_param_float_array(params, "GEARLifetime:quadratic", 3,
-                                   lt->quadratic);
-
-  /* Read linear terms */
-  parser_get_opt_param_float_array(params, "GEARLifetime:linear", 3,
-                                   lt->linear);
-
-  /* Read constant terms */
-  parser_get_opt_param_float_array(params, "GEARLifetime:constant", 3,
-                                   lt->constant);
-}
-
-/**
  * @brief Inititialize the Lifetime.
  *
  * @param lt The #lifetime.
@@ -193,9 +171,6 @@ __attribute__((always_inline)) INLINE static void lifetime_init(
 
   /* Read params from yields table */
   lifetime_read_from_tables(lt, params, filename);
-
-  /* overwrite the parameters if found in the params */
-  lifetime_read_from_params(lt, params);
 
   /* Change units from yr into Myr */
   const int dim = 3;

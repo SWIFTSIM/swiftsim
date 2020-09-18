@@ -382,58 +382,6 @@ void initial_mass_function_read_from_table(struct initial_mass_function *imf,
 }
 
 /**
- * @brief Reads the parameters file and if required overwrites the parameters
- * found in the yields table.
- *
- * @param imf The #initial_mass_function.
- * @param params The #swift_params.
- */
-void initial_mass_function_read_from_params(struct initial_mass_function *imf,
-                                            struct swift_params *params) {
-
-  /* Read the number of elements */
-  const int n_parts = parser_get_opt_param_int(
-      params, "GEARInitialMassFunction:number_function_part", imf->n_parts);
-
-  const int n_parts_changed = n_parts != imf->n_parts;
-  imf->n_parts = n_parts;
-
-  /* Reallocate the exponent memory */
-  if (n_parts_changed) {
-    free(imf->exp);
-    if ((imf->exp = (float *)malloc(sizeof(float) * imf->n_parts)) == NULL)
-      error("Failed to allocate the IMF exponents.");
-  }
-
-  /* Read the exponents */
-  const char *exponent_name = "GEARInitialMassFunction:exponents";
-  if (n_parts_changed) {
-    parser_get_param_float_array(params, exponent_name, imf->n_parts, imf->exp);
-  } else {
-    parser_get_opt_param_float_array(params, exponent_name, imf->n_parts,
-                                     imf->exp);
-  }
-
-  /* Reallocate the mass limits memory */
-  if (n_parts_changed) {
-    free(imf->mass_limits);
-    if ((imf->mass_limits =
-             (float *)malloc(sizeof(float) * (imf->n_parts + 1))) == NULL)
-      error("Failed to allocate the IMF masses.");
-  }
-
-  /* Read the mass limits */
-  const char *mass_limits_name = "GEARInitialMassFunction:mass_limits_msun";
-  if (n_parts_changed) {
-    parser_get_param_float_array(params, mass_limits_name, imf->n_parts + 1,
-                                 imf->mass_limits);
-  } else {
-    parser_get_opt_param_float_array(params, mass_limits_name, imf->n_parts + 1,
-                                     imf->mass_limits);
-  }
-}
-
-/**
  * @brief Initialize the initial mass function.
  *
  * @param imf The #initial_mass_function.
@@ -450,9 +398,6 @@ void initial_mass_function_init(struct initial_mass_function *imf,
 
   /* Read the parameters from the yields table */
   initial_mass_function_read_from_table(imf, params, filename);
-
-  /* Overwrites the parameters if found in the params file */
-  initial_mass_function_read_from_params(imf, params);
 
   /* Write the masses in the correct attributes */
   imf->mass_min = imf->mass_limits[0];

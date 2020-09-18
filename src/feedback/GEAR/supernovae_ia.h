@@ -46,9 +46,6 @@ void supernovae_ia_read_from_tables(struct supernovae_ia *snia,
                                     struct swift_params *params,
                                     const char *filename);
 
-void supernovae_ia_read_from_params(struct supernovae_ia *snia,
-                                    struct swift_params *params);
-
 void supernovae_ia_init(struct supernovae_ia *snia,
                         const struct phys_const *phys_const,
                         const struct unit_system *us,
