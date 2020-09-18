@@ -93,7 +93,7 @@ __attribute__((always_inline)) INLINE static void sink_kick_extra(
  * @brief Calculate if the gas has the potential of becoming
  * a sink.
  *
- * No star formation should occur, so return 0.
+ * No sink formation should occur, so return 0.
  *
  * @param sink_props the sink properties to use.
  * @param p the gas particles.
