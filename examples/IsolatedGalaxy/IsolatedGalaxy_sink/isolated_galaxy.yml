@@ -83,7 +83,3 @@ HernquistPotential:
 
 DefaultSink:
   cut_off_radius: 0.1      # Cut off radius of all the sinks in internal units.
-
-# Parameters controlling restarts
-Restarts:
-  delta_hours:        0.01        # (Optional) decimal hours between dumps of restart files.
