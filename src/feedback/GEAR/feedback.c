@@ -246,15 +246,13 @@ void feedback_evolve_spart(struct spart* restrict sp,
   const float metal = chemistry_get_total_metal_mass_fraction_for_feedback(sp);
   const float threshold = feedback_props->metallicity_max_first_stars;
 
-  const struct stellar_model *model = &feedback_props->stellar_model;
-  if (metal < threshold) {
-    model = &feedback_props->stellar_model_first_stars;
-  }
+  const struct stellar_model* model =
+      metal < threshold ? &feedback_props->stellar_model_first_stars
+                        : &feedback_props->stellar_model;
 
   /* Compute the stellar evolution */
-  stellar_evolution_evolve_spart(sp, model, cosmo, us,
-                                 phys_const, ti_begin, star_age_beg_step_safe,
-                                 dt);
+  stellar_evolution_evolve_spart(sp, model, cosmo, us, phys_const, ti_begin,
+                                 star_age_beg_step_safe, dt);
 
   /* Transform the number of SN to the energy */
   sp->feedback_data.energy_ejected =

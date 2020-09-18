@@ -318,7 +318,6 @@ void supernovae_ii_read_yields(struct supernovae_ii *snii,
   h5_close_group(file_id, group_id);
 };
 
-
 /**
  * @brief Reads the supernovae II parameters from tables.
  *

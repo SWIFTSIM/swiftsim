@@ -127,7 +127,7 @@ lifetime_get_log_mass_from_lifetime(const struct lifetime* life, float log_time,
  * @param filename The filename of the chemistry table.
  */
 __attribute__((always_inline)) INLINE static void lifetime_read_from_tables(
-    struct lifetime* lt, struct swift_params* params, const char *filename) {
+    struct lifetime* lt, struct swift_params* params, const char* filename) {
 
   hid_t file_id, group_id;
 
@@ -167,7 +167,7 @@ __attribute__((always_inline)) INLINE static void lifetime_read_from_tables(
 __attribute__((always_inline)) INLINE static void lifetime_init(
     struct lifetime* lt, const struct phys_const* phys_const,
     const struct unit_system* us, struct swift_params* params,
-    const char *filename) {
+    const char* filename) {
 
   /* Read params from yields table */
   lifetime_read_from_tables(lt, params, filename);

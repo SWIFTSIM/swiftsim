@@ -384,21 +384,22 @@ void stellar_evolution_read_elements(struct stellar_model* sm,
 
   /* Read the elements from the parameter file. */
   int nval = -1;
-  char **elements;
+  char** elements;
   parser_get_param_string_array(params, "GEARFeedback:elements", &nval,
                                 &elements);
 
   /* Check that we have the correct number of elements. */
   if (nval != GEAR_CHEMISTRY_ELEMENT_COUNT - 1) {
-    error("You need to provide %i elements but found %i. "
-          "If you wish to provide a different number of elements, "
-          "you need to compile with --with-chemistry=GEAR_N where N "
-          "is the number of elements + 1.",
-          GEAR_CHEMISTRY_ELEMENT_COUNT, nval);
+    error(
+        "You need to provide %i elements but found %i. "
+        "If you wish to provide a different number of elements, "
+        "you need to compile with --with-chemistry=GEAR_N where N "
+        "is the number of elements + 1.",
+        GEAR_CHEMISTRY_ELEMENT_COUNT, nval);
   }
 
   /* Copy the elements into the stellar model. */
-  for(int i = 0; i < nval; i++) {
+  for (int i = 0; i < nval; i++) {
     if (strlen(elements[i]) >= GEAR_LABELS_SIZE) {
       error("Element name '%s' too long", elements[i]);
     }
@@ -409,8 +410,9 @@ void stellar_evolution_read_elements(struct stellar_model* sm,
   parser_free_param_string_array(nval, elements);
 
   /* Add the metals to the end. */
-  strcpy(sm->elements_name + (GEAR_CHEMISTRY_ELEMENT_COUNT - 1) * GEAR_LABELS_SIZE,
-         "Metals");
+  strcpy(
+      sm->elements_name + (GEAR_CHEMISTRY_ELEMENT_COUNT - 1) * GEAR_LABELS_SIZE,
+      "Metals");
 }
 
 /**
@@ -436,7 +438,8 @@ void stellar_evolution_props_init(struct stellar_model* sm,
       parser_get_param_int(params, "GEARFeedback:discrete_yields");
 
   /* Initialize the initial mass function */
-  initial_mass_function_init(&sm->imf, phys_const, us, params, sm->yields_table);
+  initial_mass_function_init(&sm->imf, phys_const, us, params,
+                             sm->yields_table);
 
   /* Initialize the lifetime model */
   lifetime_init(&sm->lifetime, phys_const, us, params, sm->yields_table);

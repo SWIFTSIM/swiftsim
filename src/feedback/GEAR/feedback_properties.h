@@ -61,7 +61,7 @@ __attribute__((always_inline)) INLINE static void feedback_props_print(
       strcat(txt, ", ");
     }
     strcat(txt, stellar_evolution_get_element_name(
-        &feedback_props->stellar_model, i));
+                    &feedback_props->stellar_model, i));
   }
 
   if (engine_rank == 0) {
@@ -108,7 +108,8 @@ __attribute__((always_inline)) INLINE static void feedback_props_init(
   fp->energy_per_supernovae = e_feedback;
 
   /* filename of the chemistry tables. */
-  parser_get_param_string(params, "GEARFeedback:yields_table", fp->stellar_model.yields_table);
+  parser_get_param_string(params, "GEARFeedback:yields_table",
+                          fp->stellar_model.yields_table);
 
   /* Initialize the stellar models. */
   stellar_evolution_props_init(&fp->stellar_model, phys_const, us, params,
@@ -120,17 +121,17 @@ __attribute__((always_inline)) INLINE static void feedback_props_init(
 
   if (fp->metallicity_max_first_stars == -1) {
     message("First stars are disabled.");
-  }
-  else {
+  } else {
     if (fp->metallicity_max_first_stars < 0) {
-      error("The metallicity threshold for the first stars is in mass fraction. "
-            "It cannot be lower than 0.");
+      error(
+          "The metallicity threshold for the first stars is in mass fraction. "
+          "It cannot be lower than 0.");
     }
     message("Reading the stellar model for the first stars");
     parser_get_param_string(params, "GEARFeedback:yields_table_first_stars",
                             fp->stellar_model_first_stars.yields_table);
-    stellar_evolution_props_init(&fp->stellar_model_first_stars,
-                                 phys_const, us, params, cosmo);
+    stellar_evolution_props_init(&fp->stellar_model_first_stars, phys_const, us,
+                                 params, cosmo);
   }
 
   /* Print the stellar properties */
