@@ -7309,7 +7309,7 @@ struct sink *cell_convert_part_to_sink(struct engine *e, struct cell *c,
 #endif
 
   /* Set a smoothing length */
-  sp->h = max(c->stars.h_max, c->hydro.h_max);
+  sp->r_cut = e->sink_properties->cut_off_radius;
 
   /* Here comes the Sink! */
   return sp;
