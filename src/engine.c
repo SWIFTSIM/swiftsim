@@ -2272,8 +2272,6 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
     /* ... and recompute */
     pm_mesh_compute_potential(e->mesh, e->s, &e->threadpool, e->verbose);
 
-    pm_mesh_interpolate_forces(e->mesh, e, e->s->gparts, e->s->nr_gparts);
-
     engine_recompute_displacement_constraint(e);
   }
 
@@ -2745,8 +2743,6 @@ void engine_step(struct engine *e) {
 
     /* ... and recompute */
     pm_mesh_compute_potential(e->mesh, e->s, &e->threadpool, e->verbose);
-
-    pm_mesh_interpolate_forces(e->mesh, e, e->s->gparts, e->s->nr_gparts);
 
     engine_recompute_displacement_constraint(e);
   }
