@@ -113,7 +113,9 @@ static int Reader_init(PyObjectReader *self, PyObject *args, PyObject *kwds) {
  */
 static PyObject *getTimeLimits(PyObject *self, PyObject *Py_UNUSED(ignored)) {
   if (!((PyObjectReader *)self)->ready) {
-    error_python("The logger is not ready yet");
+    error_python(
+        "The logger is not ready yet."
+        "Did you forget to open it with \"with\"?");
   }
 
   /* initialize the reader. */
@@ -286,7 +288,9 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
                                    PyObject *args) {
   PyObjectReader *self_reader = (PyObjectReader *)self;
   if (!self_reader->ready) {
-    error_python("The logger is not ready yet");
+    error_python(
+        "The logger is not ready yet."
+        "Did you forget to open it with \"with\"?");
   }
 
   /* input variables. */
@@ -413,7 +417,10 @@ static PyTypeObject PyObjectReader_Type = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_doc =
         "Deals with a logger file and provides the data through"
-        " its different methods.\n\n"
+        " its different methods. The reader is really open with the method "
+        "__enter__"
+        "(called by `with ...``). Outside the area delimited by with, "
+        "the logger is not accessible.\n\n"
         "Parameters\n"
         "----------\n\n"
         "basename: str\n"
