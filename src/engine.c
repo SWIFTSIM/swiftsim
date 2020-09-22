@@ -141,6 +141,7 @@ int engine_current_step;
 
 extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
+extern int engine_max_parts_per_cooling;
 
 /**
  * @brief Link a density/force task to a cell.
