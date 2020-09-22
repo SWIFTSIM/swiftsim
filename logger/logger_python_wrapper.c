@@ -32,10 +32,10 @@
 #include <stdlib.h>
 
 typedef struct {
-  PyObject_HEAD
+  PyObject_HEAD;
 
-      /* Add logger stuff here */
-      struct logger_reader reader;
+  /* Add logger stuff here */
+  struct logger_reader reader;
 
   /* Is the logger ready? */
   int ready;
