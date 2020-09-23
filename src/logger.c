@@ -836,6 +836,7 @@ void logger_init(struct logger_writer *log, const struct engine *e,
   /* set initial value of parameters. */
   log->timestamp_offset = 0;
   log->index.dump_size_last_output = 0;
+  log->index_file_number = 0;
 
   /* generate dump filename. */
   char logger_name_file[PARSER_MAX_LINE_SIZE];
@@ -1177,21 +1178,30 @@ void logger_struct_restore(struct logger_writer *log, FILE *stream) {
                       NULL, "logger");
 
   /* Read the masks */
+  const struct mask_data *old_logger_mask_data = log->logger_mask_data;
   log->logger_mask_data = (struct mask_data *)malloc(sizeof(struct mask_data) *
                                                      log->logger_count_mask);
 
   restart_read_blocks((void *)log->logger_mask_data, sizeof(struct mask_data),
                       log->logger_count_mask, stream, NULL, "logger_masks");
 
-  /* Restore the logger mpi history */
-  logger_history_restore(&log->history_new, stream);
-  logger_history_restore(&log->history_removed, stream);
+  /* Restore the pointers */
+  log->mask_data_pointers.hydro = log->logger_mask_data +
+    (log->mask_data_pointers.hydro - old_logger_mask_data);
+  log->mask_data_pointers.gravity = log->logger_mask_data +
+    (log->mask_data_pointers.gravity - old_logger_mask_data);
+  log->mask_data_pointers.stars = log->logger_mask_data +
+    (log->mask_data_pointers.stars - old_logger_mask_data);
 
-  /* generate dump filename */
+  /* Restart the dump file. */
   char logger_name_file[PARSER_MAX_LINE_SIZE];
   logger_get_dump_name(log, logger_name_file);
 
   dump_restart(&log->dump, logger_name_file);
+
+  /* Restore the logger mpi history */
+  logger_history_restore(&log->history_new, stream);
+  logger_history_restore(&log->history_removed, stream);
 }
 
 #endif /* WITH_LOGGER */

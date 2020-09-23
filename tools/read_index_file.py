@@ -12,7 +12,7 @@ dt = np.dtype([("ids", np.ulonglong),
                ("offset", np.uint64)])
 
 # Read the file
-with open(filename, "r") as f:
+with open(filename, "rb") as f:
     # read the time
     time = np.fromfile(f, dtype=float, count=1)
     time_int = np.fromfile(f, dtype=np.longlong, count=1)
