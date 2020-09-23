@@ -692,7 +692,7 @@ void space_regrid(struct space *s, int verbose) {
       }
 
       /* Re-distribute the particles to their new nodes. */
-      engine_redistribute(s->e);
+      engine_redistribute(s->e, /* initial_redistribute */ 0);
 
       /* Make the proxies. */
       engine_makeproxies(s->e);
@@ -710,7 +710,7 @@ void space_regrid(struct space *s, int verbose) {
       partition_restore_celllist(s, s->e->reparttype);
 
       /* Now re-distribute the particles, should just add to cells? */
-      engine_redistribute(s->e);
+      engine_redistribute(s->e, /* initial_redistribute */ 0);
 
       /* Make the proxies. */
       engine_makeproxies(s->e);

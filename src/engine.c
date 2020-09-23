@@ -237,7 +237,7 @@ void engine_repartition(struct engine *e) {
      Finally, the space, tasks, and proxies need to be rebuilt. */
 
   /* Redistribute the particles between the nodes. */
-  engine_redistribute(e);
+  engine_redistribute(e, /* initial redistribute */ 0);
 
   /* Make the proxies. */
   engine_makeproxies(e);
@@ -3066,8 +3066,16 @@ void engine_check_for_index_dump(struct engine *e) {
   const size_t index_file_size =
       total_nr_parts * sizeof(struct logger_part_data);
 
+#ifdef WITH_MPI
+  const size_t number_part_history = logger_mpi_history_get_size(&log->history);
+  const int history_too_large = number_part_history > log->history.maximal_size;
+#else
+  const int history_too_large = 0;
+#endif
+
   /* Check if we should write a file */
-  if (mem_frac * (dump_size - old_dump_size) > index_file_size) {
+  if (mem_frac * (dump_size - old_dump_size) > index_file_size ||
+      history_too_large) {
     /* Write an index file */
     engine_dump_index(e);
 

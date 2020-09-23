@@ -29,6 +29,7 @@
 #include "dump.h"
 #include "error.h"
 #include "inline.h"
+#include "logger_mpi_history.h"
 #include "timeline.h"
 #include "units.h"
 
@@ -39,7 +40,7 @@ struct part;
 struct engine;
 
 #define logger_major_version 0
-#define logger_minor_version 4
+#define logger_minor_version 5
 /* Size of the strings. */
 #define logger_string_length 200
 
@@ -107,6 +108,11 @@ struct logger_writer {
     /* Size of the dump since at the last output */
     size_t dump_size_last_output;
   } index;
+
+#ifdef WITH_MPI
+  /* History of the MPI rank since the last index file */
+  struct logger_mpi_history history;
+#endif
 
   /*  Dump file (In the reader, the dump is cleaned, therefore it is renamed
    * logfile). */

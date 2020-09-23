@@ -809,6 +809,11 @@ void logger_init(struct logger_writer *log, const struct engine *e,
 
   /* init dump. */
   dump_init(&log->dump, logger_name_file, buffer_size);
+
+#ifdef WITH_MPI
+  /* initialize the history */
+  logger_mpi_history_first_init(&log->history, params);
+#endif
 }
 
 /**
@@ -822,6 +827,10 @@ void logger_free(struct logger_writer *log) {
   free(log->logger_mask_data);
   log->logger_mask_data = NULL;
   log->logger_count_mask = 0;
+
+#ifdef WITH_MPI
+  logger_mpi_history_clean(&log->history);
+#endif
 }
 
 /**
@@ -1094,6 +1103,11 @@ void logger_struct_dump(const struct logger_writer *log, FILE *stream) {
   restart_write_blocks((void *)log->logger_mask_data, sizeof(struct mask_data),
                        log->logger_count_mask, stream, "logger_masks",
                        "logger_masks");
+
+#ifdef WITH_MPI
+  /* Dump the logger mpi history */
+  logger_mpi_history_dump(&log->history);
+#endif
 }
 
 /**
@@ -1114,6 +1128,11 @@ void logger_struct_restore(struct logger_writer *log, FILE *stream) {
 
   restart_read_blocks((void *)log->logger_mask_data, sizeof(struct mask_data),
                       log->logger_count_mask, stream, NULL, "logger_masks");
+
+#ifdef WITH_MPI
+  /* Restore the logger mpi history */
+  logger_mpi_history_restore(&log->history);
+#endif
 
   /* generate dump filename */
   char logger_name_file[PARSER_MAX_LINE_SIZE];

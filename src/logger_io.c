@@ -100,8 +100,8 @@ void logger_io_copy_mapper(void* restrict temp, int N,
  * @param n_props The number of element in @props.
  * @param N The number of particles to write.
  */
-void writeIndexArray(const struct engine* e, FILE* f, struct io_props* props,
-                     size_t n_props, size_t N) {
+void write_index_array(const struct engine* e, FILE* f, struct io_props* props,
+                       size_t n_props, size_t N) {
 
   /* Check that the assumptions are corrects */
   if (n_props != 2)
@@ -341,7 +341,7 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
     }
 
     /* Write ids */
-    writeIndexArray(e, f, list, num_fields, N);
+    write_index_array(e, f, list, num_fields, N);
 
     /* Free temporary arrays */
     if (parts_written) swift_free("parts_written", parts_written);
@@ -352,6 +352,12 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
     if (sparts_written) swift_free("sparts_written", sparts_written);
     if (bparts_written) swift_free("bparts_written", bparts_written);
   }
+
+#ifdef WITH_MPI
+  /* Write the MPI history */
+  logger_mpi_history_write(&log->history, e, f);
+#endif
+
 
   /* Close file */
   fclose(f);
