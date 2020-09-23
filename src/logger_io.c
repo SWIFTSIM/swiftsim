@@ -161,7 +161,6 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
   struct xpart* xparts = e->s->xparts;
   struct gpart* gparts = e->s->gparts;
   struct spart* sparts = e->s->sparts;
-  static int outputCount = 0;
 
   /* Number of particles currently in the arrays */
   const size_t Ntot = e->s->nr_gparts;
@@ -191,7 +190,8 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
   snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s_%04i_%04i.index",
-           e->logger->base_name, engine_rank, outputCount);
+           e->logger->base_name, engine_rank, log->index_file_number);
+  log->index_file_number++;
 
   /* Open file */
   FILE* f = NULL;
@@ -361,7 +361,6 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
   /* Close file */
   fclose(f);
 
-  ++outputCount;
 }
 
 /**

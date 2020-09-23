@@ -249,8 +249,9 @@ void logger_history_dump(const struct logger_history *hist, FILE *stream) {
                        "logger_history", "logger_history");
 
   for(int i = 0; i < swift_type_count; i++) {
-    restart_write_blocks((void *)hist->data[i], sizeof(struct logger_index_data),
-                         hist->size[i], stream, "logger_history_data", "logger_history_data");
+    if (hist->size[i] != 0)
+      restart_write_blocks((void *)hist->data[i], sizeof(struct logger_index_data),
+                           hist->size[i], stream, "logger_history_data", "logger_history_data");
   }
 }
 
@@ -264,9 +265,11 @@ void logger_history_restore(struct logger_history *hist, FILE *stream) {
       error("Failed to allocate array for logger history");
     }
 
-    restart_read_blocks((void *)hist->data[i], sizeof(struct logger_index_data),
-                        hist->size[i], stream, NULL, "logger_history_data");
+    if (hist->size[i] != 0)
+      restart_read_blocks((void *)hist->data[i], sizeof(struct logger_index_data),
+                          hist->size[i], stream, NULL, "logger_history_data");
   }
+
 }
 
 

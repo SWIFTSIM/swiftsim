@@ -109,6 +109,9 @@ struct logger_writer {
     size_t dump_size_last_output;
   } index;
 
+  /* Index file number for the filename. */
+  int index_file_number;
+
   /* History of the new particles since the last index file. */
   struct logger_history history_new;
 
