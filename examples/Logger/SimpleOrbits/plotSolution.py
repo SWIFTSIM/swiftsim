@@ -165,7 +165,7 @@ def doLogger():
             rel_pos = pos[sort, :] - center
             vel = vel[sort, :]
 
-            # Compute the interpolated variables
+            # Compute the derived values
             r = np.sum(rel_pos**2, axis=1)**0.5
             v2 = np.sum(vel**2, axis=1)
             E[i, :] = 0.5 * v2 - G * M / r
