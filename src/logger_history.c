@@ -24,8 +24,8 @@
 #include <string.h>
 
 /* Local include */
-#include "part.h"
 #include "logger_io.h"
+#include "part.h"
 
 #if defined(WITH_LOGGER)
 
@@ -38,15 +38,17 @@
  */
 void logger_history_first_init(struct logger_history *hist) {
 
-  for(int i = 0; i < swift_type_count; i++) {
+  for (int i = 0; i < swift_type_count; i++) {
     /* Set the counters to their initial value */
     hist->size[i] = 0;
     hist->capacity[i] = LOGGER_HISTORY_INIT_SIZE;
 
-    hist->data[i] = (struct logger_index_data *)
-      malloc(sizeof(struct logger_index_data) * LOGGER_HISTORY_INIT_SIZE);
+    hist->data[i] = (struct logger_index_data *)malloc(
+        sizeof(struct logger_index_data) * LOGGER_HISTORY_INIT_SIZE);
     if (hist->data[i] == NULL) {
-      error("Failed to allocate memory for the logger_history (particle type %i)", i);
+      error(
+          "Failed to allocate memory for the logger_history (particle type %i)",
+          i);
     }
   }
 }
@@ -60,7 +62,7 @@ void logger_history_first_init(struct logger_history *hist) {
  */
 void logger_history_init(struct logger_history *hist) {
 
-  for(int i = 0; i < swift_type_count; i++) {
+  for (int i = 0; i < swift_type_count; i++) {
     /* Set the counters to their initial value */
     hist->size[i] = 0;
     hist->capacity[i] = LOGGER_HISTORY_INIT_SIZE;
@@ -68,10 +70,12 @@ void logger_history_init(struct logger_history *hist) {
     /* Allocate the initial size */
     free(hist->data[i]);
 
-    hist->data[i] = (struct logger_index_data *)
-      malloc(sizeof(struct logger_index_data) * LOGGER_HISTORY_INIT_SIZE);
+    hist->data[i] = (struct logger_index_data *)malloc(
+        sizeof(struct logger_index_data) * LOGGER_HISTORY_INIT_SIZE);
     if (hist->data[i] == NULL) {
-      error("Failed to allocate memory for the logger_history (particle type %i)", i);
+      error(
+          "Failed to allocate memory for the logger_history (particle type %i)",
+          i);
     }
   }
 }
@@ -82,7 +86,7 @@ void logger_history_init(struct logger_history *hist) {
  * @param hist The #logger_history.
  */
 void logger_history_clean(struct logger_history *hist) {
-  for(int i = 0; i < swift_type_count; i++) {
+  for (int i = 0; i < swift_type_count; i++) {
     /* Set the counters to 0 */
     hist->size[i] = 0;
     hist->capacity[i] = 0;
@@ -93,7 +97,6 @@ void logger_history_clean(struct logger_history *hist) {
       hist->data[i] = NULL;
     }
   }
-
 }
 
 /**
@@ -103,21 +106,22 @@ void logger_history_clean(struct logger_history *hist) {
  * @param data The data from the particle.
  * @param part_type The particle type.
  */
-void logger_history_log(struct logger_history *hist, struct logger_index_data data,
-                            enum part_type part_type) {
+void logger_history_log(struct logger_history *hist,
+                        struct logger_index_data data,
+                        enum part_type part_type) {
 
   /* Check if enough space is left */
   if (hist->size[part_type] + 1 >= hist->capacity[part_type]) {
     /* Compute the previous amount of memory */
     const size_t memsize =
-      sizeof(struct logger_index_data) * hist->capacity[part_type];
+        sizeof(struct logger_index_data) * hist->capacity[part_type];
 
     /* Increase the capacity of the array */
     hist->capacity[part_type] *= 2;
 
     /* Allocate the new array and copy the content of the previous one */
-    struct logger_index_data *tmp = (struct logger_index_data *)
-      malloc(2 * memsize);
+    struct logger_index_data *tmp =
+        (struct logger_index_data *)malloc(2 * memsize);
 
     memcpy(tmp, hist->data[part_type], memsize);
 
@@ -157,7 +161,8 @@ void logger_history_log_part(struct logger_history *hist, const struct part *p,
  * @param hist The #logger_history.
  * @param sp The #spart to log.
  */
-void logger_history_log_spart(struct logger_history *hist, const struct spart *sp) {
+void logger_history_log_spart(struct logger_history *hist,
+                              const struct spart *sp) {
   /* Save the required data */
   struct logger_index_data data;
   data.id = sp->id;
@@ -173,7 +178,8 @@ void logger_history_log_spart(struct logger_history *hist, const struct spart *s
  * @param hist The #logger_history.
  * @param gp The #gpart to log.
  */
-void logger_history_log_gpart(struct logger_history *hist, const struct gpart *gp) {
+void logger_history_log_gpart(struct logger_history *hist,
+                              const struct gpart *gp) {
   /* Save the required data */
   struct logger_index_data data;
   data.id = gp->id_or_neg_offset;
@@ -187,7 +193,6 @@ void logger_history_log_gpart(struct logger_history *hist, const struct gpart *g
 
   /* Log the data */
   logger_history_log(hist, data, swift_type_dark_matter);
-
 }
 
 /**
@@ -196,7 +201,8 @@ void logger_history_log_gpart(struct logger_history *hist, const struct gpart *g
  * @param hist The #logger_history.
  * @param bp The #bpart to log.
  */
-void logger_history_log_bpart(struct logger_history *hist, const struct bpart *bp) {
+void logger_history_log_bpart(struct logger_history *hist,
+                              const struct bpart *bp) {
   error("TODO");
 }
 
@@ -207,19 +213,21 @@ void logger_history_log_bpart(struct logger_history *hist, const struct bpart *b
  * @param e The #engine.
  * @param f The file where to write the history.
  */
-void logger_history_write(struct logger_history *hist, struct engine *e, FILE *f) {
+void logger_history_write(struct logger_history *hist, struct engine *e,
+                          FILE *f) {
   /* Write the number of particles */
   fwrite(hist->size, sizeof(uint64_t), swift_type_count, f);
 
   /* write the particles */
-  for(int i = 0; i < swift_type_count; i++) {
+  for (int i = 0; i < swift_type_count; i++) {
     /* Generate the structures for writing the index file */
     const int num_fields = 2;
     struct io_props list[2];
-    list[0] = io_make_output_field("ParticleIDs", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, hist->data[i],
-                                   id, "Field not used");
-    list[1] = io_make_output_field("Offset", UINT64, 1, UNIT_CONV_NO_UNITS, 0.f, hist->data[i],
-                                   offset, "Field not used");
+    list[0] =
+        io_make_output_field("ParticleIDs", ULONGLONG, 1, UNIT_CONV_NO_UNITS,
+                             0.f, hist->data[i], id, "Field not used");
+    list[1] = io_make_output_field("Offset", UINT64, 1, UNIT_CONV_NO_UNITS, 0.f,
+                                   hist->data[i], offset, "Field not used");
 
     write_index_array(e, f, list, num_fields, hist->size[i]);
   }
@@ -237,7 +245,7 @@ void logger_history_write(struct logger_history *hist, struct engine *e, FILE *f
  */
 size_t logger_history_get_size(const struct logger_history *hist) {
   size_t number = 0;
-  for(int i = 0; i < swift_type_count; i++) {
+  for (int i = 0; i < swift_type_count; i++) {
     number += hist->size[i];
   }
 
@@ -248,10 +256,11 @@ void logger_history_dump(const struct logger_history *hist, FILE *stream) {
   restart_write_blocks((void *)hist, sizeof(struct logger_history), 1, stream,
                        "logger_history", "logger_history");
 
-  for(int i = 0; i < swift_type_count; i++) {
+  for (int i = 0; i < swift_type_count; i++) {
     if (hist->size[i] != 0)
-      restart_write_blocks((void *)hist->data[i], sizeof(struct logger_index_data),
-                           hist->size[i], stream, "logger_history_data", "logger_history_data");
+      restart_write_blocks(
+          (void *)hist->data[i], sizeof(struct logger_index_data),
+          hist->size[i], stream, "logger_history_data", "logger_history_data");
   }
 }
 
@@ -259,19 +268,18 @@ void logger_history_restore(struct logger_history *hist, FILE *stream) {
   restart_read_blocks((void *)hist, sizeof(struct logger_history), 1, stream,
                       NULL, "logger_history");
 
-  for(int i = 0; i < swift_type_count; i++) {
-    hist->data[i] = malloc(hist->capacity[i] * sizeof(struct logger_index_data));
+  for (int i = 0; i < swift_type_count; i++) {
+    hist->data[i] =
+        malloc(hist->capacity[i] * sizeof(struct logger_index_data));
     if (hist->data[i] == NULL) {
       error("Failed to allocate array for logger history");
     }
 
     if (hist->size[i] != 0)
-      restart_read_blocks((void *)hist->data[i], sizeof(struct logger_index_data),
-                          hist->size[i], stream, NULL, "logger_history_data");
+      restart_read_blocks((void *)hist->data[i],
+                          sizeof(struct logger_index_data), hist->size[i],
+                          stream, NULL, "logger_history_data");
   }
-
 }
 
-
-
-#endif // WITH_LOGGER
+#endif  // WITH_LOGGER

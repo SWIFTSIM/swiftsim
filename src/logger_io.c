@@ -357,10 +357,8 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
   logger_history_write(&log->history_new, e, f);
   logger_history_write(&log->history_removed, e, f);
 
-
   /* Close file */
   fclose(f);
-
 }
 
 /**

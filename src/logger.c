@@ -144,11 +144,13 @@ void logger_log_all_particles(struct logger_writer *log,
 
   /* log the gparts */
   logger_log_gparts(log, s->gparts, s->nr_gparts, e,
-                    /* log_all_fields */ 1, /* Special flags */ 0, /* data */ 0);
+                    /* log_all_fields */ 1, /* Special flags */ 0,
+                    /* data */ 0);
 
   /* log the parts */
   logger_log_sparts(log, s->sparts, s->nr_sparts, e,
-                    /* log_all_fields */ 1, /* Special flags */ 0, /* data */ 0);
+                    /* log_all_fields */ 1, /* Special flags */ 0,
+                    /* data */ 0);
 
   if (e->total_nr_bparts > 0) error("Not implemented");
 }
@@ -213,8 +215,8 @@ void logger_copy_part_fields(const struct logger_writer *log,
  */
 void logger_log_part(struct logger_writer *log, const struct part *p,
                      struct xpart *xp, const struct engine *e,
-                     const int log_all_fields, const enum logger_special_flags flag,
-                     const int data) {
+                     const int log_all_fields,
+                     const enum logger_special_flags flag, const int data) {
 
   logger_log_parts(log, p, xp, /* count */ 1, e, log_all_fields, flag, data);
 }
@@ -233,8 +235,8 @@ void logger_log_part(struct logger_writer *log, const struct part *p,
  */
 void logger_log_parts(struct logger_writer *log, const struct part *p,
                       struct xpart *xp, int count, const struct engine *e,
-                      const int log_all_fields, const enum logger_special_flags flag,
-                      const int data) {
+                      const int log_all_fields,
+                      const enum logger_special_flags flag, const int data) {
 
   /* Build the special flag */
   const uint32_t special_flags = logger_pack_flags_and_data(flag, data);
@@ -278,9 +280,8 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
     /* Write the particle into the history if needed. */
     if (flag & logger_flag_create || flag & logger_flag_mpi_enter) {
       logger_history_log_part(&log->history_new, &p[i], &xp[i]);
-    }
-    else if (flag & logger_flag_change_type || flag & logger_flag_delete ||
-             flag & logger_flag_mpi_exit) {
+    } else if (flag & logger_flag_change_type || flag & logger_flag_delete ||
+               flag & logger_flag_mpi_exit) {
       logger_history_log_part(&log->history_removed, &p[i], &xp[i]);
     }
 
@@ -350,8 +351,7 @@ void logger_copy_spart_fields(const struct logger_writer *log,
  */
 void logger_log_spart(struct logger_writer *log, struct spart *sp,
                       const struct engine *e, const int log_all_fields,
-                      const enum logger_special_flags flag,
-                      const int data) {
+                      const enum logger_special_flags flag, const int data) {
 
   logger_log_sparts(log, sp, /* count */ 1, e, log_all_fields, flag, data);
 }
@@ -369,8 +369,7 @@ void logger_log_spart(struct logger_writer *log, struct spart *sp,
  */
 void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
                        const struct engine *e, const int log_all_fields,
-                       const enum logger_special_flags flag,
-                       const int data) {
+                       const enum logger_special_flags flag, const int data) {
   /* Build the special flag */
   const uint32_t special_flags = logger_pack_flags_and_data(flag, data);
 
@@ -412,9 +411,8 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
     /* Write the particle into the history if needed. */
     if (flag & logger_flag_create || flag & logger_flag_mpi_enter) {
       logger_history_log_spart(&log->history_new, &sp[i]);
-    }
-    else if (flag & logger_flag_change_type || flag & logger_flag_delete ||
-             flag & logger_flag_mpi_exit) {
+    } else if (flag & logger_flag_change_type || flag & logger_flag_delete ||
+               flag & logger_flag_mpi_exit) {
       logger_history_log_spart(&log->history_removed, &sp[i]);
     }
 
@@ -484,8 +482,7 @@ void logger_copy_gpart_fields(const struct logger_writer *log,
  */
 void logger_log_gpart(struct logger_writer *log, struct gpart *p,
                       const struct engine *e, const int log_all_fields,
-                      const enum logger_special_flags flag,
-                      const int data) {
+                      const enum logger_special_flags flag, const int data) {
   logger_log_gparts(log, p, /* count */ 1, e, log_all_fields, flag, data);
 }
 
@@ -502,8 +499,7 @@ void logger_log_gpart(struct logger_writer *log, struct gpart *p,
  */
 void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
                        const struct engine *e, const int log_all_fields,
-                       const enum logger_special_flags flag,
-                       const int data) {
+                       const enum logger_special_flags flag, const int data) {
   /* Build the special flag */
   const uint32_t special_flags = logger_pack_flags_and_data(flag, data);
 
@@ -550,9 +546,8 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
     /* Write the particle into the history if needed. */
     if (flag & logger_flag_create || flag & logger_flag_mpi_enter) {
       logger_history_log_gpart(&log->history_new, &p[i]);
-    }
-    else if (flag & logger_flag_change_type || flag & logger_flag_delete ||
-             flag & logger_flag_mpi_exit) {
+    } else if (flag & logger_flag_change_type || flag & logger_flag_delete ||
+               flag & logger_flag_mpi_exit) {
       logger_history_log_gpart(&log->history_removed, &p[i]);
     }
 
@@ -857,11 +852,11 @@ void logger_init(struct logger_writer *log, const struct engine *e,
   /* init dump. */
   dump_init(&log->dump, logger_name_file, buffer_size);
 
-
   /* Read the maximal size of the history. */
-  const float max_memory_size = parser_get_opt_param_float(
-      params, "Logger:maximal_memory_size", 1.);
-  log->maximal_size_history = max_memory_size / sizeof(struct logger_index_data);
+  const float max_memory_size =
+      parser_get_opt_param_float(params, "Logger:maximal_memory_size", 1.);
+  log->maximal_size_history =
+      max_memory_size / sizeof(struct logger_index_data);
 
   if (e->nodeID == 0) {
     message("Maximal memory size for the logger history: %g GB",
@@ -1186,12 +1181,15 @@ void logger_struct_restore(struct logger_writer *log, FILE *stream) {
                       log->logger_count_mask, stream, NULL, "logger_masks");
 
   /* Restore the pointers */
-  log->mask_data_pointers.hydro = log->logger_mask_data +
-    (log->mask_data_pointers.hydro - old_logger_mask_data);
-  log->mask_data_pointers.gravity = log->logger_mask_data +
-    (log->mask_data_pointers.gravity - old_logger_mask_data);
-  log->mask_data_pointers.stars = log->logger_mask_data +
-    (log->mask_data_pointers.stars - old_logger_mask_data);
+  log->mask_data_pointers.hydro =
+      log->logger_mask_data +
+      (log->mask_data_pointers.hydro - old_logger_mask_data);
+  log->mask_data_pointers.gravity =
+      log->logger_mask_data +
+      (log->mask_data_pointers.gravity - old_logger_mask_data);
+  log->mask_data_pointers.stars =
+      log->logger_mask_data +
+      (log->mask_data_pointers.stars - old_logger_mask_data);
 
   /* Restart the dump file. */
   char logger_name_file[PARSER_MAX_LINE_SIZE];

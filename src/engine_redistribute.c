@@ -514,7 +514,8 @@ static void engine_redistribute_relink_mapper(void *map_data, int num_elements,
  *
  *
  * @param e The #engine.
- * @param initial_redistribute Is it the redistribute done before starting the simulation?
+ * @param initial_redistribute Is it the redistribute done before starting the
+ * simulation?
  */
 void engine_redistribute(struct engine *e, int initial_redistribute) {
 
@@ -1011,13 +1012,11 @@ void engine_redistribute(struct engine *e, int initial_redistribute) {
 
       /* Log the stellar parts. */
       logger_log_sparts(e->logger, &sparts[spart_offset], s_counts[c_ind], e,
-                        /* log_all_fields */ 1,
-                        logger_flag_mpi_exit, i);
+                        /* log_all_fields */ 1, logger_flag_mpi_exit, i);
 
       /* Log the gparts */
       logger_log_gparts(e->logger, &gparts[gpart_offset], g_counts[c_ind], e,
-                        /* log_all_fields */ 1,
-                        logger_flag_mpi_exit, i);
+                        /* log_all_fields */ 1, logger_flag_mpi_exit, i);
 
       /* Log the bparts */
       if (b_counts[c_ind] > 0) {
