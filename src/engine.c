@@ -569,7 +569,7 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
       logger_log_part(
           e->logger, &s->parts[offset_parts + k], &s->xparts[offset_parts + k],
           e, /* log_all_fields */ 1,
-          logger_pack_flags_and_data(logger_flag_mpi_exit, node_id));
+          logger_flag_mpi_exit, node_id);
     }
 #endif
   }
@@ -614,7 +614,7 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
       logger_log_spart(
           e->logger, &s->sparts[offset_sparts + k], e,
           /* log_all_fields */ 1,
-          logger_pack_flags_and_data(logger_flag_mpi_exit, node_id));
+          logger_flag_mpi_exit, node_id);
     }
 #endif
   }
@@ -697,7 +697,7 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
       logger_log_gpart(
           e->logger, &s->gparts[offset_gparts + k], e,
           /* log_all_fields */ 1,
-          logger_pack_flags_and_data(logger_flag_mpi_exit, node_id));
+          logger_flag_mpi_exit, node_id);
     }
 #endif
   }
@@ -922,9 +922,6 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 
 #ifdef WITH_LOGGER
       if (e->policy & engine_policy_logger) {
-        const uint32_t flag =
-            logger_pack_flags_and_data(logger_flag_mpi_enter, prox->nodeID);
-
         struct part *parts = &s->parts[offset_parts + count_parts];
         struct xpart *xparts = &s->xparts[offset_parts + count_parts];
         struct spart *sparts = &s->sparts[offset_sparts + count_sparts];
@@ -932,15 +929,15 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 
         /* Log the gas particles */
         logger_log_parts(e->logger, parts, xparts, prox->nr_parts_in, e,
-                         /* log_all_fields */ 1, flag);
+                         /* log_all_fields */ 1, logger_flag_mpi_enter, prox->nodeID);
 
         /* Log the stellar particles */
         logger_log_sparts(e->logger, sparts, prox->nr_sparts_in, e,
-                          /* log_all_fields */ 1, flag);
+                          /* log_all_fields */ 1, logger_flag_mpi_enter, prox->nodeID);
 
         /* Log the gparts */
         logger_log_gparts(e->logger, gparts, prox->nr_gparts_in, e,
-                          /* log_all_fields */ 1, flag);
+                          /* log_all_fields */ 1, logger_flag_mpi_enter, prox->nodeID);
 
         /* Log the bparts */
         if (prox->nr_bparts_in > 0) {
@@ -3066,12 +3063,9 @@ void engine_check_for_index_dump(struct engine *e) {
   const size_t index_file_size =
       total_nr_parts * sizeof(struct logger_part_data);
 
-#ifdef WITH_MPI
-  const size_t number_part_history = logger_mpi_history_get_size(&log->history);
-  const int history_too_large = number_part_history > log->history.maximal_size;
-#else
-  const int history_too_large = 0;
-#endif
+  const size_t number_part_history = logger_history_get_size(&log->history_new) +
+    logger_history_get_size(&log->history_removed);
+  const int history_too_large = number_part_history > log->maximal_size_history;
 
   /* Check if we should write a file */
   if (mem_frac * (dump_size - old_dump_size) > index_file_size ||

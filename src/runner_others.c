@@ -329,8 +329,8 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
             /* Logs all the fields request by the user */
             // TODO select only the requested fields
             logger_log_part(e->logger, p, xp, e, /* log_all */ 1,
-                            logger_pack_flags_and_data(logger_flag_change_type,
-                                                       swift_type_stars));
+                            logger_flag_change_type,
+                            swift_type_stars);
 #endif
 
             /* Convert the gas particle to a star particle */
@@ -394,9 +394,8 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
               sp->logger_data = xp->logger_data;
 
               /* Write the s-particle */
-              logger_log_spart(e->logger, sp, e,
-                               /* log_all */ 1,
-                               /* special flags */ 0);
+              logger_log_spart(e->logger, sp, e, /* log_all */ 1,
+                               logger_flag_create, /* data */ 0);
 #endif
             } else if (swift_star_formation_model_creates_stars) {
 
@@ -693,7 +692,7 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
           /* Write particle */
           /* Currently writing everything, should adapt it through time */
           logger_log_part(e->logger, p, xp, e, /* log_all */ 0,
-                          /* special flags */ 0);
+                          /* special flags */ 0, /* data */ 0);
         } else
           /* Update counter */
           xp->logger_data.steps_since_last_output += 1;
@@ -716,7 +715,7 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
           /* Write particle */
           /* Currently writing everything, should adapt it through time */
           logger_log_gpart(e->logger, gp, e, /* log_all */ 0,
-                           /* Special flags */ 0);
+                           /* Special flags */ 0, /* data */ 0);
 
         } else
           /* Update counter */
@@ -737,7 +736,7 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
           /* Write particle */
           /* Currently writing everything, should adapt it through time */
           logger_log_spart(e->logger, sp, e, /* Log_all */ 0,
-                           /* Special flags */ 0);
+                           /* Special flags */ 0, /* data */ 0);
         } else
           /* Update counter */
           sp->logger_data.steps_since_last_output += 1;

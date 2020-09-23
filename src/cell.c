@@ -5234,7 +5234,7 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
               /* Log the particle one last time. */
               logger_log_part(
                   e->logger, p, xp, e, /* log_all */ 1,
-                  logger_pack_flags_and_data(logger_flag_delete, 0));
+                  logger_flag_delete, /* data */ 0);
             }
 #endif
 
@@ -5415,7 +5415,7 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
                 /* Log the particle one last time. */
                 logger_log_gpart(
                     e->logger, gp, e, /* log_all */ 1,
-                    logger_pack_flags_and_data(logger_flag_delete, 0));
+                    logger_flag_delete, /* data */ 0);
               }
 #endif
 
@@ -5566,7 +5566,7 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
               /* Log the particle one last time. */
               logger_log_spart(
                   e->logger, sp, e, /* log_all */ 1,
-                  logger_pack_flags_and_data(logger_flag_delete, 0));
+                  logger_flag_delete, /* data */ 0);
             }
 #endif
 

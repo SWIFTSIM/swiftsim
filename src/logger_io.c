@@ -353,10 +353,9 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
     if (bparts_written) swift_free("bparts_written", bparts_written);
   }
 
-#ifdef WITH_MPI
   /* Write the MPI history */
-  logger_mpi_history_write(&log->history, e, f);
-#endif
+  logger_history_write(&log->history_new, e, f);
+  logger_history_write(&log->history_removed, e, f);
 
 
   /* Close file */
