@@ -1,4 +1,4 @@
-This example simulate a planet orbiting around the Sun and then compare
+This example simulates a planet orbiting around the Sun and then compare
 the solution given by the snapshots and the logger.
 
 It requires to be compiled with the logger, python and the external point mass potential

@@ -68,8 +68,7 @@ struct logger_history {
   struct logger_index_data *data[swift_type_count];
 };
 
-void logger_history_first_init(struct logger_history *hist,
-                               struct swift_params *params);
+void logger_history_first_init(struct logger_history *hist);
 void logger_history_init(struct logger_history *hist);
 void logger_history_clean(struct logger_history *hist);
 void logger_history_log_part(struct logger_history *hist, const struct part *p,
@@ -81,8 +80,8 @@ void logger_history_write(struct logger_history *hist,
                               struct engine *e, FILE *f);
 size_t logger_history_get_size(const struct logger_history *hist);
 
-void logger_history_dump(const struct logger_history *hist);
-void logger_history_restore(struct logger_history *hist);
+void logger_history_dump(const struct logger_history *hist, FILE *stream);
+void logger_history_restore(struct logger_history *hist, FILE *stream);
 
 #endif // WITH_LOGGER
 #endif // SWIFT_LOGGER_HISTORY_H

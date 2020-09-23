@@ -35,10 +35,8 @@
  * @brief Initialize the structure for the first time.
  *
  * @param hist The #logger_history.
- * @param params The #swift_params.
  */
-void logger_history_first_init(struct logger_history *hist,
-                               struct swift_params *params) {
+void logger_history_first_init(struct logger_history *hist) {
 
   for(int i = 0; i < swift_type_count; i++) {
     /* Set the counters to their initial value */
@@ -90,7 +88,7 @@ void logger_history_clean(struct logger_history *hist) {
     hist->capacity[i] = 0;
 
     /* Free the memory */
-    if (hist->data[i] == NULL) {
+    if (hist->data[i] != NULL) {
       free(hist->data[i]);
       hist->data[i] = NULL;
     }
@@ -246,12 +244,29 @@ size_t logger_history_get_size(const struct logger_history *hist) {
   return number;
 }
 
-void logger_history_dump(const struct logger_history *hist) {
-  error("TODO");
+void logger_history_dump(const struct logger_history *hist, FILE *stream) {
+  restart_write_blocks((void *)hist, sizeof(struct logger_history), 1, stream,
+                       "logger_history", "logger_history");
+
+  for(int i = 0; i < swift_type_count; i++) {
+    restart_write_blocks((void *)hist->data[i], sizeof(struct logger_index_data),
+                         hist->size[i], stream, "logger_history_data", "logger_history_data");
+  }
 }
 
-void logger_history_restore(struct logger_history *hist) {
-  error("TODO");
+void logger_history_restore(struct logger_history *hist, FILE *stream) {
+  restart_read_blocks((void *)hist, sizeof(struct logger_history), 1, stream,
+                      NULL, "logger_history");
+
+  for(int i = 0; i < swift_type_count; i++) {
+    hist->data[i] = malloc(hist->capacity[i] * sizeof(struct logger_index_data));
+    if (hist->data[i] == NULL) {
+      error("Failed to allocate array for logger history");
+    }
+
+    restart_read_blocks((void *)hist->data[i], sizeof(struct logger_index_data),
+                        hist->size[i], stream, NULL, "logger_history_data");
+  }
 }
 
 
