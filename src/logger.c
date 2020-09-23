@@ -868,8 +868,8 @@ void logger_init(struct logger_writer *log, const struct engine *e,
   }
 
   /* initialize the history */
-  logger_history_first_init(&log->history_removed, params);
-  logger_history_first_init(&log->history_new, params);
+  logger_history_first_init(&log->history_removed);
+  logger_history_first_init(&log->history_new);
 }
 
 /**
@@ -1160,8 +1160,8 @@ void logger_struct_dump(const struct logger_writer *log, FILE *stream) {
                        "logger_masks");
 
   /* Dump the logger mpi history */
-  logger_history_dump(&log->history_new);
-  logger_history_dump(&log->history_removed);
+  logger_history_dump(&log->history_new, stream);
+  logger_history_dump(&log->history_removed, stream);
 }
 
 /**
@@ -1184,8 +1184,8 @@ void logger_struct_restore(struct logger_writer *log, FILE *stream) {
                       log->logger_count_mask, stream, NULL, "logger_masks");
 
   /* Restore the logger mpi history */
-  logger_history_restore(&log->history_new);
-  logger_history_restore(&log->history_removed);
+  logger_history_restore(&log->history_new, stream);
+  logger_history_restore(&log->history_removed, stream);
 
   /* generate dump filename */
   char logger_name_file[PARSER_MAX_LINE_SIZE];
