@@ -1,5 +1,5 @@
-This example simulates a planet orbiting around the Sun and then compare
-the solution given by the snapshots and the logger.
+This example simulates a planet orbiting around the Sun and then compares
+the solutions given by the snapshots to those read from the logger.
 
-It requires to be compiled with the logger, python and the external point mass potential
+It requires compilation with the logger, python and the external point mass potential
 (./configure --with-python=/usr --enable-logger --with-ext-potential=point-mass).
