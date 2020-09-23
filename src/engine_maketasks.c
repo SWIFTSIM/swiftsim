@@ -1101,6 +1101,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
   const int with_cooling = (e->policy & engine_policy_cooling);
   const int with_star_formation = (e->policy & engine_policy_star_formation);
   const int with_black_holes = (e->policy & engine_policy_black_holes);
+  const int with_rt = (e->policy & engine_policy_rt);
 #ifdef WITH_LOGGER
   const int with_logger = (e->policy & engine_policy_logger);
 #endif
@@ -1237,6 +1238,21 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
           scheduler_addunlock(s, star_resort_cell->hydro.stars_resort,
                               c->stars.stars_in);
         }
+      }
+
+      /* Radiative Transfer */
+      if (with_rt) {
+        /* ghost in */
+        c->hydro.rt_in =
+            scheduler_addtask(s, task_type_rt_in, task_subtype_none, 0,
+                              /* implicit= */ 1, c, NULL);
+        scheduler_addunlock(s, c->stars.stars_out, c->hydro.rt_in);
+
+        /* ghost out */
+        c->hydro.rt_out =
+            scheduler_addtask(s, task_type_rt_out, task_subtype_none, 0,
+                              /* implicit= */ 1, c, NULL);
+        scheduler_addunlock(s, c->hydro.rt_out, c->super->timestep);
       }
 
       /* Subgrid tasks: sink */
@@ -2071,9 +2087,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       if (with_rt) {
-        scheduler_addunlock(sched, ci->hydro.super->stars.stars_out,
+        /* TODO: feedback */
+        /* scheduler_addunlock(sched, ci->hydro.super->stars.stars_out, */
+        /*                     t_rt_inject); */
+        scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in,
                             t_rt_inject);
-        scheduler_addunlock(sched, t_rt_inject, ci->super->timestep);
+        scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_out);
       }
     }
 
@@ -2287,9 +2306,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
 
         if (with_rt) {
-          scheduler_addunlock(sched, ci->hydro.super->stars.stars_out,
+          /* TODO: if feedback */
+          /* scheduler_addunlock(sched, ci->hydro.super->stars.stars_out, */
+          /*                     t_rt_inject); */
+          scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in,
                               t_rt_inject);
-          scheduler_addunlock(sched, t_rt_inject, ci->super->timestep);
+          scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_out);
         }
 
       } else /*(ci->nodeID != nodeID) */ {
@@ -2366,9 +2388,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           }
 
           if (with_rt) {
-            scheduler_addunlock(sched, cj->hydro.super->stars.stars_out,
+            /* TODO: if feedback */
+            /* scheduler_addunlock(sched, cj->hydro.super->stars.stars_out, */
+            /*                     t_rt_inject); */
+            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in,
                                 t_rt_inject);
-            scheduler_addunlock(sched, t_rt_inject, cj->super->timestep);
+            scheduler_addunlock(sched, t_rt_inject, cj->super->hydro.rt_out);
           }
 
           if (with_timestep_limiter) {
@@ -2580,9 +2605,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       if (with_rt) {
-        scheduler_addunlock(sched, ci->hydro.super->stars.stars_out,
+        /* TODO: feedback */
+        /* scheduler_addunlock(sched, ci->hydro.super->stars.stars_out, */
+        /*                     t_rt_inject); */
+        scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in,
                             t_rt_inject);
-        scheduler_addunlock(sched, t_rt_inject, ci->super->timestep);
+        scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_out);
       }
     }
 
@@ -2800,9 +2828,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
 
         if (with_rt) {
-          scheduler_addunlock(sched, ci->hydro.super->stars.stars_out,
+          /* TODO: feedback */
+          /* scheduler_addunlock(sched, ci->hydro.super->stars.stars_out, */
+          /*                     t_rt_inject); */
+          scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in,
                               t_rt_inject);
-          scheduler_addunlock(sched, t_rt_inject, ci->super->timestep);
+          scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_out);
         }
       } else /* ci->nodeID != nodeID */ {
 
@@ -2878,9 +2909,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 cj->hydro.super->black_holes.black_holes_out);
           }
           if (with_rt) {
-            scheduler_addunlock(sched, cj->hydro.super->stars.stars_out,
+            /* TODO: feedback */
+            /* scheduler_addunlock(sched, cj->hydro.super->stars.stars_out, */
+            /*                     t_rt_inject); */
+            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in,
                                 t_rt_inject);
-            scheduler_addunlock(sched, t_rt_inject, cj->super->timestep);
+            scheduler_addunlock(sched, t_rt_inject, cj->super->hydro.rt_out);
           }
 
           if (with_timestep_limiter) {

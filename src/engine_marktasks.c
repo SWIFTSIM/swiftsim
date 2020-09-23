@@ -1022,6 +1022,12 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         cell_activate_super_spart_drifts(t->ci, s);
       }
     }
+
+    /* Radiative transfer ghost tasks */
+    else if (t->type == task_type_rt_in || t->type == task_type_rt_out) {
+      if (cell_is_active_hydro(t->ci, e) || cell_is_active_stars(t->ci, e))
+        scheduler_activate(s, t);
+    }
   }
 }
 
