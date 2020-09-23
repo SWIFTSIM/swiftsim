@@ -46,6 +46,7 @@
  * @param e The #engine.
  */
 void engine_check_for_index_dump(struct engine *e) {
+
 #ifdef WITH_LOGGER
   /* Get a few variables */
   struct logger_writer *log = e->logger;
@@ -58,8 +59,17 @@ void engine_check_for_index_dump(struct engine *e) {
   const size_t index_file_size =
       total_nr_parts * sizeof(struct logger_part_data);
 
+
+#ifdef WITH_MPI
+  const size_t number_part_history = logger_mpi_history_get_size(&log->history);
+  const int history_too_large = number_part_history > log->history.maximal_size;
+#else
+  const int history_too_large = 0;
+#endif
+
   /* Check if we should write a file */
-  if (mem_frac * (dump_size - old_dump_size) > index_file_size) {
+  if (mem_frac * (dump_size - old_dump_size) > index_file_size ||
+      history_too_large) {
     /* Write an index file */
     engine_dump_index(e);
 

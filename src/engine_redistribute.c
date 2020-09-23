@@ -514,8 +514,9 @@ static void engine_redistribute_relink_mapper(void *map_data, int num_elements,
  *
  *
  * @param e The #engine.
+ * @param initial_redistribute Is it the redistribute done before starting the simulation?
  */
-void engine_redistribute(struct engine *e) {
+void engine_redistribute(struct engine *e, int initial_redistribute) {
 
 #ifdef WITH_MPI
 #ifdef SWIFT_DEBUG_CHECKS
@@ -984,7 +985,7 @@ void engine_redistribute(struct engine *e) {
     nr_bparts_new += b_counts[k * nr_nodes + nodeID];
 
 #ifdef WITH_LOGGER
-  if (e->policy & engine_policy_logger) {
+  if (!initial_redistribute && e->policy & engine_policy_logger) {
     /* Log the particles before sending them out */
     size_t part_offset = 0;
     size_t spart_offset = 0;
@@ -1083,7 +1084,7 @@ void engine_redistribute(struct engine *e) {
      stuff we just received */
 
 #ifdef WITH_LOGGER
-  if (e->policy & engine_policy_logger) {
+  if (!initial_redistribute && e->policy & engine_policy_logger) {
     size_t part_offset = 0;
     size_t spart_offset = 0;
     size_t gpart_offset = 0;
