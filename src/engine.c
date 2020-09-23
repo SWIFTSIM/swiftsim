@@ -566,10 +566,9 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 #ifdef WITH_LOGGER
     if (e->policy & engine_policy_logger) {
       /* Log the particle when leaving a rank. */
-      logger_log_part(
-          e->logger, &s->parts[offset_parts + k], &s->xparts[offset_parts + k],
-          e, /* log_all_fields */ 1,
-          logger_flag_mpi_exit, node_id);
+      logger_log_part(e->logger, &s->parts[offset_parts + k],
+                      &s->xparts[offset_parts + k], e, /* log_all_fields */ 1,
+                      logger_flag_mpi_exit, node_id);
     }
 #endif
   }
@@ -611,10 +610,8 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 #ifdef WITH_LOGGER
     if (e->policy & engine_policy_logger) {
       /* Log the particle when leaving a rank. */
-      logger_log_spart(
-          e->logger, &s->sparts[offset_sparts + k], e,
-          /* log_all_fields */ 1,
-          logger_flag_mpi_exit, node_id);
+      logger_log_spart(e->logger, &s->sparts[offset_sparts + k], e,
+                       /* log_all_fields */ 1, logger_flag_mpi_exit, node_id);
     }
 #endif
   }
@@ -694,10 +691,8 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
         s->gparts[offset_gparts + k].type == swift_type_dark_matter) {
 
       /* Log the particle when leaving a rank. */
-      logger_log_gpart(
-          e->logger, &s->gparts[offset_gparts + k], e,
-          /* log_all_fields */ 1,
-          logger_flag_mpi_exit, node_id);
+      logger_log_gpart(e->logger, &s->gparts[offset_gparts + k], e,
+                       /* log_all_fields */ 1, logger_flag_mpi_exit, node_id);
     }
 #endif
   }
@@ -929,15 +924,18 @@ void engine_exchange_strays(struct engine *e, const size_t offset_parts,
 
         /* Log the gas particles */
         logger_log_parts(e->logger, parts, xparts, prox->nr_parts_in, e,
-                         /* log_all_fields */ 1, logger_flag_mpi_enter, prox->nodeID);
+                         /* log_all_fields */ 1, logger_flag_mpi_enter,
+                         prox->nodeID);
 
         /* Log the stellar particles */
         logger_log_sparts(e->logger, sparts, prox->nr_sparts_in, e,
-                          /* log_all_fields */ 1, logger_flag_mpi_enter, prox->nodeID);
+                          /* log_all_fields */ 1, logger_flag_mpi_enter,
+                          prox->nodeID);
 
         /* Log the gparts */
         logger_log_gparts(e->logger, gparts, prox->nr_gparts_in, e,
-                          /* log_all_fields */ 1, logger_flag_mpi_enter, prox->nodeID);
+                          /* log_all_fields */ 1, logger_flag_mpi_enter,
+                          prox->nodeID);
 
         /* Log the bparts */
         if (prox->nr_bparts_in > 0) {
@@ -3063,8 +3061,9 @@ void engine_check_for_index_dump(struct engine *e) {
   const size_t index_file_size =
       total_nr_parts * sizeof(struct logger_part_data);
 
-  const size_t number_part_history = logger_history_get_size(&log->history_new) +
-    logger_history_get_size(&log->history_removed);
+  const size_t number_part_history =
+      logger_history_get_size(&log->history_new) +
+      logger_history_get_size(&log->history_removed);
   const int history_too_large = number_part_history > log->maximal_size_history;
 
   /* Check if we should write a file */

@@ -329,8 +329,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
             /* Logs all the fields request by the user */
             // TODO select only the requested fields
             logger_log_part(e->logger, p, xp, e, /* log_all */ 1,
-                            logger_flag_change_type,
-                            swift_type_stars);
+                            logger_flag_change_type, swift_type_stars);
 #endif
 
             /* Convert the gas particle to a star particle */

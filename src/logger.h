@@ -177,28 +177,24 @@ void logger_log_all_particles(struct logger_writer *log,
                               const struct engine *e);
 void logger_log_part(struct logger_writer *log, const struct part *p,
                      struct xpart *xp, const struct engine *e,
-                     const int log_all_fields, const enum logger_special_flags flag,
-                     const int data);
+                     const int log_all_fields,
+                     const enum logger_special_flags flag, const int data);
 void logger_log_parts(struct logger_writer *log, const struct part *p,
                       struct xpart *xp, int count, const struct engine *e,
-                      const int log_all_fields, const enum logger_special_flags flag,
-                      const int data);
+                      const int log_all_fields,
+                      const enum logger_special_flags flag, const int data);
 void logger_log_spart(struct logger_writer *log, struct spart *p,
                       const struct engine *e, const int log_all_fields,
-                      const enum logger_special_flags flag,
-                      const int data);
+                      const enum logger_special_flags flag, const int data);
 void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
                        const struct engine *e, const int log_all_fields,
-                       const enum logger_special_flags flag,
-                       const int data);
+                       const enum logger_special_flags flag, const int data);
 void logger_log_gpart(struct logger_writer *log, struct gpart *p,
                       const struct engine *e, const int log_all_fields,
-                      const enum logger_special_flags flag,
-                      const int data);
+                      const enum logger_special_flags flag, const int data);
 void logger_log_gparts(struct logger_writer *log, struct gpart *gp, int count,
                        const struct engine *e, const int log_all_fields,
-                       const enum logger_special_flags flag,
-                       const int data);
+                       const enum logger_special_flags flag, const int data);
 void logger_init(struct logger_writer *log, const struct engine *e,
                  struct swift_params *params);
 void logger_free(struct logger_writer *log);

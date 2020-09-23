@@ -25,9 +25,8 @@
 #include <stdint.h>
 
 /* Local include */
-#include "part_type.h"
 #include "error.h"
-
+#include "part_type.h"
 
 #if defined(WITH_LOGGER)
 
@@ -73,15 +72,18 @@ void logger_history_init(struct logger_history *hist);
 void logger_history_clean(struct logger_history *hist);
 void logger_history_log_part(struct logger_history *hist, const struct part *p,
                              const struct xpart *xp);
-void logger_history_log_spart(struct logger_history *hist, const struct spart *sp);
-void logger_history_log_gpart(struct logger_history *hist, const struct gpart *gp);
-void logger_history_log_bpart(struct logger_history *hist, const struct bpart *bp);
-void logger_history_write(struct logger_history *hist,
-                              struct engine *e, FILE *f);
+void logger_history_log_spart(struct logger_history *hist,
+                              const struct spart *sp);
+void logger_history_log_gpart(struct logger_history *hist,
+                              const struct gpart *gp);
+void logger_history_log_bpart(struct logger_history *hist,
+                              const struct bpart *bp);
+void logger_history_write(struct logger_history *hist, struct engine *e,
+                          FILE *f);
 size_t logger_history_get_size(const struct logger_history *hist);
 
 void logger_history_dump(const struct logger_history *hist, FILE *stream);
 void logger_history_restore(struct logger_history *hist, FILE *stream);
 
-#endif // WITH_LOGGER
-#endif // SWIFT_LOGGER_HISTORY_H
+#endif  // WITH_LOGGER
+#endif  // SWIFT_LOGGER_HISTORY_H

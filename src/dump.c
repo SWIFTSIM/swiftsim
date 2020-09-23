@@ -173,7 +173,6 @@ void dump_restart(struct dump *d, const char *filename) {
     error("Failed to open dump file '%s' (%s).", filename, strerror(errno));
   }
 
-
   /* Adjust the size to be at least the page size. */
   const size_t page_mask = ~(sysconf(_SC_PAGE_SIZE) - 1);
   size_t size = (d->size + ~page_mask) & page_mask;
