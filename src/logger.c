@@ -140,15 +140,15 @@ void logger_log_all_particles(struct logger_writer *log,
 
   /* log the parts. */
   logger_log_parts(log, s->parts, s->xparts, s->nr_parts, e,
-                   /* log_all_fields */ 1, /* Special flags */ 0);
+                   /* log_all_fields */ 1, /* Special flags */ 0, /* data */ 0);
 
   /* log the gparts */
   logger_log_gparts(log, s->gparts, s->nr_gparts, e,
-                    /* log_all_fields */ 1, /* Special flags */ 0);
+                    /* log_all_fields */ 1, /* Special flags */ 0, /* data */ 0);
 
   /* log the parts */
   logger_log_sparts(log, s->sparts, s->nr_sparts, e,
-                    /* log_all_fields */ 1, /* Special flags */ 0);
+                    /* log_all_fields */ 1, /* Special flags */ 0, /* data */ 0);
 
   if (e->total_nr_bparts > 0) error("Not implemented");
 }
@@ -208,13 +208,15 @@ void logger_copy_part_fields(const struct logger_writer *log,
  * @param xp The #xpart to dump.
  * @param e The #engine.
  * @param log_all_fields Should we log all the fields?
- * @param special_flags The value of the special flag.
+ * @param flag The value of the special flags.
+ * @param data The data to write for the flag.
  */
 void logger_log_part(struct logger_writer *log, const struct part *p,
                      struct xpart *xp, const struct engine *e,
-                     const int log_all_fields, const uint32_t special_flags) {
+                     const int log_all_fields, const enum logger_special_flags flag,
+                     const int data) {
 
-  logger_log_parts(log, p, xp, /* count */ 1, e, log_all_fields, special_flags);
+  logger_log_parts(log, p, xp, /* count */ 1, e, log_all_fields, flag, data);
 }
 
 /**
@@ -226,11 +228,16 @@ void logger_log_part(struct logger_writer *log, const struct part *p,
  * @param count The number of particle to dump.
  * @param e The #engine.
  * @param log_all_fields Should we log all the fields?
- * @param special_flags The value of the special flags.
+ * @param flag The value of the special flags.
+ * @param data The data to write for the flag.
  */
 void logger_log_parts(struct logger_writer *log, const struct part *p,
                       struct xpart *xp, int count, const struct engine *e,
-                      const int log_all_fields, const uint32_t special_flags) {
+                      const int log_all_fields, const enum logger_special_flags flag,
+                      const int data) {
+
+  /* Build the special flag */
+  const uint32_t special_flags = logger_pack_flags_and_data(flag, data);
 
   /* Compute the size of the buffer. */
   size_t size_total = 0;
@@ -267,6 +274,15 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
     logger_copy_part_fields(log, &p[i], &xp[i], e, mask,
                             &xp[i].logger_data.last_offset, offset_new, buff,
                             special_flags);
+
+    /* Write the particle into the history if needed. */
+    if (flag & logger_flag_create || flag & logger_flag_mpi_enter) {
+      logger_history_log_part(&log->history_new, &p[i], &xp[i]);
+    }
+    else if (flag & logger_flag_change_type || flag & logger_flag_delete ||
+             flag & logger_flag_mpi_exit) {
+      logger_history_log_part(&log->history_removed, &p[i], &xp[i]);
+    }
 
     /* Update the pointers */
     xp[i].logger_data.last_offset = offset_new;
@@ -329,13 +345,15 @@ void logger_copy_spart_fields(const struct logger_writer *log,
  * @param sp The #spart to dump.
  * @param e The #engine.
  * @param log_all_fields Should we log all the fields?
- * @param special_flags The value of the special flag.
+ * @param flag The value of the special flags.
+ * @param data The data to write for the flag.
  */
 void logger_log_spart(struct logger_writer *log, struct spart *sp,
                       const struct engine *e, const int log_all_fields,
-                      const uint32_t special_flags) {
+                      const enum logger_special_flags flag,
+                      const int data) {
 
-  logger_log_sparts(log, sp, /* count */ 1, e, log_all_fields, special_flags);
+  logger_log_sparts(log, sp, /* count */ 1, e, log_all_fields, flag, data);
 }
 
 /**
@@ -346,11 +364,15 @@ void logger_log_spart(struct logger_writer *log, struct spart *sp,
  * @param e The #engine.
  * @param log_all_fields Should we log all the fields?
  * @param count The number of particle to dump.
- * @param special_flags The value of the special flags.
+ * @param flag The value of the special flags.
+ * @param data The data to write for the flag.
  */
 void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
                        const struct engine *e, const int log_all_fields,
-                       const uint32_t special_flags) {
+                       const enum logger_special_flags flag,
+                       const int data) {
+  /* Build the special flag */
+  const uint32_t special_flags = logger_pack_flags_and_data(flag, data);
 
   /* Compute the size of the buffer. */
   size_t size_total = 0;
@@ -386,6 +408,15 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
     logger_copy_spart_fields(log, &sp[i], e, mask,
                              &sp[i].logger_data.last_offset, offset_new, buff,
                              special_flags);
+
+    /* Write the particle into the history if needed. */
+    if (flag & logger_flag_create || flag & logger_flag_mpi_enter) {
+      logger_history_log_spart(&log->history_new, &sp[i]);
+    }
+    else if (flag & logger_flag_change_type || flag & logger_flag_delete ||
+             flag & logger_flag_mpi_exit) {
+      logger_history_log_spart(&log->history_removed, &sp[i]);
+    }
 
     /* Update the pointers */
     sp[i].logger_data.last_offset = offset_new;
@@ -448,12 +479,14 @@ void logger_copy_gpart_fields(const struct logger_writer *log,
  * @param p The #gpart to dump.
  * @param e The #engine.
  * @param log_all_fields Should we log all the fields?
- * @param special_flags The value of the special flags.
+ * @param flag The value of the special flags.
+ * @param data The data to write for the flag.
  */
 void logger_log_gpart(struct logger_writer *log, struct gpart *p,
                       const struct engine *e, const int log_all_fields,
-                      const uint32_t special_flags) {
-  logger_log_gparts(log, p, /* count */ 1, e, log_all_fields, special_flags);
+                      const enum logger_special_flags flag,
+                      const int data) {
+  logger_log_gparts(log, p, /* count */ 1, e, log_all_fields, flag, data);
 }
 
 /**
@@ -464,11 +497,15 @@ void logger_log_gpart(struct logger_writer *log, struct gpart *p,
  * @param count The number of particle to dump.
  * @param e The #engine.
  * @param log_all_fields Should we log all the fields?
- * @param special_flags The value of the special flags.
+ * @param flag The value of the special flags.
+ * @param data The data to write for the flag.
  */
 void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
                        const struct engine *e, const int log_all_fields,
-                       const uint32_t special_flags) {
+                       const enum logger_special_flags flag,
+                       const int data) {
+  /* Build the special flag */
+  const uint32_t special_flags = logger_pack_flags_and_data(flag, data);
 
   /* Compute the size of the buffer. */
   size_t size_total = 0;
@@ -509,6 +546,15 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
     /* Copy everything into the buffer */
     logger_copy_gpart_fields(log, &p[i], e, mask, &p[i].logger_data.last_offset,
                              offset_new, buff, special_flags);
+
+    /* Write the particle into the history if needed. */
+    if (flag & logger_flag_create || flag & logger_flag_mpi_enter) {
+      logger_history_log_gpart(&log->history_new, &p[i]);
+    }
+    else if (flag & logger_flag_change_type || flag & logger_flag_delete ||
+             flag & logger_flag_mpi_exit) {
+      logger_history_log_gpart(&log->history_removed, &p[i]);
+    }
 
     /* Update the pointers */
     p[i].logger_data.last_offset = offset_new;
@@ -810,10 +856,20 @@ void logger_init(struct logger_writer *log, const struct engine *e,
   /* init dump. */
   dump_init(&log->dump, logger_name_file, buffer_size);
 
-#ifdef WITH_MPI
+
+  /* Read the maximal size of the history. */
+  const float max_memory_size = parser_get_opt_param_float(
+      params, "Logger:maximal_memory_size", 1.);
+  log->maximal_size_history = max_memory_size / sizeof(struct logger_index_data);
+
+  if (e->nodeID == 0) {
+    message("Maximal memory size for the logger history: %g GB",
+            max_memory_size);
+  }
+
   /* initialize the history */
-  logger_mpi_history_first_init(&log->history, params);
-#endif
+  logger_history_first_init(&log->history_removed, params);
+  logger_history_first_init(&log->history_new, params);
 }
 
 /**
@@ -828,9 +884,8 @@ void logger_free(struct logger_writer *log) {
   log->logger_mask_data = NULL;
   log->logger_count_mask = 0;
 
-#ifdef WITH_MPI
-  logger_mpi_history_clean(&log->history);
-#endif
+  logger_history_clean(&log->history_new);
+  logger_history_clean(&log->history_removed);
 }
 
 /**
@@ -1104,10 +1159,9 @@ void logger_struct_dump(const struct logger_writer *log, FILE *stream) {
                        log->logger_count_mask, stream, "logger_masks",
                        "logger_masks");
 
-#ifdef WITH_MPI
   /* Dump the logger mpi history */
-  logger_mpi_history_dump(&log->history);
-#endif
+  logger_history_dump(&log->history_new);
+  logger_history_dump(&log->history_removed);
 }
 
 /**
@@ -1129,10 +1183,9 @@ void logger_struct_restore(struct logger_writer *log, FILE *stream) {
   restart_read_blocks((void *)log->logger_mask_data, sizeof(struct mask_data),
                       log->logger_count_mask, stream, NULL, "logger_masks");
 
-#ifdef WITH_MPI
   /* Restore the logger mpi history */
-  logger_mpi_history_restore(&log->history);
-#endif
+  logger_history_restore(&log->history_new);
+  logger_history_restore(&log->history_removed);
 
   /* generate dump filename */
   char logger_name_file[PARSER_MAX_LINE_SIZE];
