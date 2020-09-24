@@ -4984,12 +4984,12 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
 int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
   struct engine *e = s->space->e;
   const int nodeID = e->nodeID;
+  const int c_active = cell_is_active_stars(c, e) || cell_is_active_hydro(c, e);
 
+  /* TODO: implement rebuild conditions */
   int rebuild = 0;
-  int counter = 0;
 
   for (struct link *l = c->hydro.rt_inject; l != NULL; l = l->next) {
-    counter++;
     struct task *t = l->t;
     struct cell *ci = t->ci;
     struct cell *cj = t->cj;
@@ -5017,6 +5017,10 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
         cell_activate_subcell_rt_tasks(ci, cj, s);
       }
     }
+  }
+
+  if (c_active) {
+    scheduler_activate(s, c->hydro.rt_ghost1);
   }
 
   return rebuild;
