@@ -62,7 +62,7 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
                           (float)(si->x[1] - c->loc[1]),
                           (float)(si->x[2] - c->loc[2])};
 
-    /* Loop over the (x)parts in cell */
+    /* Loop over the parts in cell */
     for (int pid = 0; pid < count; pid++) {
       struct part *restrict pj = &parts[pid];
 

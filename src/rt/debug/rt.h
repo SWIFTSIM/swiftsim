@@ -25,6 +25,13 @@
  */
 
 /**
+ * @brief Update the photon number of a particle, i.e. compute
+ *        N^{n+1} = N^n + dt * dN_* / dt
+ */
+__attribute__((always_inline)) INLINE static void rt_update_photon_number(
+    struct part* restrict p) {}
+
+/**
  * @brief First initialisation of the RT extra hydro particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_first_init_part(
