@@ -88,6 +88,11 @@ struct black_holes_props {
   /*! Minimum gas particle mass in nibbling mode */
   float min_gas_mass_for_nibbling;
 
+  /*! Parameters for Booth Schaaye 2008 model */
+  float boothschaye_alpha;
+  float boothschaye_beta;
+  float boothschaye_n_h_star;
+  
   /* ---- Properties of the feedback model ------- */
 
   /*! Feedback coupling efficiency of the black holes. */
@@ -244,6 +249,20 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->f_Edd = parser_get_param_float(params, "EAGLEAGN:max_eddington_fraction");
   bp->f_Edd_recording = parser_get_param_float(
       params, "EAGLEAGN:eddington_fraction_for_recording");
+  
+  /* Booth Schaye (2008) Parameters */
+  bp->boothschaye_alpha = 1.;
+  bp->boothschaye_beta  = 2.;
+  bp->boothschaye_n_h_star = 0.1 * us->UnitLength_in_cgs *
+                             us->UnitLength_in_cgs * us->UnitLength_in_cgs;
+
+  /* Booth Schaye (2008) Parameters */
+  bp->boothschaye_alpha = parser_get_param_float(params, "EAGLEAGN:boothschaye_alpha");
+  bp->boothschaye_beta  = parser_get_param_float(params, "EAGLEAGN:boothschaye_beta");
+  bp->boothschaye_n_h_star = 
+      parser_get_param_float(params, "EAGLEAGN:boothschaye_n_h_star") * 
+      us->UnitLength_in_cgs * us->UnitLength_in_cgs * us->UnitLength_in_cgs;
+
 
   bp->use_nibbling = parser_get_param_int(params, "EAGLEAGN:use_nibbling");
   if (bp->use_nibbling) {

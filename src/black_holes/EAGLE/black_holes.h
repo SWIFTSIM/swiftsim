@@ -631,9 +631,20 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
             "calculation.",
             bp->id);
 #endif
+     /* Calculate the boost parameter BoothSchaye2009 */
+      const double n_H = gas_rho_phys * 0.75 / proton_mass;
+      const double boothschaye_factor = n_H / bp->boothschaye_n_h_star;
+      double boothschaye_boost = bp->boothschaye_alpha;
+      if ( boothschaye_factor >= bp->boothschaye_alpha) {
+	boothschaye_boost = pow(boothschaye_factor,bp->boothschaye_beta);
+
+    }
+
+
       const double denominator_inv = 1. / sqrt(denominator2);
       Bondi_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
-                   denominator_inv * denominator_inv * denominator_inv;
+                   denominator_inv * denominator_inv * denominator_inv *
+                   boothschaye_boost;
     }
   }
 
