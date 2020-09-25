@@ -2510,7 +2510,7 @@ int partition_space_to_space(double *oldh, double *oldcdim, int *oldnodeIDs,
   }
 
   /* Check we have all nodeIDs present in the resample. */
-  return check_complete(s, 1, nr_nodes + 1);
+  return check_complete(s, 1, s->e->nr_nodes);
 }
 
 /**
