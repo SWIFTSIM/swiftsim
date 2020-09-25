@@ -240,8 +240,14 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
   const double n_Z = props->n_Z;
   const double n_n = props->n_n;
 
+  /* Metallicity (metal mass fraction) at birth time of the star */
+  const double Z_birth =
+      chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+
+  const double Z = props->use_Z_birth_for_feedback ? Z_birth : ngb_Z;
+
   /* Calculate f_E */
-  const double Z_term = pow(max(ngb_Z, 1e-6) / Z_0, n_Z);
+  const double Z_term = pow(max(Z, 1e-6) / Z_0, n_Z);
   const double n_term = pow(ngb_nH_cgs / n_0, -n_n);
   const double denonimator = 1. + Z_term * n_term;
 
@@ -1094,6 +1100,9 @@ void feedback_props_init(struct feedback_props* fp,
       parser_get_param_double(params, "EAGLEFeedback:SNII_energy_fraction_n_n");
   fp->n_Z =
       parser_get_param_double(params, "EAGLEFeedback:SNII_energy_fraction_n_Z");
+
+  fp->use_Z_birth_for_feedback =
+      parser_get_param_int(params, "EAGLEFeedback:use_Z_birth_for_feedback");
 
   /* Check that it makes sense. */
   if (fp->f_E_max < fp->f_E_min) {

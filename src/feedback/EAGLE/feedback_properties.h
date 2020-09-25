@@ -265,6 +265,8 @@ struct feedback_props {
    */
   double n_Z;
 
+  int use_Z_birth_for_feedback;
+
   /* ------------ Enrichment sampling properties ------------ */
 
   /*! Star age above which the enrichment will be downsampled (in internal
