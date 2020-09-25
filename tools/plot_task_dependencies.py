@@ -10,6 +10,15 @@ from subprocess import call
 import argparse
 from os import path
 
+# define task colours in the dict here:
+task_colours = {
+    "black_holes": "forestgreen",
+    "stars": "darkorange1",
+    "hydro": "blue3",
+    "gravity": "red3",
+    "RT": "springgreen",
+}
+
 
 def parse_args():
     """
@@ -142,7 +151,7 @@ def append_single_data(data0, datai):
 
 def append_data(data):
     """
-    Append all the dataframe together
+    Append all the dataframe together, and add a column for colour type
 
     Parameters
     ----------
@@ -158,12 +167,15 @@ def append_data(data):
     """
     N = len(data)
     if N == 1:
+        data[0]["task_colour"] = "black"
         return data[0]
 
     # add number link to data[0]
     for i in range(N - 1):
         i += 1
         data[0] = append_single_data(data[0], data[i])
+
+    data[0]["task_colour"] = "black"
 
     return data[0]
 
@@ -352,24 +364,28 @@ def write_task(f, name, implicit, mpi, with_calls):
     txt = "\t " + name + "["
 
     if implicit:
-        txt += "style=filled,fillcolor=lightgrey,"
+        txt += "style=filled,fillcolor=grey90,"
     if mpi:
-        txt += "shape=diamond,"
+        txt += "shape=diamond,style=filled,fillcolor=azure,"
+
+    col = "black"
 
     if task_is_black_holes(name):
-        txt += "color=forestgreen,"
+        col = task_colours["black_holes"]
 
     if task_is_stars(name):
-        txt += "color=darkorange1,"
+        col = task_colours["stars"]
 
     if task_is_hydro(name):
-        txt += "color=blue3,"
+        col = task_colours["hydro"]
 
     if task_is_gravity(name):
-        txt += "color=red3,"
+        col = task_colours["gravity"]
 
     if task_is_RT(name):
-        txt += 'color="springgreen"'
+        col = task_colours["RT"]
+
+    txt += "color=%s," % col
 
     if with_calls:
         func = get_function_calls(name)
@@ -410,8 +426,8 @@ def write_header(f, data, git, opt):
     f.write('\t label="Task dependencies for SWIFT %s";\n' % git)
     f.write("\t compound=true;\n")
     f.write("\t ratio=0.66;\n")
-    f.write("\t node[nodesep=0.15];\n")
-
+    f.write("\t node[nodesep=0.15, fontsize=30, penwidth=5.];\n")
+    f.write("\t ranksep=1.2;\n")
     f.write("\n")
 
     # write the special task
@@ -454,9 +470,12 @@ def write_cluster(f, tasks, cluster):
 
     cluster: str
         Cluster name
+
     """
+
     f.write("\t subgraph cluster%s {\n" % cluster)
     f.write('\t\t label="";\n')
+    f.write('\t\t bgcolor="grey99";\n')
     for t in tasks:
         f.write("\t\t %s;\n" % t)
     f.write("\t };\n\n")
@@ -534,10 +553,13 @@ def write_dependencies(f, data):
         written.append(name)
 
         # write relation
-        arrow = ""
+        arrow = ",color=%s" % data["task_colour"][i]
         if data["number_rank"][i] != max_rank:
-            arrow = ",style=dashed"
-        f.write("\t %s->%s[label=%i%s]\n" % (ta, tb, number_link, arrow))
+            arrow += ",style=dashed"
+        f.write(
+            "\t %s->%s[label=%i%s,fontcolor=%s]\n"
+            % (ta, tb, number_link, arrow, data["task_colour"][i])
+        )
 
 
 def write_footer(f):
@@ -551,6 +573,49 @@ def write_footer(f):
         File where to write the data
     """
     f.write("}")
+
+
+def set_task_colours(data):
+    """
+    Set the value of the task colour for the plot if you
+    want it non-black. the `task_colours` dict is defined
+    at the top of this script.
+
+    Parameters
+    ----------
+
+    data: DataFrame 
+        DataFrame of all the tasks 
+
+
+    Returns
+    -------
+
+    data: DataFrame 
+        modified DataFrame of all the tasks, now with more
+        colour
+    """
+
+    N = len(data)
+
+    for i in range(N):
+        taskname = data["task_in"][i]
+        col = "black"
+        if task_is_black_holes(taskname):
+            col = task_colours["black_holes"]
+        elif task_is_stars(taskname):
+            col = task_colours["stars"]
+        elif task_is_hydro(taskname):
+            col = task_colours["hydro"]
+        elif task_is_gravity(taskname):
+            col = task_colours["gravity"]
+        elif task_is_RT(taskname):
+            col = task_colours["RT"]
+
+        # set the colour
+        data.loc[i, "task_colour"] = col
+
+    return data
 
 
 if __name__ == "__main__":
@@ -570,6 +635,7 @@ if __name__ == "__main__":
         data.append(tmp)
 
     data = append_data(data)
+    data = set_task_colours(data)
 
     # write output
     with open(dot_output, "w") as f:
