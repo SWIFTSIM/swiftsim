@@ -1020,7 +1020,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 
     const long long mem = 4 * sizeof(int) * c->hydro.count;
     atomic_max_ll(&max_ghost_memory, mem);
-    
+
     /* While there are particles that need to be updated... */
     for (int num_reruns = 0; count > 0 && num_reruns < max_smoothing_iter;
          num_reruns++) {

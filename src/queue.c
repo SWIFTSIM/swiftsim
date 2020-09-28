@@ -130,7 +130,8 @@ void queue_get_incoming(struct queue *q) {
                                                q->size)) == NULL)
         error("Failed to allocate new indices.");
       memcpy(temp, entries, sizeof(struct queue_entry) * q->count);
-      message("Reallocating queue to %zd MB", q->size * sizeof(struct queue_entry) / (1024 * 1024));
+      message("Reallocating queue to %zd MB",
+              q->size * sizeof(struct queue_entry) / (1024 * 1024));
       free(entries);
       q->entries = entries = temp;
     }
@@ -198,8 +199,9 @@ void queue_init(struct queue *q, struct task *tasks) {
                                                  q->size)) == NULL)
     error("Failed to allocate queue entries.");
 
-  message("Allocating queue to %zd MB", q->size * sizeof(struct queue_entry) / (1024 * 1024));
-  
+  message("Allocating queue to %zd MB",
+          q->size * sizeof(struct queue_entry) / (1024 * 1024));
+
   /* Set the tasks pointer. */
   q->tasks = tasks;
 

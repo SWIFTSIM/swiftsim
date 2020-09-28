@@ -38,6 +38,13 @@ struct cell_sinks {
     /*! The drift task for sinks */
     struct task *drift;
 
+    /*! Implicit tasks marking the entry of the sink block of tasks
+     */
+    struct task *sink_in;
+
+    /*! Implicit tasks marking the exit of the sink block of tasks */
+    struct task *sink_out;
+
     /*! Last (integer) time the cell's sink were drifted forward in time. */
     integertime_t ti_old_part;
 
@@ -46,6 +53,12 @@ struct cell_sinks {
 
     /*! Nr of #sink this cell can hold after addition of new one. */
     int count_total;
+
+    /*! Max cut off radius in this cell. */
+    float r_cut_max;
+
+    /*! Values of r_cut_max before the drifts, used for sub-cell tasks. */
+    float r_cut_max_old;
 
     /*! Maximum part movement in this cell since last construction. */
     float dx_max_part;
