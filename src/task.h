@@ -173,7 +173,7 @@ enum task_categories {
   task_category_mpi,
   task_category_fof,
   task_category_others,
-  task_category_sink_formation,
+  task_category_sink,
   task_category_count
 };
 
