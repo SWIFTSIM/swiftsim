@@ -265,7 +265,9 @@ struct feedback_props {
    */
   double n_Z;
 
-  int use_Z_birth_for_feedback;
+  /*! Are we using the birth properties to compute f_th or the properties at
+   * feedback time? */
+  int use_birth_props_for_feedback;
 
   /* ------------ Enrichment sampling properties ------------ */
 

@@ -242,13 +242,20 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
 
   /* Metallicity (metal mass fraction) at birth time of the star */
   const double Z_birth =
-      chemistry_get_total_metal_mass_fraction_for_feedback(sp);
+      chemistry_get_star_total_metal_mass_fraction_for_feedback(sp);
 
-  const double Z = props->use_Z_birth_for_feedback ? Z_birth : ngb_Z;
+  /* Physical density of the gas at the star's birth time */
+  const double rho_birth = sp->birth_density;
+  const double n_birth_cgs = rho_birth * props->rho_to_n_cgs;
+
+  /* Choose either the birth properties or current properties */
+  const double nH =
+      props->use_birth_props_for_feedback ? n_birth_cgs : ngb_nH_cgs;
+  const double Z = props->use_birth_props_for_feedback ? Z_birth : ngb_Z;
 
   /* Calculate f_E */
   const double Z_term = pow(max(Z, 1e-6) / Z_0, n_Z);
-  const double n_term = pow(ngb_nH_cgs / n_0, -n_n);
+  const double n_term = pow(nH / n_0, -n_n);
   const double denonimator = 1. + Z_term * n_term;
 
   return f_E_min + (f_E_max - f_E_min) / denonimator;
@@ -874,12 +881,13 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Get the total metallicity (metal mass fraction) at birth time and impose a
    * minimum */
-  const double Z = max(chemistry_get_total_metal_mass_fraction_for_feedback(sp),
-                       exp10(log10_min_metallicity));
+  const double Z =
+      max(chemistry_get_star_total_metal_mass_fraction_for_feedback(sp),
+          exp10(log10_min_metallicity));
 
   /* Get the individual abundances (mass fractions at birth time) */
   const float* const abundances =
-      chemistry_get_metal_mass_fraction_for_feedback(sp);
+      chemistry_get_star_metal_mass_fraction_for_feedback(sp);
 
   /* Properties collected in the stellar density loop. */
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
@@ -1101,13 +1109,14 @@ void feedback_props_init(struct feedback_props* fp,
   fp->n_Z =
       parser_get_param_double(params, "EAGLEFeedback:SNII_energy_fraction_n_Z");
 
-  fp->use_Z_birth_for_feedback =
-      parser_get_param_int(params, "EAGLEFeedback:use_Z_birth_for_feedback");
-
   /* Check that it makes sense. */
   if (fp->f_E_max < fp->f_E_min) {
     error("Can't have the maximal energy fraction smaller than the minimal!");
   }
+
+  /* Are we using the stars' birth properties or at feedback time? */
+  fp->use_birth_props_for_feedback = parser_get_param_int(
+      params, "EAGLEFeedback:use_birth_props_for_energy_faction");
 
   /* Properties of the SNII enrichment model -------------------------------- */
 
