@@ -635,7 +635,20 @@ AC_PROG_MAKE_SET
 AC_HEADER_STDC
 
 # Check for the libraries we will need.
-AC_CHECK_LIB(m,sqrt,,AC_MSG_ERROR(something is wrong with the math library!))
+# We need a functioning maths library, but that could be non-standard.
+AC_ARG_ENABLE([lm],
+    [AS_HELP_STRING([--enable-lm],
+        [Enable use of the standard -lm library @<:@yes/no@:>@]
+    )],
+    [enable_m_library="$enableval"],
+    [enable_m_library="yes"]
+)
+if test "$enable_m_library" = "yes"; then
+    AC_CHECK_LIB(m,sqrt,,AC_MSG_ERROR([something is wrong with the -lm library]))
+else
+    #  Better be built-in.
+    AC_CHECK_FUNC(sqrt,,AC_MSG_ERROR([no sqrt function is available]))
+fi
 
 # Check for GSL. We test for this in the standard directories by default,
 # and only disable if using --with-gsl=no or --without-gsl. When a value
@@ -1398,24 +1411,29 @@ fi
 
 # Check if we have native exp10 and exp10f functions. If not failback to our
 # implementations. On Apple/CLANG we have __exp10, so also check for that
-# if the compiler is clang.
-AC_CHECK_LIB([m],[exp10], [AC_DEFINE([HAVE_EXP10],1,[The exp10 function is present.])])
-AC_CHECK_LIB([m],[exp10f], [AC_DEFINE([HAVE_EXP10F],1,[The exp10f function is present.])])
-if test "$ax_cv_c_compiler_vendor" = "clang"; then
-      AC_CHECK_LIB([m],[__exp10], [AC_DEFINE([HAVE___EXP10],1,[The __exp10 function is present.])])
-      AC_CHECK_LIB([m],[__exp10f], [AC_DEFINE([HAVE___EXP10F],1,[The __exp10f function is present.])])
+# if the compiler is clang. If not using the standard library we just assume
+# these are working.
+if test "$enable_m_library" = "yes"; then 
+    AC_CHECK_LIB([m],[exp10], [AC_DEFINE([HAVE_EXP10],1,[The exp10 function is present.])])
+    AC_CHECK_LIB([m],[exp10f], [AC_DEFINE([HAVE_EXP10F],1,[The exp10f function is present.])])
+    if test "$ax_cv_c_compiler_vendor" = "clang"; then
+        AC_CHECK_LIB([m],[__exp10], [AC_DEFINE([HAVE___EXP10],1,[The __exp10 function is present.])])
+        AC_CHECK_LIB([m],[__exp10f], [AC_DEFINE([HAVE___EXP10F],1,[The __exp10f function is present.])])
+    fi
 fi
 
 # Check if we have native sincos and sincosf functions. If not failback to our
 # implementations. On Apple/CLANG we have __sincos, so also check for that
-# if the compiler is clang.
-AC_CHECK_LIB([m],[sincos], [AC_DEFINE([HAVE_SINCOS],1,[The sincos function is present.])])
-AC_CHECK_LIB([m],[sincosf], [AC_DEFINE([HAVE_SINCOSF],1,[The sincosf function is present.])])
-if test "$ax_cv_c_compiler_vendor" = "clang"; then
-      AC_CHECK_LIB([m],[__sincos], [AC_DEFINE([HAVE___SINCOS],1,[The __sincos function is present.])])
-      AC_CHECK_LIB([m],[__sincosf], [AC_DEFINE([HAVE___SINCOSF],1,[The __sincosf function is present.])])
+# if the compiler is clang. If not using the standard library we just assume
+# these are working.
+if test "$enable_m_library" = "yes"; then 
+    AC_CHECK_LIB([m],[sincos], [AC_DEFINE([HAVE_SINCOS],1,[The sincos function is present.])])
+    AC_CHECK_LIB([m],[sincosf], [AC_DEFINE([HAVE_SINCOSF],1,[The sincosf function is present.])])
+    if test "$ax_cv_c_compiler_vendor" = "clang"; then
+        AC_CHECK_LIB([m],[__sincos], [AC_DEFINE([HAVE___SINCOS],1,[The __sincos function is present.])])
+        AC_CHECK_LIB([m],[__sincosf], [AC_DEFINE([HAVE___SINCOSF],1,[The __sincosf function is present.])])
+    fi
 fi
-
 
 # Add warning flags by default, if these can be used. Option =error adds
 # -Werror to GCC, clang and Intel.  Note do this last as compiler tests may
