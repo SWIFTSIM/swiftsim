@@ -387,7 +387,7 @@ chemistry_get_metal_mass_fraction_for_feedback(const struct part* restrict p) {
 
 /**
  * @brief Returns the total metallicity (metal mass fraction) of the
- * star particle to be used in feedback/enrichment related routines.
+ * gas particle to be used in feedback/enrichment related routines.
  *
  * This is unused in GEAR. --> return 0
  *
