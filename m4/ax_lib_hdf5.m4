@@ -342,6 +342,11 @@ HDF5 support is being disabled.
             with_hdf5_fortran="no"
         fi
 
+        # SWIFT may want to not use the standard maths library, so remove it
+        # now as -lm will be added anyway when that isn't the case.
+        HDF5_LIBS=$(eval echo -n $HDF5_LIBS | $SED 's/-lm//')
+        HDF5_FLIBS=$(eval echo -n $HDF5_FLIBS | $SED 's/-lm//')
+
 	AC_SUBST([HDF5_VERSION])
 	AC_SUBST([HDF5_CC])
 	AC_SUBST([HDF5_CFLAGS])
