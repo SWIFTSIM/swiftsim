@@ -182,6 +182,41 @@ def append_data(data):
     return data[0]
 
 
+def get_task_colour(taskname):
+    """
+    Get the task colour based on its name.
+    Default colour is black.
+
+
+    Parameters
+    ----------
+
+    taskname: str
+        name of the task at hand
+
+
+    Returns
+    -------
+
+    colour: str
+        colour string directly applicable in the dot file.
+    """
+
+    colour = "black"
+    if task_is_black_holes(taskname):
+        colour = task_colours["black_holes"]
+    elif task_is_stars(taskname):
+        colour = task_colours["stars"]
+    elif task_is_hydro(taskname):
+        colour = task_colours["hydro"]
+    elif task_is_gravity(taskname):
+        colour = task_colours["gravity"]
+    elif task_is_RT(taskname):
+        colour = task_colours["RT"]
+
+    return colour
+
+
 def task_is_black_holes(name):
     """
     Does the task concern black holes?
@@ -370,22 +405,7 @@ def write_task(f, name, implicit, mpi, with_calls):
     if mpi:
         txt += "shape=diamond,style=filled,fillcolor=azure,"
 
-    col = "black"
-
-    if task_is_black_holes(name):
-        col = task_colours["black_holes"]
-
-    if task_is_stars(name):
-        col = task_colours["stars"]
-
-    if task_is_hydro(name):
-        col = task_colours["hydro"]
-
-    if task_is_gravity(name):
-        col = task_colours["gravity"]
-
-    if task_is_RT(name):
-        col = task_colours["RT"]
+    col = get_task_colour(name)
 
     txt += "color=%s," % col
 
@@ -602,18 +622,7 @@ def set_task_colours(data):
 
     for i in range(N):
         taskname = data["task_in"][i]
-        col = "black"
-        if task_is_black_holes(taskname):
-            col = task_colours["black_holes"]
-        elif task_is_stars(taskname):
-            col = task_colours["stars"]
-        elif task_is_hydro(taskname):
-            col = task_colours["hydro"]
-        elif task_is_gravity(taskname):
-            col = task_colours["gravity"]
-        elif task_is_RT(taskname):
-            col = task_colours["RT"]
-
+        col = get_task_colour(taskname)
         # set the colour
         data.loc[i, "task_colour"] = col
 
