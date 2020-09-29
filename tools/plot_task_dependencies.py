@@ -2,7 +2,9 @@
 
 description = """
 This file generates a graphviz file that represents the SWIFT tasks
- dependencies.
+dependencies.
+
+Example: ./plot_task_dependencies.py dependency_graph_*.csv
 """
 from pandas import read_csv
 import numpy as np
