@@ -460,20 +460,28 @@ These four parameters are optional and will default to their SPH equivalent
 if left unspecified. That is the value specified by the user in that
 section or the default SPH value if left unspecified there as well.
 
-The two remaining parameters can be used to overwrite the birth time (or
-scale-factor) of the stars that were read from the ICs. This can be useful
-to start a simulation with stars already of a given age. The parameters
+The remaining parameters can be used to overwrite the birth time (or
+scale-factor), birth density and birth temperatures (if these
+quantities exist) of the stars that were read from the ICs. This can
+be useful to start a simulation with stars already of a given age or
+with specific (uniform and non-0) properties at birth. The parameters
 are:
 
-* Whether or not to overwrite anything: ``overwrite_birth_time``
+* Whether or not to overwrite *all* the birth times: ``overwrite_birth_time``
   (Default: 0)
 * The value to use: ``birth_time``
+* Whether or not to overwrite *all* the birth densities: ``overwrite_birth_density``
+  (Default: 0)
+* The value to use: ``birth_density``
+* Whether or not to overwrite *all* the birth temperatures: ``overwrite_birth_temperature``
+  (Default: 0)
+* The value to use: ``birth_temperature``
 
-If the birth time is set to ``-1`` then the stars will never enter any
-feedback or enrichment loop. When these values are not specified, SWIFT
-will start and use the birth times specified in the ICs. If no values are
-given in the ICs, the stars' birth times will be zeroed, which can cause
-issues depending on the type of run performed.
+Note that if the birth time is set to ``-1`` then the stars will never
+enter any feedback or enrichment loop. When these values are not
+specified, SWIFT will start and use the birth times specified in the
+ICs. If no values are given in the ICs, the stars' birth times will be
+zeroed, which can cause issues depending on the type of run performed.
 
 .. _Parameters_time_integration:
 
