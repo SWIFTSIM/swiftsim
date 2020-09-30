@@ -38,7 +38,9 @@ __attribute__((always_inline)) INLINE static float stars_compute_timestep(
     const double time) {
 
   /* Background star particles have no time-step limits */
-  if (sp->birth_time == -1.) return FLT_MAX;
+  if (sp->birth_time == -1.) {
+    return FLT_MAX;
+  }
 
   /* Star age (in internal units) */
   double star_age;
@@ -50,12 +52,13 @@ __attribute__((always_inline)) INLINE static float stars_compute_timestep(
   }
 
   /* What age category are we in? */
-  if (star_age > stars_properties->age_threshold_unlimited)
+  if (star_age > stars_properties->age_threshold_unlimited) {
     return FLT_MAX;
-  else if (star_age < stars_properties->age_threshold)
-    return stars_properties->max_time_step_young;
-  else
+  } else if (star_age > stars_properties->age_threshold) {
     return stars_properties->max_time_step_old;
+  } else {
+    return stars_properties->max_time_step_young;
+  }
 }
 
 /**
