@@ -81,7 +81,7 @@ io_read_string_array_attribute(hid_t grp, const char *name, void *data,
     char *src = tmp + i * sdim;
     char *dest = data + i * size_per_element;
     /* It seems that HDF5 1.10.6 has a bug */
-    if (H5_VERS_MAJOR == 10 && H5_VERS_MINOR == 10 &&
+    if (H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 10 &&
         H5_VERS_RELEASE == 6) {
       memcpy(dest, src, sdim + 1);
     }
