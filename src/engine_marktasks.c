@@ -51,6 +51,7 @@
 #include "debug.h"
 #include "error.h"
 #include "proxy.h"
+#include "star_formation.h"
 #include "timers.h"
 
 /**
@@ -734,8 +735,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if (cell_need_rebuild_for_black_holes_pair(ci, cj)) *rebuild_space = 1;
         if (cell_need_rebuild_for_black_holes_pair(cj, ci)) *rebuild_space = 1;
 
-        scheduler_activate(s, ci->hydro.super->black_holes.swallow_ghost[0]);
-        scheduler_activate(s, cj->hydro.super->black_holes.swallow_ghost[0]);
+        scheduler_activate(s, ci->hydro.super->black_holes.swallow_ghost_0);
+        scheduler_activate(s, cj->hydro.super->black_holes.swallow_ghost_0);
 
 #ifdef WITH_MPI
         /* Activate the send/recv tasks. */
@@ -1019,7 +1020,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
     else if (t_type == task_type_star_formation) {
       if (cell_is_active_hydro(t->ci, e)) {
         cell_activate_star_formation_tasks(t->ci, s, with_feedback);
-        cell_activate_super_spart_drifts(t->ci, s);
+        if (swift_star_formation_model_creates_stars)
+          cell_activate_super_spart_drifts(t->ci, s);
       }
     }
   }

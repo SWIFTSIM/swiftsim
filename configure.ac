@@ -1633,16 +1633,30 @@ case "$with_gravity" in
    ;;
 esac
 
+AC_ARG_ENABLE([gravitational-potential],
+   [AS_HELP_STRING([--disable-gravitational-potential],
+     [Disable calculation of the gravitational potential (only makes sense for the multi-softening gravity scheme).]
+   )],
+   [enable_gravitational_potential="$enableval"],
+   [enable_gravitational_potential="yes"]
+)
+if test "$enable_gravitational_potential" = "no"; then
+   AC_DEFINE([SWIFT_GRAVITY_NO_POTENTIAL],1,[Disable calculation of the gravitational potential])
+fi
+
 # Hydro scheme.
 AC_ARG_WITH([hydro],
    [AS_HELP_STRING([--with-hydro=<scheme>],
-      [Hydro dynamics to use @<:@gadget2, minimal, pressure-entropy, pressure-energy, pressure-energy-monaghan, default, gizmo-mfv, gizmo-mfm, shadowfax, planetary, sphenix, anarchy-pu default: gadget2@:>@]
+      [Hydro dynamics to use @<:@none, gadget2, minimal, pressure-entropy, pressure-energy, pressure-energy-monaghan, default, gizmo-mfv, gizmo-mfm, shadowfax, planetary, sphenix, anarchy-pu default: gadget2@:>@]
    )],
    [with_hydro="$withval"],
    [with_hydro="gadget2"]
 )
 
 case "$with_hydro" in
+   none)
+      AC_DEFINE([NONE_SPH], [1], [No hydro])
+   ;;
    gadget2)
       AC_DEFINE([GADGET2_SPH], [1], [Gadget-2 SPH])
    ;;
@@ -2389,6 +2403,7 @@ AC_MSG_RESULT([
 
    Gravity scheme      : $with_gravity
    Multipole order     : $with_multipole_order
+   Compute potential   : $enable_gravitational_potential
    No gravity below ID : $no_gravity_below_id
    Make gravity glass  : $gravity_glass_making
    External potential  : $with_potential

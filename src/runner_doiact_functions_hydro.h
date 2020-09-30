@@ -26,6 +26,10 @@
 
 #include "runner_doiact_hydro.h"
 
+extern long long max_dopair2_memory;
+extern long long max_doself1_memory;
+extern long long max_doself2_memory;
+
 /**
  * @brief Compute the interactions between a cell pair (non-symmetric case).
  *
@@ -1320,6 +1324,8 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
   struct sort_entry *restrict sort_active_i = NULL,
                               *restrict sort_active_j = NULL;
 
+  long long mem = 0;
+
   // MATTHIEU: temporary disable this optimization
   if (0 && cell_is_all_active_hydro(ci, e)) {
     /* If everybody is active don't bother copying */
@@ -1329,6 +1335,8 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
     if (posix_memalign((void **)&sort_active_i, SWIFT_CACHE_ALIGNMENT,
                        sizeof(struct sort_entry) * count_i) != 0)
       error("Failed to allocate active sortlists.");
+
+    mem += sizeof(struct sort_entry) * count_i;
 
     /* Collect the active particles in ci */
     for (int k = 0; k < count_i; k++) {
@@ -1349,6 +1357,8 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
                        sizeof(struct sort_entry) * count_j) != 0)
       error("Failed to allocate active sortlists.");
 
+    mem += sizeof(struct sort_entry) * count_j;
+
     /* Collect the active particles in cj */
     for (int k = 0; k < count_j; k++) {
       if (part_is_active(&parts_j[sort_j[k].i], e)) {
@@ -1357,6 +1367,8 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
       }
     }
   }
+
+  atomic_max_ll(&max_dopair2_memory, mem);
 
   /* Loop over *all* the parts in ci starting from the centre until
      we are out of range of anything in cj (using the maximal hi). */
@@ -1874,6 +1886,9 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
       countdt += 1;
     }
 
+  long long mem = count * sizeof(int);
+  atomic_max_ll(&max_doself1_memory, mem);
+
   /* Cosmological terms */
   const float a = cosmo->a;
   const float H = cosmo->H;
@@ -2085,6 +2100,9 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
       indt[countdt] = k;
       countdt += 1;
     }
+
+  long long mem = count * sizeof(int);
+  atomic_max_ll(&max_doself2_memory, mem);
 
   /* Cosmological terms */
   const float a = cosmo->a;

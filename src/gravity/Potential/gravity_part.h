@@ -93,7 +93,6 @@ struct gpart {
   /* Brute-force particle potential. */
   double potential_exact;
 #endif
-
-} SWIFT_STRUCT_ALIGN;
+};
 
 #endif /* SWIFT_POTENTIAL_GRAVITY_PART_H */

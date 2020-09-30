@@ -144,6 +144,15 @@ extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
 extern int engine_max_parts_per_cooling;
 
+long long sort_array_counts;
+long long sort_array_memory;
+long long sort_array_directions;
+
+long long max_ghost_memory;
+long long max_dopair2_memory;
+long long max_doself1_memory;
+long long max_doself2_memory;
+
 /**
  * @brief Link a density/force task to a cell.
  *
@@ -268,11 +277,12 @@ void engine_repartition(struct engine *e) {
  */
 void engine_repartition_trigger(struct engine *e) {
 
+  static int opened = 0;
+  if (e->restarting) opened = 1;
+
 #ifdef WITH_MPI
 
   const ticks tic = getticks();
-  static int opened = 0;
-  if (e->restarting) opened = 1;
 
   /* Do nothing if there have not been enough steps since the last repartition
    * as we don't want to repeat this too often or immediately after a
@@ -432,7 +442,8 @@ void engine_repartition_trigger(struct engine *e) {
         if (abs_trigger > 1.f) abs_trigger = 0.f; /* Not relevant. */
         fprintf(timelog,
                 "# %d balance: %f, expected: %f (sys: %f, total: %f)\n",
-                e->step, balance, abs_trigger, (smaxtime - smintime) / smean,
+                e->step, balance, abs_trigger,
+                (smaxtime - smintime) / (smean + FLT_MIN),
                 (tmaxtime - tmintime) / tmean);
 
         fclose(timelog);
@@ -453,6 +464,28 @@ void engine_repartition_trigger(struct engine *e) {
   if (e->verbose)
     message("took %.3f %s", clocks_from_ticks(getticks() - tic),
             clocks_getunit());
+#else
+
+  /* Get the resident size of the process for the memory logs. */
+  long size, resident, shared, text, library, data, dirty;
+  memuse_use(&size, &resident, &shared, &text, &data, &library, &dirty);
+
+  /* Keep logs of all CPU times and resident memory size for debugging
+   * load issues. */
+  FILE *memlog = NULL;
+  if (!opened) {
+    memlog = fopen("rank_memory_balance.log", "w");
+    fprintf(memlog, "# step rank resident\n");
+
+    opened = 1;
+  } else {
+    memlog = fopen("rank_memory_balance.log", "a");
+  }
+
+  fprintf(memlog, "# %d mean resident memory: %f, balance: %f\n", e->step,
+          (double)resident, 0.);
+  fclose(memlog);
+
 #endif
 }
 
@@ -2158,6 +2191,11 @@ void engine_launch(struct engine *e, const char *call) {
   space_reset_task_counters(e->s);
 #endif
 
+  max_ghost_memory = 0;
+  max_dopair2_memory = 0;
+  max_doself1_memory = 0;
+  max_doself2_memory = 0;
+
   /* Prepare the scheduler. */
   atomic_inc(&e->sched.waiting);
 
@@ -2666,10 +2704,10 @@ void engine_step(struct engine *e) {
       engine_drift_top_multipoles(e);
   }
 
-#ifdef WITH_MPI
+  //#ifdef WITH_MPI
   /* Repartition the space amongst the nodes? */
   engine_repartition_trigger(e);
-#endif
+  //#endif
 
   /* Prepare the tasks to be launched, rebuild or repartition if needed. */
   engine_prepare(e);
@@ -2751,6 +2789,17 @@ void engine_step(struct engine *e) {
   e->usertime_last_step = end_usertime - start_usertime;
   e->systime_last_step = end_systime - start_systime;
 #endif
+
+  message(
+      "SORT number of arrays: %lld number of directions: %lld mem usage: %lld "
+      "MB",
+      sort_array_counts, sort_array_directions,
+      sort_array_memory / (1024 * 1024));
+
+  message("GHOST max mem usage: %lld MB", max_ghost_memory / (1024 * 1024));
+  message("DOPAIR2 max mem usage: %lld MB", max_dopair2_memory / (1024 * 1024));
+  message("DOSELF1 max mem usage: %lld MB", max_doself1_memory / (1024 * 1024));
+  message("DOSELF2 max mem usage: %lld MB", max_doself2_memory / (1024 * 1024));
 
   /* Since the time-steps may have changed because of the limiter's
    * action, we need to communicate the new time-step sizes */
@@ -3229,7 +3278,8 @@ void engine_makeproxies(struct engine *e) {
 
   /* Prepare the proxies and the proxy index. */
   if (e->proxy_ind == NULL)
-    if ((e->proxy_ind = (int *)malloc(sizeof(int) * e->nr_nodes)) == NULL)
+    if ((e->proxy_ind = (int *)swift_malloc("engine.proxy_ind",
+                                            sizeof(int) * e->nr_nodes)) == NULL)
       error("Failed to allocate proxy index.");
   for (int k = 0; k < e->nr_nodes; k++) e->proxy_ind[k] = -1;
   e->nr_proxies = 0;
@@ -3935,6 +3985,10 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
                  struct fof_props *fof_properties,
                  struct los_props *los_properties) {
 
+  sort_array_counts = 0;
+  sort_array_memory = 0;
+  sort_array_directions = 0;
+
   /* Clean-up everything */
   bzero(e, sizeof(struct engine));
 
@@ -4318,8 +4372,8 @@ void engine_config(int restart, int fof, struct engine *e,
     error("SWIFT was not compiled with MPI support.");
 #else
     e->policy |= engine_policy_mpi;
-    if ((e->proxies = (struct proxy *)calloc(sizeof(struct proxy),
-                                             engine_maxproxies)) == NULL)
+    if ((e->proxies = (struct proxy *)swift_calloc(
+             "engine.proxy", sizeof(struct proxy), engine_maxproxies)) == NULL)
       error("Failed to allocate memory for proxies.");
     e->nr_proxies = 0;
 
@@ -5444,8 +5498,8 @@ void engine_clean(struct engine *e, const int fof, const int restart) {
   for (int i = 0; i < e->nr_proxies; ++i) {
     proxy_clean(&e->proxies[i]);
   }
-  free(e->proxy_ind);
-  free(e->proxies);
+  swift_free("engine.proxy_ind", e->proxy_ind);
+  swift_free("engine.proxy", e->proxies);
 
   /* Free types */
   part_free_mpi_types();
@@ -5454,6 +5508,7 @@ void engine_clean(struct engine *e, const int fof, const int restart) {
   proxy_free_mpi_type();
   task_free_mpi_comms();
   mpicollect_free_MPI_type();
+  partition_free_celllist(e->reparttype);
 #endif
 
   /* Close files */

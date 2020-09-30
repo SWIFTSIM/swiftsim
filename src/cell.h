@@ -33,6 +33,10 @@
 
 /* Local includes. */
 #include "align.h"
+#include "cell_black_holes.h"
+#include "cell_hydro.h"
+#include "cell_sinks.h"
+#include "cell_stars.h"
 #include "kernel_hydro.h"
 #include "lock.h"
 #include "multipole_struct.h"
@@ -40,13 +44,16 @@
 #include "periodic.h"
 #include "sort_part.h"
 #include "space.h"
-#include "star_formation_logger_struct.h"
 #include "task.h"
 #include "timeline.h"
 
 /* Avoid cyclic inclusions */
 struct engine;
 struct scheduler;
+
+extern long long sort_array_counts;
+extern long long sort_array_memory;
+extern long long sort_array_directions;
 
 /* Max tag size set to 2^29 to take into account some MPI implementations
  * that use 2^31 as the upper bound on MPI tags and the fact that
@@ -343,147 +350,13 @@ struct cell {
   /*! Cell flags bit-mask. */
   volatile uint32_t flags;
 
-  /*! Hydro variables */
-  struct {
-
-    /*! Pointer to the #part data. */
-    struct part *parts;
-
-    /*! Pointer to the #xpart data. */
-    struct xpart *xparts;
-
-    /*! Pointer for the sorted indices. */
-    struct sort_entry *sort;
-
-    /*! Super cell, i.e. the highest-level parent cell that has a hydro
-     * pair/self tasks */
-    struct cell *super;
-
-    /*! The task computing this cell's sorts. */
-    struct task *sorts;
-
-    /*! The drift task for parts */
-    struct task *drift;
-
-    /*! Linked list of the tasks computing this cell's hydro density. */
-    struct link *density;
-
-    /* Linked list of the tasks computing this cell's hydro gradients. */
-    struct link *gradient;
-
-    /*! Linked list of the tasks computing this cell's hydro forces. */
-    struct link *force;
-
-    /*! Linked list of the tasks computing this cell's limiter. */
-    struct link *limiter;
-
-    /*! Dependency implicit task for the ghost  (in->ghost->out)*/
-    struct task *ghost_in;
-
-    /*! Dependency implicit task for the ghost  (in->ghost->out)*/
-    struct task *ghost_out;
-
-    /*! The ghost task itself */
-    struct task *ghost;
-
-    /*! The extra ghost task for complex hydro schemes */
-    struct task *extra_ghost;
-
-    /*! The task to end the force calculation */
-    struct task *end_force;
-
-    /*! Dependency implicit task for cooling (in->cooling->out) */
-    struct task *cooling_in;
-
-    /*! Dependency implicit task for cooling (in->cooling->out) */
-    struct task *cooling_out;
-
-    /*! Task for cooling */
-    struct task *cooling;
-
-    /*! Task for star formation */
-    struct task *star_formation;
-
-    /*! Task for sorting the stars again after a SF event */
-    struct task *stars_resort;
-
-    /*! Task for self/pair injection step of radiative transfer */
-    struct link *rt_inject;
-
-    /*! Last (integer) time the cell's part were drifted forward in time. */
-    integertime_t ti_old_part;
-
-    /*! Minimum end of (integer) time step in this cell for hydro tasks. */
-    integertime_t ti_end_min;
-
-    /*! Maximum end of (integer) time step in this cell for hydro tasks. */
-    integertime_t ti_end_max;
-
-    /*! Maximum beginning of (integer) time step in this cell for hydro tasks.
-     */
-    integertime_t ti_beg_max;
-
-    /*! Spin lock for various uses (#part case). */
-    swift_lock_type lock;
-
-    /*! Max smoothing length in this cell. */
-    float h_max;
-
-    /*! Maximum part movement in this cell since last construction. */
-    float dx_max_part;
-
-    /*! Maximum particle movement in this cell since the last sort. */
-    float dx_max_sort;
-
-    /*! Values of h_max before the drifts, used for sub-cell tasks. */
-    float h_max_old;
-
-    /*! Values of dx_max before the drifts, used for sub-cell tasks. */
-    float dx_max_part_old;
-
-    /*! Values of dx_max_sort before the drifts, used for sub-cell tasks. */
-    float dx_max_sort_old;
-
-    /*! Nr of #part in this cell. */
-    int count;
-
-    /*! Nr of #part this cell can hold after addition of new #part. */
-    int count_total;
-
-    /*! Number of #part updated in this cell. */
-    int updated;
-
-    /*! Is the #part data of this cell being used in a sub-cell? */
-    int hold;
-
-    /*! Bit mask of sort directions that will be needed in the next timestep. */
-    uint16_t requires_sorts;
-
-    /*! Bit mask of sorts that need to be computed for this cell. */
-    uint16_t do_sort;
-
-    /*! Bit-mask indicating the sorted directions */
-    uint16_t sorted;
-
-    /*! Bit-mask indicating the sorted directions */
-    uint16_t sort_allocated;
-
-#ifdef SWIFT_DEBUG_CHECKS
-
-    /*! Last (integer) time the cell's sort arrays were updated. */
-    integertime_t ti_sort;
-
-#endif
-
-  } hydro;
-
   /*! Grav variables */
   struct {
 
     /*! Pointer to the #gpart data. */
     struct gpart *parts;
 
-    /*! Pointer to the #spart data at rebuild time. */
+    /*! Pointer to the #gpart data at rebuild time. */
     struct gpart *parts_rebuild;
 
     /*! This cell's multipole. */
@@ -571,250 +444,17 @@ struct cell {
 
   } grav;
 
+  /*! Hydro variables */
+  struct cell_hydro hydro;
+
   /*! Stars variables */
-  struct {
-
-    /*! Pointer to the #spart data. */
-    struct spart *parts;
-
-    /*! Pointer to the #spart data at rebuild time. */
-    struct spart *parts_rebuild;
-
-    /*! The star ghost task itself */
-    struct task *ghost;
-
-    /*! Linked list of the tasks computing this cell's star density. */
-    struct link *density;
-
-    /*! Linked list of the tasks computing this cell's star feedback. */
-    struct link *feedback;
-
-    /*! The task computing this cell's sorts before the density. */
-    struct task *sorts;
-
-    /*! The drift task for sparts */
-    struct task *drift;
-
-    /*! Implicit tasks marking the entry of the stellar physics block of tasks
-     */
-    struct task *stars_in;
-
-    /*! Implicit tasks marking the exit of the stellar physics block of tasks */
-    struct task *stars_out;
-
-    /*! Last (integer) time the cell's spart were drifted forward in time. */
-    integertime_t ti_old_part;
-
-    /*! Spin lock for various uses (#spart case). */
-    swift_lock_type lock;
-
-    /*! Spin lock for star formation use. */
-    swift_lock_type star_formation_lock;
-
-    /*! Nr of #spart in this cell. */
-    int count;
-
-    /*! Nr of #spart this cell can hold after addition of new #spart. */
-    int count_total;
-
-    /*! Max smoothing length in this cell. */
-    float h_max;
-
-    /*! Values of h_max before the drifts, used for sub-cell tasks. */
-    float h_max_old;
-
-    /*! Maximum part movement in this cell since last construction. */
-    float dx_max_part;
-
-    /*! Values of dx_max before the drifts, used for sub-cell tasks. */
-    float dx_max_part_old;
-
-    /*! Maximum particle movement in this cell since the last sort. */
-    float dx_max_sort;
-
-    /*! Values of dx_max_sort before the drifts, used for sub-cell tasks. */
-    float dx_max_sort_old;
-
-    /*! Pointer for the sorted indices. */
-    struct sort_entry *sort;
-
-    /*! Bit mask of sort directions that will be needed in the next timestep. */
-    uint16_t requires_sorts;
-
-    /*! Bit-mask indicating the sorted directions */
-    uint16_t sorted;
-
-    /*! Bit-mask indicating the sorted directions */
-    uint16_t sort_allocated;
-
-    /*! Bit mask of sorts that need to be computed for this cell. */
-    uint16_t do_sort;
-
-    /*! Maximum end of (integer) time step in this cell for star tasks. */
-    integertime_t ti_end_min;
-
-    /*! Maximum end of (integer) time step in this cell for star tasks. */
-    integertime_t ti_end_max;
-
-    /*! Maximum beginning of (integer) time step in this cell for star tasks.
-     */
-    integertime_t ti_beg_max;
-
-    /*! Number of #spart updated in this cell. */
-    int updated;
-
-    /*! Is the #spart data of this cell being used in a sub-cell? */
-    int hold;
-
-    /*! Star formation history struct */
-    struct star_formation_history sfh;
-
-#ifdef SWIFT_DEBUG_CHECKS
-    /*! Last (integer) time the cell's sort arrays were updated. */
-    integertime_t ti_sort;
-#endif
-
-  } stars;
+  struct cell_stars stars;
 
   /*! Black hole variables */
-  struct {
-
-    /*! Pointer to the #bpart data. */
-    struct bpart *parts;
-
-    /*! The drift task for bparts */
-    struct task *drift;
-
-    /*! Implicit tasks marking the entry of the BH physics block of tasks
-     */
-    struct task *black_holes_in;
-
-    /*! Implicit tasks marking the exit of the BH physics block of tasks */
-    struct task *black_holes_out;
-
-    /*! The star ghost task itself */
-    struct task *density_ghost;
-
-    /*! The star ghost task itself */
-    struct task *swallow_ghost[3];
-
-    /*! Linked list of the tasks computing this cell's BH density. */
-    struct link *density;
-
-    /*! Linked list of the tasks computing this cell's BH swallowing and
-     * merging. */
-    struct link *swallow;
-
-    /*! Linked list of the tasks processing the particles to swallow */
-    struct link *do_gas_swallow;
-
-    /*! Linked list of the tasks processing the particles to swallow */
-    struct link *do_bh_swallow;
-
-    /*! Linked list of the tasks computing this cell's BH feedback. */
-    struct link *feedback;
-
-    /*! Last (integer) time the cell's bpart were drifted forward in time. */
-    integertime_t ti_old_part;
-
-    /*! Spin lock for various uses (#bpart case). */
-    swift_lock_type lock;
-
-    /*! Nr of #bpart in this cell. */
-    int count;
-
-    /*! Nr of #bpart this cell can hold after addition of new #bpart. */
-    int count_total;
-
-    /*! Max smoothing length in this cell. */
-    float h_max;
-
-    /*! Values of h_max before the drifts, used for sub-cell tasks. */
-    float h_max_old;
-
-    /*! Maximum part movement in this cell since last construction. */
-    float dx_max_part;
-
-    /*! Values of dx_max before the drifts, used for sub-cell tasks. */
-    float dx_max_part_old;
-
-    /*! Maximum end of (integer) time step in this cell for black tasks. */
-    integertime_t ti_end_min;
-
-    /*! Maximum end of (integer) time step in this cell for black hole tasks. */
-    integertime_t ti_end_max;
-
-    /*! Maximum beginning of (integer) time step in this cell for black hole
-     * tasks.
-     */
-    integertime_t ti_beg_max;
-
-    /*! Number of #bpart updated in this cell. */
-    int updated;
-
-    /*! Is the #bpart data of this cell being used in a sub-cell? */
-    int hold;
-
-  } black_holes;
+  struct cell_black_holes black_holes;
 
   /*! Sink particles variables */
-  struct {
-
-    /*! Pointer to the #sink data. */
-    struct sink *parts;
-
-    /*! Nr of #sink in this cell. */
-    int count;
-
-    /*! Nr of #sink this cell can hold after addition of new one. */
-    int count_total;
-
-    /*! Max cut off radius in this cell. */
-    float r_cut_max;
-
-    /*! Values of r_cut_max before the drifts, used for sub-cell tasks. */
-    float r_cut_max_old;
-
-    /*! Number of #sink updated in this cell. */
-    int updated;
-
-    /*! Is the #sink data of this cell being used in a sub-cell? */
-    int hold;
-
-    /*! Spin lock for various uses (#sink case). */
-    swift_lock_type lock;
-
-    /*! Maximum part movement in this cell since last construction. */
-    float dx_max_part;
-
-    /*! Values of dx_max before the drifts, used for sub-cell tasks. */
-    float dx_max_part_old;
-
-    /*! Last (integer) time the cell's sink were drifted forward in time. */
-    integertime_t ti_old_part;
-
-    /*! Minimum end of (integer) time step in this cell for sink tasks. */
-    integertime_t ti_end_min;
-
-    /*! Maximum end of (integer) time step in this cell for sink tasks. */
-    integertime_t ti_end_max;
-
-    /*! Maximum beginning of (integer) time step in this cell for sink
-     * tasks.
-     */
-    integertime_t ti_beg_max;
-
-    /*! The drift task for sinks */
-    struct task *drift;
-
-    /*! Implicit tasks marking the entry of the sink block of tasks
-     */
-    struct task *sink_in;
-
-    /*! Implicit tasks marking the exit of the sink block of tasks */
-    struct task *sink_out;
-
-  } sinks;
+  struct cell_sinks sinks;
 
 #ifdef WITH_MPI
   /*! MPI variables */
@@ -1436,6 +1076,20 @@ __attribute__((always_inline)) INLINE static void cell_malloc_hydro_sorts(
                                (count + 1))) == NULL)
       error("Failed to allocate sort memory.");
 
+    long long mem = sizeof(struct sort_entry) * num_arrays_wanted * (count + 1);
+    long long dir = num_arrays_wanted;
+
+    atomic_inc(&sort_array_counts);
+    atomic_add(&sort_array_memory, mem);
+    atomic_add(&sort_array_directions, dir);
+
+    mem = sizeof(struct sort_entry) * num_already_allocated * (count + 1);
+    dir = num_already_allocated;
+
+    atomic_dec(&sort_array_counts);
+    atomic_sub(&sort_array_memory, mem);
+    atomic_sub(&sort_array_directions, dir);
+
     /* Now, copy the already existing arrays */
     int from = 0;
     int to = 0;
@@ -1468,6 +1122,13 @@ __attribute__((always_inline)) INLINE static void cell_malloc_hydro_sorts(
                "hydro.sort",
                sizeof(struct sort_entry) * num_arrays * (count + 1))) == NULL)
         error("Failed to allocate sort memory.");
+
+      long long mem = sizeof(struct sort_entry) * num_arrays * (count + 1);
+      long long dir = num_arrays;
+
+      atomic_inc(&sort_array_counts);
+      atomic_add(&sort_array_memory, mem);
+      atomic_add(&sort_array_directions, dir);
     }
   }
 }
@@ -1480,11 +1141,24 @@ __attribute__((always_inline)) INLINE static void cell_malloc_hydro_sorts(
 __attribute__((always_inline)) INLINE static void cell_free_hydro_sorts(
     struct cell *c) {
 
+#ifndef NONE_SPH
   if (c->hydro.sort != NULL) {
     swift_free("hydro.sort", c->hydro.sort);
+
+    const int num_arrays = intrinsics_popcount(c->hydro.sort_allocated);
+    const int count = c->hydro.count;
+
+    long long mem = sizeof(struct sort_entry) * num_arrays * (count + 1);
+    long long dir = num_arrays;
+
+    atomic_dec(&sort_array_counts);
+    atomic_sub(&sort_array_memory, mem);
+    atomic_sub(&sort_array_directions, dir);
+
     c->hydro.sort = NULL;
     c->hydro.sort_allocated = 0;
   }
+#endif
 }
 
 /**
@@ -1593,11 +1267,13 @@ __attribute__((always_inline)) INLINE static void cell_malloc_stars_sorts(
 __attribute__((always_inline)) INLINE static void cell_free_stars_sorts(
     struct cell *c) {
 
+#ifndef STARS_NONE
   if (c->stars.sort != NULL) {
     swift_free("stars.sort", c->stars.sort);
     c->stars.sort = NULL;
     c->stars.sort_allocated = 0;
   }
+#endif
 }
 
 /**

@@ -340,8 +340,8 @@ void proxy_cells_exchange(struct proxy *proxies, int num_proxies,
 #ifdef WITH_MPI
 
   MPI_Request *reqs;
-  if ((reqs = (MPI_Request *)malloc(sizeof(MPI_Request) * 2 * num_proxies)) ==
-      NULL)
+  if ((reqs = (MPI_Request *)swift_malloc(
+           "reqs", sizeof(MPI_Request) * 2 * num_proxies)) == NULL)
     error("Failed to allocate request buffers.");
   MPI_Request *reqs_in = reqs;
   MPI_Request *reqs_out = &reqs[num_proxies];
@@ -439,7 +439,7 @@ void proxy_cells_exchange(struct proxy *proxies, int num_proxies,
     error("MPI_Waitall on sends failed.");
 
   /* Clean up. */
-  free(reqs);
+  swift_free("reqs", reqs);
   swift_free("pcells", pcells);
   swift_free("proxy_cell_offset", offset);
   for (int k = 0; k < num_proxies; k++) {

@@ -212,9 +212,9 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->stars.dx_max_sort = 0.f;
     c->black_holes.dx_max_part = 0.f;
     c->hydro.sorted = 0;
-    c->hydro.sort_allocated = 0;
+    // c->hydro.sort_allocated = 0;
     c->stars.sorted = 0;
-    c->hydro.count = 0;
+    // c->hydro.count = 0;
     c->hydro.count_total = 0;
     c->hydro.updated = 0;
     c->grav.count = 0;
@@ -239,9 +239,9 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->stars.density = NULL;
     c->stars.feedback = NULL;
     c->black_holes.density_ghost = NULL;
-    c->black_holes.swallow_ghost[0] = NULL;
-    c->black_holes.swallow_ghost[1] = NULL;
-    c->black_holes.swallow_ghost[2] = NULL;
+    c->black_holes.swallow_ghost_0 = NULL;
+    c->black_holes.swallow_ghost_1 = NULL;
+    c->black_holes.swallow_ghost_2 = NULL;
     c->black_holes.density = NULL;
     c->black_holes.swallow = NULL;
     c->black_holes.do_gas_swallow = NULL;
@@ -306,6 +306,7 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
 
     cell_free_hydro_sorts(c);
     cell_free_stars_sorts(c);
+    c->hydro.count = 0;
 #if WITH_MPI
     c->mpi.tag = -1;
     c->mpi.recv = NULL;
@@ -398,13 +399,13 @@ void space_regrid(struct space *s, int verbose) {
       for (int k = 0; k < s->nr_local_cells_with_particles; ++k) {
         const struct cell *c =
             &s->cells_top[s->local_cells_with_particles_top[k]];
-        if (c->hydro.h_max > h_max) {
+        if (c->hydro.count > 0 && c->hydro.h_max > h_max) {
           h_max = c->hydro.h_max;
         }
-        if (c->stars.h_max > h_max) {
+        if (c->stars.count > 0 && c->stars.h_max > h_max) {
           h_max = c->stars.h_max;
         }
-        if (c->black_holes.h_max > h_max) {
+        if (c->black_holes.count > 0 && c->black_holes.h_max > h_max) {
           h_max = c->black_holes.h_max;
         }
         if (c->sinks.r_cut_max > h_max) {
@@ -416,13 +417,16 @@ void space_regrid(struct space *s, int verbose) {
     } else if (s->cells_top != NULL) {
       for (int k = 0; k < s->nr_cells; k++) {
         const struct cell *c = &s->cells_top[k];
-        if (c->nodeID == engine_rank && c->hydro.h_max > h_max) {
+        if (c->nodeID == engine_rank && c->hydro.count > 0 &&
+            c->hydro.h_max > h_max) {
           h_max = c->hydro.h_max;
         }
-        if (c->nodeID == engine_rank && c->stars.h_max > h_max) {
+        if (c->nodeID == engine_rank && c->stars.count > 0 &&
+            c->stars.h_max > h_max) {
           h_max = c->stars.h_max;
         }
-        if (c->nodeID == engine_rank && c->black_holes.h_max > h_max) {
+        if (c->nodeID == engine_rank && c->black_holes.count > 0 &&
+            c->black_holes.h_max > h_max) {
           h_max = c->black_holes.h_max;
         }
         if (c->nodeID == engine_rank && c->sinks.r_cut_max > h_max) {
@@ -1626,7 +1630,8 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
         nr_gparts -= 1;
 
         /* Swap the particle */
-        memswap(&s->gparts[k], &s->gparts[nr_gparts], sizeof(struct gpart));
+        memswap_unaligned(&s->gparts[k], &s->gparts[nr_gparts],
+                          sizeof(struct gpart));
 
         /* Swap the link with part/spart */
         if (s->gparts[k].type == swift_type_gas) {
@@ -3566,7 +3571,7 @@ void space_gparts_sort(struct gpart *gparts, struct part *parts,
         while (ind[j] == target_cid) {
           j = offsets[target_cid] + counts[target_cid]++;
         }
-        memswap(&gparts[j], &temp_gpart, sizeof(struct gpart));
+        memswap_unaligned(&gparts[j], &temp_gpart, sizeof(struct gpart));
         memswap(&ind[j], &target_cid, sizeof(int));
         if (gparts[j].type == swift_type_gas) {
           parts[-gparts[j].id_or_neg_offset].gpart = &gparts[j];

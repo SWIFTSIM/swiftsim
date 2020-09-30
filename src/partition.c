@@ -2516,7 +2516,6 @@ int partition_space_to_space(double *oldh, double *oldcdim, int *oldnodeIDs,
  *
  * @param s the space with the top-level cells.
  * @param reparttype struct to update with the a list of nodeIDs.
- *
  */
 void partition_store_celllist(struct space *s, struct repartition *reparttype) {
   if (reparttype->ncelllist != s->nr_cells) {
@@ -2557,6 +2556,19 @@ void partition_restore_celllist(struct space *s,
           "saved number (%d)",
           s->nr_cells, reparttype->ncelllist);
     }
+  }
+}
+
+/**
+ * @brief Free the cell list that was allocated at the last restart dump.
+ *
+ * @param reparttype struct to free the list of nodeIDs from.
+ */
+void partition_free_celllist(struct repartition *reparttype) {
+
+  if (reparttype->ncelllist > 0) {
+    free(reparttype->celllist);
+    reparttype->celllist = 0;
   }
 }
 

@@ -87,6 +87,7 @@ void partition_init(struct partition *partition,
 void partition_store_celllist(struct space *s, struct repartition *reparttype);
 void partition_restore_celllist(struct space *s,
                                 struct repartition *reparttype);
+void partition_free_celllist(struct repartition *reparttype);
 void partition_struct_dump(struct repartition *reparttype, FILE *stream);
 void partition_struct_restore(struct repartition *reparttype, FILE *stream);
 

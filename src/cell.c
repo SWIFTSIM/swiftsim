@@ -2102,7 +2102,7 @@ void cell_split(struct cell *c, ptrdiff_t parts_offset, ptrdiff_t sparts_offset,
             j++;
             bucket_count[bid]++;
           }
-          memswap(&gparts[j], &gpart, sizeof(struct gpart));
+          memswap_unaligned(&gparts[j], &gpart, sizeof(struct gpart));
           memswap(&gbuff[j], &temp_buff, sizeof(struct cell_buff));
           if (gparts[j].type == swift_type_gas) {
             parts[-gparts[j].id_or_neg_offset - parts_offset].gpart =
@@ -4677,8 +4677,8 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
       if (cell_need_rebuild_for_black_holes_pair(ci, cj)) rebuild = 1;
       if (cell_need_rebuild_for_black_holes_pair(cj, ci)) rebuild = 1;
 
-      scheduler_activate(s, ci->hydro.super->black_holes.swallow_ghost[0]);
-      scheduler_activate(s, cj->hydro.super->black_holes.swallow_ghost[0]);
+      scheduler_activate(s, ci->hydro.super->black_holes.swallow_ghost_0);
+      scheduler_activate(s, cj->hydro.super->black_holes.swallow_ghost_0);
 
 #ifdef WITH_MPI
       /* Activate the send/recv tasks. */
@@ -4859,12 +4859,12 @@ int cell_unskip_black_holes_tasks(struct cell *c, struct scheduler *s) {
 
     if (c->black_holes.density_ghost != NULL)
       scheduler_activate(s, c->black_holes.density_ghost);
-    if (c->black_holes.swallow_ghost[0] != NULL)
-      scheduler_activate(s, c->black_holes.swallow_ghost[0]);
-    if (c->black_holes.swallow_ghost[1] != NULL)
-      scheduler_activate(s, c->black_holes.swallow_ghost[1]);
-    if (c->black_holes.swallow_ghost[2] != NULL)
-      scheduler_activate(s, c->black_holes.swallow_ghost[2]);
+    if (c->black_holes.swallow_ghost_0 != NULL)
+      scheduler_activate(s, c->black_holes.swallow_ghost_0);
+    if (c->black_holes.swallow_ghost_1 != NULL)
+      scheduler_activate(s, c->black_holes.swallow_ghost_1);
+    if (c->black_holes.swallow_ghost_2 != NULL)
+      scheduler_activate(s, c->black_holes.swallow_ghost_2);
     if (c->black_holes.black_holes_in != NULL)
       scheduler_activate(s, c->black_holes.black_holes_in);
     if (c->black_holes.black_holes_out != NULL)
@@ -7152,7 +7152,8 @@ void cell_reorder_extra_gparts(struct cell *c, struct part *parts,
 #endif
 
       /* Swap everything (including pointers) */
-      memswap(&gparts[i], &gparts[first_not_extra], sizeof(struct gpart));
+      memswap_unaligned(&gparts[i], &gparts[first_not_extra],
+                        sizeof(struct gpart));
       if (gparts[i].type == swift_type_gas) {
         parts[-gparts[i].id_or_neg_offset].gpart = &gparts[i];
       } else if (gparts[i].type == swift_type_stars) {
