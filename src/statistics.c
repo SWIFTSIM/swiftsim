@@ -144,8 +144,8 @@ void stats_collect_part_mapper(void *map_data, int nr_parts, void *extra_data) {
     /* Get position and velocity */
     double x[3];
     float v[3];
-    convert_gpart_pos(e, gp, x);
-    convert_gpart_vel(e, gp, v);
+    convert_part_pos(e, p, xp, x);
+    convert_part_vel(e, p, xp, v);
 
     const float m = hydro_get_mass(p);
     const float entropy = hydro_get_drifted_physical_entropy(p, cosmo);
