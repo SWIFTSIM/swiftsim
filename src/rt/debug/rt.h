@@ -29,19 +29,11 @@
  *        N^{n+1} = N^n + dt * dN_* / dt
  */
 __attribute__((always_inline)) INLINE static void rt_update_photon_number(
-    struct part* restrict p) {}
-
-/**
- * @brief First initialisation of the RT extra hydro particle data.
- */
-__attribute__((always_inline)) INLINE static void rt_first_init_part(
     struct part* restrict p) {
 
-  p->rt_data.iact_stars = 0;
-  p->rt_data.calls_tot = 0;
-  p->rt_data.calls_per_step = 0;
-  p->rt_data.calls_self = 0;
-  p->rt_data.calls_pair = 0;
+  p->rt_data.photon_number_updated = 1;
+  p->rt_data.calls_tot += 1;
+  p->rt_data.calls_per_step += 1;
 }
 
 /**
@@ -50,23 +42,21 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
 __attribute__((always_inline)) INLINE static void rt_init_part(
     struct part* restrict p) {
 
-  p->rt_data.iact_stars = 0;
   p->rt_data.calls_per_step = 0;
-  p->rt_data.calls_self = 0;
-  p->rt_data.calls_pair = 0;
+  p->rt_data.iact_stars_inject = 0;
+  p->rt_data.calls_self_inject = 0;
+  p->rt_data.calls_pair_inject = 0;
+  p->rt_data.photon_number_updated = 0;
 }
 
 /**
- * @brief First initialisation of the RT extra star particle data.
+ * @brief First initialisation of the RT extra hydro particle data.
  */
-__attribute__((always_inline)) INLINE static void rt_first_init_spart(
-    struct spart* restrict sp) {
+__attribute__((always_inline)) INLINE static void rt_first_init_part(
+    struct part* restrict p) {
 
-  sp->rt_data.iact_hydro = 0;
-  sp->rt_data.calls_tot = 0;
-  sp->rt_data.calls_per_step = 0;
-  sp->rt_data.calls_self = 0;
-  sp->rt_data.calls_pair = 0;
+  p->rt_data.calls_tot = 0;
+  rt_init_part(p);
 }
 
 /**
@@ -75,9 +65,20 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
 __attribute__((always_inline)) INLINE static void rt_init_spart(
     struct spart* restrict sp) {
 
-  sp->rt_data.iact_hydro = 0;
   sp->rt_data.calls_per_step = 0;
-  sp->rt_data.calls_self = 0;
-  sp->rt_data.calls_pair = 0;
+  sp->rt_data.iact_hydro_inject = 0;
+  sp->rt_data.calls_self_inject = 0;
+  sp->rt_data.calls_pair_inject = 0;
 }
+
+/**
+ * @brief First initialisation of the RT extra star particle data.
+ */
+__attribute__((always_inline)) INLINE static void rt_first_init_spart(
+    struct spart* restrict sp) {
+
+  sp->rt_data.calls_tot = 0;
+  rt_init_spart(sp);
+}
+
 #endif /* SWIFT_RT_DEBUG_H */
