@@ -66,6 +66,11 @@ void runner_do_gas_swallow(struct runner *r, struct cell *c, int timer) {
   struct part *parts = c->hydro.parts;
   struct xpart *xparts = c->hydro.xparts;
 
+  /* Nothing to do here if the cell is foreign and we are nibbling */
+  if (c->nodeID != e->nodeID && use_nibbling) {
+    return;
+  }
+
   /* Early abort?
    * (We only want cells for which we drifted the gas as these are
    * the only ones that could have gas particles that have been flagged
