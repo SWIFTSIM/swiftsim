@@ -330,9 +330,8 @@ void runner_do_bh_swallow(struct runner *r, struct cell *c, int timer) {
 
       /* Update mass of associated gpart, to reflect potential changes from
        * nibbling. */
-      if (use_nibbling) {
+      if (use_nibbling && c->nodeID == e->nodeID) {
         cell_bp->gpart->mass = cell_bp->mass;
-        continue;
       }
 
       /* Get the ID of the black holes that will swallow this bpart */
