@@ -175,7 +175,7 @@ Statistics:
   timestep_file_name:  timesteps # (Optional) File name for timing information output. Note: No underscores "_" allowed in file name
   output_list_on:      0   	 # (Optional) Enable the output list
   output_list:         statlist.txt # (Optional) File containing the output times (see documentation in "Parameter File" section)
-  SFH_filename:        SFR.txt   # (Optional) File name/directory for the SFH output (standard is SFR.txt)
+  SFH_file_name:        SFR.txt   # (Optional) File name/directory for the SFH output (standard is SFR.txt)
 
 # Parameters related to the initial conditions
 InitialConditions:
