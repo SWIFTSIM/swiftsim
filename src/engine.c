@@ -4401,10 +4401,14 @@ void engine_config(int restart, int fof, struct engine *e,
               "b-Updates", "Wall-clock time", clocks_getunit(), "Props");
       fflush(e->file_timesteps);
     }
-
+    /* Obtain the location/name for the SFH file from the parameter file */
+    char SFH_fileName[200] = "";
+    parser_get_opt_param_string(params, "Statistics:SFH_file_name",
+                                SFH_fileName,"SFR.txt");
+    
     /* Initialize the SFH logger if running with star formation */
     if (e->policy & engine_policy_star_formation) {
-      e->sfh_logger = fopen("SFR.txt", mode);
+      e->sfh_logger = fopen(SFH_fileName, mode);
       if (!restart) {
         star_formation_logger_init_log_file(e->sfh_logger, e->internal_units,
                                             e->physical_constants);
