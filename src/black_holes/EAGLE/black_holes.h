@@ -570,7 +570,8 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       Bondi_rate = 4. * M_PI * G * G * BH_mass * BH_mass * rho_sub *
                    denominator_inv * denominator_inv * denominator_inv;
 
-    } else {
+    
+    } else if (props->use_boothschaye) {
 
       /* Use dynamical rho and c for Bondi model */
 
@@ -587,18 +588,38 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
 #endif
      /* Calculate the boost parameter BoothSchaye2009 */
       const double n_H = gas_rho_phys * 0.75 / proton_mass;
-      const double boothschaye_factor = n_H / bp->boothschaye_n_h_star;
-      double boothschaye_boost = bp->boothschaye_alpha;
-      if ( boothschaye_factor >= bp->boothschaye_alpha) {
-	boothschaye_boost = pow(boothschaye_factor,bp->boothschaye_beta);
+      const double boothschaye_factor = n_H / props->boothschaye_n_h_star;
+      double boothschaye_boost = props->boothschaye_alpha;
+      const double boothschaye_power = props->boothschaye_beta;
 
-    }
+      if ( boothschaye_factor >= props->boothschaye_alpha) {
+        boothschaye_boost = pow(boothschaye_factor, boothschaye_power);
 
-
+      }
       const double denominator_inv = 1. / sqrt(denominator2);
       Bondi_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
                    denominator_inv * denominator_inv * denominator_inv *
                    boothschaye_boost;
+
+    } else {
+
+      /* Use dynamical rho and c for Bondi model */
+
+      const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
+
+      const double denominator2 = gas_v_norm2 + gas_c_phys2;
+#ifdef SWIFT_DEBUG_CHECKS
+      /* Make sure that the denominator is strictly positive */
+      if (denominator2 <= 0)
+        error(
+            "Invalid denominator for black hole particle %lld in Bondi rate "
+            "calculation.",
+            bp->id);
+#endif
+
+      const double denominator_inv = 1. / sqrt(denominator2);
+      Bondi_rate = 4. * M_PI * G * G * BH_mass * BH_mass * gas_rho_phys *
+                   denominator_inv * denominator_inv * denominator_inv;
     }
   }
 
