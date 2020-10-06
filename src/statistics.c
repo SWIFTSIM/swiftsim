@@ -346,7 +346,7 @@ void stats_collect_bpart_mapper(void *map_data, int nr_bparts,
     const float m = bp->mass;
 
     /* Collect mass */
-    stats.star_mass += m;
+    stats.bh_mass += m;
 
     /* Collect metal mass */
     stats.bh_Z_mass += chemistry_get_bh_total_metal_mass_for_stats(bp);
@@ -498,7 +498,7 @@ void stats_collect(const struct space *s, struct statistics *stats) {
 
   /* Run parallel collection of statistics for sparts */
   if (s->nr_bparts > 0)
-    threadpool_map(&s->e->threadpool, stats_collect_spart_mapper, s->bparts,
+    threadpool_map(&s->e->threadpool, stats_collect_bpart_mapper, s->bparts,
                    s->nr_bparts, sizeof(struct bpart),
                    threadpool_auto_chunk_size, &extra_data);
 
@@ -531,7 +531,7 @@ void stats_write_file_header(FILE *file, const struct unit_system *restrict us,
 
   fprintf(file, "# Global statistics file\n");
   fprintf(file, "######################################################\n");
-  fprintf(file, "# The quantities are all given in internal physical units!\n");
+  fprintf(file, "# The quantities are all given in internal units!\n");
   fprintf(file, "#\n");
   fprintf(file, "# (0)  Simulation step\n");
   fprintf(file,
@@ -590,50 +590,66 @@ void stats_write_file_header(FILE *file, const struct unit_system *restrict us,
   fprintf(file, "#      Unit = %e gram\n", us->UnitMass_in_cgs);
   fprintf(file, "#      Unit = %e solar mass\n",
           1. / phys_const->const_solar_mass);
-  fprintf(file, "# (13) Total kinetic energy. \n");
+  fprintf(file, "# (13) Total kinetic energy (physical). \n");
   fprintf(file, "#      Unit = %e erg\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ENERGY));
-  fprintf(file, "# (14) Total internal (thermal) energy of the gas. \n");
+  fprintf(file,
+          "# (14) Total internal (thermal) energy of the gas (physical). \n");
   fprintf(file, "#      Unit = %e erg\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ENERGY));
-  fprintf(file, "# (15) Total potential energy. \n");
+  fprintf(file, "# (15) Total potential energy (physical). \n");
   fprintf(file, "#      Unit = %e erg\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ENERGY));
-  fprintf(file, "# (16) Total radiated energy of the gas. \n");
+  fprintf(file, "# (16) Total radiated energy of the gas (physical). \n");
   fprintf(file, "#      Unit = %e erg\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ENERGY));
-  fprintf(file, "# (17) Total gas entropy. \n");
+  fprintf(file, "# (17) Total gas entropy (physical). \n");
   fprintf(file, "#      Unit = %e erg gram^(%.3f) cm^(%.3f)\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ENTROPY),
           hydro_gamma_minus_one, -3.f * hydro_gamma_minus_one);
-  fprintf(file, "# (18) Centre of mass of the simulation (x coordinate). \n");
+  fprintf(
+      file,
+      "# (18) Comoving centre of mass of the simulation (x coordinate). \n");
   fprintf(file, "#      Unit = %e cm\n", us->UnitLength_in_cgs);
   fprintf(file, "#      Unit = %e pc or %e Mpc\n",
           1. / phys_const->const_parsec, 1. / phys_const->const_parsec / 1e6);
-  fprintf(file, "# (19) Centre of mass of the simulation (y coordinate). \n");
+  fprintf(
+      file,
+      "# (19) Comoving centre of mass of the simulation (y coordinate). \n");
   fprintf(file, "#      Unit = %e cm\n", us->UnitLength_in_cgs);
   fprintf(file, "#      Unit = %e pc or %e Mpc\n",
           1. / phys_const->const_parsec, 1. / phys_const->const_parsec / 1e6);
-  fprintf(file, "# (20) Centre of mass of the simulation (z coordinate). \n");
+  fprintf(
+      file,
+      "# (20) Comoving centre of mass of the simulation (z coordinate). \n");
   fprintf(file, "#      Unit = %e cm\n", us->UnitLength_in_cgs);
   fprintf(file, "#      Unit = %e pc or %e Mpc\n",
           1. / phys_const->const_parsec, 1. / phys_const->const_parsec / 1e6);
-  fprintf(file, "# (21) Momentum of the simulation (x coordinate). \n");
+  fprintf(file,
+          "# (21) Comoving momentum of the simulation (x coordinate). \n");
   fprintf(file, "#      Unit = %e gram cm s^-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_MOMENTUM));
-  fprintf(file, "# (22) Momentum of the simulation (y coordinate). \n");
+  fprintf(file,
+          "# (22) Comoving momentum of the simulation (y coordinate). \n");
   fprintf(file, "#      Unit = %e gram cm s^-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_MOMENTUM));
-  fprintf(file, "# (23) Momentum of the simulation (z coordinate). \n");
+  fprintf(file,
+          "# (23) Comoving momentum of the simulation (z coordinate). \n");
   fprintf(file, "#      Unit = %e gram cm s^-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_MOMENTUM));
-  fprintf(file, "# (24) Angular momentum of the simulation (x coordinate). \n");
+  fprintf(
+      file,
+      "# (24) Comoving angular momentum of the simulation (x coordinate). \n");
   fprintf(file, "#      Unit = %e gram cm^2 s^-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ANGULAR_MOMENTUM));
-  fprintf(file, "# (25) Angular momentum of the simulation (y coordinate). \n");
+  fprintf(
+      file,
+      "# (25) Comoving angular momentum of the simulation (y coordinate). \n");
   fprintf(file, "#      Unit = %e gram cm^2 s^-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ANGULAR_MOMENTUM));
-  fprintf(file, "# (26) Angular momentum of the simulation (z coordinate). \n");
+  fprintf(
+      file,
+      "# (26) Comoving angular momentum of the simulation (z coordinate). \n");
   fprintf(file, "#      Unit = %e gram cm^2 s^-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ANGULAR_MOMENTUM));
   fprintf(file, "#\n");
