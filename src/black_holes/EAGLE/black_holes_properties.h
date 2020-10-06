@@ -260,11 +260,11 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->boothschaye_alpha = parser_get_opt_param_float(
       params, "EAGLEAGN:boothschaye_alpha", 1.);
   
-  bp->boothschaye_beta  = 
+  bp->boothschaye_beta  =
       parser_get_opt_param_float(params, "EAGLEAGN:boothschaye_beta", 2.);
   
-  bp->boothschaye_n_h_star = 
-      parser_get_opt_param_float(params, "EAGLEAGN:boothschaye_n_h_star", 0.1) / 
+  bp->boothschaye_n_h_star =
+      parser_get_opt_param_float(params, "EAGLEAGN:boothschaye_n_h_star", 0.1) /
       units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
 
   bp->use_nibbling = parser_get_param_int(params, "EAGLEAGN:use_nibbling");
