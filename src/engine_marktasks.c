@@ -95,6 +95,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       const int ci_active_black_holes = cell_is_active_black_holes(ci, e);
       const int ci_active_stars = cell_is_active_stars(ci, e) ||
                                   (with_star_formation && ci_active_hydro);
+      const int ci_active_sinks = cell_is_active_sinks(ci, e) || ci_active_hydro;
 
       /* Activate the hydro drift */
       if (t_type == task_type_self && t_subtype == task_subtype_density) {
@@ -174,6 +175,26 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       else if (t_type == task_type_sub_self &&
                t_subtype == task_subtype_stars_feedback) {
         if (ci_active_stars) scheduler_activate(s, t);
+      }
+
+      /* Activate the sink formation */
+      else if (t_type == task_type_self &&
+               t_subtype == task_subtype_sink_compute_formation) {
+        if (ci_active_sinks) {
+          scheduler_activate(s, t);
+          cell_activate_drift_part(ci, s);
+          cell_activate_drift_sink(ci, s);
+          if (with_timestep_sync) cell_activate_sync_part(ci, s);
+        }
+      }
+
+      /* Store current values of dx_max and h_max. */
+      else if (t_type == task_type_sub_self &&
+               t_subtype == task_subtype_sink_compute_formation) {
+        if (ci_active_sinks) {
+          scheduler_activate(s, t);
+          cell_activate_subcell_sinks_tasks(ci, NULL, s, with_timestep_sync);
+        }
       }
 
       /* Activate the black hole density */
@@ -301,6 +322,11 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                                   (with_star_formation && ci_active_hydro);
       const int cj_active_stars = cell_is_active_stars(cj, e) ||
                                   (with_star_formation && cj_active_hydro);
+
+      const int ci_active_sinks = cell_is_active_sinks(ci, e) ||
+        ci_active_hydro;
+      const int cj_active_sinks = cell_is_active_sinks(cj, e) ||
+        cj_active_hydro;
 
       /* Only activate tasks that involve a local active cell. */
       if ((t_subtype == task_subtype_density ||
@@ -476,6 +502,58 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           error("Invalid task sub-type encountered");
         }
 #endif
+      }
+
+      /* Sink formation */
+      else if ((t_subtype == task_subtype_sink_compute_formation) &&
+               (ci_active_sinks || cj_active_sinks) &&
+               (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
+
+        scheduler_activate(s, t);
+
+        /* Set the correct sorting flags */
+        if (t_type == task_type_pair) {
+
+          /* Do ci */
+          if (ci_active_sinks) {
+
+            /* hydro for cj */
+            atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
+            cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
+
+            /* Activate the drift tasks. */
+            if (ci_nodeID == nodeID) cell_activate_drift_sink(ci, s);
+            if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
+            if (cj_nodeID == nodeID && with_timestep_sync)
+              cell_activate_sync_part(cj, s);
+
+            /* Check the sorts and activate them if needed. */
+            cell_activate_hydro_sorts(cj, t->flags, s);
+          }
+
+          /* Do cj */
+          if (cj_active_sinks) {
+
+            /* hydro for ci */
+            atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
+            ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
+
+            /* Activate the drift tasks. */
+            if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
+            if (cj_nodeID == nodeID) cell_activate_drift_sink(cj, s);
+            if (ci_nodeID == nodeID && with_timestep_sync)
+              cell_activate_sync_part(ci, s);
+
+            /* Check the sorts and activate them if needed. */
+            cell_activate_hydro_sorts(ci, t->flags, s);
+          }
+        }
+
+        /* Store current values of dx_max and h_max. */
+        else if (t_type == task_type_sub_pair &&
+                 t_subtype == task_subtype_sink_compute_formation) {
+          cell_activate_subcell_sinks_tasks(ci, cj, s, with_timestep_sync);
+        }
       }
 
       /* RT injection tasks */
@@ -724,6 +802,86 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             cell_activate_drift_part(ci, s);
           }
         }
+#endif
+      }
+
+            /* Only interested in stars_density tasks as of here. */
+      else if (t->subtype == task_subtype_sink_compute_formation) {
+
+        /* Too much particle movement? */
+        if (cell_need_rebuild_for_sinks_pair(ci, cj)) *rebuild_space = 1;
+        if (cell_need_rebuild_for_sinks_pair(cj, ci)) *rebuild_space = 1;
+
+#ifdef WITH_MPI
+        error("TODO");
+        /* /\* Activate the send/recv tasks. *\/ */
+        /* if (ci_nodeID != nodeID) { */
+
+        /*   if (cj_active_stars) { */
+        /*     scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv); */
+        /*     scheduler_activate_recv(s, ci->mpi.recv, task_subtype_rho); */
+
+        /*     /\* If the local cell is active, more stuff will be needed. *\/ */
+        /*     scheduler_activate_send(s, cj->mpi.send, task_subtype_spart, */
+        /*                             ci_nodeID); */
+        /*     cell_activate_drift_spart(cj, s); */
+
+        /*     /\* If the local cell is active, send its ti_end values. *\/ */
+        /*     scheduler_activate_send(s, cj->mpi.send, task_subtype_tend_spart, */
+        /*                             ci_nodeID); */
+        /*   } */
+
+        /*   if (ci_active_stars) { */
+        /*     scheduler_activate_recv(s, ci->mpi.recv, task_subtype_spart); */
+
+        /*     /\* If the foreign cell is active, we want its ti_end values. *\/ */
+        /*     scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_spart); */
+
+        /*     /\* Is the foreign cell active and will need stuff from us? *\/ */
+        /*     scheduler_activate_send(s, cj->mpi.send, task_subtype_xv, */
+        /*                             ci_nodeID); */
+        /*     scheduler_activate_send(s, cj->mpi.send, task_subtype_rho, */
+        /*                             ci_nodeID); */
+
+        /*     /\* Drift the cell which will be sent; note that not all sent */
+        /*        particles will be drifted, only those that are needed. *\/ */
+        /*     cell_activate_drift_part(cj, s); */
+        /*   } */
+
+        /* } else if (cj_nodeID != nodeID) { */
+
+        /*   /\* If the local cell is active, receive data from the foreign cell. *\/ */
+        /*   if (ci_active_stars) { */
+        /*     scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv); */
+        /*     scheduler_activate_recv(s, cj->mpi.recv, task_subtype_rho); */
+
+        /*     /\* If the local cell is active, more stuff will be needed. *\/ */
+        /*     scheduler_activate_send(s, ci->mpi.send, task_subtype_spart, */
+        /*                             cj_nodeID); */
+        /*     cell_activate_drift_spart(ci, s); */
+
+        /*     /\* If the local cell is active, send its ti_end values. *\/ */
+        /*     scheduler_activate_send(s, ci->mpi.send, task_subtype_tend_spart, */
+        /*                             cj_nodeID); */
+        /*   } */
+
+        /*   if (cj_active_stars) { */
+        /*     scheduler_activate_recv(s, cj->mpi.recv, task_subtype_spart); */
+
+        /*     /\* If the foreign cell is active, we want its ti_end values. *\/ */
+        /*     scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_spart); */
+
+        /*     /\* Is the foreign cell active and will need stuff from us? *\/ */
+        /*     scheduler_activate_send(s, ci->mpi.send, task_subtype_xv, */
+        /*                             cj_nodeID); */
+        /*     scheduler_activate_send(s, ci->mpi.send, task_subtype_rho, */
+        /*                             cj_nodeID); */
+
+        /*     /\* Drift the cell which will be sent; note that not all sent */
+        /*        particles will be drifted, only those that are needed. *\/ */
+        /*     cell_activate_drift_part(ci, s); */
+        /*   } */
+        /* } */
 #endif
       }
 

@@ -208,6 +208,8 @@ void *runner_main(void *data) {
             runner_doself_branch_bh_feedback(r, ci);
           else if (t->subtype == task_subtype_rt_inject)
             runner_doself_branch_rt_inject(r, ci, 1);
+          else if (t->subtype == task_subtype_sink_compute_formation)
+            runner_doself_branch_sink_compute_formation(r, ci);
           else
             error("Unknown/invalid task subtype (%s).",
                   subtaskID_names[t->subtype]);
@@ -242,6 +244,8 @@ void *runner_main(void *data) {
             runner_dopair_branch_bh_feedback(r, ci, cj);
           else if (t->subtype == task_subtype_rt_inject)
             runner_dopair_branch_rt_inject(r, ci, cj, 1);
+          else if (t->subtype == task_subtype_sink_compute_formation)
+            runner_dopair_branch_sink_compute_formation(r, ci, cj);
           else
             error("Unknown/invalid task subtype (%s/%s).",
                   taskID_names[t->type], subtaskID_names[t->subtype]);
@@ -274,6 +278,8 @@ void *runner_main(void *data) {
             runner_dosub_self_bh_feedback(r, ci, 1);
           else if (t->subtype == task_subtype_rt_inject)
             runner_dosub_self_rt_inject(r, ci, 1);
+          else if (t->subtype == task_subtype_sink_compute_formation)
+            runner_dosub_self_sink_compute_formation(r, ci, 1);
           else
             error("Unknown/invalid task subtype (%s/%s).",
                   taskID_names[t->type], subtaskID_names[t->subtype]);
@@ -306,6 +312,8 @@ void *runner_main(void *data) {
             runner_dosub_pair_bh_feedback(r, ci, cj, 1);
           else if (t->subtype == task_subtype_rt_inject)
             runner_dosub_pair_rt_inject(r, ci, cj, 1);
+          else if (t->subtype == task_subtype_sink_compute_formation)
+            runner_dosub_pair_sink_compute_formation(r, ci, cj, 1);
           else
             error("Unknown/invalid task subtype (%s/%s).",
                   taskID_names[t->type], subtaskID_names[t->subtype]);
