@@ -548,7 +548,7 @@ EAGLEAGN:
   viscous_alpha:                      1e6        # Normalisation constant of the viscous time-scale in the accretion reduction term
   use_boothschaye:                    0          # (Optional) Are we using the model from Booth, Schaye (2009)
   boothschaye_alpha:                  1.         # Lowest value for the accretion effeciency for the Booth, Schaye 2009 accretion model. Default is 1.
-  boothschaye_beta:                   2.         # Slope of the power law for the Booth, Schaye 2009 model. Set to 0 for constant alpha bondi-hoyle accreation
+  boothschaye_beta:                   2.         # Slope of the power law for the Booth, Schaye 2009 model.
   boothschaye_n_h_star:               0.1        # Normalization of the power law for the Booth Schaye 2009 model in cgs (cm^-3).
   radiative_efficiency:               0.1        # Fraction of the accreted mass that gets radiated.
   max_eddington_fraction:             1.         # Maximal allowed accretion rate in units of the Eddington rate.
