@@ -36,8 +36,8 @@
 #include "cooling.h"
 #include "engine.h"
 #include "error.h"
-#include "gravity.h"
-#include "hydro.h"
+#include "gravity_io.h"
+#include "hydro_io.h"
 #include "threadpool.h"
 
 /**
@@ -107,11 +107,8 @@ void stats_collect_part_mapper(void *map_data, int nr_parts, void *extra_data) {
   const struct index_data *data = (struct index_data *)extra_data;
   const struct space *s = data->s;
   const struct engine *e = s->e;
-  const int with_cosmology = (e->policy & engine_policy_cosmology);
   const int with_ext_grav = (e->policy & engine_policy_external_gravity);
   const int with_self_grav = (e->policy & engine_policy_self_gravity);
-  const integertime_t ti_current = e->ti_current;
-  const double time_base = e->time_base;
   const double time = e->time;
   const struct part *restrict parts = (struct part *)map_data;
   const struct xpart *restrict xparts =
@@ -144,33 +141,12 @@ void stats_collect_part_mapper(void *map_data, int nr_parts, void *extra_data) {
         p->time_bin == time_bin_not_created)
       continue;
 
-    /* Get useful time variables */
-    const integertime_t ti_beg =
-        get_integer_time_begin(ti_current, p->time_bin);
-    const integertime_t ti_end = get_integer_time_end(ti_current, p->time_bin);
-
-    /* Get time-step since the last kick */
-    float dt_kick_grav, dt_kick_hydro, dt_therm;
-    if (with_cosmology) {
-      dt_kick_grav = cosmology_get_grav_kick_factor(cosmo, ti_beg, ti_current);
-      dt_kick_grav -=
-          cosmology_get_grav_kick_factor(cosmo, ti_beg, (ti_beg + ti_end) / 2);
-      dt_kick_hydro =
-          cosmology_get_hydro_kick_factor(cosmo, ti_beg, ti_current);
-      dt_kick_hydro -=
-          cosmology_get_hydro_kick_factor(cosmo, ti_beg, (ti_beg + ti_end) / 2);
-      dt_therm = cosmology_get_therm_kick_factor(cosmo, ti_beg, ti_current);
-      dt_therm -=
-          cosmology_get_therm_kick_factor(cosmo, ti_beg, (ti_beg + ti_end) / 2);
-    } else {
-      dt_kick_grav = (ti_current - ((ti_beg + ti_end) / 2)) * time_base;
-      dt_kick_hydro = (ti_current - ((ti_beg + ti_end) / 2)) * time_base;
-      dt_therm = (ti_current - ((ti_beg + ti_end) / 2)) * time_base;
-    }
-
+    /* Get position and velocity */
+    double x[3];
     float v[3];
-    hydro_get_drifted_velocities(p, xp, dt_kick_hydro, dt_kick_grav, v);
-    const double x[3] = {p->x[0], p->x[1], p->x[2]};
+    convert_part_pos(e, p, xp, x);
+    convert_part_vel(e, p, xp, v);
+
     const float m = hydro_get_mass(p);
     const float entropy = hydro_get_drifted_physical_entropy(p, cosmo);
     const float u_inter = hydro_get_drifted_physical_internal_energy(p, cosmo);
@@ -227,11 +203,8 @@ void stats_collect_gpart_mapper(void *map_data, int nr_gparts,
   const struct index_data *data = (struct index_data *)extra_data;
   const struct space *s = data->s;
   const struct engine *e = s->e;
-  const int with_cosmology = (e->policy & engine_policy_cosmology);
   const int with_ext_grav = (e->policy & engine_policy_external_gravity);
   const int with_self_grav = (e->policy & engine_policy_self_gravity);
-  const integertime_t ti_current = e->ti_current;
-  const double time_base = e->time_base;
   const double time = e->time;
   const struct gpart *restrict gparts = (struct gpart *)map_data;
   struct statistics *const global_stats = data->stats;
@@ -263,28 +236,13 @@ void stats_collect_gpart_mapper(void *map_data, int nr_gparts,
         gp->time_bin == time_bin_not_created)
       continue;
 
-    /* Get useful variables */
-    const integertime_t ti_beg =
-        get_integer_time_begin(ti_current, gp->time_bin);
-    const integertime_t ti_end = get_integer_time_end(ti_current, gp->time_bin);
-
-    /* Get time-step since the last kick */
-    float dt_kick_grav;
-    if (with_cosmology) {
-      dt_kick_grav = cosmology_get_grav_kick_factor(cosmo, ti_beg, ti_current);
-      dt_kick_grav -=
-          cosmology_get_grav_kick_factor(cosmo, ti_beg, (ti_beg + ti_end) / 2);
-    } else {
-      dt_kick_grav = (ti_current - ((ti_beg + ti_end) / 2)) * time_base;
-    }
-
-    /* Extrapolate velocities */
-    const float v[3] = {gp->v_full[0] + gp->a_grav[0] * dt_kick_grav,
-                        gp->v_full[1] + gp->a_grav[1] * dt_kick_grav,
-                        gp->v_full[2] + gp->a_grav[2] * dt_kick_grav};
+    /* Get position and velocity */
+    double x[3];
+    float v[3];
+    convert_gpart_pos(e, gp, x);
+    convert_gpart_vel(e, gp, v);
 
     const float m = gravity_get_mass(gp);
-    const double x[3] = {gp->x[0], gp->x[1], gp->x[2]};
 
     /* Collect mass */
     stats.mass += m;
