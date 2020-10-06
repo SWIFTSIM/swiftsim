@@ -58,6 +58,7 @@
 #include "chemistry.h"
 #include "clocks.h"
 #include "cooling.h"
+#include "cooling_properties.h"
 #include "cosmology.h"
 #include "cycle.h"
 #include "debug.h"
@@ -141,6 +142,7 @@ int engine_current_step;
 
 extern int engine_max_parts_per_ghost;
 extern int engine_max_sparts_per_ghost;
+extern int engine_max_parts_per_cooling;
 
 /**
  * @brief Link a density/force task to a cell.
@@ -1619,8 +1621,8 @@ int engine_estimate_nr_tasks(const struct engine *e) {
 #endif
   }
   if (e->policy & engine_policy_sinks) {
-    /* 1 drift, 2 kicks, 1 time-step */
-    n1 += 4;
+    /* 1 drift, 2 kicks, 1 time-step, 1 sink formation */
+    n1 += 5;
   }
   if (e->policy & engine_policy_fof) {
     n1 += 2;
@@ -1632,8 +1634,9 @@ int engine_estimate_nr_tasks(const struct engine *e) {
   }
 #endif
   if (e->policy & engine_policy_rt) {
-    /* 1 self (inject), (3^3-1)/2 = 26/2 = 13 inject pairs */
-    n1 += 14;
+    /* inject: 1 self + (3^3-1)/2 = 26/2 = 13 pairs  |  14
+     * ghosts: in + out                              | + 2 */
+    n1 += 16;
   }
 
 #ifdef WITH_MPI
@@ -2084,7 +2087,7 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->type == task_type_stars_ghost ||
         t->type == task_type_stars_ghost_in ||
         t->type == task_type_stars_ghost_out || t->type == task_type_sink_in ||
-        t->type == task_type_sink_out ||
+        t->type == task_type_sink_out || t->type == task_type_sink_formation ||
         t->type == task_type_bh_swallow_ghost1 ||
         t->type == task_type_bh_swallow_ghost2 ||
         t->type == task_type_bh_swallow_ghost3 || t->type == task_type_bh_in ||
@@ -4734,10 +4737,14 @@ void engine_config(int restart, int fof, struct engine *e,
 
     engine_max_parts_per_ghost =
         parser_get_opt_param_int(params, "Scheduler:engine_max_parts_per_ghost",
-                                 engine_max_parts_per_ghost_default);
+                                 engine_max_parts_per_ghost);
     engine_max_sparts_per_ghost = parser_get_opt_param_int(
         params, "Scheduler:engine_max_sparts_per_ghost",
-        engine_max_sparts_per_ghost_default);
+        engine_max_sparts_per_ghost);
+
+    engine_max_parts_per_cooling = parser_get_opt_param_int(
+        params, "Scheduler:engine_max_parts_per_cooling",
+        engine_max_parts_per_cooling);
   }
 
   /* Allocate and init the threads. */

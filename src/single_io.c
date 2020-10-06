@@ -832,7 +832,7 @@ void write_output_single(struct engine* e,
   /* Format things in a Gadget-friendly array */
   long long N_total[swift_type_count] = {
       (long long)Ngas_written,   (long long)Ndm_written,
-      (long long)Ndm_background, (long long)Nsinks,
+      (long long)Ndm_background, (long long)Nsinks_written,
       (long long)Nstars_written, (long long)Nblackholes_written};
 
   /* File name */
@@ -892,6 +892,16 @@ void write_output_single(struct engine* e,
   io_write_attribute(h_grp, "Scale-factor", DOUBLE, &e->cosmology->a, 1);
   io_write_attribute_s(h_grp, "Code", "SWIFT");
   io_write_attribute_s(h_grp, "RunName", e->run_name);
+
+  /* Write out the time-base */
+  if (with_cosmology) {
+    io_write_attribute_d(h_grp, "TimeBase_dloga", e->time_base);
+    const double delta_t = cosmology_get_timebase(e->cosmology, e->ti_current);
+    io_write_attribute_d(h_grp, "TimeBase_dt", delta_t);
+  } else {
+    io_write_attribute_d(h_grp, "TimeBase_dloga", 0);
+    io_write_attribute_d(h_grp, "TimeBase_dt", e->time_base);
+  }
 
   /* Store the time at which the snapshot was written */
   time_t tm = time(NULL);

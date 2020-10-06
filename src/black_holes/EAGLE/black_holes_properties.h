@@ -91,6 +91,12 @@ struct black_holes_props {
   float boothschaye_beta;
   double boothschaye_n_h_star;
   
+  /*! Switch for nibbling mode */
+  int use_nibbling;
+
+  /*! Minimum gas particle mass in nibbling mode */
+  float min_gas_mass_for_nibbling;
+
   /* ---- Properties of the feedback model ------- */
 
   /*! Feedback coupling efficiency of the black holes. */
@@ -143,6 +149,11 @@ struct black_holes_props {
 
   /*! Maximal distance over which BHs merge, in units of softening length */
   float max_merging_distance_ratio;
+
+  /* ---- Black hole time-step properties ---------- */
+
+  /*! Minimum allowed time-step of BH (internal units) */
+  float time_step_min;
 
   /* ---- Common conversion factors --------------- */
 
@@ -236,6 +247,8 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->epsilon_r =
       parser_get_param_float(params, "EAGLEAGN:radiative_efficiency");
+  if (bp->epsilon_r > 1.f)
+    error("EAGLEAGN:radiative_efficiency must be <= 1, not %f.", bp->epsilon_r);
 
   bp->f_Edd = parser_get_param_float(params, "EAGLEAGN:max_eddington_fraction");
   bp->f_Edd_recording = parser_get_param_float(
@@ -254,6 +267,13 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->boothschaye_n_h_star =
       parser_get_opt_param_float(params, "EAGLEAGN:boothschaye_n_h_star", 0.1) /
       units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
+
+  bp->use_nibbling = parser_get_param_int(params, "EAGLEAGN:use_nibbling");
+  if (bp->use_nibbling) {
+    bp->min_gas_mass_for_nibbling =
+        parser_get_param_float(params, "EAGLEAGN:min_gas_mass_for_nibbling");
+    bp->min_gas_mass_for_nibbling *= phys_const->const_solar_mass;
+  }
 
   /* Feedback parameters ---------------------------------- */
 
@@ -329,6 +349,16 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
 
   bp->max_merging_distance_ratio =
       parser_get_param_float(params, "EAGLEAGN:merger_max_distance_ratio");
+
+  /* ---- Black hole time-step properties ------------------ */
+
+  const double Myr_in_cgs = 1e6 * 365.25 * 24. * 60. * 60.;
+
+  const double time_step_min_Myr = parser_get_opt_param_float(
+      params, "EAGLEAGN:minimum_timestep_Myr", FLT_MAX);
+
+  bp->time_step_min = time_step_min_Myr * Myr_in_cgs /
+                      units_cgs_conversion_factor(us, UNIT_CONV_TIME);
 
   /* Common conversion factors ----------------------------- */
 

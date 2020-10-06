@@ -456,6 +456,13 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
+  if (with_sink && with_star_formation) {
+    printf(
+        "Error: The sink particles are not supposed to be run with star "
+        "formation.\n");
+    return 1;
+  }
+
   /* The CPU frequency is a long long, so we need to parse that ourselves. */
   if (cpufreqarg != NULL) {
     if (sscanf(cpufreqarg, "%llu", &cpufreq) != 1) {
@@ -578,12 +585,6 @@ int main(int argc, char *argv[]) {
     error(
         "Error: Cannot use radiative transfer without stars, --stars must be "
         "chosen\n");
-  }
-  /* Temporary, this dependency will be removed later */
-  if (with_rt && !with_feedback) {
-    error(
-        "Error: Cannot use radiative transfer without feedback for now,"
-        " --feedback must be chosen\n");
   }
 
 #ifndef GADGET2_SPH
