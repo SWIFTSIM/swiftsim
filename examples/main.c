@@ -1024,11 +1024,11 @@ int main(int argc, char *argv[]) {
           " but compiled without it.");
     }
 #else
-      /* if (!with_cooling && !with_temperature) { */
-      /*   error( */
-      /*       "ERROR: Compiled with cooling but running without it. " */
-      /*       "Did you forget the --cooling or --temperature flags?"); */
-      /* } */
+    if (!with_cooling && !with_temperature) {
+      error(
+          "ERROR: Compiled with cooling but running without it. "
+          "Did you forget the --cooling or --temperature flags?");
+    }
 #endif
     bzero(&cooling_func, sizeof(struct cooling_function_data));
     if (with_cooling || with_temperature) {
