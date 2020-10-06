@@ -1034,7 +1034,7 @@ void space_allocate_extras(struct space *s, int verbose) {
                    engine_redistribute_alloc_margin;
 
       if (verbose)
-        message("Re-allocating sparts array from %zd to %zd", s->size_sinks,
+        message("Re-allocating sinks array from %zd to %zd", s->size_sinks,
                 size_sinks);
 
       /* Create more space for parts */

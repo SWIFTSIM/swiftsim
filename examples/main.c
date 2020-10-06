@@ -458,7 +458,7 @@ int main(int argc, char *argv[]) {
 
   if (with_sink && with_star_formation) {
     printf(
-        "Error: The sink particles are not supposed to be run with the star "
+        "Error: The sink particles are not supposed to be run with star "
         "formation.\n");
     return 1;
   }
