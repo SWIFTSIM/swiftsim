@@ -48,9 +48,9 @@ Snapshots:
 
 # Parameters governing the conserved quantities statistics
 Statistics:
-  scale_factor_first:  0.92 # Scale-factor of the first stat dump (cosmological run)
-  time_first:          0.01 # Time of the first stat dump (non-cosmological run) (in internal units)
-  delta_time:          1.05 # Time between statistics output
+  scale_factor_first:  0.91  # Scale-factor of the first stat dump (cosmological run)
+  time_first:          0.01  # Time of the first stat dump (non-cosmological run) (in internal units)
+  delta_time:          1.005 # Time between statistics output
 
 # Parameters for the self-gravity scheme
 Gravity:
