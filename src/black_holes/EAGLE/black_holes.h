@@ -478,10 +478,9 @@ black_hole_feedback_delta_T(const struct bpart* bp,
                             const struct black_holes_props* props,
                             const struct cosmology* cosmo) {
 
-  /* Safety check: should only get here if we run with the varying-dT model */
+  /* If we do not want a variable delta T, we can stop right here. */
   if (!props->use_variable_delta_T)
-    error("Attempting to compute variable black hole heating temperature "
-          "without activating this model. Cease and desist.");
+    return props->AGN_delta_T_desired;
 
   if (bp->internal_energy_gas < 0)
     error("Attempting to compute feedback energy for BH without neighbours.");
@@ -756,9 +755,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
       bp->circular_velocity_gas[2] * mass_rate * dt / bp->h;
 
   /* Now find the temperature increase for a possible feedback event */
-  const double delta_T = props->use_variable_delta_T ?
-      black_hole_feedback_delta_T(bp, props, cosmo) :
-      props->AGN_delta_T_desired;
+  const double delta_T = black_hole_feedback_delta_T(bp, props, cosmo);
   bp->AGN_delta_T = delta_T;
   const double delta_u = delta_T * props->temp_to_u_factor;
 
