@@ -604,7 +604,7 @@ void stats_write_file_header(FILE *file, const struct unit_system *restrict us,
   fprintf(file, "#      Unit = %e erg\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ENERGY));
   fprintf(file, "# (17) Total gas entropy (physical). \n");
-  fprintf(file, "#      Unit = %e erg gram^(%.3f) cm^(%.3f)\n",
+  fprintf(file, "#      Unit = %e erg gram**(%.3f) cm**(%.3f)\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ENTROPY),
           hydro_gamma_minus_one, -3.f * hydro_gamma_minus_one);
   fprintf(
@@ -627,30 +627,30 @@ void stats_write_file_header(FILE *file, const struct unit_system *restrict us,
           1. / phys_const->const_parsec, 1. / phys_const->const_parsec / 1e6);
   fprintf(file,
           "# (21) Comoving momentum of the simulation (x coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm s^-1\n",
+  fprintf(file, "#      Unit = %e gram cm s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_MOMENTUM));
   fprintf(file,
           "# (22) Comoving momentum of the simulation (y coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm s^-1\n",
+  fprintf(file, "#      Unit = %e gram cm s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_MOMENTUM));
   fprintf(file,
           "# (23) Comoving momentum of the simulation (z coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm s^-1\n",
+  fprintf(file, "#      Unit = %e gram cm s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_MOMENTUM));
   fprintf(
       file,
       "# (24) Comoving angular momentum of the simulation (x coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm^2 s^-1\n",
+  fprintf(file, "#      Unit = %e gram cm**2 s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ANGULAR_MOMENTUM));
   fprintf(
       file,
       "# (25) Comoving angular momentum of the simulation (y coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm^2 s^-1\n",
+  fprintf(file, "#      Unit = %e gram cm**2 s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ANGULAR_MOMENTUM));
   fprintf(
       file,
       "# (26) Comoving angular momentum of the simulation (z coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm^2 s^-1\n",
+  fprintf(file, "#      Unit = %e gram cm**2 s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ANGULAR_MOMENTUM));
   fprintf(file, "#\n");
   fprintf(
