@@ -164,8 +164,7 @@ void stats_collect_part_mapper(void *map_data, int nr_parts, void *extra_data) {
     stats.gas_mass += m;
 
     /* Collect metal mass */
-    stats.gas_Z_mass +=
-        m * chemistry_get_total_metal_mass_fraction_for_stats(p);
+    stats.gas_Z_mass += chemistry_get_total_metal_mass_for_stats(p);
 
     /* Collect centre of mass */
     stats.centre_of_mass[0] += m * x[0];
@@ -259,8 +258,7 @@ void stats_collect_spart_mapper(void *map_data, int nr_sparts,
     stats.star_mass += m;
 
     /* Collect metal mass */
-    stats.star_Z_mass +=
-        m * chemistry_get_star_total_metal_mass_fraction_for_stats(sp);
+    stats.star_Z_mass += chemistry_get_star_total_metal_mass_for_stats(sp);
 
     /* Collect centre of mass */
     stats.centre_of_mass[0] += m * x[0];

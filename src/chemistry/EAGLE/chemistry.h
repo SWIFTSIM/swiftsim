@@ -594,10 +594,9 @@ chemistry_get_metal_mass_fraction_for_star_formation(
  * @param p Pointer to the particle data.
  */
 __attribute__((always_inline)) INLINE static float
-chemistry_get_total_metal_mass_fraction_for_stats(
-    const struct part* restrict p) {
+chemistry_get_total_metal_mass_for_stats(const struct part* restrict p) {
 
-  return p->chemistry_data.metal_mass_fraction_total;
+  return p->chemistry_data.metal_mass_fraction_total * hydro_get_mass(p);
 }
 
 /**
@@ -607,10 +606,9 @@ chemistry_get_total_metal_mass_fraction_for_stats(
  * @param p Pointer to the particle data.
  */
 __attribute__((always_inline)) INLINE static float
-chemistry_get_star_total_metal_mass_fraction_for_stats(
-    const struct spart* restrict sp) {
+chemistry_get_star_total_metal_mass_for_stats(const struct spart* restrict sp) {
 
-  return sp->chemistry_data.metal_mass_fraction_total;
+  return sp->chemistry_data.metal_mass_fraction_total * sp->mass;
 }
 
 /**
