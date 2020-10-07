@@ -806,7 +806,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 #endif
       }
 
-      /* Only interested in stars_density tasks as of here. */
+      /* Only interested in sink_compute_formation tasks as of here. */
       else if (t->subtype == task_subtype_sink_compute_formation) {
 
         /* Too much particle movement? */
