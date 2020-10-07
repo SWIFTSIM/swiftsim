@@ -60,7 +60,14 @@ __attribute__((always_inline)) INLINE static void sink_first_init_sink(
  * @param sp The particle to act upon
  */
 __attribute__((always_inline)) INLINE static void sink_init_sink(
-    struct sink* sp) {}
+    struct sink* sp) {
+#ifdef DEBUG_INTERACTIONS_SINKS
+  for (int i = 0; i < MAX_NUM_OF_NEIGHBOURS_SINKS; ++i)
+    sp->ids_ngbs_formation[i] = -1;
+  sp->num_ngb_formation = 0;
+#endif
+
+}
 
 /**
  * @brief Predict additional particle fields forward in time when drifting
@@ -135,8 +142,7 @@ INLINE static int sink_should_convert_to_sink(
     const struct sink_props* sink_props, const struct engine* e,
     const double dt_sink) {
   /* const float random_number = */
-  /*   random_unit_interval(p->id, e->ti_current, random_number_star_formation);
-   */
+  /*   random_unit_interval(p->id, e->ti_current, random_number_star_formation); */
   /* return random_number < 5e-4; */
   return 0;
 }
