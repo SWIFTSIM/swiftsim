@@ -186,7 +186,7 @@ INLINE static void star_formation_logger_init_log_file(
   fprintf(fp,
           "# (1) Time since Big Bang (cosmological run), Time since start of "
           "the simulation (non-cosmological run).\n");
-  fprintf(fp, "#     Unit = %e seconds\n", us->UnitTime_in_cgs);
+  fprintf(fp, "#     Unit = %e s\n", us->UnitTime_in_cgs);
   fprintf(fp, "#     Unit = %e yr\n", 1.f / phys_const->const_year);
   fprintf(fp, "#     Unit = %e Myr\n", 1.f / phys_const->const_year / 1e6);
   fprintf(fp, "# (2) Scale factor (no unit)\n");
