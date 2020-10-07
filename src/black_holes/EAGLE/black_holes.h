@@ -501,9 +501,14 @@ black_hole_feedback_delta_T(const struct bpart* bp,
   /* If desired, also make sure that delta T is not below the numerically 
    * critical temperature or that of the ambient gas */
   if (props->AGN_with_locally_adaptive_delta_T) {
+
+    /* Critical temperature for numerical efficiency, based on equation 18 
+     * of Dalla Vecchia & Schaye (2012) */
     const double T_crit = 3.162e7 * pow(n_gas_phys * 0.1, 0.6666667) *
         pow(mean_ngb_mass * props->mass_to_solar_mass * 1e-6, 0.33333333);
     delta_T = max(delta_T, T_crit * props->AGN_delta_T_crit_factor);
+
+    /* Delta_T should be (at least) some multiple of the local gas T */
     delta_T = max(delta_T, T_gas * props->AGN_delta_T_background_factor);
   }
 
