@@ -82,6 +82,15 @@ struct black_holes_props {
   /*! Eddington fraction threshold for recording */
   float f_Edd_recording;
 
+  /*! Switch for the Booth, Schaye 2009 model */
+
+  int use_boothschaye;
+
+  /*! Parameters for Booth, Schaye 2009 model */
+  float boothschaye_alpha;
+  float boothschaye_beta;
+  double boothschaye_n_h_star;
+  
   /*! Switch for nibbling mode */
   int use_nibbling;
 
