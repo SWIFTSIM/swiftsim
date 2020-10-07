@@ -491,14 +491,16 @@ black_hole_feedback_delta_T(const struct bpart* bp,
   const double T_gas = bp->internal_energy_gas *
       cosmo->a_factor_internal_energy / props->temp_to_u_factor;
 
-  /* Calculate delta T */
+  /* Calculate base line delta T from BH subgrid mass. The assumption is that
+   * the BH mass scales (via halo mass) with the virial temperature, so that
+   * this aims for delta T > T_vir. */
   double delta_T = props->AGN_delta_T_mass_norm *
       pow((bp->subgrid_mass / props->AGN_delta_T_mass_reference),
           props->AGN_delta_T_mass_exponent);
 
   /* If desired, also make sure that delta T is not below the numerically 
    * critical temperature or that of the ambient gas */
-  if (!props->AGN_with_locally_adaptive_delta_T) {
+  if (props->AGN_with_locally_adaptive_delta_T) {
     const double T_crit = 3.162e7 * pow(n_gas_phys * 0.1, 0.6666667) *
         pow(mean_ngb_mass * props->mass_to_solar_mass * 1e-6, 0.33333333);
     delta_T = max(delta_T, T_crit * props->AGN_delta_T_crit_factor);
