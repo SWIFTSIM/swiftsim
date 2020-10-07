@@ -1225,10 +1225,10 @@ cell_can_recurse_in_pair_sinks_task(const struct cell *ci,
   /* smaller than the sub-cell sizes ? */
   /* Note: We use the _old values as these might have been updated by a drift */
   return ci->split && cj->split &&
-    ((ci->sinks.r_cut_max_old + ci->sinks.dx_max_part_old) <
-     0.5f * ci->dmin) &&
-    ((kernel_gamma * cj->hydro.h_max_old + cj->hydro.dx_max_part_old) <
-     0.5f * cj->dmin);
+         ((ci->sinks.r_cut_max_old + ci->sinks.dx_max_part_old) <
+          0.5f * ci->dmin) &&
+         ((kernel_gamma * cj->hydro.h_max_old + cj->hydro.dx_max_part_old) <
+          0.5f * cj->dmin);
 }
 
 /**
@@ -1419,7 +1419,7 @@ cell_need_rebuild_for_sinks_pair(const struct cell *ci, const struct cell *cj) {
   /* moved larger than the cell size ? */
   /* Note ci->dmin == cj->dmin */
   if (max(ci->sinks.r_cut_max, kernel_gamma * cj->hydro.h_max) +
-      ci->sinks.dx_max_part + cj->hydro.dx_max_part >
+          ci->sinks.dx_max_part + cj->hydro.dx_max_part >
       cj->dmin) {
     return 1;
   }

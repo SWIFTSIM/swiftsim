@@ -1434,8 +1434,9 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
           else if (t->cj->nodeID != nodeID)
             cost = 3.f * wscale * sink_count_i * count_j * sid_scale[t->flags];
           else
-            cost = 2.f * wscale * (sink_count_i * count_j + sink_count_j * count_i) *
-              sid_scale[t->flags];
+            cost = 2.f * wscale *
+                   (sink_count_i * count_j + sink_count_j * count_i) *
+                   sid_scale[t->flags];
 
         } else if (t->subtype == task_subtype_bh_density ||
                    t->subtype == task_subtype_bh_swallow ||
@@ -1487,14 +1488,17 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
           }
 
         } else if (t->subtype == task_subtype_sink_compute_formation) {
-            if (t->ci->nodeID != nodeID) {
-              cost = 3.f * (wscale * count_i) * sink_count_j * sid_scale[t->flags];
-            } else if (t->cj->nodeID != nodeID) {
-              cost = 3.f * (wscale * sink_count_i) * count_j * sid_scale[t->flags];
-            } else {
-              cost = 2.f * wscale * (sink_count_i * count_j + sink_count_j * count_i) *
-                sid_scale[t->flags];
-            }
+          if (t->ci->nodeID != nodeID) {
+            cost =
+                3.f * (wscale * count_i) * sink_count_j * sid_scale[t->flags];
+          } else if (t->cj->nodeID != nodeID) {
+            cost =
+                3.f * (wscale * sink_count_i) * count_j * sid_scale[t->flags];
+          } else {
+            cost = 2.f * wscale *
+                   (sink_count_i * count_j + sink_count_j * count_i) *
+                   sid_scale[t->flags];
+          }
         } else if (t->subtype == task_subtype_bh_density ||
                    t->subtype == task_subtype_bh_swallow ||
                    t->subtype == task_subtype_bh_feedback) {
@@ -1534,8 +1538,8 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
         if (t->subtype == task_subtype_stars_density ||
             t->subtype == task_subtype_stars_feedback) {
           cost = 1.f * (wscale * scount_i) * count_i;
-        }else if (t->subtype == task_subtype_sink_compute_formation) {
-            cost = 1.f * (wscale * sink_count_i) * count_i;
+        } else if (t->subtype == task_subtype_sink_compute_formation) {
+          cost = 1.f * (wscale * sink_count_i) * count_i;
         } else if (t->subtype == task_subtype_bh_density ||
                    t->subtype == task_subtype_bh_swallow ||
                    t->subtype == task_subtype_bh_feedback) {

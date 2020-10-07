@@ -1992,9 +1992,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
       /* The sink tasks */
       if (with_sink) {
-        t_sink_formation =
-          scheduler_addtask(sched, task_type_self, task_subtype_sink_compute_formation,
-                            flags, 0, ci, NULL);
+        t_sink_formation = scheduler_addtask(
+            sched, task_type_self, task_subtype_sink_compute_formation, flags,
+            0, ci, NULL);
       }
 
       /* The black hole feedback tasks */
@@ -2196,9 +2196,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
       /* The sink tasks */
       if (with_sink) {
-        t_sink_formation =
-          scheduler_addtask(sched, task_type_pair, task_subtype_sink_compute_formation,
-                            flags, 0, ci, cj);
+        t_sink_formation = scheduler_addtask(
+            sched, task_type_pair, task_subtype_sink_compute_formation, flags,
+            0, ci, cj);
       }
 
       /* The black hole feedback tasks */
@@ -2572,9 +2572,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
       /* The sink tasks */
       if (with_sink) {
-        t_sink_formation =
-          scheduler_addtask(sched, task_type_sub_self,
-                            task_subtype_sink_compute_formation, flags, 0, ci, NULL);
+        t_sink_formation = scheduler_addtask(
+            sched, task_type_sub_self, task_subtype_sink_compute_formation,
+            flags, 0, ci, NULL);
       }
 
       /* The black hole feedback tasks */
@@ -2790,9 +2790,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
       /* The sink tasks */
       if (with_sink) {
-        t_sink_formation =
-          scheduler_addtask(sched, task_type_sub_pair,
-                            task_subtype_sink_compute_formation, flags, 0, ci, cj);
+        t_sink_formation = scheduler_addtask(
+            sched, task_type_sub_pair, task_subtype_sink_compute_formation,
+            flags, 0, ci, cj);
       }
 
       /* The black hole feedback tasks */
