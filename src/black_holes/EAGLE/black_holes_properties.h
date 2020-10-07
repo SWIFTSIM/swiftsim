@@ -83,27 +83,22 @@ struct black_holes_props {
   float f_Edd_recording;
 
   /*! Switch for the Booth, Schaye 2009 model */
+  int use_boost_factor;
 
-  int use_boothschaye;
+  /*! Lowest value of the boost of the Booth, Schaye 2009 model */
+  float boost_alpha;
 
-  /*! Parameters for Booth, Schaye 2009 model */
-  float boothschaye_alpha;
-  float boothschaye_beta;
-  double boothschaye_n_h_star;
+  /*! Power law slope for the boost of the Booth, Schaye 2009 model */
+  float boost_beta;
+
+  /*! Normalisation density (internal units) for the boost of the Booth, Schaye 2009 model */
+  double boost_n_h_star;
   
   /*! Switch for nibbling mode */
   int use_nibbling;
 
   /*! Minimum gas particle mass in nibbling mode */
   float min_gas_mass_for_nibbling;
-
-  /*! Switch for the Booth, Schaye 2009 model */
-  int use_boothschaye;
-
-  /*! Parameters for Booth, Schaye 2009 model */
-  float boothschaye_alpha;
-  float boothschaye_beta;
-  double boothschaye_n_h_star;
   
   /* ---- Properties of the feedback model ------- */
 
@@ -263,18 +258,21 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       params, "EAGLEAGN:eddington_fraction_for_recording");
   
   /*  Booth Schaye (2009) Parameters */
-  bp->use_boothschaye = parser_get_opt_param_int(
-      params, "EAGLEAGN:use_boothschaye", 0);
+  bp->use_boost_factor = parser_get_param_int(
+      params, "EAGLEAGN:use_boost_factor");
   
-  bp->boothschaye_alpha = parser_get_opt_param_float(
-      params, "EAGLEAGN:boothschaye_alpha", 1.);
+  if (bp->use_boost_factor) {
+    bp->boost_alpha = parser_get_param_float(
+        params, "EAGLEAGN:boost_alpha");
   
-  bp->boothschaye_beta  =
-      parser_get_opt_param_float(params, "EAGLEAGN:boothschaye_beta", 2.);
+    bp->boost_beta  =
+        parser_get_param_float(params, "EAGLEAGN:boost_beta");
   
-  bp->boothschaye_n_h_star =
-      parser_get_opt_param_float(params, "EAGLEAGN:boothschaye_n_h_star", 0.1) /
-      units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
+  /* Load the density in cgs and convert to internal units */
+    bp->boost_n_h_star =
+        parser_get_param_float(params, "EAGLEAGN:boost_n_h_star_cm3") /
+        units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
+  }
 
   bp->use_nibbling = parser_get_param_int(params, "EAGLEAGN:use_nibbling");
   if (bp->use_nibbling) {
