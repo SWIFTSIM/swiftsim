@@ -181,7 +181,7 @@ INLINE static void star_formation_logger_init_log_file(
   fprintf(fp, "######################################################\n");
   fprintf(fp, "# The quantities are all given in internal physical units!\n");
   fprintf(fp, "#\n");
-  fprintf(fp, "# (0)  Simulation step (no unit)\n");
+  fprintf(fp, "# (0)  Simulation step\n");
   fprintf(fp, "#      Unit = dimensionless\n");
   fprintf(fp,
           "# (1) Time since Big Bang (cosmological run), Time since start of "
@@ -189,9 +189,9 @@ INLINE static void star_formation_logger_init_log_file(
   fprintf(fp, "#     Unit = %e s\n", us->UnitTime_in_cgs);
   fprintf(fp, "#     Unit = %e yr\n", 1.f / phys_const->const_year);
   fprintf(fp, "#     Unit = %e Myr\n", 1.f / phys_const->const_year / 1e6);
-  fprintf(fp, "# (2) Scale factor (no unit)\n");
+  fprintf(fp, "# (2) Scale factor\n");
   fprintf(fp, "#     Unit = dimensionless\n");
-  fprintf(fp, "# (3) Redshift     (no unit)\n");
+  fprintf(fp, "# (3) Redshift\n");
   fprintf(fp, "#     Unit = dimensionless\n");
   fprintf(fp, "# (4) Total mass stars formed in the current time-step.\n");
   fprintf(fp, "#     Unit = %e gram\n", us->UnitMass_in_cgs);

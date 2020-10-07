@@ -623,7 +623,7 @@ void stats_write_file_header(FILE *file, const struct unit_system *restrict us,
   fprintf(file, "######################################################\n");
   fprintf(file, "# The quantities are all given in internal units!\n");
   fprintf(file, "#\n");
-  fprintf(file, "# (0)  Simulation step (no unit)\n");
+  fprintf(file, "# (0)  Simulation step\n");
   fprintf(file, "#      Unit = dimensionless\n");
   fprintf(file,
           "# (1)  Time since Big Bang (cosmological run), Time since start of "
@@ -631,9 +631,9 @@ void stats_write_file_header(FILE *file, const struct unit_system *restrict us,
   fprintf(file, "#      Unit = %e s\n", us->UnitTime_in_cgs);
   fprintf(file, "#      Unit = %e yr \n", 1.f / phys_const->const_year);
   fprintf(file, "#      Unit = %e Myr \n", 1.f / phys_const->const_year / 1e6);
-  fprintf(file, "# (2)  Scale factor (no unit)\n");
+  fprintf(file, "# (2)  Scale factor\n");
   fprintf(file, "#      Unit = dimensionless\n");
-  fprintf(file, "# (3)  Redshift     (no unit)\n");
+  fprintf(file, "# (3)  Redshift\n");
   fprintf(file, "#      Unit = dimensionless\n");
   fprintf(file, "# (4)  Total mass in the simulation. \n");
   fprintf(file, "#      Unit = %e gram\n", us->UnitMass_in_cgs);

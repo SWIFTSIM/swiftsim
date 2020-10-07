@@ -512,8 +512,7 @@ chemistry_get_metal_mass_fraction_for_star_formation(
 __attribute__((always_inline)) INLINE static float
 chemistry_get_total_metal_mass_for_stats(const struct part* restrict p) {
 
-  return p->chemistry_data
-             .metal_mass[GEAR_CHEMISTRY_ELEMENT_COUNT - 1];
+  return p->chemistry_data.metal_mass[GEAR_CHEMISTRY_ELEMENT_COUNT - 1];
 }
 
 /**
