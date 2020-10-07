@@ -40,6 +40,7 @@
 #include "error.h"
 #include "gravity_io.h"
 #include "hydro_io.h"
+#include "sink_io.h"
 #include "stars_io.h"
 #include "threadpool.h"
 
@@ -291,6 +292,91 @@ void stats_collect_spart_mapper(void *map_data, int nr_sparts,
 }
 
 /**
+ * @brief The #threadpool mapper function used to collect statistics for #sink.
+ *
+ * @param map_data Pointer to the particles.
+ * @param nr_parts The number of particles in this chunk
+ * @param extra_data The #statistics aggregator.
+ */
+void stats_collect_sink_mapper(void *map_data, int nr_sinks, void *extra_data) {
+
+  /* Unpack the data */
+  const struct index_data *data = (struct index_data *)extra_data;
+  const struct space *s = data->s;
+  const struct engine *e = s->e;
+  const int with_ext_grav = (e->policy & engine_policy_external_gravity);
+  const int with_self_grav = (e->policy & engine_policy_self_gravity);
+  const double time = e->time;
+  const struct sink *const sinks = (struct sink *)map_data;
+  struct statistics *const global_stats = data->stats;
+
+  /* Some information about the physical model */
+  const struct external_potential *potential = e->external_potential;
+  const struct phys_const *phys_const = e->physical_constants;
+  const struct cosmology *cosmo = e->cosmology;
+
+  /* Some constants from cosmology */
+  const float a_inv = cosmo->a_inv;
+  const float a_inv2 = a_inv * a_inv;
+
+  /* Local accumulator */
+  struct statistics stats;
+  stats_init(&stats);
+
+  /* Loop over particles */
+  for (int k = 0; k < nr_sinks; k++) {
+
+    /* Get the particle */
+    const struct sink *sp = &sinks[k];
+    const struct gpart *gp = sp->gpart;
+
+    /* Ignore non-existing particles */
+    if (sp->time_bin == time_bin_inhibited ||
+        sp->time_bin == time_bin_not_created)
+      continue;
+
+    /* Get position and velocity */
+    double x[3];
+    float v[3];
+    convert_sink_pos(e, sp, x);
+    convert_sink_vel(e, sp, v);
+
+    const float m = sp->mass;
+
+    /* Collect mass */
+    stats.star_mass += m;
+
+    /* Collect centre of mass */
+    stats.centre_of_mass[0] += m * x[0];
+    stats.centre_of_mass[1] += m * x[1];
+    stats.centre_of_mass[2] += m * x[2];
+
+    /* Collect momentum */
+    stats.mom[0] += m * v[0];
+    stats.mom[1] += m * v[1];
+    stats.mom[2] += m * v[2];
+
+    /* Collect angular momentum */
+    stats.ang_mom[0] += m * (x[1] * v[2] - x[2] * v[1]);
+    stats.ang_mom[1] += m * (x[2] * v[0] - x[0] * v[2]);
+    stats.ang_mom[2] += m * (x[0] * v[1] - x[1] * v[0]);
+
+    /* Collect energies. */
+    stats.E_kin += 0.5f * m * (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) *
+                   a_inv2; /* 1/2 m a^2 \dot{r}^2 */
+    if (gp != NULL && with_self_grav)
+      stats.E_pot_self += 0.5f * m * gravity_get_physical_potential(gp, cosmo);
+    if (gp != NULL && with_ext_grav)
+      stats.E_pot_ext += m * external_gravity_get_potential_energy(
+                                 time, potential, phys_const, gp);
+  }
+
+  /* Now write back to memory */
+  if (lock_lock(&global_stats->lock) == 0) stats_add(global_stats, &stats);
+  if (lock_unlock(&global_stats->lock) != 0) error("Failed to unlock stats.");
+}
+
+/**
  * @brief The #threadpool mapper function used to collect statistics for #bpart.
  *
  * @param map_data Pointer to the particles.
@@ -493,6 +579,12 @@ void stats_collect(const struct space *s, struct statistics *stats) {
     threadpool_map(&s->e->threadpool, stats_collect_spart_mapper, s->sparts,
                    s->nr_sparts, sizeof(struct spart),
                    threadpool_auto_chunk_size, &extra_data);
+
+  /* Run parallel collection of statistics for sparts */
+  if (s->nr_sinks > 0)
+    threadpool_map(&s->e->threadpool, stats_collect_sink_mapper, s->sinks,
+                   s->nr_sinks, sizeof(struct sink), threadpool_auto_chunk_size,
+                   &extra_data);
 
   /* Run parallel collection of statistics for sparts */
   if (s->nr_bparts > 0)
