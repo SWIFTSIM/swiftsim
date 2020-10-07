@@ -3707,10 +3707,10 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
     double shift[3];
     const int sid = space_getsid(s->space, &ci, &cj, shift);
 
-    const int ci_active = cell_is_active_sinks(ci, e) ||
-      cell_is_active_hydro(ci, e);
-    const int cj_active = cell_is_active_sinks(cj, e) ||
-      cell_is_active_hydro(cj, e);
+    const int ci_active =
+        cell_is_active_sinks(ci, e) || cell_is_active_hydro(ci, e);
+    const int cj_active =
+        cell_is_active_sinks(cj, e) || cell_is_active_hydro(cj, e);
 
     /* Should we even bother? */
     if (!ci_active && !cj_active) return;
