@@ -25,7 +25,6 @@
 
 #include "active.h"
 #include "runner_doiact_sinks.h"
-#include "sink.h"
 
 /**
  * @brief Calculate the number density of #part around the #sink
@@ -99,7 +98,6 @@ void DOSELF1_SINKS(struct runner *r, struct cell *c, int timer) {
       }
     } /* loop over the parts in ci. */
   }   /* loop over the sinks in ci. */
-
 }
 
 /**
@@ -320,7 +318,6 @@ void DO_SYM_PAIR1_SINKS(struct runner *r, struct cell *ci, struct cell *cj,
         /* Hit or miss? */
         if (r2 < ri2) {
           IACT_SINK(r2, dx, ri, hj, spi, pj, a, H);
-
         }
       } /* loop over the parts in cj. */
     }   /* loop over the parts in ci. */
@@ -432,12 +429,10 @@ void DO_SYM_PAIR1_SINKS(struct runner *r, struct cell *ci, struct cell *cj,
         if (r2 < rj2) {
 
           IACT_SINK(r2, dx, rj, hi, spj, pi, a, H);
-
         }
       } /* loop over the parts in ci. */
     }   /* loop over the parts in cj. */
   }     /* Cell cj is active */
-
 }
 
 void DOPAIR1_SINKS_NAIVE(struct runner *r, struct cell *restrict ci,
@@ -476,36 +471,6 @@ void DOSELF1_BRANCH_SINKS(struct runner *r, struct cell *c) {
   DOSELF1_SINKS(r, c, 1);
 }
 
-#define RUNNER_CHECK_SORT(TYPE, PART, cj, ci, sid)                          \
-  ({                                                                        \
-    const struct sort_entry *restrict sort_j =                              \
-        cell_get_##TYPE##_sorts(cj, sid);                                   \
-                                                                            \
-    for (int pjd = 0; pjd < cj->TYPE.count; pjd++) {                        \
-      const struct PART *p = &cj->TYPE.parts[sort_j[pjd].i];                \
-      if (PART##_is_inhibited(p, e)) continue;                              \
-                                                                            \
-      const float d = p->x[0] * runner_shift[sid][0] +                      \
-                      p->x[1] * runner_shift[sid][1] +                      \
-                      p->x[2] * runner_shift[sid][2];                       \
-      if ((fabsf(d - sort_j[pjd].d) - cj->TYPE.dx_max_sort) >               \
-              1.0e-4 * max(fabsf(d), cj->TYPE.dx_max_sort_old) &&           \
-          (fabsf(d - sort_j[pjd].d) - cj->TYPE.dx_max_sort) >               \
-              cj->width[0] * 1.0e-10)                                       \
-        error(                                                              \
-            "particle shift diff exceeds dx_max_sort in cell cj. "          \
-            "cj->nodeID=%d "                                                \
-            "ci->nodeID=%d d=%e sort_j[pjd].d=%e cj->" #TYPE                \
-            ".dx_max_sort=%e "                                              \
-            "cj->" #TYPE                                                    \
-            ".dx_max_sort_old=%e, cellID=%i super->cellID=%i"               \
-            "cj->depth=%d cj->maxdepth=%d",                                 \
-            cj->nodeID, ci->nodeID, d, sort_j[pjd].d, cj->TYPE.dx_max_sort, \
-            cj->TYPE.dx_max_sort_old, cj->cellID, cj->hydro.super->cellID,  \
-            cj->depth, cj->maxdepth);                                       \
-    }                                                                       \
-  })
-
 /**
  * @brief Determine which version of DOPAIR1_SINKS needs to be called depending
  * on the orientation of the cells or whether DOPAIR1_SINKS needs to be called
@@ -537,8 +502,7 @@ void DOPAIR1_BRANCH_SINKS(struct runner *r, struct cell *ci, struct cell *cj) {
   if (!do_ci && !do_cj) return;
 
   /* Check that cells are drifted. */
-  if (do_ci &&
-      (!cell_are_sink_drifted(ci, e) || !cell_are_part_drifted(cj, e)))
+  if (do_ci && (!cell_are_sink_drifted(ci, e) || !cell_are_part_drifted(cj, e)))
     error("Interacting undrifted cells.");
 
   /* Have the cells been sorted? */
@@ -546,8 +510,7 @@ void DOPAIR1_BRANCH_SINKS(struct runner *r, struct cell *ci, struct cell *cj) {
                 cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin))
     error("Interacting unsorted cells.");
 
-  if (do_cj &&
-      (!cell_are_part_drifted(ci, e) || !cell_are_sink_drifted(cj, e)))
+  if (do_cj && (!cell_are_part_drifted(ci, e) || !cell_are_sink_drifted(cj, e)))
     error("Interacting undrifted cells.");
 
   /* Have the cells been sorted? */
@@ -647,7 +610,6 @@ void DOSUB_PAIR1_SINKS(struct runner *r, struct cell *ci, struct cell *cj,
 
     if (do_ci || do_cj) DOPAIR1_BRANCH_SINKS(r, ci, cj);
   }
-
 }
 
 /**

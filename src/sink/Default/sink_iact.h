@@ -35,8 +35,8 @@ __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_sinks_compute_formation(const float r2, const float *dx,
                                            const float hi, const float hj,
                                            struct sink *restrict si,
-                                           const struct part *restrict pj, const float a,
-                                           const float H) {
+                                           const struct part *restrict pj,
+                                           const float a, const float H) {
 
 #ifdef DEBUG_INTERACTIONS_SINKS
   /* Update ngb counters */
