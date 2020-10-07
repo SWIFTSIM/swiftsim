@@ -533,63 +533,57 @@ void stats_write_file_header(FILE *file, const struct unit_system *restrict us,
   fprintf(file, "######################################################\n");
   fprintf(file, "# The quantities are all given in internal units!\n");
   fprintf(file, "#\n");
-  fprintf(file, "# (0)  Simulation step\n");
+  fprintf(file, "# (0)  Simulation step (no unit)\n");
+  fprintf(file, "#      Unit = dimensionless\n");
   fprintf(file,
           "# (1)  Time since Big Bang (cosmological run), Time since start of "
           "the simulation (non-cosmological run).\n");
-  fprintf(file, "#      Unit = %e seconds\n", us->UnitTime_in_cgs);
-  fprintf(file, "#      Unit = %e yr or %e Myr\n", 1.f / phys_const->const_year,
-          1.f / phys_const->const_year / 1e6);
+  fprintf(file, "#      Unit = %e s\n", us->UnitTime_in_cgs);
+  fprintf(file, "#      Unit = %e yr \n", 1.f / phys_const->const_year);
+  fprintf(file, "#      Unit = %e Myr \n", 1.f / phys_const->const_year / 1e6);
   fprintf(file, "# (2)  Scale factor (no unit)\n");
+  fprintf(file, "#      Unit = dimensionless\n");
   fprintf(file, "# (3)  Redshift     (no unit)\n");
+  fprintf(file, "#      Unit = dimensionless\n");
   fprintf(file, "# (4)  Total mass in the simulation. \n");
   fprintf(file, "#      Unit = %e gram\n", us->UnitMass_in_cgs);
-  fprintf(file, "#      Unit = %e solar mass\n",
-          1. / phys_const->const_solar_mass);
+  fprintf(file, "#      Unit = %e Msun\n", 1. / phys_const->const_solar_mass);
   fprintf(file,
           "# (5)  Total gas mass in the simulation (Particle type %d). \n",
           swift_type_gas);
   fprintf(file, "#      Unit = %e gram\n", us->UnitMass_in_cgs);
-  fprintf(file, "#      Unit = %e solar mass\n",
-          1. / phys_const->const_solar_mass);
+  fprintf(file, "#      Unit = %e Msun\n", 1. / phys_const->const_solar_mass);
   fprintf(file,
           "# (6)  Total dark matter mass in the simulation (Particle type %d & "
           "%d). \n",
           swift_type_dark_matter, swift_type_dark_matter_background);
   fprintf(file, "#      Unit = %e gram\n", us->UnitMass_in_cgs);
-  fprintf(file, "#      Unit = %e solar mass\n",
-          1. / phys_const->const_solar_mass);
+  fprintf(file, "#      Unit = %e Msun\n", 1. / phys_const->const_solar_mass);
   fprintf(file,
           "# (7)  Total sink mass in the simulation (Particle type %d). \n",
           swift_type_sink);
   fprintf(file, "#      Unit = %e gram\n", us->UnitMass_in_cgs);
-  fprintf(file, "#      Unit = %e solar mass\n",
-          1. / phys_const->const_solar_mass);
+  fprintf(file, "#      Unit = %e Msun\n", 1. / phys_const->const_solar_mass);
   fprintf(file,
           "# (8)  Total stellar mass in the simulation (Particle type %d). \n",
           swift_type_stars);
   fprintf(file, "#      Unit = %e gram\n", us->UnitMass_in_cgs);
-  fprintf(file, "#      Unit = %e solar mass\n",
-          1. / phys_const->const_solar_mass);
+  fprintf(file, "#      Unit = %e Msun\n", 1. / phys_const->const_solar_mass);
   fprintf(
       file,
       "# (9)  Total black hole mass in the simulation (Particle type %d). \n",
       swift_type_black_hole);
   fprintf(file, "#      Unit = %e gram\n", us->UnitMass_in_cgs);
-  fprintf(file, "#      Unit = %e solar mass\n",
-          1. / phys_const->const_solar_mass);
+  fprintf(file, "#      Unit = %e Msun\n", 1. / phys_const->const_solar_mass);
   fprintf(file, "# (10) Total metal mass in the gas phase. \n");
   fprintf(file, "#      Unit = %e gram\n", us->UnitMass_in_cgs);
-  fprintf(file, "#      Unit = %e solar mass\n",
-          1. / phys_const->const_solar_mass);
+  fprintf(file, "#      Unit = %e Msun\n", 1. / phys_const->const_solar_mass);
   fprintf(file, "# (11) Total metal mass locked in stars. \n");
   fprintf(file, "#      Unit = %e gram\n", us->UnitMass_in_cgs);
-  fprintf(file, "#      Unit = %e solar mass\n",
-          1. / phys_const->const_solar_mass);
+  fprintf(file, "#      Unit = %e Msun\n", 1. / phys_const->const_solar_mass);
   fprintf(file, "# (12) Total metal mass locked in black holes. \n");
   fprintf(file, "#      Unit = %e gram\n", us->UnitMass_in_cgs);
-  fprintf(file, "#      Unit = %e solar mass\n",
-          1. / phys_const->const_solar_mass);
+  fprintf(file, "#      Unit = %e Msun\n", 1. / phys_const->const_solar_mass);
   fprintf(file, "# (13) Total kinetic energy (physical). \n");
   fprintf(file, "#      Unit = %e erg\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ENERGY));
@@ -604,53 +598,53 @@ void stats_write_file_header(FILE *file, const struct unit_system *restrict us,
   fprintf(file, "#      Unit = %e erg\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ENERGY));
   fprintf(file, "# (17) Total gas entropy (physical). \n");
-  fprintf(file, "#      Unit = %e erg gram**(%.3f) cm**(%.3f)\n",
+  fprintf(file, "#      Unit = %e erg * gram**(%.3f) * cm**(%.3f)\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ENTROPY),
           hydro_gamma_minus_one, -3.f * hydro_gamma_minus_one);
   fprintf(
       file,
       "# (18) Comoving centre of mass of the simulation (x coordinate). \n");
   fprintf(file, "#      Unit = %e cm\n", us->UnitLength_in_cgs);
-  fprintf(file, "#      Unit = %e pc or %e Mpc\n",
-          1. / phys_const->const_parsec, 1. / phys_const->const_parsec / 1e6);
+  fprintf(file, "#      Unit = %e pc\n", 1. / phys_const->const_parsec);
+  fprintf(file, "#      Unit = %e Mpc\n", 1. / phys_const->const_parsec / 1e6);
   fprintf(
       file,
       "# (19) Comoving centre of mass of the simulation (y coordinate). \n");
   fprintf(file, "#      Unit = %e cm\n", us->UnitLength_in_cgs);
-  fprintf(file, "#      Unit = %e pc or %e Mpc\n",
-          1. / phys_const->const_parsec, 1. / phys_const->const_parsec / 1e6);
+  fprintf(file, "#      Unit = %e pc\n", 1. / phys_const->const_parsec);
+  fprintf(file, "#      Unit = %e Mpc\n", 1. / phys_const->const_parsec / 1e6);
   fprintf(
       file,
       "# (20) Comoving centre of mass of the simulation (z coordinate). \n");
   fprintf(file, "#      Unit = %e cm\n", us->UnitLength_in_cgs);
-  fprintf(file, "#      Unit = %e pc or %e Mpc\n",
-          1. / phys_const->const_parsec, 1. / phys_const->const_parsec / 1e6);
+  fprintf(file, "#      Unit = %e pc\n", 1. / phys_const->const_parsec);
+  fprintf(file, "#      Unit = %e Mpc\n", 1. / phys_const->const_parsec / 1e6);
   fprintf(file,
           "# (21) Comoving momentum of the simulation (x coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm s**-1\n",
+  fprintf(file, "#      Unit = %e gram * cm * s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_MOMENTUM));
   fprintf(file,
           "# (22) Comoving momentum of the simulation (y coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm s**-1\n",
+  fprintf(file, "#      Unit = %e gram * cm * s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_MOMENTUM));
   fprintf(file,
           "# (23) Comoving momentum of the simulation (z coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm s**-1\n",
+  fprintf(file, "#      Unit = %e gram * cm * s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_MOMENTUM));
   fprintf(
       file,
       "# (24) Comoving angular momentum of the simulation (x coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm**2 s**-1\n",
+  fprintf(file, "#      Unit = %e gram * cm**2 * s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ANGULAR_MOMENTUM));
   fprintf(
       file,
       "# (25) Comoving angular momentum of the simulation (y coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm**2 s**-1\n",
+  fprintf(file, "#      Unit = %e gram * cm**2 * s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ANGULAR_MOMENTUM));
   fprintf(
       file,
       "# (26) Comoving angular momentum of the simulation (z coordinate). \n");
-  fprintf(file, "#      Unit = %e gram cm**2 s**-1\n",
+  fprintf(file, "#      Unit = %e gram * cm**2 * s**-1\n",
           units_cgs_conversion_factor(us, UNIT_CONV_ANGULAR_MOMENTUM));
   fprintf(file, "#\n");
   fprintf(
