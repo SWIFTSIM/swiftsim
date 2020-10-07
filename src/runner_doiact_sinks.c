@@ -1,8 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2012 Pedro Gonnet (pedro.gonnet@durham.ac.uk)
- *                    Matthieu Schaller (matthieu.schaller@durham.ac.uk)
- *               2015 Peter W. Draper (p.w.draper@durham.ac.uk)
+ * Copyright (c) 2020 Loic Hausammann (loic.hausammann@epfl.ch)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -28,8 +26,8 @@
 #include "engine.h"
 #include "feedback.h"
 #include "runner.h"
+#include "sink.h"
 #include "space_getsid.h"
-#include "stars.h"
 #include "timers.h"
 
 /* Import the sink compute formation loop functions. */

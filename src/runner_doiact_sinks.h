@@ -1,7 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
- *               2018 Loic Hausammann (loic.hausammann@epfl.ch)
+ * Copyright (c) 2020 Loic Hausammann (loic.hausammann@epfl.ch)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -59,4 +58,3 @@ void DOPAIR1_BRANCH_SINKS(struct runner *r, struct cell *ci, struct cell *cj);
 void DOSUB_SELF1_SINKS(struct runner *r, struct cell *ci, int gettimer);
 void DOSUB_PAIR1_SINKS(struct runner *r, struct cell *ci, struct cell *cj,
                        int gettimer);
-
