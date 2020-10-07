@@ -177,7 +177,7 @@ struct black_holes_props {
   /*! Conversion factor from temperature to internal energy */
   float temp_to_u_factor;
 
-    /*! Conversion factor from physical density to n_H [cgs] */
+  /*! Conversion factor from physical density to n_H [cgs] */
   float rho_to_n_cgs;
 
   /*! Conversion factor from internal mass to solar masses */
@@ -289,30 +289,28 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   bp->epsilon_f =
       parser_get_param_float(params, "EAGLEAGN:coupling_efficiency");
 
-  const double T_K_to_int = 1. / 
-    units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
+  const double T_K_to_int =
+      1. / units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
 
   bp->use_variable_delta_T =
       parser_get_param_int(params, "EAGLEAGN:use_variable_delta_T");
   if (bp->use_variable_delta_T) {
     bp->AGN_delta_T_mass_norm =
-        parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_mass_norm")
-        * T_K_to_int;
+        parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_mass_norm") *
+        T_K_to_int;
     bp->AGN_delta_T_mass_reference =
-        parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_mass_reference")
-        * phys_const->const_solar_mass;   
+        parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_mass_reference") *
+        phys_const->const_solar_mass;
     bp->AGN_delta_T_mass_exponent =
-        parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_mass_exponent");   
+        parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_mass_exponent");
 
-    bp->AGN_with_locally_adaptive_delta_T =
-        parser_get_param_int(
-          params, "EAGLEAGN:AGN_with_locally_adaptive_delta_T");
+    bp->AGN_with_locally_adaptive_delta_T = parser_get_param_int(
+        params, "EAGLEAGN:AGN_with_locally_adaptive_delta_T");
     if (bp->AGN_with_locally_adaptive_delta_T) {
       bp->AGN_delta_T_crit_factor =
           parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_crit_factor");
-      bp->AGN_delta_T_background_factor =
-          parser_get_param_float(
-            params, "EAGLEAGN:AGN_delta_T_background_factor");      
+      bp->AGN_delta_T_background_factor = parser_get_param_float(
+          params, "EAGLEAGN:AGN_delta_T_background_factor");
     }
 
     bp->AGN_delta_T_max =
@@ -414,7 +412,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
    * Note this assumes primoridal abundance */
   const double X_H = hydro_props->hydrogen_mass_fraction;
   bp->rho_to_n_cgs =
-    (X_H / m_p) * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
+      (X_H / m_p) * units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
 
   /* Conversion factor for internal mass to M_solar */
   bp->mass_to_solar_mass = 1. / phys_const->const_solar_mass;

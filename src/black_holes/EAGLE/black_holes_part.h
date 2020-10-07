@@ -160,7 +160,7 @@ struct bpart {
   /*! Total (physical) angular momentum accumulated from subgrid accretion */
   float accreted_angular_momentum[3];
 
-  /*! Instantaneous temperature increase for feedback */  
+  /*! Instantaneous temperature increase for feedback */
   float AGN_delta_T;
 
   /*! Union for the last high Eddington ratio point in time */
