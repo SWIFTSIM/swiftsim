@@ -83,7 +83,7 @@ struct black_holes_props {
   float f_Edd_recording;
 
   /*! Switch for the Booth, Schaye 2009 model */
-  int use_boost_factor;
+  int with_boost_factor;
 
   /*! Lowest value of the boost of the Booth, Schaye 2009 model */
   float boost_alpha;
@@ -258,10 +258,10 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       params, "EAGLEAGN:eddington_fraction_for_recording");
   
   /*  Booth Schaye (2009) Parameters */
-  bp->use_boost_factor = parser_get_param_int(
-      params, "EAGLEAGN:use_boost_factor");
+  bp->with_boost_factor = parser_get_param_int(
+      params, "EAGLEAGN:with_boost_factor");
   
-  if (bp->use_boost_factor) {
+  if (bp->with_boost_factor) {
     bp->boost_alpha = parser_get_param_float(
         params, "EAGLEAGN:boost_alpha");
   

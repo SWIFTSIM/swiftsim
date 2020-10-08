@@ -638,20 +638,13 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     }
   }
   /* Compute the boost factor from Booth, Schaye (2009) */
-  if (props->use_boost_factor) {
+  if (props->with_boost_factor) {
     const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
     const double n_H = gas_rho_phys * 0.75 / proton_mass;
     const double boost_ratio = n_H / props->boost_n_h_star;
-    double boost_factor = props->boost_alpha;
-    const double boost_power = props->boost_beta;
-
-    if ( boost_ratio >= props->boost_alpha) {
-      boost_factor *= pow(boost_ratio, boost_power);
-
-    }
+    const double boost_factor = max( pow(boost_ratio, props->boost_beta), props->boost_alpha);
     Bondi_rate *= boost_factor;
   }
-
   /* Compute the reduction factor from Rosas-Guevara et al. (2015) */
   if (with_angmom_limiter) {
     const double Bondi_radius = G * BH_mass / gas_c_phys2;
