@@ -60,7 +60,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
 }
 
 /**
- * @brief First initialisation of the RT extra star particle data.
+ * @brief Initialisation of the RT extra star particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_init_spart(
     struct spart* restrict sp) {
