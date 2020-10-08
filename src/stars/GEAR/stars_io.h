@@ -45,7 +45,7 @@ INLINE static void stars_read_particles(struct spart *sparts,
                                 sparts, mass);
   list[3] = io_make_input_field("ParticleIDs", LONGLONG, 1, COMPULSORY,
                                 UNIT_CONV_NO_UNITS, sparts, id);
-  list[4] = io_make_input_field("SmoothingLength", FLOAT, 1, OPTIONAL,
+  list[4] = io_make_input_field("SmoothingLengths", FLOAT, 1, OPTIONAL,
                                 UNIT_CONV_LENGTH, sparts, h);
   list[5] = io_make_input_field("BirthTime", FLOAT, 1, OPTIONAL, UNIT_CONV_MASS,
                                 sparts, birth_time);
@@ -132,7 +132,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                            sparts, id, "Unique IDs of the particles");
 
   list[4] = io_make_output_field(
-      "SmoothingLength", FLOAT, 1, UNIT_CONV_LENGTH, 1.f, sparts, h,
+      "SmoothingLengths", FLOAT, 1, UNIT_CONV_LENGTH, 1.f, sparts, h,
       "Co-moving smoothing lengths (FWHM of the kernel) of the particles");
 
   if (with_cosmology) {

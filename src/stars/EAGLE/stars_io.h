@@ -46,7 +46,7 @@ INLINE static void stars_read_particles(struct spart *sparts,
                                 sparts, mass);
   list[3] = io_make_input_field("ParticleIDs", LONGLONG, 1, COMPULSORY,
                                 UNIT_CONV_NO_UNITS, sparts, id);
-  list[4] = io_make_input_field("SmoothingLength", FLOAT, 1, OPTIONAL,
+  list[4] = io_make_input_field("SmoothingLengths", FLOAT, 1, OPTIONAL,
                                 UNIT_CONV_LENGTH, sparts, h);
   list[5] = io_make_input_field("Masses", FLOAT, 1, COMPULSORY, UNIT_CONV_MASS,
                                 sparts, mass_init);
