@@ -236,13 +236,12 @@ This activates your tasks once they've beed created.
 
 Initially, the engine will need to skip the task that updates the particles.
 It is the case for the cooling, therefore you will need to add it in 
-``engine_skip_force_and_kick``.
+``engine_skip_force_and_kick()``.
 Additionally, the tasks will be marked as 'to be skipped' once they've been
-executed during a time step, and then re-activated in the next time step if
-they need to be executed again during this time step. This way, all the 
-created tasks can be kept and don't need to be re-created every time step, 
-but instead can just be skipped. In order to be un-skipped however, you need
-to add the unskipping manually to ``engine_do_unskip_mapperi()`` in 
+executed during a time step, and then reactivated during the next time step if
+they need to be executed again. This way, all the created tasks can be kept and
+don't need to be recreated every time step. In order to be unskipped however, 
+you need to add the unskipping manually to ``engine_do_unskip_mapper()`` in 
 ``engine_unskip.c``.
 
 Finally, you also need to initialize your new variables and pointers in 
