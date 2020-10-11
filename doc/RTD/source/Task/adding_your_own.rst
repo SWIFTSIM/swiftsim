@@ -232,7 +232,7 @@ and give the task an estimate of the computational cost that it will have in
         cost = wscale * count_i;
         break;
 
-This activates your tasks once they've beed created.
+This activates your tasks once they've been created.
 
 Initially, the engine will need to skip the task that updates the particles.
 It is the case for the cooling, therefore you will need to add it in 

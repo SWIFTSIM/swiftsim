@@ -350,7 +350,7 @@ and give the task an estimate of the computational cost that it will have in
 Similarly, you'll need to update ``case task_type_sub_self``, ``task_type_pair``, 
 and ``task_type_sub_pair`` as well.
 
-This activates your tasks once they've beed created.
+This activates your tasks once they've been created.
 
 
 Initially, the engine will need to skip the task that updates the particles.
