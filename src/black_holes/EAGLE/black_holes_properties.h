@@ -372,9 +372,8 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
   /* Reposition parameters --------------------------------- */
 
   bp->max_reposition_mass =
-      parser_get_param_float(params, "EAGLEAGN:max_reposition_mass");
-  /* Convert to internal units */
-  bp->max_reposition_mass *= phys_const->const_solar_mass;
+      parser_get_param_float(params, "EAGLEAGN:max_reposition_mass") *
+      phys_const->const_solar_mass;
   bp->max_reposition_distance_ratio =
       parser_get_param_float(params, "EAGLEAGN:max_reposition_distance_ratio");
 
