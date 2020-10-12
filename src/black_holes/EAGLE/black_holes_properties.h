@@ -400,6 +400,7 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
         * phys_const->const_solar_mass / phys_const->const_year;
     bp->nheat_limit =
         parser_get_param_float(params, "EAGLEAGN:AGN_nheat_limit");
+  }
 
   /* We must always read a default value to initialize BHs to */
   bp->num_ngbs_to_heat =
