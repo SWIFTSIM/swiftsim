@@ -160,6 +160,9 @@ struct bpart {
   /*! Total (physical) angular momentum accumulated by swallowing particles */
   float swallowed_angular_momentum[3];
 
+  /*! Accretion boost factor */
+  float accretion_boost_factor;
+
   /*! Total (physical) angular momentum accumulated from subgrid accretion */
   float accreted_angular_momentum[3];
 

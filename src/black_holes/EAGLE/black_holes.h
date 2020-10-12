@@ -167,6 +167,7 @@ __attribute__((always_inline)) INLINE static void black_holes_init_bpart(
   bp->reposition.potential = FLT_MAX;
   bp->accretion_rate = 0.f; /* Optionally accumulated ngb-by-ngb */
   bp->f_visc = FLT_MAX;
+  bp->accretion_boost_factor = -FLT_MAX;
   bp->mass_at_start_of_step = bp->mass; /* bp->mass may grow in nibbling mode */
 }
 
@@ -701,9 +702,13 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     const double gas_rho_phys = bp->rho_gas * cosmo->a3_inv;
     const double n_H = gas_rho_phys * XH / proton_mass;
     const double boost_ratio = n_H / props->boost_n_h_star;
-    const double boost_factor =
-        max(pow(boost_ratio, props->boost_beta), props->boost_alpha);
+    const double boost_factor = (props->boost_alpha_only) ?
+        max(pow(boost_ratio, props->boost_beta), props->boost_alpha) :
+        props->boost_alpha;
     Bondi_rate *= boost_factor;
+    bp->accretion_boost_factor = boost_factor;
+  } else {
+    bp->accretion_boost_factor = 1.;
   }
 
   /* Compute the reduction factor from Rosas-Guevara et al. (2015) */

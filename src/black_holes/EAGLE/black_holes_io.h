@@ -139,7 +139,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
                                                int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 33;
+  *num_fields = 35;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_bpart(
@@ -359,6 +359,13 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "Physical speeds at which the black holes repositioned most recently. "
       "This is 0 for black holes that have never repositioned, or if the "
       "simulation has been run without prescribed repositioning speed.");
+
+  list[34] = io_make_output_field(
+      "AccretionBoostFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      accretion_boost_factor,
+      "Multiplicative factors by which the Bondi-Hoyle-Lyttleton accretion "
+      "rates have been increased by the density-dependent Booth & Schaye "
+      "(2009) accretion model.");
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 
