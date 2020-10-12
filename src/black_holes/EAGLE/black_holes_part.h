@@ -172,6 +172,9 @@ struct bpart {
   /*! Instantaneous energy reservoir threshold (num-to-heat) */
   float num_ngbs_to_heat;
 
+  /*! Eddington fractions */
+  float eddington_fraction;
+
   /*! Union for the last high Eddington ratio point in time */
   union {
 

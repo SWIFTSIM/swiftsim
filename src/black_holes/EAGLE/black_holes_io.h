@@ -152,7 +152,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
                                                int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 37;
+  *num_fields = 38;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_bpart(
@@ -392,6 +392,12 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
     "expressed in units of the (constant) target heating temperature "
     "increase.");
 
+  list[37] = io_make_output_field(
+      "EddingtonFractions", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      eddington_fraction,
+      "Accretion rates of black holes in units of their Eddington rates. "
+      "This is based on the unlimited accretion rates, so these fractions "
+      "can be above the limiting fEdd.");
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 
