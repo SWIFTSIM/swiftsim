@@ -273,6 +273,8 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
  * @param dt Length of time-step in internal units.
  * @param ngb_gas_mass Total un-weighted mass in the star's kernel (internal
  * units)
+ * @param num_gas_ngbs Total (integer) number of gas neighbours within the
+ * star's kernel.
  * @param ngb_nH_cgs Hydrogen number density of the gas surrounding the star
  * (physical cgs units).
  * @param ngb_Z Metallicity (metal mass fraction) of the gas surrounding the
