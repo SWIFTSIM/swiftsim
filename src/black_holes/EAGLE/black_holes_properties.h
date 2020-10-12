@@ -141,6 +141,9 @@ struct black_holes_props {
   /*! Number of gas neighbours to heat in a feedback event */
   float num_ngbs_to_heat;
 
+  /*! Switch to make nheat use the constant dT as basis, not actual dT */
+  int AGN_use_nheat_with_fixed_dT;
+
   /* ---- Properties of the repositioning model --- */
 
   /*! Maximal mass of BH to reposition */
@@ -361,6 +364,13 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
         parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_max") * T_K_to_int;
     bp->AGN_delta_T_min =
         parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_min") * T_K_to_int;
+    bp->AGN_use_nheat_with_fixed_dT =
+        parser_get_param_int(params, "EAGLEAGN:AGN_use_nheat_with_fixed_dT");
+    if (bp->AGN_use_nheat_with_fixed_dT) {
+      bp->AGN_delta_T_desired =
+          parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_K");
+    }
+
   } else {
     bp->AGN_delta_T_desired =
         parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_K");

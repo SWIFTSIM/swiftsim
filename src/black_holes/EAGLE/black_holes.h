@@ -784,12 +784,15 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   const double delta_T = black_hole_feedback_delta_T(bp, props, cosmo);
   bp->AGN_delta_T = delta_T;
   const double delta_u = delta_T * props->temp_to_u_factor;
+  const double delta_u_ref = props->AGN_use_nheat_with_fixed_dT ?
+      props->AGN_delta_T_desired * props->temp_to_u_factor : delta_u;
 
   /* Energy required to have a feedback event
    * Note that we have subtracted the particles we swallowed from the ngb_mass
    * and num_ngbs accumulators. */
   const double mean_ngb_mass = bp->ngb_mass / ((double)bp->num_ngbs);
-  const double E_feedback_event = num_ngbs_to_heat * delta_u * mean_ngb_mass;
+  const double E_feedback_event = num_ngbs_to_heat * delta_u_ref *
+      mean_ngb_mass;
 
   /* Are we doing some feedback? */
   if (bp->energy_reservoir > E_feedback_event) {

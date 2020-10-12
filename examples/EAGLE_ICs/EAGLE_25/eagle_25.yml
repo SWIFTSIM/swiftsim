@@ -230,7 +230,8 @@ EAGLEAGN:
   AGN_delta_T_background_factor:      0.0        # Multiple of local gas temperature to use as dT floor (only used if use_variable_delta_T and AGN_with_locally_adaptive_delta_T are both 1).
   AGN_delta_T_min:                    1e7        # Minimum allowed value of AGN dT [K] (only used if use_variable_delta_T is 1).
   AGN_delta_T_max:                    3e9        # Maximum allowed value of AGN dT [K] (only used if use_variable_delta_T is 1).
-  AGN_delta_T_K:                      3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event [K] (only used if use_variable_delta_T is 0).
+  AGN_delta_T_K:                      3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event [K] (only used if use_variable_delta_T is 0 or AGN_use_nheat_with_fixed_dT is 1).
+  AGN_use_nheat_with_fixed_dT:        0          # Switch to use the constant AGN dT, rather than the adaptive one, for calculating the energy reservoir threshold.
   AGN_num_ngb_to_heat:                1.         # Target number of gas neighbours to heat in an AGN feedback event.
   max_reposition_mass:                1e20       # Maximal BH mass considered for BH repositioning in solar masses (large number implies we always reposition).
   max_reposition_distance_ratio:      3.0        # Maximal distance a BH can be repositioned, in units of the softening length.
