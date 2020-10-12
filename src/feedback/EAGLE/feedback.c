@@ -329,13 +329,14 @@ INLINE static void compute_SNII_feedback(
     }
 
     /* Abort if there are no SNe exploding this step */
-    if (N_SNe == 0.) return;
+    if (N_SNe <= 0.) return;
 
     /* Conversion factor from T to internal energy */
     const double conv_factor = feedback_props->temp_to_u_factor;
 
-    /* Calculate the default heating probability */
+    /* Calculate the default heating probability (accounting for round-off) */
     double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
+    prob = max(prob, 0.0);
 
     /* Calculate the change in internal energy of the gas particles that get
      * heated */
