@@ -285,8 +285,8 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
  */
 INLINE static void compute_SNII_feedback(
     struct spart* sp, const double star_age, const double dt,
-    const float ngb_gas_mass, const double ngb_nH_cgs, const double ngb_Z,
-    const struct feedback_props* feedback_props,
+    const float ngb_gas_mass, const int num_gas_ngbs, const double ngb_nH_cgs,
+    const double ngb_Z, const struct feedback_props* feedback_props,
     const double min_dying_mass_Msun, const double max_dying_mass_Msun) {
 
   /* Are we sampling the delay function or using a fixed delay? */
@@ -370,6 +370,7 @@ INLINE static void compute_SNII_feedback(
     sp->number_of_SNII_events++;
     sp->feedback_data.to_distribute.SNII_heating_probability = prob;
     sp->feedback_data.to_distribute.SNII_delta_u = delta_u;
+    sp->number_of_heating_events += (prob * num_gas_ngbs);
   }
 }
 
@@ -891,6 +892,7 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Properties collected in the stellar density loop. */
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
+  const int num_gas_ngbs = sp->feedback_data.to_collect.num_ngbs;
   const float ngb_gas_Z = sp->feedback_data.to_collect.ngb_Z;
   const float ngb_gas_rho = sp->feedback_data.to_collect.ngb_rho;
   const float ngb_gas_phys_nH_cgs =
@@ -943,9 +945,9 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Compute properties of the stochastic SNII feedback model. */
   if (feedback_props->with_SNII_feedback) {
-    compute_SNII_feedback(sp, age, dt, ngb_gas_mass, ngb_gas_phys_nH_cgs,
-                          ngb_gas_Z, feedback_props, min_dying_mass_Msun,
-                          max_dying_mass_Msun);
+    compute_SNII_feedback(sp, age, dt, ngb_gas_mass, num_gas_ngbs,
+                          ngb_gas_phys_nH_cgs, ngb_gas_Z, feedback_props,
+                          min_dying_mass_Msun, max_dying_mass_Msun);
   }
 
   /* Integration interval is zero - this can happen if minimum and maximum
