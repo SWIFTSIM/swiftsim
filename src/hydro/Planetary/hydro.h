@@ -568,6 +568,12 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   /* Compute the norm of div v */
   const float abs_div_v = fabsf(p->density.div_v);
 
+#ifdef PLANETARY_FIXED_ENTROPY
+  /* Override the internal energy to satisfy the fixed entropy */
+  p->u = gas_internal_energy_from_entropy(p->rho, p->s_fixed, p->mat_id);
+  xp->u_full = p->u;
+#endif
+
   /* Compute the pressure */
   const float pressure =
       gas_pressure_from_internal_energy(p->rho, p->u, p->mat_id);
@@ -641,12 +647,12 @@ __attribute__((always_inline)) INLINE static void hydro_reset_predicted_values(
   p->v[1] = xp->v_full[1];
   p->v[2] = xp->v_full[2];
 
-  /* Re-set the entropy */
+  /* Re-set the internal energy */
   p->u = xp->u_full;
 
   /* Compute the pressure */
   const float pressure =
-      gas_pressure_from_internal_energy(p->rho, xp->u_full, p->mat_id);
+      gas_pressure_from_internal_energy(p->rho, p->u, p->mat_id);
 
   /* Compute the sound speed */
   const float soundspeed =
