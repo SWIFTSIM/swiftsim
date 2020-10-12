@@ -858,6 +858,7 @@ INLINE static void evolve_AGB(const double log10_min_mass,
  * @param dt length of current timestep
  */
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
+                               const struct phys_const* phys_const,
                                const struct cosmology* cosmo, struct spart* sp,
                                const struct unit_system* us, const double age,
                                const double dt) {
@@ -872,11 +873,9 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 #endif
 
   /* Convert dt and stellar age from internal units to Gyr. */
-  const double Gyr_in_cgs = 1e9 * 365.25 * 24. * 3600.;
-  const double time_to_cgs = units_cgs_conversion_factor(us, UNIT_CONV_TIME);
-  const double conversion_factor = time_to_cgs / Gyr_in_cgs;
-  const double dt_Gyr = dt * conversion_factor;
-  const double star_age_Gyr = age * conversion_factor;
+  const double Gyr_inv = 1. / (phys_const->const_year * 1e9);
+  const double dt_Gyr = dt * Gyr_inv;
+  const double star_age_Gyr = age * Gyr_inv;
 
   /* Get the birth mass of the star */
   const double M_init = sp->mass_init;
@@ -1017,8 +1016,6 @@ void feedback_props_init(struct feedback_props* fp,
                          const struct hydro_props* hydro_props,
                          const struct cosmology* cosmo) {
 
-  const double Gyr_in_cgs = 1.0e9 * 365.25 * 24. * 3600.;
-
   /* Main operation modes ------------------------------------------------- */
 
   fp->with_SNII_feedback =
@@ -1067,7 +1064,7 @@ void feedback_props_init(struct feedback_props* fp,
     /* Set the delay time before SNII occur */
     fp->SNII_wind_delay =
         parser_get_param_double(params, "EAGLEFeedback:SNII_wind_delay_Gyr") *
-        Gyr_in_cgs / units_cgs_conversion_factor(us, UNIT_CONV_TIME);
+        phys_const->const_year * 1e9;
   }
 
   /* Read the temperature change to use in stochastic heating */
@@ -1196,7 +1193,7 @@ void feedback_props_init(struct feedback_props* fp,
   fp->stellar_evolution_age_cut =
       parser_get_param_double(params,
                               "EAGLEFeedback:stellar_evolution_age_cut_Gyr") *
-      Gyr_in_cgs / units_cgs_conversion_factor(us, UNIT_CONV_TIME);
+      phys_const->const_year * 1e9;
 
   fp->stellar_evolution_sampling_rate = parser_get_param_double(
       params, "EAGLEFeedback:stellar_evolution_sampling_rate");
