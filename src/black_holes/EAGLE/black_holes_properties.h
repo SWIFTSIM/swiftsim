@@ -138,6 +138,18 @@ struct black_holes_props {
   float AGN_delta_T_max;
   float AGN_delta_T_min;
 
+  /*! Vary the energy reservoir according to the BH accretion rate? */
+  int use_adaptive_energy_reservoir_threshold;
+
+  /*! Normalisation for energy reservoir threshold, at upper end */
+  float nheat_alpha;
+
+  /*! Reference max accretion rate for energy reservoir variation */
+  float nheat_maccr_normalisation;
+
+  /*! Hard limit to the energy reservoir threshold */
+  float nheat_limit;
+
   /*! Number of gas neighbours to heat in a feedback event */
   float num_ngbs_to_heat;
 
@@ -376,6 +388,20 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
         parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_K");
   }
 
+  bp->use_adaptive_energy_reservoir_threshold =
+      parser_get_param_int(
+        params, "EAGLEAGN:AGN_use_adaptive_energy_reservoir_threshold");
+  if (bp->use_adaptive_energy_reservoir_threshold) {
+    bp->nheat_alpha =
+        parser_get_param_float(params, "EAGLEAGN:AGN_nheat_alpha");
+    bp->nheat_maccr_normalisation =
+        parser_get_param_float(
+            params, "EAGLEAGN:AGN_nheat_maccr_normalisation")
+        * phys_const->const_solar_mass / phys_const->const_year;
+    bp->nheat_limit =
+        parser_get_param_float(params, "EAGLEAGN:AGN_nheat_limit");
+
+  /* We must always read a default value to initialize BHs to */
   bp->num_ngbs_to_heat =
       parser_get_param_float(params, "EAGLEAGN:AGN_num_ngb_to_heat");
 

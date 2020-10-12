@@ -69,7 +69,7 @@ __attribute__((always_inline)) INLINE static float black_holes_compute_timestep(
    * rate. The time is multiplied by the number of Ngbs to heat because
    * if more particles are heated at once then the time between different
    * AGN feedback events increases proportionally. */
-  const double dt_heat = E_heat * props->num_ngbs_to_heat / Energy_rate;
+  const double dt_heat = E_heat * bp->num_ngbs_to_heat / Energy_rate;
 
   /* The new timestep of the BH cannot be smaller than the miminum allowed
    * time-step */
@@ -126,6 +126,7 @@ __attribute__((always_inline)) INLINE static void black_holes_first_init_bpart(
   bp->accreted_angular_momentum[1] = 0.f;
   bp->accreted_angular_momentum[2] = 0.f;
   bp->last_repos_vel = 0.f;
+  bp->num_ngbs_to_heat = props->num_ngbs_to_heat;  /* Filler value */
 
 
   black_holes_mark_bpart_as_not_swallowed(&bp->merger_data);
@@ -524,6 +525,37 @@ __attribute__((always_inline)) INLINE static double black_hole_feedback_delta_T(
 }
 
 /**
+ * @brief Computes the energy reservoir threshold for AGN feedback.
+ *
+ * If adaptive, this is proportional to the accretion rate, with an
+ * asymptotic upper limit.
+ *
+ * @param bp The #bpart.
+ * @param props The properties of the black hole model.
+ */
+__attribute__((always_inline)) INLINE static double
+black_hole_energy_reservoir_threshold(struct bpart* bp,
+                                      const struct black_holes_props* props) {
+
+  /* If we want a constant threshold, this is short and sweet. */
+  if (!props->use_adaptive_energy_reservoir_threshold)
+    return props->num_ngbs_to_heat;
+
+  double num_to_heat = props->nheat_alpha *
+      (bp->accretion_rate / props->nheat_maccr_normalisation);
+
+  /* Impose smooth truncation of num_to_heat towards props->nheat_limit */
+  if (num_to_heat > props->nheat_alpha) {
+    const double coeff_b = 1. / (props->nheat_limit - props->nheat_alpha);
+    const double coeff_a = exp(coeff_b * props->nheat_alpha) / coeff_b;
+    num_to_heat = props->nheat_limit - coeff_a * exp(-coeff_b * num_to_heat);
+  }
+
+  bp->num_ngbs_to_heat = num_to_heat;
+  return num_to_heat;
+}
+
+/**
  * @brief Compute the accretion rate of the black hole and all the quantites
  * required for the feedback loop.
  *
@@ -560,7 +592,6 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   const double f_Edd_recording = props->f_Edd_recording;
   const double epsilon_r = props->epsilon_r;
   const double epsilon_f = props->epsilon_f;
-  const double num_ngbs_to_heat = props->num_ngbs_to_heat;
   const int with_angmom_limiter = props->with_angmom_limiter;
 
   /* (Subgrid) mass of the BH (internal units) */
@@ -789,9 +820,11 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   const double delta_u_ref = props->AGN_use_nheat_with_fixed_dT ?
       props->AGN_delta_T_desired * props->temp_to_u_factor : delta_u;
 
-  /* Energy required to have a feedback event
-   * Note that we have subtracted the particles we swallowed from the ngb_mass
-   * and num_ngbs accumulators. */
+  /* Energy required to have a feedback event.
+   * Note that we have subtracted particles we may have swallowed from the
+   * ngb_mass and num_ngbs accumulators already. */
+  const double num_ngbs_to_heat =
+      black_hole_energy_reservoir_threshold(bp, props);
   const double mean_ngb_mass = bp->ngb_mass / ((double)bp->num_ngbs);
   const double E_feedback_event = num_ngbs_to_heat * delta_u_ref *
       mean_ngb_mass;
@@ -1027,6 +1060,9 @@ INLINE static void black_holes_create_from_gas(
   bp->number_of_gas_swallows = 0;
   bp->number_of_direct_gas_swallows = 0;
   bp->number_of_time_steps = 0;
+
+  /* Initialise the energy reservoir threshold to the constant default */
+  bp->num_ngbs_to_heat = props->num_ngbs_to_heat;  /* Filler value */
 
   /* We haven't repositioned yet, nor attempted it */
   bp->number_of_repositions = 0;

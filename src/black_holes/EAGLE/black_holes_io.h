@@ -152,7 +152,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
                                                int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 35;
+  *num_fields = 37;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_bpart(
@@ -384,6 +384,14 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
     "GasTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, bparts,
     convert_bpart_gas_temperatures,
     "Temperature of the gas surrounding the black holes.");
+
+  list[36] = io_make_output_field(
+    "EnergyReservoirThresholds", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+    num_ngbs_to_heat,
+    "Minimum energy reservoir required for the black holes to do feedback, "
+    "expressed in units of the (constant) target heating temperature "
+    "increase.");
+
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 

@@ -169,6 +169,9 @@ struct bpart {
   /*! Instantaneous temperature increase for feedback */
   float AGN_delta_T;
 
+  /*! Instantaneous energy reservoir threshold (num-to-heat) */
+  float num_ngbs_to_heat;
+
   /*! Union for the last high Eddington ratio point in time */
   union {
 

@@ -566,6 +566,10 @@ EAGLEAGN:
   coupling_efficiency:                0.15       # Fraction of the radiated energy that couples to the gas in feedback events.
   AGN_delta_T_K:                      3.16228e8  # Change in temperature to apply to the gas particle in an AGN feedback event in Kelvin.
   AGN_use_nheat_with_fixed_dT:        0          # Switch to use the constant AGN dT, rather than the adaptive one, for calculating the energy reservoir threshold (only used if use_variable_delta_T is 1).
+  AGN_use_adaptive_energy_reservoir_threshold: 0 # Switch to calculate an adaptive AGN energy reservoir threshold.
+  AGN_nheat_alpha:                   -1.0        # Number of particles to be heatable in a feedback event, at the reference accretion rate (only used if AGN_use_adaptive_energy_reservoir_threshold is 1).
+  AGN_nheat_maccr_normalisation:     -1.0        # Reference accretion rate for energy reservoir threshold [M_sun / yr] (only used if AGN_use_adaptive_energy_reservoir_threshold is 1).
+  AGN_nheat_limit:                   -1.0        # Hard limit for the energy reservoir threshold; above the reference accretion rate, it exponentially tapers off towards this (only used if AGN_use_adaptive_energy_reservoir_threshold is 1).
   AGN_num_ngb_to_heat:                1.         # Target number of gas neighbours to heat in an AGN feedback event.
   max_reposition_mass:                2e8        # Maximal BH mass considered for BH repositioning in solar masses.
   max_reposition_distance_ratio:      3.0        # Maximal distance a BH can be repositioned, in units of the softening length.
