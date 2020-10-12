@@ -250,8 +250,8 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
 
   /* Choose either the birth properties or current properties */
   const double nH =
-      props->use_birth_props_for_feedback ? n_birth_cgs : ngb_nH_cgs;
-  const double Z = props->use_birth_props_for_feedback ? Z_birth : ngb_Z;
+      props->use_birth_density_for_f_th ? n_birth_cgs : ngb_nH_cgs;
+  const double Z = props->use_birth_Z_for_f_th ? Z_birth : ngb_Z;
 
   /* Calculate f_E */
   const double Z_term = pow(max(Z, 1e-6) / Z_0, n_Z);
@@ -1115,8 +1115,10 @@ void feedback_props_init(struct feedback_props* fp,
   }
 
   /* Are we using the stars' birth properties or at feedback time? */
-  fp->use_birth_props_for_feedback = parser_get_param_int(
-      params, "EAGLEFeedback:SNII_energy_fraction_use_birth_props");
+  fp->use_birth_density_for_f_th = parser_get_param_int(
+      params, "EAGLEFeedback:SNII_energy_fraction_use_birth_density");
+  fp->use_birth_Z_for_f_th = parser_get_param_int(
+      params, "EAGLEFeedback:SNII_energy_fraction_use_birth_metallicity");
 
   /* Properties of the SNII enrichment model -------------------------------- */
 
