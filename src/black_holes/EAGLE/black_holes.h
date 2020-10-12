@@ -125,6 +125,8 @@ __attribute__((always_inline)) INLINE static void black_holes_first_init_bpart(
   bp->accreted_angular_momentum[0] = 0.f;
   bp->accreted_angular_momentum[1] = 0.f;
   bp->accreted_angular_momentum[2] = 0.f;
+  bp->last_repos_vel = 0.f;
+
 
   black_holes_mark_bpart_as_not_swallowed(&bp->merger_data);
 }
@@ -827,6 +829,38 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
 }
 
 /**
+ * @brief Computes the (maximal) repositioning speed for a black hole.
+ *
+ * Calculated as upsilon * (m_BH / m_ref) ^ beta_m * (n_H_BH / n_ref) ^ beta_n
+ * where m_BH = BH subgrid mass, n_H_BH = physical gas density around BH
+ * and upsilon, m_ref, beta_m, n_ref, and beta_n are parameters.
+ *
+ * @param bp The #bpart.
+ * @param props The properties of the black hole model.
+ * @param cosmo The current cosmological model.
+ */
+__attribute__((always_inline)) INLINE static double
+black_holes_get_repositioning_speed(
+    const struct bpart* restrict bp, const struct black_holes_props* props,
+    const struct cosmology* cosmo) {
+
+  const double n_gas_phys = bp->rho_gas * cosmo->a3_inv * props->rho_to_n_cgs;
+  const double v_repos = props->reposition_coefficient_upsilon *
+      pow(bp->subgrid_mass / props->reposition_reference_mass,
+          props->reposition_exponent_mass) *
+      pow(n_gas_phys / props->reposition_reference_n_H,
+          props->reposition_exponent_n_H);
+
+  /* Make sure the repositioning is not back-firing... */
+  if (v_repos < 0)
+    error("BH %lld wants to reposition at negative speed (%g U_V). Do you "
+          "think you are being funny? No-one is laughing.",
+          bp->id, v_repos);
+
+  return v_repos;
+}
+
+/**
  * @brief Finish the calculation of the new BH position.
  *
  * Here, we check that the BH should indeed be moved in the next drift.
@@ -863,20 +897,17 @@ __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
     } else if (props->set_reposition_speed) {
 
       /* If we are re-positioning, move the BH a fraction of delta_x, so
-       * that we have a well-defined re-positioning velocity. We have
-       * checked already that reposition_coefficient_upsilon is positive. */
-      const float repos_vel =
-          props->reposition_coefficient_upsilon *
-          pow(bp->subgrid_mass / constants->const_solar_mass,
-              props->reposition_exponent_xi);
+       * that we have a well-defined re-positioning velocity (repos_vel
+       * cannot be negative). */
+      double repos_vel = black_holes_get_repositioning_speed(
+          bp, props, cosmo);
 
+      /* Convert target reposition velocity to a fractional reposition
+       * along reposition.delta_x */
       const double dx = bp->reposition.delta_x[0];
       const double dy = bp->reposition.delta_x[1];
       const double dz = bp->reposition.delta_x[2];
       const double d = sqrt(dx * dx + dy * dy + dz * dz);
-
-      /* Convert target reposition velocity to a fractional reposition
-       * along reposition.delta_x */
 
       /* Exclude the pathological case of repositioning by zero distance */
       if (d > 0) {
@@ -889,8 +920,12 @@ __attribute__((always_inline)) INLINE static void black_holes_end_reposition(
         /* ... but fractions > 1 can occur if the target velocity is high.
          * We do not want this, because it could lead to overshooting the
          * actual potential minimum. */
-        if (repos_frac > 1) repos_frac = 1.;
+        if (repos_frac > 1) {
+          repos_frac = 1.;
+          repos_vel = repos_frac * d / dt;
+        }
 
+        bp->last_repos_vel = (float)repos_vel;
         bp->reposition.delta_x[0] *= repos_frac;
         bp->reposition.delta_x[1] *= repos_frac;
         bp->reposition.delta_x[2] *= repos_frac;
@@ -987,6 +1022,7 @@ INLINE static void black_holes_create_from_gas(
   /* We haven't repositioned yet, nor attempted it */
   bp->number_of_repositions = 0;
   bp->number_of_reposition_attempts = 0;
+  bp->last_repos_vel = 0.f;
 
   /* Initial metal masses */
   const float gas_mass = hydro_get_mass(p);

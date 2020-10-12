@@ -163,8 +163,17 @@ struct black_holes_props {
   /*! Normalisation factor for repositioning velocity */
   float reposition_coefficient_upsilon;
 
+  /*! Reference black hole mass for repositioning scaling */
+  float reposition_reference_mass;
+
   /*! Repositioning velocity scaling with black hole mass */
-  float reposition_exponent_xi;
+  float reposition_exponent_mass;
+
+  /*! Reference gas density for repositioning scaling */
+  float reposition_reference_n_H;
+
+  /*! Repositioning velocity scaling with gas density */
+  float reposition_exponent_n_H;
 
   /* ---- Properties of the merger model ---------- */
 
@@ -399,8 +408,16 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
     bp->reposition_coefficient_upsilon *=
         (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
 
-    bp->reposition_exponent_xi = parser_get_opt_param_float(
-        params, "EAGLEAGN:reposition_exponent_xi", 1.0);
+    /* Scaling parameters with BH mass and gas density */
+    bp->reposition_reference_mass = parser_get_param_float(
+        params, "EAGLEAGN:reposition_reference_mass") *
+        phys_const->const_solar_mass;
+    bp->reposition_exponent_mass = parser_get_opt_param_float(
+        params, "EAGLEAGN:reposition_exponent_mass", 2.0);
+    bp->reposition_reference_n_H = parser_get_param_float(
+        params, "EAGLEAGN:reposition_reference_n_H");
+    bp->reposition_exponent_n_H = parser_get_opt_param_float(
+        params, "EAGLEAGN:reposition_exponent_n_H", 1.0);
   }
 
   /* Merger parameters ------------------------------------- */

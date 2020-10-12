@@ -353,6 +353,13 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "Temperature by which gas particles have been heated by the black hole "
       "particles in the most recent feedback event.");
 
+  list[33] = io_make_output_field(
+      "LastRepositionVelocities", FLOAT, 1, UNIT_CONV_SPEED, 0.f, bparts,
+      last_repos_vel,
+      "Physical speeds at which the black holes repositioned most recently. "
+      "This is 0 for black holes that have never repositioned, or if the "
+      "simulation has been run without prescribed repositioning speed.");
+
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 
   list += *num_fields;
