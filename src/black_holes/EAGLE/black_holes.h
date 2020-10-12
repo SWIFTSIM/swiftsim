@@ -765,10 +765,9 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   }
 
   /* Increase the subgrid angular momentum according to what we accreted
-   * Note that this is already in physical units, a factors from velocity and r
-   * adius cancel each others.
-   * Also, the circular velocity contains an extra smoothing length factor that
-   * we undo here. */
+   * Note that this is already in physical units, a factors from velocity and
+   * radius cancel each other. Also, the circular velocity contains an extra
+   * smoothing length factor that we undo here. */
   bp->accreted_angular_momentum[0] +=
       bp->circular_velocity_gas[0] * mass_rate * dt / bp->h;
   bp->accreted_angular_momentum[1] +=
