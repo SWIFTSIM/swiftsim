@@ -48,8 +48,8 @@ struct feedback_spart_data {
        * comoving units) */
       float ngb_rho;
 
-      /*! SPH-weighted metallicity of the neighbouring gas particles (internal
-       * units) */
+      /*! SPH-weighted metallicity of the neighbouring gas particles
+       * (dimensionless) */
       float ngb_Z;
 
     } to_collect;
