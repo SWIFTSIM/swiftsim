@@ -269,7 +269,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float visc = -0.25f * v_sig * (balsara_i + balsara_j) * mu_ij / rho_ij;
 
   /* Convolve with the kernel */
-  const float visc_acc_term = 0.5f * visc * (wi_dr * f_ij + wj_dr * f)ji) * r_inv;
+  const float visc_acc_term =
+      0.5f * visc * (wi_dr * f_ij + wj_dr * f_ji) * r_inv;
 
   /* SPH acceleration term */
   const float sph_acc_term =
