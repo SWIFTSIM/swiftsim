@@ -17,14 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DEFAULT_HYDRO_IACT_H
-#define SWIFT_DEFAULT_HYDRO_IACT_H
+#ifndef SWIFT_PHANTOM_HYDRO_IACT_H
+#define SWIFT_PHANTOM_HYDRO_IACT_H
 
 /**
- * @file Default/hydro_iact.h
+ * @file Phantom/hydro_iact.h
  * @brief Density-Energy conservative implementation of SPH,
  *        with added diffusive physics (Cullen & Denhen 2011 AV,
  *        Price 2017 (PHANTOM) diffusion) (interaction routines)
+ *
+ *        This is a base reference implementation
+ *        similar to the one presented in Price 2018.
  */
 
 #include "adiabatic_index.h"
@@ -520,4 +523,4 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   pi->force.h_dt -= mj * dvdr * f_ij * r_inv / rhoj * wi_dr;
 }
 
-#endif /* SWIFT_DEFAULT_HYDRO_IACT_H */
+#endif /* SWIFT_PHANTOM_HYDRO_IACT_H */

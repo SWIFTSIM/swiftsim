@@ -17,15 +17,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DEFAULT_HYDRO_H
-#define SWIFT_DEFAULT_HYDRO_H
+#ifndef SWIFT_PHANTOM_HYDRO_H
+#define SWIFT_PHANTOM_HYDRO_H
 
 /**
- * @file Default/hydro.h
+ * @file Phantom/hydro.h
  * @brief Density-Energy conservative implementation of SPH,
  *        with added diffusive physics (Cullen & Denhen 2011 AV,
  *        Price 2017 (PHANTOM) diffusion)  (Non-neighbour loop
- *        equations)
+ *        equations).
+ *
+ *        This is a base reference implementation
+ *        similar to the one presented in Price 2018.
  */
 
 #include "adiabatic_index.h"
@@ -1025,4 +1028,4 @@ hydro_set_init_internal_energy(struct part *p, float u_init) {
   p->u = u_init;
 }
 
-#endif /* SWIFT_DEFAULT_HYDRO_H */
+#endif /* SWIFT_PHANTOM_HYDRO_H */
