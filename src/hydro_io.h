@@ -35,7 +35,7 @@
 #elif defined(HOPKINS_PU_SPH_MONAGHAN)
 #include "./hydro/PressureEnergyMorrisMonaghanAV/hydro_io.h"
 #elif defined(PHANTOM_SPH)
-#include "./hydro/Default/hydro_io.h"
+#include "./hydro/Phantom/hydro_io.h"
 #elif defined(GIZMO_MFV_SPH) || defined(GIZMO_MFM_SPH)
 #include "./hydro/Gizmo/hydro_io.h"
 #elif defined(SHADOWFAX_SPH)

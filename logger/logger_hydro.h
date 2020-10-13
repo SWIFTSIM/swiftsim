@@ -39,7 +39,7 @@
 #include "./hydro/PressureEnergyMorrisMonaghanAV/logger_hydro.h"
 #elif defined(PHANTOM_SPH)
 #error TODO
-#include "./hydro/Default/logger_hydro.h"
+#include "./hydro/Phantom/logger_hydro.h"
 #elif defined(GIZMO_MFV_SPH) || defined(GIZMO_MFM_SPH)
 #error TODO
 #include "./hydro/Gizmo/logger_hydro.h"

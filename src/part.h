@@ -62,7 +62,7 @@ struct threadpool;
 #include "./hydro/PressureEnergyMorrisMonaghanAV/hydro_part.h"
 #define hydro_need_extra_init_loop 0
 #elif defined(PHANTOM_SPH)
-#include "./hydro/Default/hydro_part.h"
+#include "./hydro/Phantom/hydro_part.h"
 #define EXTRA_HYDRO_LOOP
 #define hydro_need_extra_init_loop 0
 #elif defined(GIZMO_MFV_SPH) || defined(GIZMO_MFM_SPH)
