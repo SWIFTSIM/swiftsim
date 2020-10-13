@@ -1658,7 +1658,7 @@ case "$with_hydro" in
    pressure-energy-monaghan)
       AC_DEFINE([HOPKINS_PU_SPH_MONAGHAN], [1], [Pressure-Energy SPH with M&M Variable A.V.])
    ;;
-   default)
+   phantom)
       AC_DEFINE([PHANTOM_SPH], [1], [Phantom SPH])
    ;;
    gizmo-mfv)
