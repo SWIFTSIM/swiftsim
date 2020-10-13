@@ -61,7 +61,7 @@ struct threadpool;
 #elif defined(HOPKINS_PU_SPH_MONAGHAN)
 #include "./hydro/PressureEnergyMorrisMonaghanAV/hydro_part.h"
 #define hydro_need_extra_init_loop 0
-#elif defined(DEFAULT_SPH)
+#elif defined(PHANTOM_SPH)
 #include "./hydro/Default/hydro_part.h"
 #define EXTRA_HYDRO_LOOP
 #define hydro_need_extra_init_loop 0

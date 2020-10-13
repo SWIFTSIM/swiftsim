@@ -37,7 +37,7 @@
 #elif defined(HOPKINS_PU_SPH_MONAGHAN)
 #error TODO
 #include "./hydro/PressureEnergyMorrisMonaghanAV/logger_hydro.h"
-#elif defined(DEFAULT_SPH)
+#elif defined(PHANTOM_SPH)
 #error TODO
 #include "./hydro/Default/logger_hydro.h"
 #elif defined(GIZMO_MFV_SPH) || defined(GIZMO_MFM_SPH)
