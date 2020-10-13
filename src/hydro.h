@@ -54,7 +54,7 @@
 #elif defined(PHANTOM_SPH)
 #include "./hydro/Phantom/hydro.h"
 #include "./hydro/Phantom/hydro_iact.h"
-#define SPH_IMPLEMENTATION "Default version of SPH"
+#define SPH_IMPLEMENTATION "PHANTOM SPH reference implementation (Price 2018)"
 #elif defined(GIZMO_MFV_SPH) || defined(GIZMO_MFM_SPH)
 #include "./hydro/Gizmo/hydro.h"
 #include "./hydro/Gizmo/hydro_iact.h"
