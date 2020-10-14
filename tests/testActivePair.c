@@ -202,6 +202,7 @@ void zero_particle_fields_force(struct cell *c, const struct cosmology *cosmo,
     p->density.rho_dh = 0.f;
     p->density.wcount = 48.f / (kernel_norm * pow_dimension(p->h));
     p->density.wcount_dh = 0.f;
+    p->viscosity.v_sig = hydro_get_comoving_soundspeed(p);
 #endif /* MINIMAL */
 #ifdef HOPKINS_PE_SPH
     p->rho = 1.f;
