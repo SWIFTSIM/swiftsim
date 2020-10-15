@@ -599,7 +599,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
   /* We can now compute the Bondi accretion rate (internal units) */
   double Bondi_rate;
 
-  if (props->multi_phase_bondi) {
+  if (props->use_multi_phase_bondi) {
 
     /* In this case, we are in 'multi-phase-Bondi' mode -- otherwise,
      * the accretion_rate is still zero (was initialised to this) */
@@ -622,7 +622,7 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
                                gas_v_phys[1] * gas_v_phys[1] +
                                gas_v_phys[2] * gas_v_phys[2];
 
-    if (props->subgrid_bondi) {
+    if (props->use_subgrid_bondi) {
 
       /* Use subgrid rho and c for Bondi model */
 
