@@ -904,6 +904,13 @@ following page:
 
 * :ref:`Output_list_label` (to have statistics outputs not evenly spaced in time).
 
+One of the standard outputs when dealing with star formation is SFR.txt which
+will contain the star formation history of the simulation. The option:
+
+* ``SFH_file_name`` (default: ``SFR.txt``)
+
+allows to user to set a specific filename and path to the file.
+
 .. _Parameters_restarts:
 
 Restarts
