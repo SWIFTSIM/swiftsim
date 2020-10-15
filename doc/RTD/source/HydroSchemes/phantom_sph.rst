@@ -1,23 +1,26 @@
 .. PHANTOM SPH
    Josh Borrow 13th October 2020
 
-SPHENIX
+Phantom
 =======
 
 This scheme is a reference implementation similar to the one presented in
-Price (2018), the PHANTOM paper. It uses:
+Price (2018), the PHANTOM paper (not including MHD). It uses:
 
 + A simplified Cullen & Dehnen AV limiter (note that this is different to 
   PHANTOM as we do not explicitly include the matrix calculation).
 + A fixed alpha artificial conduction scheme used for hydro-only problems
-  as presented in the PHANTOM paper.
+  as presented in the PHANTOM paper (i.e. we use the 'hydro-only' conduction
+  velocity, rather than the one used for gravitational problems).
 + Base Density-Energy SPH
 
 The simplified version of the 'Inviscid SPH' artificial viscosity calculates
 the time differential of the velocity divergence explicitly, using the value
 from the previous step. We also use the Balsara switch instead of the improved
 neighbour-based limiter from Cullen & Dehnen 2010, to avoid matrix
-calculations.
+calculations. We also use a different value for the 'h-factors' due to SWIFT
+using neighbour finding based on particle number density, rather than local
+mass density.
 
 
 To configure with this scheme, use
