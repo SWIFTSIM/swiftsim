@@ -139,7 +139,7 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
                                                int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 33;
+  *num_fields = 38;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_bpart(
@@ -352,6 +352,40 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       AGN_delta_T,
       "Temperature by which gas particles have been heated by the black hole "
       "particles in the most recent feedback event.");
+
+  list[33] = io_make_output_field(
+      "NumberOfHeatingEvents", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      AGN_number_of_energy_injections,
+      "Integer number of (thermal) energy injections the black hole has had "
+      "so far");
+
+  list[34] = io_make_output_field(
+      "NumberOfAGNEvents", INT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      AGN_number_of_AGN_events,
+      "Integer number of AGN events the black hole has had so far"
+      " (the number of times the BH did AGN feedback)");
+
+  if (with_cosmology) {
+    list[35] = io_make_output_field(
+        "LastAGNFeedbackScaleFactors", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
+        bparts, last_AGN_event_scale_factor,
+        "Scale-factors at which the black holes last had an AGN event.");
+  } else {
+    list[35] = io_make_output_field(
+        "LastAGNFeedbackTimes", FLOAT, 1, UNIT_CONV_TIME, 0.f, bparts,
+        last_AGN_event_time,
+        "Times at which the black holes last had an AGN event.");
+  }
+
+  list[36] = io_make_output_field(
+      "AccretionLimitedTimeSteps", FLOAT, 1, UNIT_CONV_TIME, 0.f, bparts,
+      dt_heat, "Accretion-limited time-steps of black holes.");
+
+  list[37] = io_make_output_field(
+      "AGNTotalInjectedEnergies", FLOAT, 1, UNIT_CONV_ENERGY, 0.f, bparts,
+      AGN_cumulative_energy,
+      "Total (cumulative) physical energies injected into gas particles "
+      "in AGN feedback.");
 
 #ifdef DEBUG_INTERACTIONS_BLACK_HOLES
 
