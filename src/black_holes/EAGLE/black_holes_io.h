@@ -135,7 +135,7 @@ INLINE static void convert_bpart_gas_temperatures(const struct engine* e,
 
   /* Conversion from specific internal energy to temperature */
   ret[0] = bp->internal_energy_gas * cosmo->a_factor_internal_energy /
-      props->temp_to_u_factor;
+           props->temp_to_u_factor;
 }
 
 /**
@@ -381,16 +381,16 @@ INLINE static void black_holes_write_particles(const struct bpart* bparts,
       "(2009) accretion model.");
 
   list[35] = io_make_output_field_convert_bpart(
-    "GasTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, bparts,
-    convert_bpart_gas_temperatures,
-    "Temperature of the gas surrounding the black holes.");
+      "GasTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, bparts,
+      convert_bpart_gas_temperatures,
+      "Temperature of the gas surrounding the black holes.");
 
   list[36] = io_make_output_field(
-    "EnergyReservoirThresholds", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
-    num_ngbs_to_heat,
-    "Minimum energy reservoir required for the black holes to do feedback, "
-    "expressed in units of the (constant) target heating temperature "
-    "increase.");
+      "EnergyReservoirThresholds", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      num_ngbs_to_heat,
+      "Minimum energy reservoir required for the black holes to do feedback, "
+      "expressed in units of the (constant) target heating temperature "
+      "increase.");
 
   list[37] = io_make_output_field(
       "EddingtonFractions", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,

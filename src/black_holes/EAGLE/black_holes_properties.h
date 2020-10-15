@@ -322,8 +322,8 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       parser_get_param_int(params, "EAGLEAGN:with_boost_factor");
 
   if (bp->with_boost_factor) {
-    bp->boost_alpha_only = parser_get_param_int(
-        params, "EAGLEAGN:boost_alpha_only");
+    bp->boost_alpha_only =
+        parser_get_param_int(params, "EAGLEAGN:boost_alpha_only");
     bp->boost_alpha = parser_get_param_float(params, "EAGLEAGN:boost_alpha");
 
     if (!bp->boost_alpha_only) {
@@ -388,16 +388,15 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
         parser_get_param_float(params, "EAGLEAGN:AGN_delta_T_K");
   }
 
-  bp->use_adaptive_energy_reservoir_threshold =
-      parser_get_param_int(
-        params, "EAGLEAGN:AGN_use_adaptive_energy_reservoir_threshold");
+  bp->use_adaptive_energy_reservoir_threshold = parser_get_param_int(
+      params, "EAGLEAGN:AGN_use_adaptive_energy_reservoir_threshold");
   if (bp->use_adaptive_energy_reservoir_threshold) {
     bp->nheat_alpha =
         parser_get_param_float(params, "EAGLEAGN:AGN_nheat_alpha");
     bp->nheat_maccr_normalisation =
-        parser_get_param_float(
-            params, "EAGLEAGN:AGN_nheat_maccr_normalisation")
-        * phys_const->const_solar_mass / phys_const->const_year;
+        parser_get_param_float(params,
+                               "EAGLEAGN:AGN_nheat_maccr_normalisation") *
+        phys_const->const_solar_mass / phys_const->const_year;
     bp->nheat_limit =
         parser_get_param_float(params, "EAGLEAGN:AGN_nheat_limit");
   }
@@ -452,13 +451,13 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
         (1e5 / (us->UnitLength_in_cgs / us->UnitTime_in_cgs));
 
     /* Scaling parameters with BH mass and gas density */
-    bp->reposition_reference_mass = parser_get_param_float(
-        params, "EAGLEAGN:reposition_reference_mass") *
+    bp->reposition_reference_mass =
+        parser_get_param_float(params, "EAGLEAGN:reposition_reference_mass") *
         phys_const->const_solar_mass;
     bp->reposition_exponent_mass = parser_get_opt_param_float(
         params, "EAGLEAGN:reposition_exponent_mass", 2.0);
-    bp->reposition_reference_n_H = parser_get_param_float(
-        params, "EAGLEAGN:reposition_reference_n_H");
+    bp->reposition_reference_n_H =
+        parser_get_param_float(params, "EAGLEAGN:reposition_reference_n_H");
     bp->reposition_exponent_n_H = parser_get_opt_param_float(
         params, "EAGLEAGN:reposition_exponent_n_H", 1.0);
   }
