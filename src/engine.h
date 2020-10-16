@@ -367,6 +367,9 @@ struct engine {
   /* The current step number. */
   int step;
 
+  /* Are we drifting one last time for the end snapshot? */
+  int final_drift;
+
   /* Data for the threads' barrier. */
   swift_barrier_t wait_barrier;
   swift_barrier_t run_barrier;

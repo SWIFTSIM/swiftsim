@@ -5155,8 +5155,11 @@ int cell_has_tasks(struct cell *c) {
  * @param c The #cell.
  * @param e The #engine (to get ti_current).
  * @param force Drift the particles irrespective of the #cell flags.
+ * @param init Should the function also initialise particles if they are active
+ * in this step?
  */
-void cell_drift_part(struct cell *c, const struct engine *e, int force) {
+void cell_drift_part(struct cell *c, const struct engine *e, int force,
+                     const int init) {
   const int periodic = e->s->periodic;
   const double dim[3] = {e->s->dim[0], e->s->dim[1], e->s->dim[2]};
   const int with_cosmology = (e->policy & engine_policy_cosmology);
@@ -5204,7 +5207,7 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
         struct cell *cp = c->progeny[k];
 
         /* Collect */
-        cell_drift_part(cp, e, force);
+        cell_drift_part(cp, e, force, init);
 
         /* Update */
         dx_max = max(dx_max, cp->hydro.dx_max_part);
@@ -5336,7 +5339,7 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
       black_holes_mark_part_as_not_swallowed(&p->black_holes_data);
 
       /* Get ready for a density calculation */
-      if (part_is_active(p, e)) {
+      if (init && part_is_active(p, e)) {
         hydro_init_part(p, &e->s->hs);
         black_holes_init_potential(&p->black_holes_data);
         chemistry_init_part(p, e->chemistry);
@@ -5372,8 +5375,11 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
  * @param c The #cell.
  * @param e The #engine (to get ti_current).
  * @param force Drift the particles irrespective of the #cell flags.
+ * @param init Should the function also initialise particles if they are active
+ * in this step?
  */
-void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
+void cell_drift_gpart(struct cell *c, const struct engine *e, int force,
+                      const int init) {
   const int periodic = e->s->periodic;
   const double dim[3] = {e->s->dim[0], e->s->dim[1], e->s->dim[2]};
   const int with_cosmology = (e->policy & engine_policy_cosmology);
@@ -5415,7 +5421,7 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
         struct cell *cp = c->progeny[k];
 
         /* Recurse */
-        cell_drift_gpart(cp, e, force);
+        cell_drift_gpart(cp, e, force, init);
       }
     }
 
@@ -5495,7 +5501,7 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
       }
 
       /* Init gravity force fields. */
-      if (gpart_is_active(gp, e)) {
+      if (init && gpart_is_active(gp, e)) {
         gravity_init_gpart(gp);
       }
     }
@@ -5514,8 +5520,11 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
  * @param c The #cell.
  * @param e The #engine (to get ti_current).
  * @param force Drift the particles irrespective of the #cell flags.
+ * @param init Should the function also initialise particles if they are active
+ * in this step?
  */
-void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
+void cell_drift_spart(struct cell *c, const struct engine *e, int force,
+                      const int init) {
   const int periodic = e->s->periodic;
   const double dim[3] = {e->s->dim[0], e->s->dim[1], e->s->dim[2]};
   const int with_cosmology = (e->policy & engine_policy_cosmology);
@@ -5562,7 +5571,7 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
         struct cell *cp = c->progeny[k];
 
         /* Recurse */
-        cell_drift_spart(cp, e, force);
+        cell_drift_spart(cp, e, force, init);
 
         /* Update */
         dx_max = max(dx_max, cp->stars.dx_max_part);
@@ -5664,7 +5673,7 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
       cell_h_max = max(cell_h_max, sp->h);
 
       /* Get ready for a density calculation */
-      if (spart_is_active(sp, e)) {
+      if (init && spart_is_active(sp, e)) {
         stars_init_spart(sp);
         feedback_init_spart(sp);
         rt_init_spart(sp);
@@ -5694,8 +5703,11 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
  * @param c The #cell.
  * @param e The #engine (to get ti_current).
  * @param force Drift the particles irrespective of the #cell flags.
+ * @param init Should the function also initialise particles if they are active
+ * in this step?
  */
-void cell_drift_bpart(struct cell *c, const struct engine *e, int force) {
+void cell_drift_bpart(struct cell *c, const struct engine *e, int force,
+                      const int init) {
 
   const int periodic = e->s->periodic;
   const double dim[3] = {e->s->dim[0], e->s->dim[1], e->s->dim[2]};
@@ -5743,7 +5755,7 @@ void cell_drift_bpart(struct cell *c, const struct engine *e, int force) {
         struct cell *cp = c->progeny[k];
 
         /* Recurse */
-        cell_drift_bpart(cp, e, force);
+        cell_drift_bpart(cp, e, force, init);
 
         /* Update */
         dx_max = max(dx_max, cp->black_holes.dx_max_part);
@@ -5839,7 +5851,7 @@ void cell_drift_bpart(struct cell *c, const struct engine *e, int force) {
       black_holes_mark_bpart_as_not_swallowed(&bp->merger_data);
 
       /* Get ready for a density calculation */
-      if (bpart_is_active(bp, e)) {
+      if (init && bpart_is_active(bp, e)) {
         black_holes_init_bpart(bp);
       }
     }
@@ -5865,8 +5877,11 @@ void cell_drift_bpart(struct cell *c, const struct engine *e, int force) {
  * @param c The #cell.
  * @param e The #engine (to get ti_current).
  * @param force Drift the particles irrespective of the #cell flags.
+ * @param init Should the function also initialise particles if they are active
+ * in this step?
  */
-void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
+void cell_drift_sink(struct cell *c, const struct engine *e, int force,
+                     const int init) {
 
   const int periodic = e->s->periodic;
   const double dim[3] = {e->s->dim[0], e->s->dim[1], e->s->dim[2]};
@@ -5912,7 +5927,7 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
         struct cell *cp = c->progeny[k];
 
         /* Recurse */
-        cell_drift_sink(cp, e, force);
+        cell_drift_sink(cp, e, force, init);
 
         /* Update */
         dx_max = max(dx_max, cp->sinks.dx_max_part);
@@ -6004,7 +6019,7 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
       cell_r_max = max(cell_r_max, sink->r_cut);
 
       /* Get ready for a density calculation */
-      if (sink_is_active(sink, e)) {
+      if (init && sink_is_active(sink, e)) {
         sink_init_sink(sink);
       }
     }

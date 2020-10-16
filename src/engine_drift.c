@@ -40,6 +40,7 @@ void engine_do_drift_all_part_mapper(void *map_data, int num_elements,
 
   const struct engine *e = (const struct engine *)extra_data;
   const int restarting = e->restarting;
+  const int do_init = !e->final_drift;
   struct space *s = e->s;
   struct cell *cells_top;
   int *local_cells_top;
@@ -71,7 +72,7 @@ void engine_do_drift_all_part_mapper(void *map_data, int num_elements,
     if (c->nodeID == e->nodeID) {
 
       /* Drift all the particles */
-      cell_drift_part(c, e, /* force the drift=*/1);
+      cell_drift_part(c, e, /* force the drift=*/1, do_init);
     }
   }
 }
@@ -88,6 +89,7 @@ void engine_do_drift_all_gpart_mapper(void *map_data, int num_elements,
 
   const struct engine *e = (const struct engine *)extra_data;
   const int restarting = e->restarting;
+  const int do_init = !e->final_drift;
   struct space *s = e->s;
   struct cell *cells_top;
   int *local_cells_top;
@@ -119,7 +121,7 @@ void engine_do_drift_all_gpart_mapper(void *map_data, int num_elements,
     if (c->nodeID == e->nodeID) {
 
       /* Drift all the particles */
-      cell_drift_gpart(c, e, /* force the drift=*/1);
+      cell_drift_gpart(c, e, /* force the drift=*/1, do_init);
     }
   }
 }
@@ -136,6 +138,7 @@ void engine_do_drift_all_spart_mapper(void *map_data, int num_elements,
 
   const struct engine *e = (const struct engine *)extra_data;
   const int restarting = e->restarting;
+  const int do_init = !e->final_drift;
   struct space *s = e->s;
   struct cell *cells_top;
   int *local_cells_top;
@@ -167,7 +170,7 @@ void engine_do_drift_all_spart_mapper(void *map_data, int num_elements,
     if (c->nodeID == e->nodeID) {
 
       /* Drift all the particles */
-      cell_drift_spart(c, e, /* force the drift=*/1);
+      cell_drift_spart(c, e, /* force the drift=*/1, do_init);
     }
   }
 }
@@ -184,6 +187,7 @@ void engine_do_drift_all_bpart_mapper(void *map_data, int num_elements,
 
   const struct engine *e = (const struct engine *)extra_data;
   const int restarting = e->restarting;
+  const int do_init = !e->final_drift;
   struct space *s = e->s;
   struct cell *cells_top;
   int *local_cells_top;
@@ -215,7 +219,7 @@ void engine_do_drift_all_bpart_mapper(void *map_data, int num_elements,
     if (c->nodeID == e->nodeID) {
 
       /* Drift all the particles */
-      cell_drift_bpart(c, e, /* force the drift=*/1);
+      cell_drift_bpart(c, e, /* force the drift=*/1, do_init);
     }
   }
 }
@@ -232,6 +236,7 @@ void engine_do_drift_all_sink_mapper(void *map_data, int num_elements,
 
   const struct engine *e = (const struct engine *)extra_data;
   const int restarting = e->restarting;
+  const int do_init = !e->final_drift;
   struct space *s = e->s;
   struct cell *cells_top;
   int *local_cells_top;
@@ -263,7 +268,7 @@ void engine_do_drift_all_sink_mapper(void *map_data, int num_elements,
     if (c->nodeID == e->nodeID) {
 
       /* Drift all the particles */
-      cell_drift_sink(c, e, /* force the drift=*/1);
+      cell_drift_sink(c, e, /* force the drift=*/1, do_init);
     }
   }
 }
