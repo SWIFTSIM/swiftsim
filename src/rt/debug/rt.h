@@ -26,10 +26,10 @@
 
 /**
  * @brief Update the photon number of a particle, i.e. compute
- *        N^{n+1} = N^n + dt * dN_* / dt
+ *        E^{n+1} = E^n + dt * dE_* / dt
  */
-__attribute__((always_inline)) INLINE static void rt_update_photon_number(
-    struct part* restrict p) {
+__attribute__((always_inline)) INLINE static void
+rt_injection_update_photon_density(struct part* restrict p) {
 
   p->rt_data.photon_number_updated = 1;
   p->rt_data.calls_tot += 1;

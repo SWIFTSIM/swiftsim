@@ -1416,7 +1416,7 @@ void runner_do_rt_ghost1(struct runner *r, struct cell *c, int timer) {
 
   for (int pid = 0; pid < count; pid++) {
     struct part *restrict p = &(c->hydro.parts[pid]);
-    rt_update_photon_number(p);
+    rt_injection_update_photon_density(p);
   }
 
   if (timer) TIMER_TOC(timer_do_rt_ghost1);
