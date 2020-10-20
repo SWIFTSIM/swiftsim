@@ -72,6 +72,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
   const int with_timestep_limiter = e->policy & engine_policy_timestep_limiter;
   const int with_timestep_sync = e->policy & engine_policy_timestep_sync;
   const int with_star_formation = e->policy & engine_policy_star_formation;
+  const int with_sinks = e->policy & engine_policy_sinks;
   const int with_feedback = e->policy & engine_policy_feedback;
 
   for (int ind = 0; ind < num_elements; ind++) {
@@ -96,7 +97,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       const int ci_active_stars = cell_is_active_stars(ci, e) ||
                                   (with_star_formation && ci_active_hydro);
       const int ci_active_sinks =
-          cell_is_active_sinks(ci, e) || ci_active_hydro;
+          with_sinks && (cell_is_active_sinks(ci, e) || ci_active_hydro);
 
       /* Activate the hydro drift */
       if (t_type == task_type_self && t_subtype == task_subtype_density) {
@@ -325,9 +326,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                                   (with_star_formation && cj_active_hydro);
 
       const int ci_active_sinks =
-          cell_is_active_sinks(ci, e) || ci_active_hydro;
+          with_sinks && (cell_is_active_sinks(ci, e) || ci_active_hydro);
       const int cj_active_sinks =
-          cell_is_active_sinks(cj, e) || cj_active_hydro;
+          with_sinks && (cell_is_active_sinks(cj, e) || cj_active_hydro);
 
       /* Only activate tasks that involve a local active cell. */
       if ((t_subtype == task_subtype_density ||
@@ -997,9 +998,10 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
     /* Kick ? */
     else if (t_type == task_type_kick1 || t_type == task_type_kick2) {
+      const int sinks_active = with_sinks && cell_is_active_sinks(t->ci, e);
 
       if (cell_is_active_hydro(t->ci, e) || cell_is_active_gravity(t->ci, e) ||
-          cell_is_active_stars(t->ci, e) || cell_is_active_sinks(t->ci, e) ||
+          cell_is_active_stars(t->ci, e) || sinks_active ||
           cell_is_active_black_holes(t->ci, e))
         scheduler_activate(s, t);
     }
@@ -1094,8 +1096,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       t->ci->stars.updated = 0;
       t->ci->sinks.updated = 0;
       t->ci->black_holes.updated = 0;
+      const int sinks_active = with_sinks && cell_is_active_sinks(t->ci, e);
       if (cell_is_active_hydro(t->ci, e) || cell_is_active_gravity(t->ci, e) ||
-          cell_is_active_stars(t->ci, e) || cell_is_active_sinks(t->ci, e) ||
+          cell_is_active_stars(t->ci, e) || sinks_active ||
           cell_is_active_black_holes(t->ci, e))
         scheduler_activate(s, t);
     }
