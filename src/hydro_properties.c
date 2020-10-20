@@ -40,6 +40,7 @@
 #define hydro_props_default_max_iterations 30
 #define hydro_props_default_volume_change 1.4f
 #define hydro_props_default_h_max FLT_MAX
+#define hydro_props_default_rho_min 0.f 
 #define hydro_props_default_h_min_ratio 0.f
 #define hydro_props_default_h_tolerance 1e-4
 #define hydro_props_default_init_temp 0.f
@@ -194,6 +195,31 @@ void hydro_props_init(struct hydro_props *p,
 
   p->minimal_internal_energy = u_min / mean_molecular_weight;
 
+  /* Minimal density to resolve in H/cm^3 */
+  const float number_density_H_p_cm3 =
+      parser_get_opt_param_float(params, "SPH:minimal_number_density_H_p_cm3",
+                                 hydro_props_default_rho_min);
+
+  /* Get the proton mass */
+  const double m_p = phys_const->const_proton_mass;
+
+  /* Calculate the conversion factor for cm^-3 to L^-3 in internal units*/
+  const double conversion_factor =
+      1. / units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
+
+  /* Get the m_p times conversion factor in float */
+  const float m_p_times_conversion_factor = m_p * conversion_factor;
+
+  /* Convert the minimum density to mass density in internal units */
+  p->rho_min = number_density_H_p_cm3  * m_p_times_conversion_factor / p->hydrogen_mass_fraction;
+
+  /* Inverse of the minimum density */
+  if (p->rho_min == 0.f) {
+    p->rho_min_inv = FLT_MAX;
+  } else {
+    p->rho_min_inv = 1./p->rho_min;
+  }
+
   /* ------ Particle splitting parameters ---------- */
 
   /* Are we doing particle splitting? */
@@ -214,7 +240,8 @@ void hydro_props_init(struct hydro_props *p,
  *
  * @param p The #hydro_props.
  */
-void hydro_props_print(const struct hydro_props *p) {
+void hydro_props_print(const struct hydro_props *p,
+                       const struct phys_const *phys_const) {
 
   /* Print equation of state first */
   eos_print(&eos);
@@ -246,6 +273,11 @@ void hydro_props_print(const struct hydro_props *p) {
 
   if (p->h_max != hydro_props_default_h_max)
     message("Maximal smoothing length allowed: %.4f", p->h_max);
+
+  if (p->rho_min != hydro_props_default_rho_min) {
+    message("Minimal resolved density: %1.4e", p->rho_min);
+    message("Maximal smoothing length for different resolution hmax(10^4 Msun) = %e, hmax(10^6 Msun) = %e, hmax(10^8 Msun) = %e",cbrtf(phys_const->const_solar_mass * 1e4 * p->rho_min_inv), cbrtf(phys_const->const_solar_mass * 1e6 * p->rho_min_inv), cbrtf(phys_const->const_solar_mass * 1e8 * p->rho_min_inv));
+  }
 
   message("Maximal time-bin difference between neighbours: %d",
           time_bin_neighbour_max_delta_bin);

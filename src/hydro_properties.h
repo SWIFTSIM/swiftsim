@@ -70,6 +70,12 @@ struct hydro_props {
   /*! Minimal smoothing length (internal units) */
   float h_min;
 
+  /*! Minimal resolved density (internal units) */
+  float rho_min;
+
+  /*! Inverse of the minimal resolved density (internal units) */
+  float rho_min_inv;
+
   /*! Maximal number of iterations to converge h */
   int max_smoothing_iterations;
 
@@ -132,7 +138,8 @@ struct hydro_props {
   struct diffusion_global_data diffusion;
 };
 
-void hydro_props_print(const struct hydro_props *p);
+void hydro_props_print(const struct hydro_props *p, 
+                       const struct phys_const *phys_const);
 void hydro_props_init(struct hydro_props *p,
                       const struct phys_const *phys_const,
                       const struct unit_system *us,

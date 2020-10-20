@@ -5192,6 +5192,7 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
   const int with_cosmology = (e->policy & engine_policy_cosmology);
   const float hydro_h_max = e->hydro_properties->h_max;
   const float hydro_h_min = e->hydro_properties->h_min;
+  const float hydro_rho_min_inv = e->hydro_properties->rho_min_inv;
   const integertime_t ti_old_part = c->hydro.ti_old_part;
   const integertime_t ti_current = e->ti_current;
   struct part *const parts = c->hydro.parts;
@@ -5345,8 +5346,14 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
         }
       }
 
+      /* Calculate the particle based maximum smoothing length */
+      const float hydro_h_max_part = cbrtf(p->mass * hydro_rho_min_inv);
+
+      /* Use the minimum of the particle based and global h_max */
+      const float current_hydro_h_max = min(hydro_h_max, hydro_h_max_part);
+
       /* Limit h to within the allowed range */
-      p->h = min(p->h, hydro_h_max);
+      p->h = min(p->h, current_hydro_h_max);
       p->h = max(p->h, hydro_h_min);
 
       /* Compute (square of) motion since last cell construction */
