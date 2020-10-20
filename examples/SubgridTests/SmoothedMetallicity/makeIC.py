@@ -27,15 +27,19 @@ import numpy as np
 gamma = 5./3.      # Gas adiabatic index
 rho0 = 1.          # Background density
 P0 = 1e-6          # Background pressure
-Nelem = 10         # Gear: 10, EAGLE: 9
+Nelem = 2          # Gear: 10, EAGLE: 9
 low_metal = -6     # Low iron fraction
-high_metal = -5    # high iron fraction
-sigma_metal = 0.1  # relative standard deviation for the metallicities
+high_metal = -5.5  # high iron fraction
+max_shift = 1      # Shift between the different elements
+sigma_metal = 0.2  # relative standard deviation for the metallicities
 fileName = "smoothed_metallicity.hdf5"
 
 # shift all metals in order to obtain nicer plots
-low_metal = [low_metal] * Nelem + np.linspace(0, 3, Nelem)
-high_metal = [high_metal] * Nelem + np.linspace(0, 3, Nelem)
+low_metal = [low_metal] * Nelem + np.linspace(0, max_shift, Nelem)
+low_metal = 10**low_metal
+
+high_metal = [high_metal] * Nelem + np.linspace(0, max_shift, Nelem)
+high_metal = 10**high_metal
 
 # ---------------------------------------------------
 glass = h5py.File("glassCube_32.hdf5", "r")
@@ -53,7 +57,7 @@ ids = np.linspace(1, numPart, numPart)
 m = np.zeros(numPart)
 u = np.zeros(numPart)
 r = np.zeros(numPart)
-Z = np.zeros((numPart, Nelem))
+mass_frac = np.zeros((numPart, Nelem))
 
 m[:] = rho0 * vol / numPart
 u[:] = P0 / (rho0 * (gamma - 1))
@@ -61,11 +65,13 @@ u[:] = P0 / (rho0 * (gamma - 1))
 # set metallicities
 select = pos[:, 0] < 0.5
 nber = sum(select)
-Z[select, :] = low_metal * (1 + np.random.normal(loc=0., scale=sigma_metal,
-                                                 size=(nber, Nelem)))
+mass_frac[select, :] = low_metal * (
+    1 + np.random.normal(loc=0., scale=sigma_metal,
+                         size=(nber, Nelem)))
 nber = numPart - nber
-Z[~select, :] = high_metal * (1 + np.random.normal(
+mass_frac[~select, :] = high_metal * (1 + np.random.normal(
     loc=0., scale=sigma_metal, size=(nber, Nelem)))
+
 # --------------------------------------------------
 
 # File
@@ -99,7 +105,6 @@ grp.create_dataset('Masses', data=m, dtype='f')
 grp.create_dataset('SmoothingLength', data=h, dtype='f')
 grp.create_dataset('InternalEnergy', data=u, dtype='f')
 grp.create_dataset('ParticleIDs', data=ids, dtype='L')
-mass_frac = 10**Z
 grp.create_dataset('MetalMassFraction', data=mass_frac, dtype='d')
 
 
