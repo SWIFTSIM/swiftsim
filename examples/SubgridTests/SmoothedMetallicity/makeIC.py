@@ -1,32 +1,33 @@
 ###############################################################################
 # This file is part of SWIFT.
 # Copyright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-# 
+#
 ##############################################################################
 
 import h5py
 import numpy as np
 
-# Generates a swift IC file for the Smoothed Metallicity test in a periodic cubic box
+# Generates a swift IC file for the Smoothed Metallicity test
+# in a periodic cubic box
 
 # Parameters
 gamma = 5./3.      # Gas adiabatic index
 rho0 = 1.          # Background density
-P0 = 1.e-6         # Background pressure
-Nelem = 9          # Gear: 9, EAGLE: 9
+P0 = 1e-6          # Background pressure
+Nelem = 10         # Gear: 10, EAGLE: 9
 low_metal = -6     # Low iron fraction
 high_metal = -5    # high iron fraction
 sigma_metal = 0.1  # relative standard deviation for the metallicities
@@ -54,7 +55,6 @@ u = np.zeros(numPart)
 r = np.zeros(numPart)
 Z = np.zeros((numPart, Nelem))
 
-r = np.sqrt((pos[:, 0] - 0.5)**2 + (pos[:, 1] - 0.5)**2 + (pos[:, 2] - 0.5)**2)
 m[:] = rho0 * vol / numPart
 u[:] = P0 / (rho0 * (gamma - 1))
 
@@ -64,9 +64,8 @@ nber = sum(select)
 Z[select, :] = low_metal * (1 + np.random.normal(loc=0., scale=sigma_metal,
                                                  size=(nber, Nelem)))
 nber = numPart - nber
-Z[np.logical_not(select), :] = high_metal * (1 + np.random.normal(
+Z[~select, :] = high_metal * (1 + np.random.normal(
     loc=0., scale=sigma_metal, size=(nber, Nelem)))
-
 # --------------------------------------------------
 
 # File
@@ -100,7 +99,8 @@ grp.create_dataset('Masses', data=m, dtype='f')
 grp.create_dataset('SmoothingLength', data=h, dtype='f')
 grp.create_dataset('InternalEnergy', data=u, dtype='f')
 grp.create_dataset('ParticleIDs', data=ids, dtype='L')
-grp.create_dataset('ElementAbundance', data=Z, dtype='f')
+mass_frac = 10**Z
+grp.create_dataset('MetalMassFraction', data=mass_frac, dtype='d')
 
 
 file.close()
