@@ -34,7 +34,7 @@ low_metal = -6  # low metal abundance
 high_metal = -5  # High metal abundance
 sigma_metal = 0.1  # relative standard deviation for Z
 
-Nelem = 9
+Nelem = 10
 # shift all metals in order to obtain nicer plots
 low_metal = [low_metal] * Nelem + np.linspace(0, 3, Nelem)
 high_metal = [high_metal] * Nelem + np.linspace(0, 3, Nelem)
@@ -80,12 +80,15 @@ kernel = sim["/HydroScheme"].attrs["Kernel function"]
 neighbours = sim["/HydroScheme"].attrs["Kernel target N_ngb"]
 eta = sim["/HydroScheme"].attrs["Kernel eta"]
 chemistry = sim["/SubgridScheme"].attrs["Chemistry Model"]
+chemistry = str(chemistry)
 git = sim["Code"].attrs["Git Revision"]
 
 pos = sim["/PartType0/Coordinates"][:, :]
 d = pos[:, 0] - boxSize / 2
-smooth_metal = sim["/PartType0/SmoothedElementMassFractions"][:, :]
-metal = sim["/PartType0/ElementMassFractions"][:, :]
+smooth_metal = sim["/PartType0/SmoothedMetalMassFractions"][:, :]
+smooth_metal = np.log10(smooth_metal)
+metal = sim["/PartType0/MetalMassFractions"][:, :]
+metal = np.log10(metal)
 h = sim["/PartType0/SmoothingLengths"][:]
 h = np.mean(h)
 
@@ -166,6 +169,8 @@ plt.figure()
 plt.subplot(221)
 for e in range(Nelem):
     plt.plot(metal[:, e], smooth_metal[:, e], ".", ms=0.5, alpha=0.2)
+    ind = pos[:, 0] < 0.5
+    print(np.median(smooth_metal[ind, e]), np.median(smooth_metal[ind, e]), high_metal[e], low_metal[e])
 
 xmin, xmax = metal.min(), metal.max()
 ymin, ymax = smooth_metal.min(), smooth_metal.max()
