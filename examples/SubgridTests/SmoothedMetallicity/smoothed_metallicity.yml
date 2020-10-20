@@ -33,3 +33,6 @@ InitialConditions:
   file_name:  ./smoothed_metallicity.hdf5          # The file to read
   periodic:   1
 
+GEARChemistry:
+  initial_metallicity: -1 # Read from the snapshot
+  diffusion_coefficient: 0 # Coefficient for the diffusion (see Shen et al. 2010)

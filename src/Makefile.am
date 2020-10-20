@@ -259,6 +259,10 @@ nobase_noinst_HEADERS = align.h approx_math.h atomic.h barrier.h cycle.h error.h
 		 chemistry/GEAR/chemistry_io.h \
 		 chemistry/GEAR/chemistry_struct.h \
 		 chemistry/GEAR/chemistry_iact.h \
+     chemistry/GEAR_DIFFUSION/chemistry.h \
+     chemistry/GEAR_DIFFUSION/chemistry_io.h \
+     chemistry/GEAR_DIFFUSION/chemistry_struct.h \
+     chemistry/GEAR_DIFFUSION/chemistry_iact.h \
                  chemistry/EAGLE/chemistry.h \
 		 chemistry/EAGLE/chemistry_io.h \
 		 chemistry/EAGLE/chemistry_struct.h\
