@@ -277,12 +277,13 @@ __attribute__((always_inline)) INLINE static int cell_is_active_sinks(
     const struct cell *c, const struct engine *e) {
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (c->sinks.ti_end_min < e->ti_current)
+  if (c->sinks.ti_end_min < e->ti_current) {
     error(
         "cell in an impossible time-zone! c->ti_end_min=%lld (t=%e) and "
         "e->ti_current=%lld (t=%e, a=%e)",
         c->sinks.ti_end_min, c->sinks.ti_end_min * e->time_base, e->ti_current,
         e->ti_current * e->time_base, e->cosmology->a);
+  }
 #endif
 
   return (c->sinks.ti_end_min == e->ti_current);
