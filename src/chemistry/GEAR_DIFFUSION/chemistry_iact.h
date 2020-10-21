@@ -180,8 +180,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     /* part j */
     /* Get the kernel for hj */
     const float hj_inv = 1.0f / hj;
-    const float hj_inv_dim = pow_dimension(hj_inv);        /* 1/h^d */
-    const float hj_inv_dim_plus_one = hj_inv_dim * hj_inv; /* 1/h^(d+1) */
 
     /* Compute the kernel function for pj */
     const float xj = r * hj_inv;
@@ -190,8 +188,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     /* part i */
     /* Get the kernel for hi */
     const float hi_inv = 1.0f / hi;
-    const float hi_inv_dim = pow_dimension(hi_inv);        /* 1/h^d */
-    const float hi_inv_dim_plus_one = hi_inv_dim * hi_inv; /* 1/h^(d+1) */
 
     /* Compute the kernel function for pi */
     const float xi = r * hi_inv;
@@ -200,13 +196,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     /* Get 1/r */
     const float r_inv = 1.f / sqrtf(r2);
 
-    float dw_r = 0.5f *
-                 (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) *
-                 r_inv;
+    const float wi_dr = dwi_dx * r_inv;
+    const float wj_dr = dwj_dx * r_inv;
 
-    /* mj_dw_r in physical units. */
-    const float mj_dw_r = mj * dw_r * cosmo->a3_inv;
-    const float mi_dw_r = mi * dw_r * cosmo->a3_inv;
+    const float mj_dw_r = mj * wi_dr;
+    const float mi_dw_r = mi * wj_dr;
 
     /* Compute the diffusion coefficient <D> / <rho> in physical units. */
     const float coef = 2. * (chi->diff_coef + chj->diff_coef) /
@@ -278,11 +272,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
 
     /* Get 1/r */
     const float r_inv = 1.f / sqrtf(r2);
-    const float dw_r = 0.5f *
-      (dwi_dx * hi_inv_dim_plus_one + dwj_dx * hj_inv_dim_plus_one) *
-      r_inv;
-    /* mj_dw_r in physical units. */
-    const float mj_dw_r = mj * dw_r;
+    const float wi_dr = dwi_dx * r_inv;
+
+    const float mj_dw_r = mj * wi_dr;
 
     /* Compute the diffusion coefficient <D> / <rho> in physical units. */
     const float coef = 2. * (chi->diff_coef + chj->diff_coef) /

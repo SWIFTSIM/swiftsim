@@ -176,8 +176,8 @@ ymin, ymax = smooth_metal.min(), smooth_metal.max()
 x = max(xmin, ymin)
 y = min(xmax, ymax)
 plt.loglog([x, y], [x, y], "--k", lw=1.0)
-plt.xlabel("${\\rm{Metallicity}}~Z_\\textrm{part}$", labelpad=0)
-plt.ylabel("${\\rm{Smoothed~Metallicity}}~Z_\\textrm{sm}$", labelpad=0)
+plt.xlabel("${\\rm{Metal~mass~fraction}}$", labelpad=0)
+plt.ylabel("${\\rm{Smoothed~metal~mass~fraction}}$", labelpad=0)
 
 # Metallicity --------------------------------
 e = 0
@@ -189,7 +189,7 @@ plt.fill_between(
 )
 plt.yscale("log")
 plt.xlabel("${\\rm{Distance}}~r$", labelpad=0)
-plt.ylabel("${\\rm{Smoothed~Metallicity}}~Z_\\textrm{sm}$", labelpad=0)
+plt.ylabel("${\\rm{Smoothed~metal~mass~fraction}}$", labelpad=0)
 plt.xlim(-0.5, 0.5)
 # plt.ylim(low_metal[e] - 1, high_metal[e] + 1)
 
