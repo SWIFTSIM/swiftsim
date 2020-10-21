@@ -5444,10 +5444,7 @@ void space_init_sparts_mapper(void *restrict map_data, int scount,
   struct spart *restrict sparts = (struct spart *)map_data;
   for (int k = 0; k < scount; k++) {
     stars_init_spart(&sparts[k]);
-    rt_init_spart(&sparts[k], /*reset_emission_rate =*/1);
-    if (sparts[k].id == 137500){
-      printf("--- reset 137500 in space.c; time bin = %d\n", sparts[k].time_bin);
-    }
+    rt_init_spart(&sparts[k]);
   }
 }
 
@@ -5525,33 +5522,22 @@ void space_init_sinks(struct space *s, int verbose) {
             clocks_getunit());
 }
 
-void space_first_init_rt_extra_data_mapper(void *restrict map_data, int scount, void *restrict extra_data) {
+void space_first_init_rt_extra_data_mapper(void *restrict map_data, int scount,
+                                           void *restrict extra_data) {
 
   struct spart *restrict sparts = (struct spart *)map_data;
   const struct engine *restrict e = (struct engine *)extra_data;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
 
   for (int k = 0; k < scount; k++) {
-    rt_compute_stellar_emission_rate(
-      &sparts[k], 
-      e->cosmology,
-      with_cosmology,
-      e->ti_current,
-      e->time, 
-      e->time_base
-    );
-
-
-
-    if (sparts[k].id == 137500){
-      printf("--- reset 137500 in space.c:first_init_rt_extra_data; time bin = %d; emission rate set? %d\n", sparts[k].time_bin, sparts[k].rt_data.emission_rate_set);
-    }
+    rt_compute_stellar_emission_rate(&sparts[k], e->cosmology, with_cosmology,
+                                     e->ti_current, e->time, e->time_base);
   }
 }
 
 /**
- * @brief Calls the first radiative transfer additional data 
- * initialisation function on all star particles in the space. 
+ * @brief Calls the first radiative transfer additional data
+ * initialisation function on all star particles in the space.
  * This function requires that the time bins for star particles
  * have been set already and is called after the 0-th time step.
  *
@@ -5563,14 +5549,13 @@ void space_first_init_rt_extra_data(struct space *s, int verbose) {
   const ticks tic = getticks();
 
   if (s->nr_sparts > 0)
-    threadpool_map(&s->e->threadpool, space_first_init_rt_extra_data_mapper, s->sparts,
-                   s->nr_sparts, sizeof(struct spart),
+    threadpool_map(&s->e->threadpool, space_first_init_rt_extra_data_mapper,
+                   s->sparts, s->nr_sparts, sizeof(struct spart),
                    threadpool_auto_chunk_size, /*extra_data=*/s->e);
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
             clocks_getunit());
 }
-
 
 void space_convert_quantities_mapper(void *restrict map_data, int count,
                                      void *restrict extra_data) {

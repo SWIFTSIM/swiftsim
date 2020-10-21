@@ -38,12 +38,18 @@ rt_injection_update_photon_density(struct part* restrict p) {}
  *        stellar property, i.e. doesn't depend on the environment.
  *
  * @param sp star particle to work on
- * @param star_age the star particle's age
- * @param dt current time step size
+ * @param cosmo cosmology struct in use
+ * @param with_cosmology whether we're running with cosmology
+ * @param ti_current current system integer time
+ * @param time current system time
+ * @param time_base time base in use
  */
 __attribute__((always_inline)) INLINE static void
-rt_compute_stellar_emission_rate(struct spart* restrict sp, double star_age,
-                                 double dt) {}
+rt_compute_stellar_emission_rate(struct spart* restrict sp,
+                                 const struct cosmology* cosmo,
+                                 int with_cosmology,
+                                 const integertime_t ti_current, double time,
+                                 double time_base) {}
 
 /**
  * @brief First initialisation of the RT extra hydro particle data.
@@ -65,12 +71,8 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
 
 /**
  * @brief Initialisation of the RT extra star particle data.
- *
- * @param sp star particle
- * @param reset_emission_rate whether to reset the stellar emission
- *        rate.
  */
 __attribute__((always_inline)) INLINE static void rt_init_spart(
-    struct spart* restrict sp, int reset_emission_rate) {}
+    struct spart* restrict sp) {}
 
 #endif /* SWIFT_RT_M1_H */

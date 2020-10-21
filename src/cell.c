@@ -5700,19 +5700,10 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
         feedback_init_spart(sp);
 
         if (with_rt) {
-          rt_init_spart(sp, /*reset_emission_rate =*/1);
-
-          /* now get stellar emission rates */
-          /* TODO: cleanup */
-          rt_compute_stellar_emission_rate(
-            &sparts[k], 
-            e->cosmology,
-            with_cosmology,
-            e->ti_current,
-            e->time, 
-            e->time_base
-          );
-
+          rt_init_spart(sp);
+          rt_compute_stellar_emission_rate(sp, e->cosmology, with_cosmology,
+                                           e->ti_current, e->time,
+                                           e->time_base);
         }
       }
     }
