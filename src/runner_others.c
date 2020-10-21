@@ -526,7 +526,7 @@ void runner_do_end_hydro_force(struct runner *r, struct cell *c, int timer) {
           /* Compute the time step. */
           const integertime_t ti_step = get_integer_timestep(p->time_bin);
           const integertime_t ti_begin =
-            get_integer_time_begin(e->ti_current - 1, p->time_bin);
+              get_integer_time_begin(e->ti_current - 1, p->time_bin);
 
           dt = cosmology_get_delta_time(cosmo, ti_begin, ti_begin + ti_step);
         } else {
