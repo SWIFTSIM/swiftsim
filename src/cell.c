@@ -5549,6 +5549,7 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
   const int periodic = e->s->periodic;
   const double dim[3] = {e->s->dim[0], e->s->dim[1], e->s->dim[2]};
   const int with_cosmology = (e->policy & engine_policy_cosmology);
+  const int with_rt = (e->policy & engine_policy_rt);
   const float stars_h_max = e->hydro_properties->h_max;
   const float stars_h_min = e->hydro_properties->h_min;
   const integertime_t ti_old_spart = c->stars.ti_old_part;
@@ -5697,7 +5698,22 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
       if (spart_is_active(sp, e)) {
         stars_init_spart(sp);
         feedback_init_spart(sp);
-        rt_init_spart(sp);
+
+        if (with_rt) {
+          rt_init_spart(sp, /*reset_emission_rate =*/1);
+
+          /* now get stellar emission rates */
+          /* TODO: cleanup */
+          rt_compute_stellar_emission_rate(
+            &sparts[k], 
+            e->cosmology,
+            with_cosmology,
+            e->ti_current,
+            e->time, 
+            e->time_base
+          );
+
+        }
       }
     }
 
