@@ -70,7 +70,7 @@ INLINE static void chemistry_copy_star_formation_properties(
 static INLINE void chemistry_print_backend(
     const struct chemistry_global_data* data) {
 
-  message("Chemistry function is 'Gear'.");
+  message("Chemistry function is 'Gear with diffusion'.");
 }
 
 /**
@@ -249,37 +249,39 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
   }
 
 
-  /* Compute the trace and add the hubble flow. */
-  float trace = 0;
+  /* Compute the trace over 3 and add the hubble flow. */
+  float trace_3 = 0;
   for(int i = 0; i < 3; i++) {
     cpd->S[i][i] += cosmo->H;
-    trace += cpd->S[i][i];
+    trace_3 += cpd->S[i][i];
   }
+  trace_3 /= 3.;
 
+  float S_t[3][3];
   for(int i = 0; i < 3; i++) {
     /* Make the tensor symmetric. */
     float avg = 0.5 * (cpd->S[i][0] + cpd->S[0][i]);
-    cpd->S[i][0] = avg;
-    cpd->S[0][i] = avg;
+    S_t[i][0] = avg;
+    S_t[0][i] = avg;
 
     avg = 0.5 * (cpd->S[i][1] + cpd->S[1][i]);
-    cpd->S[i][1] = avg;
-    cpd->S[1][i] = avg;
+    S_t[i][1] = avg;
+    S_t[1][i] = avg;
 
     avg = 0.5 * (cpd->S[i][2] + cpd->S[2][i]);
-    cpd->S[i][2] = avg;
-    cpd->S[2][i] = avg;
+    S_t[i][2] = avg;
+    S_t[2][i] = avg;
 
     /* Remove the trace. */
-    cpd->S[i][i] -= trace / 3.;
+    S_t[i][i] -= trace_3;
   }
 
   /* Compute the norm. */
   float norm = 0;
   for(int i = 0; i < 3; i++) {
-    norm += cpd->S[i][0] * cpd->S[i][0];
-    norm += cpd->S[i][1] * cpd->S[i][1];
-    norm += cpd->S[i][2] * cpd->S[i][2];
+    norm += S_t[i][0] * S_t[i][0];
+    norm += S_t[i][1] * S_t[i][1];
+    norm += S_t[i][2] * S_t[i][2];
   }
   norm = sqrt(norm);
 
