@@ -36,3 +36,10 @@
 #include "runner_doiact_functions_sinks.h"
 #undef FUNCTION_TASK_LOOP
 #undef FUNCTION
+
+
+#define FUNCTION merger
+#define FUNCTION_TASK_LOOP TASK_LOOP_MERGER
+#include "runner_doiact_functions_sinks_merger.h"
+#undef FUNCTION_TASK_LOOP
+#undef FUNCTION

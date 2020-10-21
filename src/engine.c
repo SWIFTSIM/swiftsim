@@ -2097,6 +2097,8 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->subtype == task_subtype_limiter ||
         t->subtype == task_subtype_gradient ||
         t->subtype == task_subtype_stars_feedback ||
+        t->subtype == task_subtype_sink_compute_formation ||
+        t->subtype == task_subtype_sink_merger ||
         t->subtype == task_subtype_bh_feedback ||
         t->subtype == task_subtype_bh_swallow ||
         t->subtype == task_subtype_do_gas_swallow ||
