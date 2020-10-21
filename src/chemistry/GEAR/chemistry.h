@@ -147,8 +147,7 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
 
   if (initial_metallicity < 0) {
     message("Setting the initial metallicity from the snapshot.");
-  }
-  else {
+  } else {
     message("Setting the initial metallicity from the parameter file.");
   }
 
@@ -212,8 +211,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
 
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     /* Final operation on the density (add self-contribution). */
-    cpd->smoothed_metal_mass_fraction[i] +=
-        cpd->metal_mass[i] * kernel_root;
+    cpd->smoothed_metal_mass_fraction[i] += cpd->metal_mass[i] * kernel_root;
 
     /* Finish the calculation by inserting the missing h-factors */
     cpd->smoothed_metal_mass_fraction[i] *= factor;
@@ -227,8 +225,8 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void chemistry_end_force(
-    struct part* restrict p, const struct cosmology* cosmo, const int with_cosmology,
-    const double time, const double dt) {}
+    struct part* restrict p, const struct cosmology* cosmo,
+    const int with_cosmology, const double time, const double dt) {}
 
 /**
  * @brief Sets all particle fields to sensible values when the #part has 0 ngbs.
@@ -247,7 +245,7 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
   /* Set the smoothed fractions with the non smoothed fractions */
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     p->chemistry_data.smoothed_metal_mass_fraction[i] =
-      p->chemistry_data.metal_mass[i] / hydro_get_mass(p);
+        p->chemistry_data.metal_mass[i] / hydro_get_mass(p);
   }
 }
 
@@ -294,11 +292,10 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     if (data->initial_metallicities[i] < 0) {
       /* Use the value from the IC. We are reading the metal mass fraction. */
       p->chemistry_data.metal_mass[i] *= hydro_get_mass(p);
-    }
-    else {
+    } else {
       /* Use the value from the parameter file */
       p->chemistry_data.metal_mass[i] =
-        data->initial_metallicities[i] * hydro_get_mass(p);
+          data->initial_metallicities[i] * hydro_get_mass(p);
     }
   }
 
