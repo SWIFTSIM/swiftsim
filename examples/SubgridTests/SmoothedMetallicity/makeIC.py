@@ -72,6 +72,9 @@ nber = numPart - nber
 mass_frac[~select, :] = high_metal * (1 + np.random.normal(
     loc=0., scale=sigma_metal, size=(nber, Nelem)))
 
+v[select, 2] = 1
+v[~select, 2] = -1
+
 # --------------------------------------------------
 
 # File
