@@ -21,8 +21,8 @@
 
 /**
  * @file GEAR/chemistry_iact.h
- * @brief Smooth metal interaction + diffusion functions following the GEAR version of
- * smooth metalicity.
+ * @brief Smooth metal interaction + diffusion functions following the GEAR
+ * version of smooth metalicity.
  */
 
 /**
@@ -72,14 +72,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
 
   /* Compute contribution to the smooth metallicity */
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
-    chi->smoothed_metal_mass_fraction[i] +=
-        chj->metal_mass[i] * wi;
-    chj->smoothed_metal_mass_fraction[i] +=
-        chi->metal_mass[i] * wj;
+    chi->smoothed_metal_mass_fraction[i] += chj->metal_mass[i] * wi;
+    chj->smoothed_metal_mass_fraction[i] += chi->metal_mass[i] * wj;
   }
 
   /* Compute the shear tensor */
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     chi->S[i][0] += (pj->v[0] - pi->v[0]) * dx[i] * mj_wi_dr;
     chi->S[i][1] += (pj->v[1] - pi->v[1]) * dx[i] * mj_wi_dr;
     chi->S[i][2] += (pj->v[2] - pi->v[2]) * dx[i] * mj_wi_dr;
@@ -128,18 +126,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
 
   /* Compute contribution to the smooth metallicity */
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
-    chi->smoothed_metal_mass_fraction[i] +=
-        chj->metal_mass[i] * wi;
+    chi->smoothed_metal_mass_fraction[i] += chj->metal_mass[i] * wi;
   }
 
   /* Compute the shear tensor */
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     chi->S[i][0] += (pj->v[0] - pi->v[0]) * dx[i] * mj_wi_dr;
     chi->S[i][1] += (pj->v[1] - pi->v[1]) * dx[i] * mj_wi_dr;
     chi->S[i][2] += (pj->v[2] - pi->v[2]) * dx[i] * mj_wi_dr;
   }
 }
-
 
 /**
  * @brief do metal diffusion computation in the <FORCE LOOP>
@@ -203,8 +199,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     const float mi_dw_r = mi * wj_dr;
 
     /* Compute the diffusion coefficient <D> / <rho> in physical units. */
-    const float coef = 2. * (chi->diff_coef + chj->diff_coef) /
-      (rhoi + rhoj);
+    const float coef = 2. * (chi->diff_coef + chj->diff_coef) / (rhoi + rhoj);
 
     const float coef_i = coef * mj_dw_r;
     const float coef_j = coef * mi_dw_r;
@@ -277,11 +272,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     const float mj_dw_r = mj * wi_dr;
 
     /* Compute the diffusion coefficient <D> / <rho> in physical units. */
-    const float coef = 2. * (chi->diff_coef + chj->diff_coef) /
-      (rhoi + rhoj);
+    const float coef = 2. * (chi->diff_coef + chj->diff_coef) / (rhoi + rhoj);
 
     const float coef_i = coef * mj_dw_r;
-
 
     /* Compute the time derivative */
     for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
@@ -290,7 +283,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
       const double dm = mi_frac - mj_frac;
       chi->metal_mass_dt[i] += coef_i * dm;
     }
-
   }
 }
 
