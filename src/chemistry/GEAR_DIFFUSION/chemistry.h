@@ -148,8 +148,7 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
 
   if (initial_metallicity < 0) {
     message("Setting the initial metallicity from the snapshot.");
-  }
-  else {
+  } else {
     message("Setting the initial metallicity from the parameter file.");
   }
 
@@ -159,7 +158,8 @@ static INLINE void chemistry_init_backend(struct swift_params* parameter_file,
   }
 
   /* Read the diffusion coefficient */
-  data->C = parser_get_param_float(parameter_file, "GEARChemistry:diffusion_coefficient");
+  data->C = parser_get_param_float(parameter_file,
+                                   "GEARChemistry:diffusion_coefficient");
 
   /* Check if need to scale the initial metallicity */
   const int scale_metallicity = parser_get_opt_param_int(
@@ -194,7 +194,7 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
   }
 
   /* Reset the shear tensor */
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     cpd->S[i][0] = 0;
     cpd->S[i][1] = 0;
     cpd->S[i][2] = 0;
@@ -233,8 +233,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
 
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     /* Final operation on the density (add self-contribution). */
-    cpd->smoothed_metal_mass_fraction[i] +=
-        cpd->metal_mass[i] * kernel_root;
+    cpd->smoothed_metal_mass_fraction[i] += cpd->metal_mass[i] * kernel_root;
 
     /* Finish the calculation by inserting the missing h-factors */
     cpd->smoothed_metal_mass_fraction[i] *= factor;
@@ -248,17 +247,16 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
     cpd->S[k][2] *= factor_shear;
   }
 
-
   /* Compute the trace over 3 and add the hubble flow. */
   float trace_3 = 0;
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     cpd->S[i][i] += cosmo->H;
     trace_3 += cpd->S[i][i];
   }
   trace_3 /= 3.;
 
   float S_t[3][3];
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     /* Make the tensor symmetric. */
     float avg = 0.5 * (cpd->S[i][0] + cpd->S[0][i]);
     S_t[i][0] = avg;
@@ -278,7 +276,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
 
   /* Compute the norm. */
   float norm = 0;
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     norm += S_t[i][0] * S_t[i][0];
     norm += S_t[i][1] * S_t[i][1];
     norm += S_t[i][2] * S_t[i][2];
@@ -300,19 +298,19 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void chemistry_end_force(
-    struct part* restrict p, const struct cosmology* cosmo, const int with_cosmology,
-    const double time, const double dt) {
+    struct part* restrict p, const struct cosmology* cosmo,
+    const int with_cosmology, const double time, const double dt) {
   if (dt == 0) {
     return;
   }
 
-  struct chemistry_part_data *ch = &p->chemistry_data;
+  struct chemistry_part_data* ch = &p->chemistry_data;
   const float h_inv = cosmo->a / p->h;
   const float h_inv_dim = pow_dimension(h_inv); /* 1/h^d */
   /* Missing factors in iact. */
   const float factor = h_inv_dim * h_inv;
 
-  for(int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     ch->metal_mass[i] += ch->metal_mass_dt[i] * dt * factor;
     /* Make sure that the metallicity is >= 0 */
     ch->metal_mass[i] = max(ch->metal_mass[i], 0.);
@@ -336,7 +334,7 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
   /* Set the smoothed fractions with the non smoothed fractions */
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     p->chemistry_data.smoothed_metal_mass_fraction[i] =
-      p->chemistry_data.metal_mass[i] / hydro_get_mass(p);
+        p->chemistry_data.metal_mass[i] / hydro_get_mass(p);
   }
 }
 
@@ -383,11 +381,10 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_part(
     if (data->initial_metallicities[i] < 0) {
       /* Use the value from the IC. We are reading the metal mass fraction. */
       p->chemistry_data.metal_mass[i] *= hydro_get_mass(p);
-    }
-    else {
+    } else {
       /* Use the value from the parameter file */
       p->chemistry_data.metal_mass[i] =
-        data->initial_metallicities[i] * hydro_get_mass(p);
+          data->initial_metallicities[i] * hydro_get_mass(p);
     }
   }
 
@@ -405,7 +402,8 @@ __attribute__((always_inline)) INLINE static void chemistry_first_init_spart(
     const struct chemistry_global_data* data, struct spart* restrict sp) {
 
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
-    sp->chemistry_data.metal_mass_fraction[i] = data->initial_metallicities[i] * sp->mass;
+    sp->chemistry_data.metal_mass_fraction[i] =
+        data->initial_metallicities[i] * sp->mass;
   }
 }
 
