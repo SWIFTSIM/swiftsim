@@ -167,6 +167,17 @@ int scheduler_get_number_relation(const struct scheduler *s,
 #define MAX_NUMBER_DEP 128
 
 /**
+ * @brief Describe the level at which the task are done.
+ * WARNING: the order is supposed to be sorted according
+ * to the restriction strength.
+ */
+enum task_dependency_level {
+    task_dependency_level_top = 0,
+    task_dependency_level_super,
+    task_dependency_level_none,
+};
+
+/**
  * @brief Informations about all the task dependencies of
  *   a single task.
  */
@@ -180,6 +191,9 @@ struct task_dependency {
 
   /* Is the task implicit */
   int implicit_in;
+
+  /* Level at which the task in is executed */
+  enum task_dependency_level task_in_level;
 
   /* Dependent task */
   /* ID of the dependent task */
@@ -207,6 +221,7 @@ struct task_dependency {
  * @param tstype The MPI_Datatype to initialize
  */
 void task_dependency_define(MPI_Datatype *tstype) {
+  error("TODO");
   /* Define the variables */
   const int count = 8;
   int blocklens[count];
@@ -341,7 +356,7 @@ void task_dependency_sum(void *in_p, void *out_p, int *len,
 #endif  // WITH_MPI
 
 /**
- * @brief Write a dot file with the task dependencies.
+ * @brief Write a csv file with the task dependencies.
  *
  * Run plot_task_dependencies.sh for an example of how to use it
  * to generate the figure.
@@ -367,6 +382,8 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose) {
 
   /* Reset counter */
   for (int i = 0; i < nber_tasks; i++) {
+    /* Assume that the task are at the top level */
+    task_dep[i].task_in_level = task_dependency_level_top;
     for (int j = 0; j < MAX_NUMBER_DEP; j++) {
       /* Use number_link as indicator of the existance of a relation */
       task_dep[i].number_link[j] = -1;
@@ -386,6 +403,31 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose) {
     cur->type_in = ta->type;
     cur->subtype_in = ta->subtype;
     cur->implicit_in = ta->implicit;
+
+    /* Set the task level. */
+    const struct cell *ci = ta->ci;
+    const struct cell *cj = ta->cj;
+    const int is_ci_top = ci == NULL ||
+      (ci != NULL && ci == ci->top);
+    const int is_cj_top = cj == NULL ||
+      (cj != NULL && cj == cj->top);
+    const int is_ci_super = ci == NULL || (ci != NULL &&
+      (ci == ci->super || ci == ci->hydro.super || ci == ci->grav.super));
+    const int is_cj_super = cj == NULL || (cj != NULL &&
+      (cj == cj->super || cj == cj->hydro.super || cj == cj->grav.super));
+
+    /* Are we dealing with a task at the top level? */
+    if (is_ci_top && is_cj_top) {
+      cur->task_in_level = max(cur->task_in_level, task_dependency_level_top);
+    }
+    /* At the super level? */
+    else if (is_ci_super && is_cj_super) {
+      cur->task_in_level = max(cur->task_in_level, task_dependency_level_super);
+    }
+    /* At a random level? */
+    else {
+      cur->task_in_level = task_dependency_level_none;
+    }
 
     /* and their dependencies */
     for (int j = 0; j < ta->nr_unlock_tasks; j++) {
@@ -470,7 +512,7 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose) {
     fprintf(
         f,
         "task_in,task_out,implicit_in,implicit_out,mpi_in,mpi_out,cluster_in,"
-        "cluster_out,number_link,number_rank\n");
+        "cluster_out,number_link,number_rank,task_in_level\n");
 
     for (int i = 0; i < nber_tasks; i++) {
       for (int j = 0; j < MAX_NUMBER_DEP; j++) {
@@ -490,6 +532,8 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose) {
 
         const int count = task_dep[i].number_link[j];
         const int number_rank = task_dep[i].number_rank[j];
+
+        const int task_in_level = task_dep[i].task_in_level;
 
         /* text to write */
         char ta_name[200];
@@ -512,9 +556,9 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose) {
         task_get_group_name(ta_type, ta_subtype, ta_cluster);
         task_get_group_name(tb_type, tb_subtype, tb_cluster);
 
-        fprintf(f, "%s,%s,%d,%d,%d,%d,%s,%s,%d,%d\n", ta_name, tb_name,
+        fprintf(f, "%s,%s,%d,%d,%d,%d,%s,%s,%d,%d,%d\n", ta_name, tb_name,
                 ta_implicit, tb_implicit, ta_mpi, tb_mpi, ta_cluster,
-                tb_cluster, count, number_rank);
+                tb_cluster, count, number_rank, task_in_level);
       }
     }
     /* Close the file */
