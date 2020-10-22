@@ -58,29 +58,22 @@ struct logger_index_data {
 struct logger_history {
 
   /* Number of elements currently stored */
-  uint64_t size[swift_type_count];
+  uint64_t size;
 
   /* Size of the current buffer */
-  size_t capacity[swift_type_count];
+  size_t capacity;
 
   /* Buffer containing the particles */
-  struct logger_index_data *data[swift_type_count];
+  struct logger_index_data *data;
 };
 
-void logger_history_first_init(struct logger_history *hist);
 void logger_history_init(struct logger_history *hist);
-void logger_history_clean(struct logger_history *hist);
-void logger_history_log_part(struct logger_history *hist, const struct part *p,
-                             const struct xpart *xp);
-void logger_history_log_spart(struct logger_history *hist,
-                              const struct spart *sp);
-void logger_history_log_gpart(struct logger_history *hist,
-                              const struct gpart *gp);
-void logger_history_log_bpart(struct logger_history *hist,
-                              const struct bpart *bp);
+void logger_history_reset(struct logger_history *hist);
+void logger_history_free(struct logger_history *hist);
+void logger_history_log(struct logger_history *hist, const long long id,
+                        const uint64_t last_offset);
 void logger_history_write(struct logger_history *hist, struct engine *e,
                           FILE *f);
-size_t logger_history_get_size(const struct logger_history *hist);
 
 void logger_history_dump(const struct logger_history *hist, FILE *stream);
 void logger_history_restore(struct logger_history *hist, FILE *stream);

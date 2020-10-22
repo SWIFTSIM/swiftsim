@@ -139,6 +139,29 @@ void write_index_array(const struct engine* e, FILE* f, struct io_props* props,
 }
 
 /**
+ * @brief Write the history (created or deleted) for all the particles type.
+ *
+ * @param history The list of history to write.
+ * @param e The #engine.
+ * @param f The opened file to use.
+ */
+void logger_write_history(struct logger_history* history, struct engine* e,
+                          FILE* f) {
+
+  /* Write the number of particles. */
+  uint64_t size[swift_type_count];
+  for (int i = 0; i < swift_type_count; i++) {
+    size[i] = history[i].size;
+  }
+  fwrite(size, sizeof(uint64_t), swift_type_count, f);
+
+  /* Write the data */
+  for (int i = 0; i < swift_type_count; i++) {
+    logger_history_write(&history[i], e, f);
+  }
+}
+
+/**
  * @brief Writes a logger index file
  *
  * @param log The #logger_writer.
@@ -353,9 +376,11 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
     if (bparts_written) swift_free("bparts_written", bparts_written);
   }
 
-  /* Write the MPI history */
-  logger_history_write(&log->history_new, e, f);
-  logger_history_write(&log->history_removed, e, f);
+  /* Write the particles created */
+  logger_write_history(log->history_new, e, f);
+
+  /* Write the particles removed */
+  logger_write_history(log->history_removed, e, f);
 
   /* Close file */
   fclose(f);

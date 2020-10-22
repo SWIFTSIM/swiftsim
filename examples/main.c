@@ -1401,7 +1401,7 @@ int main(int argc, char *argv[]) {
     /* Turn off the logger to avoid writing the communications */
     if (with_logger) e.policy &= ~engine_policy_logger;
 
-    engine_redistribute(&e, /* initial_redistribute */ 1);
+    engine_redistribute(&e);
     /* Turn it back on */
     if (with_logger) e.policy |= engine_policy_logger;
 #endif
