@@ -5384,7 +5384,7 @@ void space_init_parts_mapper(void *restrict map_data, int count,
     black_holes_init_potential(&parts[k].black_holes_data);
     chemistry_init_part(&parts[k], e->chemistry);
     pressure_floor_init_part(&parts[k], &xparts[k]);
-    rt_init_part(&parts[k]);
+    rt_reset_part(&parts[k]);
     star_formation_init_part(&parts[k], e->star_formation);
     tracers_after_init(&parts[k], &xparts[k], e->internal_units,
                        e->physical_constants, with_cosmology, e->cosmology,
@@ -5444,7 +5444,7 @@ void space_init_sparts_mapper(void *restrict map_data, int scount,
   struct spart *restrict sparts = (struct spart *)map_data;
   for (int k = 0; k < scount; k++) {
     stars_init_spart(&sparts[k]);
-    rt_init_spart(&sparts[k]);
+    rt_reset_spart(&sparts[k]);
   }
 }
 

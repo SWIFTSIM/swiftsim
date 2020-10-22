@@ -5375,7 +5375,7 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
         tracers_after_init(p, xp, e->internal_units, e->physical_constants,
                            with_cosmology, e->cosmology, e->hydro_properties,
                            e->cooling_func, e->time);
-        rt_init_part(p);
+        rt_reset_part(p);
       }
     }
 
@@ -5700,7 +5700,7 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
         feedback_init_spart(sp);
 
         if (with_rt) {
-          rt_init_spart(sp);
+          rt_reset_spart(sp);
 
           /* get star's age and time step for stellar emission rates */
           const integertime_t ti_begin =

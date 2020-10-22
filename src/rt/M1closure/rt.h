@@ -56,9 +56,9 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
     struct part* restrict p) {}
 
 /**
- * @brief Initialisation of the RT extra hydro particle data.
+ * @brief Reset of the RT extra hydro particle data.
  */
-__attribute__((always_inline)) INLINE static void rt_init_part(
+__attribute__((always_inline)) INLINE static void rt_reset_part(
     struct part* restrict p) {}
 
 /**
@@ -68,9 +68,9 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
     struct spart* restrict sp) {}
 
 /**
- * @brief Initialisation of the RT extra star particle data.
+ * @brief Reset of the RT extra star particle data.
  */
-__attribute__((always_inline)) INLINE static void rt_init_spart(
+__attribute__((always_inline)) INLINE static void rt_reset_spart(
     struct spart* restrict sp) {}
 
 #endif /* SWIFT_RT_M1_H */
