@@ -38,11 +38,9 @@ rt_injection_update_photon_density(struct part* restrict p) {}
  *        stellar property, i.e. doesn't depend on the environment.
  *
  * @param sp star particle to work on
- * @param cosmo cosmology struct in use
- * @param with_cosmology whether we're running with cosmology
- * @param ti_current current system integer time
  * @param time current system time
- * @param time_base time base in use
+ * @param star_age age of the star *at the end of the step*
+ * @param dt star time step
  */
 __attribute__((always_inline)) INLINE static void
 rt_compute_stellar_emission_rate(struct spart* restrict sp,

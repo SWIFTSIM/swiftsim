@@ -5530,8 +5530,34 @@ void space_first_init_rt_extra_data_mapper(void *restrict map_data, int scount,
   const int with_cosmology = (e->policy & engine_policy_cosmology);
 
   for (int k = 0; k < scount; k++) {
-    rt_compute_stellar_emission_rate(&sparts[k], e->cosmology, with_cosmology,
-                                     e->ti_current, e->time, e->time_base);
+
+    struct spart *restrict sp = &sparts[k];
+
+    /* get star's age and time step for stellar emission rates */
+    const integertime_t ti_begin =
+        get_integer_time_begin(e->ti_current - 1, sp->time_bin);
+    const integertime_t ti_step = get_integer_timestep(sp->time_bin);
+
+    /* Get particle time-step */
+    double dt_star;
+    if (with_cosmology) {
+      dt_star =
+          cosmology_get_delta_time(e->cosmology, ti_begin, ti_begin + ti_step);
+    } else {
+      dt_star = get_timestep(sp->time_bin, e->time_base);
+    }
+
+    /* Calculate age of the star at current time */
+    double star_age_end_of_step;
+    if (with_cosmology) {
+      star_age_end_of_step = cosmology_get_delta_time_from_scale_factors(
+          e->cosmology, (double)sp->birth_scale_factor, e->cosmology->a);
+    } else {
+      star_age_end_of_step = e->time - (double)sp->birth_time;
+    }
+
+    rt_compute_stellar_emission_rate(sp, e->time, star_age_end_of_step,
+                                     dt_star);
   }
 }
 
