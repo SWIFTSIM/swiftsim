@@ -113,10 +113,10 @@ struct logger_writer {
   int index_file_number;
 
   /* History of the new particles since the last index file. */
-  struct logger_history history_new;
+  struct logger_history history_new[swift_type_count];
 
   /* History of the particles removed since the last index file. */
-  struct logger_history history_removed;
+  struct logger_history history_removed[swift_type_count];
 
   /* Maximal number of particle stored in the history. */
   size_t maximal_size_history;
@@ -178,23 +178,28 @@ void logger_log_all_particles(struct logger_writer *log,
 void logger_log_part(struct logger_writer *log, const struct part *p,
                      struct xpart *xp, const struct engine *e,
                      const int log_all_fields,
-                     const enum logger_special_flags flag, const int data);
+                     const enum logger_special_flags flag, const int flag_data);
 void logger_log_parts(struct logger_writer *log, const struct part *p,
                       struct xpart *xp, int count, const struct engine *e,
                       const int log_all_fields,
-                      const enum logger_special_flags flag, const int data);
+                      const enum logger_special_flags flag,
+                      const int flag_data);
 void logger_log_spart(struct logger_writer *log, struct spart *p,
                       const struct engine *e, const int log_all_fields,
-                      const enum logger_special_flags flag, const int data);
+                      const enum logger_special_flags flag,
+                      const int flag_data);
 void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
                        const struct engine *e, const int log_all_fields,
-                       const enum logger_special_flags flag, const int data);
+                       const enum logger_special_flags flag,
+                       const int flag_data);
 void logger_log_gpart(struct logger_writer *log, struct gpart *p,
                       const struct engine *e, const int log_all_fields,
-                      const enum logger_special_flags flag, const int data);
+                      const enum logger_special_flags flag,
+                      const int flag_data);
 void logger_log_gparts(struct logger_writer *log, struct gpart *gp, int count,
                        const struct engine *e, const int log_all_fields,
-                       const enum logger_special_flags flag, const int data);
+                       const enum logger_special_flags flag,
+                       const int flag_data);
 void logger_init(struct logger_writer *log, const struct engine *e,
                  struct swift_params *params);
 void logger_free(struct logger_writer *log);
@@ -217,23 +222,23 @@ void logger_struct_restore(struct logger_writer *log, FILE *stream);
  * @brief Generate the data for the special flags.
  *
  * @param flag The special flag to use.
- * @param data The data to write in the record.
+ * @param flag_data The data to write in the record.
  */
 INLINE static uint32_t logger_pack_flags_and_data(
-    enum logger_special_flags flag, int data) {
+    enum logger_special_flags flag, int flag_data) {
 #ifdef SWIFT_DEBUG_CHECKS
   if (flag & 0xFFFFFF00) {
     error(
         "The special flag in the particle logger cannot be larger than 1 "
         "byte.");
   }
-  if (data & ~0xFFFFFF) {
+  if (flag_data & ~0xFFFFFF) {
     error(
         "The data for the special flag in the particle logger cannot be larger "
         "than 3 bytes.");
   }
 #endif
-  return ((uint32_t)flag << (3 * 8)) | (data & 0xFFFFFF);
+  return ((uint32_t)flag << (3 * 8)) | (flag_data & 0xFFFFFF);
 }
 
 /**

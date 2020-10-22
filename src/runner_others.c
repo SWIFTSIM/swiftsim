@@ -741,8 +741,8 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
         if (logger_should_write(&xp->logger_data, e->logger)) {
           /* Write particle */
           /* Currently writing everything, should adapt it through time */
-          logger_log_part(e->logger, p, xp, e, /* log_all */ 0,
-                          /* special flags */ 0, /* data */ 0);
+          logger_log_part(e->logger, p, xp, e, /* log_all_fields= */ 0,
+                          /* flag= */ 0, /* flag_data= */ 0);
         } else
           /* Update counter */
           xp->logger_data.steps_since_last_output += 1;
@@ -764,8 +764,8 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
         if (logger_should_write(&gp->logger_data, e->logger)) {
           /* Write particle */
           /* Currently writing everything, should adapt it through time */
-          logger_log_gpart(e->logger, gp, e, /* log_all */ 0,
-                           /* Special flags */ 0, /* data */ 0);
+          logger_log_gpart(e->logger, gp, e, /* log_all_fields= */ 0,
+                           /* flag= */ 0, /* flag_data= */ 0);
 
         } else
           /* Update counter */
@@ -785,8 +785,8 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
         if (logger_should_write(&sp->logger_data, e->logger)) {
           /* Write particle */
           /* Currently writing everything, should adapt it through time */
-          logger_log_spart(e->logger, sp, e, /* Log_all */ 0,
-                           /* Special flags */ 0, /* data */ 0);
+          logger_log_spart(e->logger, sp, e, /* Log_all_fields= */ 0,
+                           /* flag= */ 0, /* flag_data= */ 0);
         } else
           /* Update counter */
           sp->logger_data.steps_since_last_output += 1;
