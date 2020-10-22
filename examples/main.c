@@ -1612,6 +1612,7 @@ int main(int argc, char *argv[]) {
     e.min_active_bin = get_min_active_bin(e.ti_current, e.ti_old);
     e.step += 1;
     engine_current_step = e.step;
+    e.final_drift = 1;
 
     engine_drift_all(&e, /*drift_mpole=*/0);
 
