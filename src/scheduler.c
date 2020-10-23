@@ -172,11 +172,11 @@ int scheduler_get_number_relation(const struct scheduler *s,
  * to the leaf.
  */
 enum task_dependency_level {
-    task_dependency_level_top = 0,
-    task_dependency_level_super,
-    task_dependency_level_super_hydro,
-    task_dependency_level_super_grav,
-    task_dependency_level_none,
+  task_dependency_level_top = 0,
+  task_dependency_level_super,
+  task_dependency_level_super_hydro,
+  task_dependency_level_super_grav,
+  task_dependency_level_none,
 };
 
 /**
@@ -418,20 +418,16 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose) {
     /* Set the task level. */
     const struct cell *ci = ta->ci;
     const struct cell *cj = ta->cj;
-    const int is_ci_top = ci == NULL ||
-      (ci != NULL && ci == ci->top);
-    const int is_cj_top = cj == NULL ||
-      (cj != NULL && cj == cj->top);
-    const int is_ci_super = ci == NULL ||
-      (ci != NULL && ci == ci->super);
-    const int is_cj_super = cj == NULL ||
-      (cj != NULL && cj == cj->super);
+    const int is_ci_top = ci == NULL || (ci != NULL && ci == ci->top);
+    const int is_cj_top = cj == NULL || (cj != NULL && cj == cj->top);
+    const int is_ci_super = ci == NULL || (ci != NULL && ci == ci->super);
+    const int is_cj_super = cj == NULL || (cj != NULL && cj == cj->super);
     const int is_hydro_super =
-      (cj == NULL || (cj != NULL && cj == cj->hydro.super)) &&
-      (ci == NULL || (ci != NULL && ci == ci->hydro.super));
+        (cj == NULL || (cj != NULL && cj == cj->hydro.super)) &&
+        (ci == NULL || (ci != NULL && ci == ci->hydro.super));
     const int is_grav_super =
-      (cj == NULL || (cj != NULL && cj == cj->grav.super)) &&
-      (ci == NULL || (ci != NULL && ci == ci->grav.super));
+        (cj == NULL || (cj != NULL && cj == cj->grav.super)) &&
+        (ci == NULL || (ci != NULL && ci == ci->grav.super));
 
     /* Are we dealing with a task at the top level? */
     if (is_ci_top && is_cj_top) {
@@ -446,15 +442,21 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose) {
       /* if both at the same time => task_dependency_level_super */
       if (is_hydro_super) {
         if (cur->task_in_level == task_dependency_level_super_grav) {
-          error("A task seems to be at the same time at the grav and hydro levels");
+          error(
+              "A task seems to be at the same time at the grav and hydro "
+              "levels");
         }
-        cur->task_in_level = max(cur->task_in_level, task_dependency_level_super_hydro);
+        cur->task_in_level =
+            max(cur->task_in_level, task_dependency_level_super_hydro);
       }
       if (is_grav_super) {
         if (cur->task_in_level == task_dependency_level_super_hydro) {
-          error("A task seems to be at the same time at the grav and hydro levels");
+          error(
+              "A task seems to be at the same time at the grav and hydro "
+              "levels");
         }
-        cur->task_in_level = max(cur->task_in_level, task_dependency_level_super_grav);
+        cur->task_in_level =
+            max(cur->task_in_level, task_dependency_level_super_grav);
       }
     }
     /* At a random level? */
