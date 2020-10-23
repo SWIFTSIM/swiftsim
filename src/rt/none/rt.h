@@ -43,11 +43,8 @@ rt_injection_update_photon_density(struct part* restrict p) {}
  * @param dt star time step
  */
 __attribute__((always_inline)) INLINE static void
-rt_compute_stellar_emission_rate(struct spart* restrict sp,
-                                 const struct cosmology* cosmo,
-                                 int with_cosmology,
-                                 const integertime_t ti_current, double time,
-                                 double time_base) {}
+rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
+                                 double star_age, double dt) {}
 
 /**
  * @brief First initialisation of the RT extra hydro particle data.
