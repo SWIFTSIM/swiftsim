@@ -1381,90 +1381,132 @@ void cell_activate_subcell_external_grav_tasks(struct cell *ci,
  * @param s The task #scheduler.
  */
 void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
-                                    struct scheduler *s) {
-  const struct engine *e = s->space->e;
-
-  /* Self interaction? */
-  if (cj == NULL) {
-    /* Do anything? */
-    if (ci->hydro.count == 0 || !cell_is_active_hydro(ci, e)) return;
-
-    /* Recurse? */
-    if (cell_can_recurse_in_self_hydro_task(ci)) {
-      /* Loop over all progenies and pairs of progenies */
-      for (int j = 0; j < 8; j++) {
-        if (ci->progeny[j] != NULL) {
-          cell_activate_subcell_rt_tasks(ci->progeny[j], NULL, s);
-          for (int k = j + 1; k < 8; k++)
-            if (ci->progeny[k] != NULL)
-              cell_activate_subcell_rt_tasks(ci->progeny[j], ci->progeny[k], s);
-        }
-      }
-    } else {
-      /* We have reached the bottom of the tree: activate tasks */
-      for (struct link *l = ci->hydro.rt_inject; l != NULL; l = l->next) {
-        struct task *t = l->t;
-        const int ci_active = cell_is_active_hydro(ci, e);
-#ifdef WITH_MPI
-        const int ci_nodeID = ci->nodeID;
-#else
-        const int ci_nodeID = e->nodeID;
-#endif
-        /* Only activate tasks that involve a local active cell. */
-        if (ci_active && ci_nodeID == e->nodeID) {
-          scheduler_activate(s, t);
-        }
-      }
-    }
-  }
-
-  /* Otherwise, pair interaction */
-  else {
-    /* Should we even bother? */
-    if (!cell_is_active_hydro(ci, e) && !cell_is_active_hydro(cj, e)) return;
-    if (ci->hydro.count == 0 || cj->hydro.count == 0) return;
-
-    /* Get the orientation of the pair. */
-    double shift[3];
-    const int sid = space_getsid(s->space, &ci, &cj, shift);
-
-    /* recurse? */
-    if (cell_can_recurse_in_pair_hydro_task(ci) &&
-        cell_can_recurse_in_pair_hydro_task(cj)) {
-      const struct cell_split_pair *csp = &cell_split_pairs[sid];
-      for (int k = 0; k < csp->count; k++) {
-        const int pid = csp->pairs[k].pid;
-        const int pjd = csp->pairs[k].pjd;
-        if (ci->progeny[pid] != NULL && cj->progeny[pjd] != NULL)
-          cell_activate_subcell_rt_tasks(ci->progeny[pid], cj->progeny[pjd], s);
-      }
-    }
-
-    /* Otherwise, activate the RT tasks. */
-    else if (cell_is_active_hydro(ci, e) || cell_is_active_hydro(cj, e)) {
-
-      /* Activate the drifts if the cells are local. */
-      for (struct link *l = ci->hydro.rt_inject; l != NULL; l = l->next) {
-        struct task *t = l->t;
-        const int ci_active = cell_is_active_hydro(ci, e);
-        const int cj_active = (cj != NULL) ? cell_is_active_hydro(cj, e) : 0;
-#ifdef WITH_MPI
-        const int ci_nodeID = ci->nodeID;
-        const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
-#else
-        const int ci_nodeID = e->nodeID;
-        const int cj_nodeID = e->nodeID;
-#endif
-
-        /* Only activate tasks that involve a local active cell. */
-        if ((ci_active && ci_nodeID == e->nodeID) ||
-            (cj_active && cj_nodeID == e->nodeID)) {
-          scheduler_activate(s, t);
-        }
-      }
-    }
-  }
-}
+                                    struct scheduler *s) {}
+/*   const struct engine *e = s->space->e; */
+/*  */
+/*   [> Self interaction? <] */
+/*   if (cj == NULL) { */
+/*     [> Do anything? <] */
+/*     if (ci->hydro.count == 0 || !cell_is_active_hydro(ci, e)) return; */
+/*  */
+/*     [> Recurse? <] */
+/*     if (cell_can_recurse_in_self_hydro_task(ci)) { */
+/*       [> Loop over all progenies and pairs of progenies <] */
+/*       for (int j = 0; j < 8; j++) { */
+/*         if (ci->progeny[j] != NULL) { */
+/*           cell_activate_subcell_rt_tasks(ci->progeny[j], NULL, s); */
+/*           for (int k = j + 1; k < 8; k++) */
+/*             if (ci->progeny[k] != NULL) */
+/*               cell_activate_subcell_rt_tasks(ci->progeny[j], ci->progeny[k],
+ * s); */
+/*         } */
+/*       } */
+/*     }  */
+/*     else { */
+/*       const int ci_active = cell_is_active_hydro(ci, e); */
+/* #ifdef WITH_MPI */
+/*       const int ci_nodeID = ci->nodeID; */
+/* #else */
+/*       const int ci_nodeID = e->nodeID; */
+/* #endif */
+/*       [> We have reached the bottom of the tree: activate tasks <] */
+/*       for (struct link *l = ci->hydro.rt_inject; l != NULL; l = l->next) { */
+/*         struct task *t = l->t; */
+/*         [> Only activate tasks that involve a local active cell. <] */
+/*         if (ci_active && ci_nodeID == e->nodeID) { */
+/*           scheduler_activate(s, t); */
+/*         } */
+/*       } */
+/*       for (struct link *l = ci->hydro.rt_gradient; l != NULL; l = l->next) {
+ */
+/*         struct task *t = l->t; */
+/*         [> Only activate tasks that involve a local active cell. <] */
+/*         if (ci_active && ci_nodeID == e->nodeID) { */
+/*           scheduler_activate(s, t); */
+/*         } */
+/*       } */
+/*       for (struct link *l = ci->hydro.rt_transport; l != NULL; l = l->next) {
+ */
+/*         struct task *t = l->t; */
+/*         [> Only activate tasks that involve a local active cell. <] */
+/*         if (ci_active && ci_nodeID == e->nodeID) { */
+/*           scheduler_activate(s, t); */
+/*         } */
+/*       } */
+/*     } */
+/*   } */
+/*  */
+/*   [> Otherwise, pair interaction <] */
+/*   else { */
+/*     [> Should we even bother? <] */
+/*     if (!cell_is_active_hydro(ci, e) && !cell_is_active_hydro(cj, e)) return;
+ */
+/*     if (ci->hydro.count == 0 || cj->hydro.count == 0) return; */
+/*  */
+/*     [> Get the orientation of the pair. <] */
+/*     double shift[3]; */
+/*     const int sid = space_getsid(s->space, &ci, &cj, shift); */
+/*  */
+/*     [> recurse? <] */
+/*     if (cell_can_recurse_in_pair_hydro_task(ci) && */
+/*         cell_can_recurse_in_pair_hydro_task(cj)) { */
+/*       const struct cell_split_pair *csp = &cell_split_pairs[sid]; */
+/*       for (int k = 0; k < csp->count; k++) { */
+/*         const int pid = csp->pairs[k].pid; */
+/*         const int pjd = csp->pairs[k].pjd; */
+/*         if (ci->progeny[pid] != NULL && cj->progeny[pjd] != NULL) */
+/*           cell_activate_subcell_rt_tasks(ci->progeny[pid], cj->progeny[pjd],
+ * s); */
+/*       } */
+/*     } */
+/*  */
+/*     [> Otherwise, activate the RT tasks. <] */
+/*     else if (cell_is_active_hydro(ci, e) || cell_is_active_hydro(cj, e)) { */
+/*  */
+/*       const int ci_active = cell_is_active_hydro(ci, e); */
+/*       const int cj_active = (cj != NULL) ? cell_is_active_hydro(cj, e) : 0;
+ */
+/* #ifdef WITH_MPI */
+/*       const int ci_nodeID = ci->nodeID; */
+/*       const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1; */
+/* #else */
+/*       const int ci_nodeID = e->nodeID; */
+/*       const int cj_nodeID = e->nodeID; */
+/* #endif */
+/*  */
+/*  */
+/*       [> Activate rt tasks if the cells are local. <] */
+/*       for (struct link *l = ci->hydro.rt_inject; l != NULL; l = l->next) { */
+/*         struct task *t = l->t; */
+/*         [> Only activate tasks that involve a local active cell. <] */
+/*         if ((ci_active && ci_nodeID == e->nodeID) || */
+/*             (cj_active && cj_nodeID == e->nodeID)) { */
+/*           scheduler_activate(s, t); */
+/*         } */
+/*       } */
+/*  */
+/*       for (struct link *l = ci->hydro.rt_gradient; l != NULL; l = l->next) {
+ */
+/*         struct task *t = l->t; */
+/*         [> Only activate tasks that involve a local active cell. <] */
+/*         if ((ci_active && ci_nodeID == e->nodeID) || */
+/*             (cj_active && cj_nodeID == e->nodeID)) { */
+/*           scheduler_activate(s, t); */
+/*         } */
+/*       } */
+/*  */
+/*       for (struct link *l = ci->hydro.rt_transport; l != NULL; l = l->next) {
+ */
+/*         struct task *t = l->t; */
+/*         [> Only activate tasks that involve a local active cell. <] */
+/*         if ((ci_active && ci_nodeID == e->nodeID) || */
+/*             (cj_active && cj_nodeID == e->nodeID)) { */
+/*           scheduler_activate(s, t); */
+/*         } */
+/*       } */
+/*     } */
+/*   } */
+/* } */
 
 /**
  * @brief Un-skips all the hydro tasks associated with a given cell and checks
@@ -2471,6 +2513,39 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
     struct task *t = l->t;
     struct cell *ci = t->ci;
     struct cell *cj = t->cj;
+    const int ci_active =
+        cell_is_active_hydro(ci, e) || cell_is_active_stars(ci, e);
+    const int cj_active = (cj != NULL) ? cell_is_active_hydro(cj, e) ||
+                                             cell_is_active_stars(ci, e)
+                                       : 0;
+#ifdef WITH_MPI
+    const int ci_nodeID = ci->nodeID;
+    const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
+#else
+    const int ci_nodeID = nodeID;
+    const int cj_nodeID = nodeID;
+#endif
+
+    /* Only activate tasks that involve a local active cell. */
+    if ((ci_active && ci_nodeID == nodeID) ||
+        (cj_active && cj_nodeID == nodeID)) {
+
+      scheduler_activate(s, t);
+
+      if (t->type == task_type_sub_self) {
+        cell_activate_subcell_rt_tasks(ci, NULL, s);
+      }
+
+      else if (t->type == task_type_sub_pair) {
+        cell_activate_subcell_rt_tasks(ci, cj, s);
+      }
+    }
+  }
+
+  for (struct link *l = c->hydro.rt_gradient; l != NULL; l = l->next) {
+    struct task *t = l->t;
+    struct cell *ci = t->ci;
+    struct cell *cj = t->cj;
     const int ci_active = cell_is_active_hydro(ci, e);
     const int cj_active = (cj != NULL) ? cell_is_active_hydro(cj, e) : 0;
 #ifdef WITH_MPI
@@ -2502,6 +2577,10 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
     if (cell_is_active_hydro(c, e)) {
       if (c->hydro.rt_in != NULL) scheduler_activate(s, c->hydro.rt_in);
       if (c->hydro.rt_ghost1 != NULL) scheduler_activate(s, c->hydro.rt_ghost1);
+      if (c->hydro.rt_gradient_out != NULL)
+        scheduler_activate(s, c->hydro.rt_gradient_out);
+      if (c->hydro.rt_transport_out != NULL)
+        scheduler_activate(s, c->hydro.rt_transport_out);
       if (c->hydro.rt_out != NULL) scheduler_activate(s, c->hydro.rt_out);
     }
   }

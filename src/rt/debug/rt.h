@@ -47,7 +47,7 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
  * @brief First initialisation of the RT extra hydro particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_first_init_part(
-    struct part* restrict p) {
+    struct part *restrict p) {
 
   p->rt_data.calls_tot = 0;
   rt_init_part(p);
@@ -78,7 +78,7 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
  * @brief First initialisation of the RT extra star particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_first_init_spart(
-    struct spart* restrict sp) {
+    struct spart *restrict sp) {
 
   sp->rt_data.calls_tot = 0;
   rt_init_spart(sp);
@@ -129,5 +129,87 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
         star_age, dt);
   }
 }
+
+/**
+ * @brief Flux calculation between particle i and particle j
+ *
+ * This method calls runner_iact_fluxes_common with mode 1.
+ *
+ * @param r2 Comoving squared distance between particle i and particle j.
+ * @param dx Comoving distance vector between the particles (dx = pi->x -
+ * pj->x).
+ * @param hi Comoving smoothing-length of particle i.
+ * @param hj Comoving smoothing-length of particle j.
+ * @param pi Particle i.
+ * @param pj Particle j.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
+ */
+__attribute__((always_inline)) INLINE static void runner_iact_rt_transport(
+    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
+    struct part *restrict pj, float a, float H) {}
+
+/**
+ * @brief Flux calculation between particle i and particle j: non-symmetric
+ * version
+ *
+ * This method calls runner_iact_fluxes_common with mode 0.
+ *
+ * @param r2 Comoving squared distance between particle i and particle j.
+ * @param dx Comoving distance vector between the particles (dx = pi->x -
+ * pj->x).
+ * @param hi Comoving smoothing-length of particle i.
+ * @param hj Comoving smoothing-length of particle j.
+ * @param pi Particle i.
+ * @param pj Particle j.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
+ */
+__attribute__((always_inline)) INLINE static void
+runner_iact_nonsym_rt_transport(float r2, const float *dx, float hi, float hj,
+                                struct part *restrict pi,
+                                struct part *restrict pj, float a, float H) {}
+
+/**
+ * @brief Calculate the gradient interaction between particle i and particle j
+ *
+ * This method wraps around hydro_gradients_collect, which can be an empty
+ * method, in which case no gradients are used.
+ *
+ * @param r2 Comoving squared distance between particle i and particle j.
+ * @param dx Comoving distance vector between the particles (dx = pi->x -
+ * pj->x).
+ * @param hi Comoving smoothing-length of particle i.
+ * @param hj Comoving smoothing-length of particle j.
+ * @param pi Particle i.
+ * @param pj Particle j.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
+ */
+__attribute__((always_inline)) INLINE static void runner_iact_rt_gradient(
+    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
+    struct part *restrict pj, float a, float H) {}
+
+/**
+ * @brief Calculate the gradient interaction between particle i and particle j:
+ * non-symmetric version
+ *
+ * This method wraps around hydro_gradients_nonsym_collect, which can be an
+ * empty method, in which case no gradients are used.
+ *
+ * @param r2 Comoving squared distance between particle i and particle j.
+ * @param dx Comoving distance vector between the particles (dx = pi->x -
+ * pj->x).
+ * @param hi Comoving smoothing-length of particle i.
+ * @param hj Comoving smoothing-length of particle j.
+ * @param pi Particle i.
+ * @param pj Particle j.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
+ */
+__attribute__((always_inline)) INLINE static void
+runner_iact_nonsym_rt_gradient(float r2, const float *dx, float hi, float hj,
+                               struct part *restrict pi,
+                               struct part *restrict pj, float a, float H) {}
 
 #endif /* SWIFT_RT_DEBUG_H */
