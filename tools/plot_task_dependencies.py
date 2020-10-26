@@ -159,7 +159,6 @@ def append_single_data(data0, datai):
         # if not present in data0
         if N == 0:
             data0.append(row)
-            data
         else:
             # otherwise just update the number of link
             ind = ind[ind].index[0]
