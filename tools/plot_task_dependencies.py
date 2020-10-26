@@ -19,6 +19,7 @@ task_colours = {
     "hydro": "blue3",
     "gravity": "red3",
     "RT": "springgreen",
+    "sink": "lightseagreen",
 }
 
 
@@ -55,6 +56,14 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-l",
+        "--with-levels",
+        dest="with_levels",
+        help="Write the number of each task at each level for each task individually",
+        action="store_true",
+    )
+
+    parser.add_argument(
         "files",
         nargs="+",
         type=str,
@@ -68,6 +77,12 @@ def parse_args():
     for f in files:
         if not path.exists(f):
             raise FileNotFoundError("You need to provide one file")
+
+    if args.with_calls and args.with_levels:
+        raise ValueError(
+            "I can't run with --with-calls and",
+            " --with-levels simultaneously. Pick one!",
+        )
 
     return args, files
 
@@ -122,6 +137,7 @@ def append_single_data(data0, datai):
     datai: DataFrame
         The second dataframe
 
+
     Returns
     -------
 
@@ -143,6 +159,7 @@ def append_single_data(data0, datai):
         # if not present in data0
         if N == 0:
             data0.append(row)
+            data
         else:
             # otherwise just update the number of link
             ind = ind[ind].index[0]
@@ -162,6 +179,7 @@ def append_data(data):
     data: list
         List containing all the dataframe to append together
 
+
     Returns
     -------
 
@@ -170,6 +188,7 @@ def append_data(data):
     """
     N = len(data)
     if N == 1:
+        # set default color
         data[0]["task_colour"] = "black"
         return data[0]
 
@@ -178,6 +197,7 @@ def append_data(data):
         i += 1
         data[0] = append_single_data(data[0], data[i])
 
+    # set default color
     data[0]["task_colour"] = "black"
 
     return data[0]
@@ -214,6 +234,8 @@ def get_task_colour(taskname):
         colour = task_colours["gravity"]
     elif task_is_RT(taskname):
         colour = task_colours["RT"]
+    elif task_is_sink(taskname):
+        colour = task_colours["sink"]
 
     return colour
 
@@ -395,7 +417,7 @@ def get_function_calls(name):
         return pre + txt + app
 
 
-def write_task(f, name, implicit, mpi, with_calls):
+def write_task(f, name, implicit, mpi, task_level, with_calls, with_levels):
     """
     Write the special task (e.g. implicit and mpi)
 
@@ -414,8 +436,19 @@ def write_task(f, name, implicit, mpi, with_calls):
     mpi: int
         Is the task MPI related
 
+    task_level: int
+        Level at which task is executed.
+        0: top
+        1: super
+        2: hydro super
+        3: gravity super
+        4: something else
+
     with_calls: bool
-        if true, write down the function calls
+        if True, write down the function calls
+
+    with_levels: bool
+        if True, write down level at which tasks are called
     """
     # generate text
     txt = "\t " + name + "["
@@ -424,13 +457,39 @@ def write_task(f, name, implicit, mpi, with_calls):
         txt += "style=filled,fillcolor=grey90,"
     if mpi:
         txt += "shape=diamond,style=filled,fillcolor=azure,"
+    if with_levels:
+        if task_level == 0:
+            levelstr = "top"
+        elif task_level == 1:
+            levelstr = "super"
+        elif task_level == 2:
+            levelstr = "super hydro"
+        elif task_level == 3:
+            levelstr = "super grav"
+        elif task_level > 3:
+            levelstr = "below super"
+        else:
+            raise ValueError("Couldn't process task level", level)
+            levelstr = "unknown/error"
+
+        txt += "\n\t\tlabel=<\n"
+        txt += '\t\t\t<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">\n'
+        txt += (
+            '\t\t\t\t<TR> <TD> <B> <FONT POINT-SIZE="24">'
+            + name
+            + " </FONT> </B> </TD> </TR> <!-- task name -->\n"
+        )
+        txt += (
+            '\t\t\t\t<TR> <TD> <I><FONT POINT-SIZE="16">'
+            + levelstr
+            + "</FONT> </I> </TD> </TR> <!-- task level -->\n"
+        )
+        txt += "\t\t\t</TABLE>\n"
+        txt += "\t\t\t>,\n\t\t"
 
     col = get_task_colour(name)
 
     txt += "color=%s," % col
-
-    if task_is_sink(name):
-        txt += "color=lightseagreen,"
 
     if with_calls:
         func = get_function_calls(name)
@@ -487,7 +546,15 @@ def write_header(f, data, git, opt):
             continue
 
         written.append(ta)
-        write_task(f, ta, data["implicit_in"][i], data["mpi_in"][i], opt.with_calls)
+        write_task(
+            f,
+            ta,
+            data["implicit_in"][i],
+            data["mpi_in"][i],
+            data["task_in_level"][i],
+            opt.with_calls,
+            opt.with_levels,
+        )
 
     # do task out
     for i in range(N):
@@ -496,7 +563,15 @@ def write_header(f, data, git, opt):
             continue
 
         written.append(tb)
-        write_task(f, tb, data["implicit_out"][i], data["mpi_out"][i], opt.with_calls)
+        write_task(
+            f,
+            tb,
+            data["implicit_out"][i],
+            data["mpi_out"][i],
+            data["task_in_level"][i],
+            opt.with_calls,
+            opt.with_levels,
+        )
 
     f.write("\n")
 
