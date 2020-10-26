@@ -146,7 +146,7 @@ const char *subtaskID_names[task_subtype_count] = {
     "do_gas_swallow",
     "do_bh_swallow",
     "bh_feedback",
-    "sink",
+    "sink_merger",
     "rt_inject",
     "sink_compute_formation",
     "rt_gradient",
@@ -268,6 +268,10 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
 
         case task_subtype_do_bh_swallow:
           return task_action_bpart;
+          break;
+
+        case task_subtype_sink_merger:
+          return task_action_sink;
           break;
 
         case task_subtype_grav:
@@ -531,6 +535,12 @@ void task_unlock(struct task *t) {
         cell_gunlocktree(ci);
         cell_munlocktree(ci);
 #endif
+      } else if (subtype == task_subtype_sink_compute_formation) {
+        cell_sink_unlocktree(ci);
+        cell_unlocktree(ci);
+      } else if (subtype == task_subtype_sink_merger) {
+        cell_sink_unlocktree(ci);
+        cell_gunlocktree(ci);
       } else if ((subtype == task_subtype_stars_density) ||
                  (subtype == task_subtype_stars_feedback)) {
         cell_sunlocktree(ci);
@@ -561,6 +571,16 @@ void task_unlock(struct task *t) {
         cell_munlocktree(ci);
         cell_munlocktree(cj);
 #endif
+      } else if (subtype == task_subtype_sink_compute_formation) {
+        cell_sink_unlocktree(ci);
+        cell_sink_unlocktree(cj);
+        cell_unlocktree(ci);
+        cell_unlocktree(cj);
+      } else if (subtype == task_subtype_sink_merger) {
+        cell_sink_unlocktree(ci);
+        cell_sink_unlocktree(cj);
+        cell_gunlocktree(ci);
+        cell_gunlocktree(cj);
       } else if ((subtype == task_subtype_stars_density) ||
                  (subtype == task_subtype_stars_feedback)) {
         cell_sunlocktree(ci);
@@ -717,6 +737,22 @@ int task_lock(struct task *t) {
           return 0;
         }
 #endif
+      } else if (subtype == task_subtype_sink_merger) {
+        if (ci->sinks.hold) return 0;
+        if (ci->grav.phold) return 0;
+        if (cell_sink_locktree(ci) != 0) return 0;
+        if (cell_glocktree(ci) != 0) {
+          cell_sink_unlocktree(ci);
+          return 0;
+        }
+      } else if (subtype == task_subtype_sink_compute_formation) {
+        if (ci->sinks.hold) return 0;
+        if (ci->hydro.hold) return 0;
+        if (cell_sink_locktree(ci) != 0) return 0;
+        if (cell_locktree(ci) != 0) {
+          cell_sink_unlocktree(ci);
+          return 0;
+        }
       } else if ((subtype == task_subtype_stars_density) ||
                  (subtype == task_subtype_stars_feedback)) {
         if (ci->stars.hold) return 0;
@@ -772,6 +808,46 @@ int task_lock(struct task *t) {
           return 0;
         }
 #endif
+      } else if (subtype == task_subtype_sink_compute_formation) {
+        /* Lock the sinks and the gas particles in both cells */
+        if (ci->sinks.hold || cj->sinks.hold) return 0;
+        if (ci->hydro.hold || cj->hydro.hold) return 0;
+        if (cell_sink_locktree(ci) != 0) return 0;
+        if (cell_sink_locktree(cj) != 0) {
+          cell_sink_unlocktree(ci);
+          return 0;
+        }
+        if (cell_locktree(ci) != 0) {
+          cell_sink_unlocktree(ci);
+          cell_sink_unlocktree(cj);
+          return 0;
+        }
+        if (cell_locktree(cj) != 0) {
+          cell_sink_unlocktree(ci);
+          cell_sink_unlocktree(cj);
+          cell_unlocktree(ci);
+          return 0;
+        }
+      } else if (subtype == task_subtype_sink_merger) {
+        /* Lock the sink and the dm particles in both cells */
+        if (ci->sinks.hold || cj->sinks.hold) return 0;
+        if (ci->grav.phold || cj->grav.phold) return 0;
+        if (cell_sink_locktree(ci) != 0) return 0;
+        if (cell_sink_locktree(cj) != 0) {
+          cell_sink_unlocktree(ci);
+          return 0;
+        }
+        if (cell_glocktree(ci) != 0) {
+          cell_sink_unlocktree(ci);
+          cell_sink_unlocktree(cj);
+          return 0;
+        }
+        if (cell_glocktree(cj) != 0) {
+          cell_sink_unlocktree(ci);
+          cell_sink_unlocktree(cj);
+          cell_gunlocktree(ci);
+          return 0;
+        }
       } else if ((subtype == task_subtype_stars_density) ||
                  (subtype == task_subtype_stars_feedback)) {
         /* Lock the stars and the gas particles in both cells */
@@ -1000,6 +1076,9 @@ void task_get_group_name(int type, int subtype, char *cluster) {
       break;
     case task_subtype_sink_compute_formation:
       strcpy(cluster, "SinkFormation");
+      break;
+    case task_subtype_sink_merger:
+      strcpy(cluster, "SinkMerger");
       break;
     default:
       strcpy(cluster, "None");
@@ -1524,6 +1603,10 @@ enum task_categories task_get_category(const struct task *t) {
         case task_subtype_do_bh_swallow:
         case task_subtype_bh_feedback:
           return task_category_black_holes;
+
+        case task_subtype_sink_compute_formation:
+        case task_subtype_sink_merger:
+          return task_category_sink;
 
         default:
           return task_category_others;

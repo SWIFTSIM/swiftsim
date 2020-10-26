@@ -22,6 +22,12 @@
 /* Config parameters. */
 #include "../config.h"
 
+enum sink_merger_remove {
+  sink_merger_remove_none,
+  sink_merger_remove_first,
+  sink_merger_remove_second
+};
+
 /* Select the correct sink model */
 #if defined(SINK_NONE)
 #include "./sink/Default/sink.h"
