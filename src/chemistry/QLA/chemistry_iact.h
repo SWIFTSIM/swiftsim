@@ -70,7 +70,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
  * @param pj Second particle.
  * @param a Current scale factor.
  * @param H Current Hubble parameter.
- * @param time_base The time base used in order to convert integer to float time.
+ * @param time_base The time base used in order to convert integer to float
+ * time.
  * @param ti_current The current time (in integer)
  * @param cosmo The #cosmology.
  * @param with_cosmology Are we running with cosmology?
@@ -94,7 +95,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
  * @param pj Second particle.
  * @param a Current scale factor.
  * @param H Current Hubble parameter.
- * @param time_base The time base used in order to convert integer to float time.
+ * @param time_base The time base used in order to convert integer to float
+ * time.
  * @param ti_current The current time (in integer)
  * @param cosmo The #cosmology.
  * @param with_cosmology Are we running with cosmology?
