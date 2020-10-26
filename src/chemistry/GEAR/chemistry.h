@@ -540,7 +540,7 @@ chemistry_get_star_total_metal_mass_for_stats(const struct spart* restrict sp) {
  */
 __attribute__((always_inline)) INLINE static float
 chemistry_get_bh_total_metal_mass_for_stats(const struct bpart* restrict bp) {
-
+  error("Not implemented");
   return 0.f;
 }
 

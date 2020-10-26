@@ -94,7 +94,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
 /**
  * @brief Updates to the chemistry data after the hydro force loop.
  *
- * Nothing to do here in EAGLE.
+ * Nothing to do here.
  *
  * @param p The particle to act upon.
  * @param cosmo The current cosmological model.
