@@ -407,7 +407,7 @@ __attribute__((always_inline)) INLINE static void chemistry_split_part(
  */
 __attribute__((always_inline)) INLINE static float const*
 chemistry_get_metal_mass_fraction_for_feedback(const struct part* restrict p) {
-
+  error("Not implemented");
   return NULL;
 }
 
@@ -422,6 +422,7 @@ chemistry_get_metal_mass_fraction_for_feedback(const struct part* restrict p) {
 __attribute__((always_inline)) INLINE static float
 chemistry_get_total_metal_mass_fraction_for_feedback(
     const struct part* restrict p) {
+  error("Not implemented");
   return 0.f;
 }
 
