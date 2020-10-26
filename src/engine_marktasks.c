@@ -198,6 +198,21 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         }
       }
 
+      /* Activate the sink merger */
+      else if (t_type == task_type_self &&
+               t_subtype == task_subtype_sink_merger) {
+        if (ci_active_sinks) {
+          scheduler_activate(s, t);
+        }
+      }
+
+      else if (t_type == task_type_sub_self &&
+               t_subtype == task_subtype_sink_merger) {
+        if (ci_active_sinks) {
+          scheduler_activate(s, t);
+        }
+      }
+
       /* Activate the black hole density */
       else if (t_type == task_type_self &&
                t_subtype == task_subtype_bh_density) {
@@ -508,14 +523,16 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       }
 
       /* Sink formation */
-      else if ((t_subtype == task_subtype_sink_compute_formation) &&
+      else if (((t_subtype == task_subtype_sink_compute_formation) ||
+                t_subtype == task_subtype_sink_merger) &&
                (ci_active_sinks || cj_active_sinks) &&
                (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
 
         scheduler_activate(s, t);
 
         /* Set the correct sorting flags */
-        if (t_type == task_type_pair) {
+        if (t_type == task_type_pair &&
+            t_subtype == task_subtype_sink_compute_formation) {
 
           /* Do ci */
           if (ci_active_sinks) {
@@ -526,6 +543,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
             /* Activate the drift tasks. */
             if (ci_nodeID == nodeID) cell_activate_drift_sink(ci, s);
+            /* Activate the sink drift for the sink merger */
+            if (cj_nodeID == nodeID) cell_activate_drift_sink(cj, s);
             if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
             if (cj_nodeID == nodeID && with_timestep_sync)
               cell_activate_sync_part(cj, s);
@@ -542,6 +561,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
 
             /* Activate the drift tasks. */
+            /* Activate the sink drift for the merger */
+            if (ci_nodeID == nodeID) cell_activate_drift_sink(ci, s);
             if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
             if (cj_nodeID == nodeID) cell_activate_drift_sink(cj, s);
             if (ci_nodeID == nodeID && with_timestep_sync)
