@@ -39,6 +39,9 @@ struct cell_sinks {
   /*! Linked list of the tasks computing this cell's sink formation checks. */
   struct link *compute_formation;
 
+  /*! Linked list of the tasks computing this cell's sink merger. */
+  struct link *merger;
+
   /*! Nr of #sink in this cell. */
   int count;
 
