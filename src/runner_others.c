@@ -478,6 +478,10 @@ void runner_do_sink_formation(struct runner *r, struct cell *c) {
           /* Are we forming a sink particle? */
           if (sink_should_convert_to_sink(p, xp, sink_props, e, dt_sink)) {
 
+#ifdef WITH_LOGGER
+            error("TODO");
+#endif
+
             /* Convert the gas particle to a sink particle */
             struct sink *sink = NULL;
 

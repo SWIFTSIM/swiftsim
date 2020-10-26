@@ -1024,7 +1024,7 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
         cell_is_active_sinks(ci, e) || cell_is_active_hydro(ci, e);
 
     /* Do anything? */
-    if (!ci_active || (ci->hydro.count == 0 || ci->sinks.count == 0)) return;
+    if (!ci_active || (ci->hydro.count == 0 && ci->sinks.count == 0)) return;
 
     /* Recurse? */
     if (cell_can_recurse_in_self_sinks_task(ci)) {
@@ -2392,6 +2392,8 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
           /* Activate the drift tasks. */
           if (ci_nodeID == nodeID) cell_activate_drift_sink(ci, s);
           if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
+          /* For the mergers */
+          if (cj_nodeID == nodeID) cell_activate_drift_sink(cj, s);
           if (cj_nodeID == nodeID && with_timestep_sync)
             cell_activate_sync_part(cj, s);
 
@@ -2408,6 +2410,8 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
           /* Activate the drift tasks. */
           if (cj_nodeID == nodeID) cell_activate_drift_sink(cj, s);
           if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
+          /* For the merger */
+          if (ci_nodeID == nodeID) cell_activate_drift_sink(ci, s);
           if (ci_nodeID == nodeID && with_timestep_sync)
             cell_activate_sync_part(ci, s);
 
