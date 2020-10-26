@@ -559,7 +559,6 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
 
         if (with_rt) {
           rt_init_spart(sp);
-          rt_reset_spart(sp); /* also reset density unrelated RT quantities */
 
           /* get star's age and time step for stellar emission rates */
           const integertime_t ti_begin =

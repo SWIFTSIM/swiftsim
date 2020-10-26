@@ -116,7 +116,6 @@ void space_init_sparts_mapper(void *restrict map_data, int scount,
   for (int k = 0; k < scount; k++) {
     stars_init_spart(&sparts[k]);
     rt_init_spart(&sparts[k]);
-    rt_reset_spart(&sparts[k]);
   }
 }
 
