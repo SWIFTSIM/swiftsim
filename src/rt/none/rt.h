@@ -47,9 +47,9 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
                                  double star_age, double dt) {}
 
 /**
- * @brief First initialisation of the RT extra hydro particle data.
+ * @brief Initialisation of the RT density loop related particle data.
  */
-__attribute__((always_inline)) INLINE static void rt_first_init_part(
+__attribute__((always_inline)) INLINE static void rt_init_part(
     struct part* restrict p) {}
 
 /**
@@ -59,15 +59,27 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
     struct part* restrict p) {}
 
 /**
- * @brief First initialisation of the RT extra star particle data.
+ * @brief First initialisation of the RT extra hydro particle data.
  */
-__attribute__((always_inline)) INLINE static void rt_first_init_spart(
+__attribute__((always_inline)) INLINE static void rt_first_init_part(
+    struct part* restrict p) {}
+
+/**
+ * @brief Initialisation of the RT density loop related particle data.
+ */
+__attribute__((always_inline)) INLINE static void rt_init_spart(
     struct spart* restrict sp) {}
 
 /**
  * @brief Reset of the RT extra star particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_reset_spart(
+    struct spart* restrict sp) {}
+
+/**
+ * @brief First initialisation of the RT extra star particle data.
+ */
+__attribute__((always_inline)) INLINE static void rt_first_init_spart(
     struct spart* restrict sp) {}
 
 #endif /* SWIFT_RT_NONE_H */

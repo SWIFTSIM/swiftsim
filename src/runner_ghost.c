@@ -316,6 +316,8 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
             /* Re-initialise everything */
             stars_init_spart(sp);
             feedback_init_spart(sp);
+            rt_init_spart(sp);
+            /* do NOT call rt_reset_spart(sp) here! */
 
             /* Off we go ! */
             continue;
@@ -1223,6 +1225,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
             tracers_after_init(p, xp, e->internal_units, e->physical_constants,
                                with_cosmology, e->cosmology,
                                e->hydro_properties, e->cooling_func, e->time);
+            rt_init_part(p);
 
             /* Off we go ! */
             continue;

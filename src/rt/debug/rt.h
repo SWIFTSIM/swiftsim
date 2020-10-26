@@ -68,6 +68,12 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
 }
 
 /**
+ * @brief Initialisation of the RT density loop related particle data.
+ */
+__attribute__((always_inline)) INLINE static void rt_init_part(
+    struct part* restrict p) {}
+
+/**
  * @brief Reset of the RT extra hydro particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_reset_part(
@@ -87,8 +93,15 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
     struct part* restrict p) {
 
   p->rt_data.calls_tot = 0;
+  rt_init_part(p);
   rt_reset_part(p);
 }
+
+/**
+ * @brief Initialisation of the RT density loop related particle data.
+ */
+__attribute__((always_inline)) INLINE static void rt_init_spart(
+    struct spart* restrict sp) {}
 
 /**
  * @brief Reset of the RT extra star particle data.
@@ -111,6 +124,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
     struct spart* restrict sp) {
 
   sp->rt_data.calls_tot = 0;
+  rt_init_spart(sp);
   rt_reset_spart(sp);
 }
 

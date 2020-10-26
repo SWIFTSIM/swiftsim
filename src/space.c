@@ -50,6 +50,7 @@
 #include "minmax.h"
 #include "proxy.h"
 #include "restart.h"
+#include "rt.h"
 #include "sort_part.h"
 #include "space_unique_id.h"
 #include "star_formation.h"
