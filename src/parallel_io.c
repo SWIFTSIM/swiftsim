@@ -1046,7 +1046,7 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
   }
 
   /* If we are remapping ParticleIDs later, start by setting them to 1. */
-  if (remap_ids) set_ids_to_one(*gparts, *Ngparts);
+  if (remap_ids) io_set_ids_to_one(*gparts, *Ngparts);
 
   if (!dry_run && with_gravity) {
 
@@ -1538,8 +1538,8 @@ void write_output_parallel(struct engine* e,
   }
 
   /* Write the location of the particles in the arrays */
-  io_write_cell_offsets(h_grp_cells, e->s->cdim, e->s->dim, e->s->pos_dithering,
-                        e->s->cells_top, e->s->nr_cells, e->s->width, mpi_rank,
+  io_write_cell_offsets(h_grp_cells, e->s->cdim, e->s->dim, e->s->cells_top,
+                        e->s->nr_cells, e->s->width, mpi_rank,
                         /*distributed=*/0, N_total, offset, numFields,
                         internal_units, snapshot_units);
 

@@ -708,7 +708,7 @@ void read_ic_single(const char* fileName,
   }
 
   /* If we are remapping ParticleIDs later, start by setting them to 1. */
-  if (remap_ids) set_ids_to_one(*gparts, *Ngparts);
+  if (remap_ids) io_set_ids_to_one(*gparts, *Ngparts);
 
   /* Duplicate the parts for gravity */
   if (!dry_run && with_gravity) {
@@ -954,8 +954,8 @@ void write_output_single(struct engine* e,
   if (h_grp < 0) error("Error while creating cells group");
 
   /* Write the location of the particles in the arrays */
-  io_write_cell_offsets(h_grp, e->s->cdim, e->s->dim, e->s->pos_dithering,
-                        e->s->cells_top, e->s->nr_cells, e->s->width, e->nodeID,
+  io_write_cell_offsets(h_grp, e->s->cdim, e->s->dim, e->s->cells_top,
+                        e->s->nr_cells, e->s->width, e->nodeID,
                         /*distributed=*/0, N_total, global_offsets, numFields,
                         internal_units, snapshot_units);
   H5Gclose(h_grp);
