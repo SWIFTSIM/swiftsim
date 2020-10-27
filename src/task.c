@@ -271,6 +271,7 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
           break;
 
         case task_subtype_sink_merger:
+        case task_subtype_sink_compute_formation:
           return task_action_sink;
           break;
 
@@ -523,6 +524,10 @@ void task_unlock(struct task *t) {
       cell_gunlocktree(ci);
       break;
 
+    case task_type_drift_sink:
+      cell_sink_unlocktree(ci);
+      break;
+
     case task_type_stars_sort:
     case task_type_stars_resort:
       cell_sunlocktree(ci);
@@ -722,6 +727,10 @@ int task_lock(struct task *t) {
     case task_type_end_grav_force:
       if (ci->grav.phold) return 0;
       if (cell_glocktree(ci) != 0) return 0;
+      break;
+
+    case task_type_drift_sink:
+      cell_sink_locktree(ci);
       break;
 
     case task_type_self:

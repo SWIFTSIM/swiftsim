@@ -168,6 +168,8 @@ INLINE static void sink_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling) {}
+    const struct cooling_function_data* restrict cooling) {
+  sink->ti_creation = e->ti_current;
+}
 
 #endif /* SWIFT_DEFAULT_SINK_H */

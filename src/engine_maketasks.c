@@ -2109,9 +2109,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         scheduler_addunlock(sched, ci->hydro.super->sinks.sink_in,
                             t_sink_formation);
         scheduler_addunlock(sched, t_sink_formation,
-                            ci->hydro.super->hydro.sink_formation);
+                            ci->top->hydro.sink_formation);
         /* Do the sink merger */
-        scheduler_addunlock(sched, ci->hydro.super->hydro.sink_formation,
+        scheduler_addunlock(sched, ci->top->hydro.sink_formation,
                             t_sink_merger);
         scheduler_addunlock(sched, t_sink_merger,
                             ci->hydro.super->sinks.sink_out);
@@ -2376,10 +2376,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           scheduler_addunlock(sched, ci->hydro.super->sinks.sink_in,
                               t_sink_formation);
           scheduler_addunlock(sched, t_sink_formation,
-                              ci->hydro.super->hydro.sink_formation);
+                              ci->top->hydro.sink_formation);
 
           /* Merger */
-          scheduler_addunlock(sched, ci->hydro.super->hydro.sink_formation,
+          scheduler_addunlock(sched, ci->top->hydro.sink_formation,
                               t_sink_merger);
           scheduler_addunlock(sched, t_sink_merger,
                               ci->hydro.super->sinks.sink_out);
@@ -2492,10 +2492,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             scheduler_addunlock(sched, cj->hydro.super->sinks.sink_in,
                                 t_sink_formation);
             scheduler_addunlock(sched, t_sink_formation,
-                                cj->hydro.super->hydro.sink_formation);
+                                cj->top->hydro.sink_formation);
 
             /* Merger */
-            scheduler_addunlock(sched, cj->hydro.super->hydro.sink_formation,
+            scheduler_addunlock(sched, cj->top->hydro.sink_formation,
                                 t_sink_merger);
             scheduler_addunlock(sched, t_sink_merger,
                                 cj->hydro.super->sinks.sink_out);
@@ -2746,10 +2746,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         scheduler_addunlock(sched, ci->hydro.super->sinks.sink_in,
                             t_sink_formation);
         scheduler_addunlock(sched, t_sink_formation,
-                            ci->hydro.super->hydro.sink_formation);
+                            ci->top->hydro.sink_formation);
 
         /* Merger */
-        scheduler_addunlock(sched, ci->hydro.super->hydro.sink_formation,
+        scheduler_addunlock(sched, ci->top->hydro.sink_formation,
                             t_sink_merger);
         scheduler_addunlock(sched, t_sink_merger,
                             ci->hydro.super->sinks.sink_out);
@@ -3020,10 +3020,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           scheduler_addunlock(sched, ci->hydro.super->sinks.sink_in,
                               t_sink_formation);
           scheduler_addunlock(sched, t_sink_formation,
-                              ci->hydro.super->hydro.sink_formation);
+                              ci->top->hydro.sink_formation);
 
           /* Merger */
-          scheduler_addunlock(sched, ci->hydro.super->hydro.sink_formation,
+          scheduler_addunlock(sched, ci->top->hydro.sink_formation,
                               t_sink_merger);
           scheduler_addunlock(sched, t_sink_merger,
                               ci->hydro.super->sinks.sink_out);
@@ -3135,10 +3135,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             scheduler_addunlock(sched, cj->hydro.super->sinks.sink_in,
                                 t_sink_formation);
             scheduler_addunlock(sched, t_sink_formation,
-                                cj->hydro.super->hydro.sink_formation);
+                                cj->top->hydro.sink_formation);
 
             /* Merger */
-            scheduler_addunlock(sched, cj->hydro.super->hydro.sink_formation,
+            scheduler_addunlock(sched, cj->top->hydro.sink_formation,
                                 t_sink_merger);
             scheduler_addunlock(sched, t_sink_merger,
                                 cj->hydro.super->sinks.sink_out);

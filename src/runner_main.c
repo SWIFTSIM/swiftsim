@@ -243,7 +243,7 @@ void *runner_main(void *data) {
           else if (t->subtype == task_subtype_sink_compute_formation)
             runner_doself_branch_sinks_compute_formation(r, ci);
           else if (t->subtype == task_subtype_sink_merger)
-            runner_doself_branch_sinks_merger(r, ci);
+            runner_doself_sinks_merger(r, ci);
          else
             error("Unknown/invalid task subtype (%s).",
                   subtaskID_names[t->subtype]);
@@ -285,7 +285,7 @@ void *runner_main(void *data) {
           else if (t->subtype == task_subtype_sink_compute_formation)
             runner_dopair_branch_sinks_compute_formation(r, ci, cj);
           else if (t->subtype == task_subtype_sink_merger)
-            runner_dopair_branch_sinks_merger(r, ci, cj);
+            runner_do_sym_pair_sinks_merger(r, ci, cj);
           else
             error("Unknown/invalid task subtype (%s/%s).",
                   taskID_names[t->type], subtaskID_names[t->subtype]);
@@ -325,7 +325,7 @@ void *runner_main(void *data) {
           else if (t->subtype == task_subtype_sink_compute_formation)
             runner_dosub_self_sinks_compute_formation(r, ci, 1);
           else if (t->subtype == task_subtype_sink_merger)
-            runner_dosub_self_sinks_merger(r, ci, 1);
+            runner_dosub_self_sinks_merger(r, ci);
           else
             error("Unknown/invalid task subtype (%s/%s).",
                   taskID_names[t->type], subtaskID_names[t->subtype]);
@@ -365,7 +365,7 @@ void *runner_main(void *data) {
           else if (t->subtype == task_subtype_sink_compute_formation)
             runner_dosub_pair_sinks_compute_formation(r, ci, cj, 1);
           else if (t->subtype == task_subtype_sink_merger)
-            runner_dosub_pair_sinks_merger(r, ci, cj, 1);
+            runner_dosub_pair_sinks_merger(r, ci, cj);
           else
             error("Unknown/invalid task subtype (%s/%s).",
                   taskID_names[t->type], subtaskID_names[t->subtype]);
