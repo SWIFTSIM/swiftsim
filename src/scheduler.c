@@ -431,11 +431,13 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose) {
 
     /* Are we dealing with a task at the top level? */
     if (is_ci_top && is_cj_top) {
-      cur->task_in_level = max(cur->task_in_level, task_dependency_level_top);
+      cur->task_in_level =
+          max(cur->task_in_level, (int)task_dependency_level_top);
     }
     /* At the super level? */
     else if (is_ci_super && is_cj_super) {
-      cur->task_in_level = max(cur->task_in_level, task_dependency_level_super);
+      cur->task_in_level =
+          max(cur->task_in_level, (int)task_dependency_level_super);
     }
     /* At the hydro/grav level? */
     else if (is_hydro_super || is_grav_super) {
@@ -447,7 +449,7 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose) {
               "levels");
         }
         cur->task_in_level =
-            max(cur->task_in_level, task_dependency_level_super_hydro);
+            max(cur->task_in_level, (int)task_dependency_level_super_hydro);
       }
       if (is_grav_super) {
         if (cur->task_in_level == task_dependency_level_super_hydro) {
@@ -456,7 +458,7 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose) {
               "levels");
         }
         cur->task_in_level =
-            max(cur->task_in_level, task_dependency_level_super_grav);
+            max(cur->task_in_level, (int)task_dependency_level_super_grav);
       }
     }
     /* At a random level? */
