@@ -1078,6 +1078,10 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
     /* Otherwise, activate the sorts and drifts. */
     else {
 
+      /* For the sink mergers */
+      if (ci->nodeID == engine_rank) cell_activate_drift_sink(ci, s);
+      if (cj->nodeID == engine_rank) cell_activate_drift_sink(cj, s);
+
       if (ci_active) {
 
         /* We are going to interact this pair, so store some values. */
@@ -1085,9 +1089,6 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
         cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
 
         /* Activate the drifts if the cells are local. */
-        if (ci->nodeID == engine_rank) cell_activate_drift_sink(ci, s);
-        /* For the sink mergers */
-        if (cj->nodeID == engine_rank) cell_activate_drift_sink(cj, s);
         if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
         if (cj->nodeID == engine_rank && with_timestep_sync)
           cell_activate_sync_part(cj, s);
@@ -1103,10 +1104,7 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
         ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
 
         /* Activate the drifts if the cells are local. */
-        /* For the sink merger */
-        if (ci->nodeID == engine_rank) cell_activate_drift_sink(ci, s);
         if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
-        if (cj->nodeID == engine_rank) cell_activate_drift_sink(cj, s);
         if (ci->nodeID == engine_rank && with_timestep_sync)
           cell_activate_sync_part(ci, s);
 

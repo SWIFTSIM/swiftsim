@@ -18,10 +18,8 @@
  ******************************************************************************/
 
 /* Before including this file, define FUNCTION, which is the
-   name of the interaction function. This creates the interaction functions
-   runner_dopair_FUNCTION, runner_dopair_FUNCTION_naive, runner_doself_FUNCTION,
-   and runner_dosub_FUNCTION calling the pairwise interaction function
-   runner_iact_FUNCTION. */
+   name of the interaction function.
+   This creates the required interaction functions. */
 
 #include "active.h"
 #include "runner_doiact_sinks_merger.h"
@@ -31,9 +29,8 @@
  *
  * @param r runner task
  * @param c cell
- * @param timer 1 if the time is to be recorded.
  */
-void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c, int timer) {
+void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (c->nodeID != engine_rank) error("Should be run on a different node");
@@ -45,6 +42,10 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c, int timer) {
   /* Anything to do here? */
   if (c->sinks.count == 0) return;
   if (!cell_is_active_sinks(c, e)) return;
+
+  /* Did we mess up the recursion? */
+  if (c->sinks.r_cut_max_old > c->dmin)
+    error("Cell smaller than the cut off radius");
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -59,9 +60,6 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c, int timer) {
     /* Get a hold of the ith sink in ci. */
     struct sink *restrict si = &sinks[sid];
 
-    /* Skip inactive particles */
-    if (!sink_is_active(si, e)) continue;
-
     const float ri = si->r_cut;
     const float ri2 = ri * ri;
     const float six[3] = {(float)(si->x[0] - c->loc[0]),
@@ -73,10 +71,15 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c, int timer) {
 
       /* Get a pointer to the jth particle. */
       struct sink *restrict sj = &sinks[sjd];
-      const float rj = sj->r_cut;
 
       /* Early abort? */
+      if (!sink_is_active(si, e) && !sink_is_active(sj, e))
+        continue;
       if (sink_is_inhibited(sj, e)) continue;
+
+      /* Get the cutoff radius */
+      const float rj = sj->r_cut;
+      const float rj2 = rj * rj;
 
       /* Compute the pairwise distance. */
       const float sjx[3] = {(float)(sj->x[0] - c->loc[0]),
@@ -91,7 +94,7 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c, int timer) {
         error("Particle sj not drifted to current time");
 #endif
 
-      if (r2 < ri2) {
+      if (r2 < ri2 || r2 < rj2) {
         enum sink_merger_remove remove =
           IACT_SINK(r2, dx, ri, rj, si, sj, a, H);
 
@@ -129,11 +132,12 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c, int timer) {
  * @param ci The first #cell
  * @param cj The second #cell
  */
-void DO_NONSYM_PAIR1_SINKS_MERGER_NAIVE(struct runner *r, struct cell *restrict ci,
-                                        struct cell *restrict cj) {
+void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *restrict ci,
+                               struct cell *restrict cj) {
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (ci->nodeID != engine_rank) error("Should be run on a different node");
+  if (ci->nodeID != engine_rank && cj->nodeID != engine_rank)
+    error("Should be run on a different node");
 #endif
 
   const struct engine *e = r->e;
@@ -141,7 +145,12 @@ void DO_NONSYM_PAIR1_SINKS_MERGER_NAIVE(struct runner *r, struct cell *restrict 
 
   /* Anything to do here? */
   if (cj->sinks.count == 0 || ci->sinks.count == 0) return;
-  if (!cell_is_active_sinks(ci, e)) return;
+  if (!cell_is_active_sinks(ci, e) && !cell_is_active_sinks(cj, e)) return;
+
+  const int ci_local = ci->nodeID == e->nodeID;
+  const int cj_local = cj->nodeID == e->nodeID;
+
+  if (!ci_local || !cj_local) error("TODO");
 
   /* Cosmological terms */
   const float a = cosmo->a;
@@ -167,9 +176,6 @@ void DO_NONSYM_PAIR1_SINKS_MERGER_NAIVE(struct runner *r, struct cell *restrict 
     /* Get a hold of the ith sink in ci. */
     struct sink *restrict si = &sinks_i[sid];
 
-    /* Skip inactive particles */
-    if (!sink_is_active(si, e)) continue;
-
     const float ri = si->r_cut;
     const float ri2 = ri * ri;
     const float six[3] = {(float)(si->x[0] - (cj->loc[0] + shift[0])),
@@ -181,10 +187,15 @@ void DO_NONSYM_PAIR1_SINKS_MERGER_NAIVE(struct runner *r, struct cell *restrict 
 
       /* Get a pointer to the jth particle. */
       struct sink *restrict sj = &sinks_j[sjd];
-      const float rj = sj->r_cut;
 
-      /* Skip inhibited particles. */
+      /* Early abort? */
+      if (!sink_is_active(si, e) && !sink_is_active(sj, e))
+        continue;
       if (sink_is_inhibited(sj, e)) continue;
+
+      /* Get the cutoff radius */
+      const float rj = sj->r_cut;
+      const float rj2 = rj * rj;
 
       /* Compute the pairwise distance. */
       const float pjx[3] = {(float)(sj->x[0] - cj->loc[0]),
@@ -199,7 +210,7 @@ void DO_NONSYM_PAIR1_SINKS_MERGER_NAIVE(struct runner *r, struct cell *restrict 
         error("Particle sj not drifted to current time");
 #endif
 
-      if (r2 < ri2) {
+      if (r2 < ri2 || r2 < rj2) {
         enum sink_merger_remove remove =
           IACT_SINK(r2, dx, ri, rj, si, sj, a, H);
 
@@ -231,303 +242,30 @@ void DO_NONSYM_PAIR1_SINKS_MERGER_NAIVE(struct runner *r, struct cell *restrict 
 }
 
 /**
- * @brief Compute the interactions between a cell pair.
- *
- * @param r The #runner.
- * @param ci The first #cell.
- * @param cj The second #cell.
- * @param sid The direction of the pair.
- * @param shift The shift vector to apply to the particles in ci.
- */
-void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci, struct cell *cj,
-                        const int sid, const double *shift) {
-
-  const struct engine *e = r->e;
-  const struct cosmology *cosmo = e->cosmology;
-
-  /* Cosmological terms */
-  const float a = cosmo->a;
-  const float H = cosmo->H;
-
-  /* Get the cutoff shift. */
-  double rshift = 0.0;
-  for (int k = 0; k < 3; k++) rshift += shift[k] * runner_shift[sid][k];
-
-  const int do_ci_sinks = (ci->nodeID == e->nodeID) && (ci->sinks.count != 0) &&
-    (cj->sinks.count != 0) && cell_is_active_sinks(ci, e);
-  const int do_cj_sinks = (cj->nodeID == e->nodeID) && (cj->sinks.count != 0) &&
-    (ci->sinks.count != 0) && cell_is_active_sinks(cj, e);
-
-  if (do_ci_sinks) {
-
-    /* Get some other useful values. */
-    const int scount_i = ci->sinks.count;
-    const int scount_j = cj->sinks.count;
-    struct sink *restrict sinks_i = ci->sinks.parts;
-    struct sink *restrict sinks_j = cj->sinks.parts;
-
-    /* Loop over the sinks in ci. */
-    for (int i = 0; i < scount_i; i++) {
-
-      /* Get a hold of the ith part in ci. */
-      struct sink *restrict spi = &sinks_i[i];
-      const float ri = spi->r_cut;
-
-      /* Skip inactive particles */
-      if (!sink_is_active(spi, e)) continue;
-
-      /* Get some additional information about pi */
-      const float ri2 = ri * ri;
-      const float pix = spi->x[0] - (cj->loc[0] + shift[0]);
-      const float piy = spi->x[1] - (cj->loc[1] + shift[1]);
-      const float piz = spi->x[2] - (cj->loc[2] + shift[2]);
-
-      /* Loop over the parts in cj. */
-      for (int sjd = 0; sjd < scount_j; sjd++) {
-
-        /* Recover spj */
-        struct sink *spj = &sinks_j[sjd];
-
-        /* Skip inhibited particles. */
-        if (sink_is_inhibited(spj, e)) continue;
-
-        const float rj = spj->r_cut;
-        const float pjx = spj->x[0] - cj->loc[0];
-        const float pjy = spj->x[1] - cj->loc[1];
-        const float pjz = spj->x[2] - cj->loc[2];
-
-        /* Compute the pairwise distance. */
-        float dx[3] = {pix - pjx, piy - pjy, piz - pjz};
-        const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-
-#ifdef SWIFT_DEBUG_CHECKS
-        /* Check that particles have been drifted to the current time */
-        if (spj->ti_drift != e->ti_current)
-          error("Particle spj not drifted to current time");
-        if (spi->ti_drift != e->ti_current)
-          error("Particle spi not drifted to current time");
-#endif
-
-        /* Hit or miss? */
-        if (r2 < ri2) {
-          enum sink_merger_remove remove =
-            IACT_SINK(r2, dx, ri, rj, spi, spj, a, H);
-
-          /* Remove the particle. */
-          switch (remove) {
-          case sink_merger_remove_none:
-            break;
-          case sink_merger_remove_first:
-            //cell_remove_gpart(e, ci, spi->gpart);
-            //spi->gpart = NULL;
-            //cell_remove_sink(e, ci, spi);
-            break;
-          case sink_merger_remove_second:
-            //cell_remove_gpart(e, cj, spj->gpart);
-            //spj->gpart = NULL;
-            //cell_remove_sink(e, cj, spj);
-            break;
-          default:
-            error("Unknown value, please check your iact function.");
-          }
-
-          /* Can we continue the loop on the current particle? */
-          if (remove == sink_merger_remove_first) {
-            break;
-          }
-        }
-      } /* loop over the sinks in cj. */
-    }   /* loop over the sinks in ci. */
-  }     /* do_ci_sinks */
-
-  if (do_cj_sinks) {
-
-    /* Get some other useful values. */
-    const int scount_i = ci->sinks.count;
-    const int scount_j = cj->sinks.count;
-    struct sink *restrict sinks_i = ci->sinks.parts;
-    struct sink *restrict sinks_j = cj->sinks.parts;
-
-    /* Loop over the parts in cj. */
-    for (int j = 0; j < scount_j; j++) {
-
-      /* Get a hold of the jth part in cj. */
-      struct sink *spj = &sinks_j[j];
-      const float rj = spj->r_cut;
-
-      /* Skip inactive particles */
-      if (!sink_is_active(spj, e)) continue;
-
-      /* Get some additional information about pj */
-      const float rj2 = rj * rj;
-      const float pjx = spj->x[0] - cj->loc[0];
-      const float pjy = spj->x[1] - cj->loc[1];
-      const float pjz = spj->x[2] - cj->loc[2];
-
-      /* Loop over the parts in ci. */
-      for (int i = 0; i < scount_i; i++) {
-
-        /* Recover pi */
-        struct sink *spi = &sinks_i[i];
-
-        /* Skip inhibited particles. */
-        if (sink_is_inhibited(spi, e)) continue;
-
-        const float ri = spi->r_cut;
-        const float pix = spi->x[0] - (cj->loc[0] + shift[0]);
-        const float piy = spi->x[1] - (cj->loc[1] + shift[1]);
-        const float piz = spi->x[2] - (cj->loc[2] + shift[2]);
-
-        /* Compute the pairwise distance. */
-        float dx[3] = {pjx - pix, pjy - piy, pjz - piz};
-        const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
-
-#ifdef SWIFT_DEBUG_CHECKS
-        /* Check that particles have been drifted to the current time */
-        if (spi->ti_drift != e->ti_current)
-          error("Particle spi not drifted to current time");
-        if (spj->ti_drift != e->ti_current)
-          error("Particle spj not drifted to current time");
-#endif
-
-        /* Hit or miss? */
-        if (r2 < rj2) {
-          enum sink_merger_remove remove =
-            IACT_SINK(r2, dx, ri, rj, spj, spi, a, H);
-
-          /* Remove the particle. */
-          switch (remove) {
-            case sink_merger_remove_none:
-              break;
-            case sink_merger_remove_first:
-              //cell_remove_gpart(e, cj, spj->gpart);
-              //spj->gpart = NULL;
-              //cell_remove_sink(e, cj, spj);
-              break;
-            case sink_merger_remove_second:
-              //cell_remove_gpart(e, ci, spi->gpart);
-              //spi->gpart = NULL;
-              //cell_remove_sink(e, ci, spi);
-              break;
-            default:
-              error("Unknown value, please check your iact function.");
-          }
-
-          /* Can we continue the loop on the current particle? */
-          if (remove == sink_merger_remove_first) {
-            break;
-          }
-        }
-      } /* loop over the sinks in ci. */
-    }   /* loop over the sinks in cj. */
-  }     /* Cell cj is active */
-}
-
-void DOPAIR1_SINKS_MERGER_NAIVE(struct runner *r, struct cell *restrict ci,
-                                struct cell *restrict cj, int timer) {
-
-  const int do_ci_sinks = ci->nodeID == r->e->nodeID;
-  const int do_cj_sinks = cj->nodeID == r->e->nodeID;
-  if (do_ci_sinks && ci->sinks.count != 0 && cj->sinks.count != 0)
-    DO_NONSYM_PAIR1_SINKS_MERGER_NAIVE(r, ci, cj);
-  if (do_cj_sinks && cj->sinks.count != 0 && ci->sinks.count != 0)
-    DO_NONSYM_PAIR1_SINKS_MERGER_NAIVE(r, cj, ci);
-}
-
-/**
- * @brief Determine which version of DOSELF1_SINKS needs to be called depending
- * on the optimisation level.
- *
- * @param r #runner
- * @param c #cell c
- *
- */
-void DOSELF1_BRANCH_SINKS_MERGER(struct runner *r, struct cell *c) {
-
-  const struct engine *restrict e = r->e;
-
-  /* Anything to do here? */
-  if (c->sinks.count == 0) return;
-
-  /* Anything to do here? */
-  if (!cell_is_active_sinks(c, e)) return;
-
-  /* Did we mess up the recursion? */
-  if (c->sinks.r_cut_max_old > c->dmin)
-    error("Cell smaller than the cut off radius");
-
-  DOSELF1_SINKS_MERGER(r, c, 1);
-}
-
-/**
- * @brief Determine which version of DOPAIR1_SINKS_MERGER needs to be called depending
- * on the orientation of the cells or whether DOPAIR1_SINKS_MERGER needs to be called
- * at all.
- *
- * @param r #runner
- * @param ci #cell ci
- * @param cj #cell cj
- *
- */
-void DOPAIR1_BRANCH_SINKS_MERGER(struct runner *r, struct cell *ci, struct cell *cj) {
-
-  const struct engine *restrict e = r->e;
-
-  /* Get the sort ID. */
-  double shift[3] = {0.0, 0.0, 0.0};
-  const int sid = space_getsid(e->s, &ci, &cj, shift);
-
-  const int ci_active = cell_is_active_sinks(ci, e);
-  const int cj_active = cell_is_active_sinks(cj, e);
-  const int do_ci_sinks = ci->nodeID == e->nodeID;
-  const int do_cj_sinks = cj->nodeID == e->nodeID;
-  const int do_ci = (ci->sinks.count != 0 && cj->sinks.count != 0 &&
-                     ci_active && do_ci_sinks);
-  const int do_cj = (cj->sinks.count != 0 && ci->sinks.count != 0 &&
-                     cj_active && do_cj_sinks);
-
-  /* Anything to do here? */
-  if (!do_ci && !do_cj) return;
-
-  /* Check that cells are drifted. */
-  if (do_ci && (!cell_are_sink_drifted(ci, e) || !cell_are_sink_drifted(cj, e)))
-    error("Interacting undrifted cells.");
-
-  if (do_cj && (!cell_are_sink_drifted(ci, e) || !cell_are_sink_drifted(cj, e)))
-    error("Interacting undrifted cells.");
-
-#ifdef SWIFT_USE_NAIVE_INTERACTIONS_SINKS_MERGER
-  DOPAIR1_SINKS_MERGER_NAIVE(r, ci, cj, 1);
-#else
-  DO_SYM_PAIR1_SINKS_MERGER(r, ci, cj, sid, shift);
-#endif
-}
-
-/**
  * @brief Compute grouped sub-cell interactions for pairs
  *
  * @param r The #runner.
  * @param ci The first #cell.
  * @param cj The second #cell.
- * @param gettimer Do we have a timer ?
  *
  * @todo Hard-code the sid on the recursive calls to avoid the
  * redundant computations to find the sid on-the-fly.
  */
-void DOSUB_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci, struct cell *cj,
-                       int gettimer) {
-
-  TIMER_TIC;
+void DOSUB_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci, struct cell *cj) {
 
   struct space *s = r->e->s;
   const struct engine *e = r->e;
 
+#ifdef WITH_MPI
+  if (ci->nodeID != e->nodeID && cj->nodeID != e->nodeID)
+    error("Should not be running on this node");
+#endif
+
   /* Should we even bother? */
-  const int should_do_ci = ci->sinks.count != 0 && cj->sinks.count != 0 &&
-                           cell_is_active_sinks(ci, e);
-  const int should_do_cj = cj->sinks.count != 0 && ci->sinks.count != 0 &&
-                           cell_is_active_sinks(cj, e);
-  if (!should_do_ci && !should_do_cj) return;
+  if (!cell_is_active_sinks(ci, e) && !cell_is_active_sinks(cj, e))
+    return;
+  if (ci->sinks.count == 0 || cj->sinks.count == 0)
+    return;
 
   /* Get the type of pair and flip ci/cj if needed. */
   double shift[3];
@@ -541,32 +279,21 @@ void DOSUB_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci, struct cell *cj
       const int pid = csp->pairs[k].pid;
       const int pjd = csp->pairs[k].pjd;
       if (ci->progeny[pid] != NULL && cj->progeny[pjd] != NULL)
-        DOSUB_PAIR1_SINKS_MERGER(r, ci->progeny[pid], cj->progeny[pjd], 0);
+        DOSUB_PAIR1_SINKS_MERGER(r, ci->progeny[pid], cj->progeny[pjd]);
     }
   }
 
   /* Otherwise, compute the pair directly. */
   else {
 
-    const int do_ci_sinks = ci->nodeID == e->nodeID;
-    const int do_cj_sinks = cj->nodeID == e->nodeID;
-    const int do_ci = ci->sinks.count != 0 && cj->sinks.count != 0 &&
-                      cell_is_active_sinks(ci, e) && do_ci_sinks;
-    const int do_cj = cj->sinks.count != 0 && ci->sinks.count != 0 &&
-                      cell_is_active_sinks(cj, e) && do_cj_sinks;
+    /* Make sure both cells are drifted to the current timestep. */
+    if (!cell_are_sink_drifted(ci, e))
+      error("Interacting undrifted cells (ci).");
 
-    if (do_ci || do_cj) {
+    if (!cell_are_sink_drifted(cj, e))
+      error("Interacting undrifted cells (cj).");
 
-      /* Make sure both cells are drifted to the current timestep. */
-      if (!cell_are_sink_drifted(ci, e))
-        error("Interacting undrifted cells (ci).");
-
-      if (!cell_are_sink_drifted(cj, e))
-        error("Interacting undrifted cells (cj).");
-
-    }
-
-    if (do_ci || do_cj) DOPAIR1_BRANCH_SINKS_MERGER(r, ci, cj);
+    DO_SYM_PAIR1_SINKS_MERGER(r, ci, cj);
   }
 }
 
@@ -575,9 +302,8 @@ void DOSUB_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci, struct cell *cj
  *
  * @param r The #runner.
  * @param ci The first #cell.
- * @param gettimer Do we have a timer ?
  */
-void DOSUB_SELF1_SINKS_MERGER(struct runner *r, struct cell *ci, int gettimer) {
+void DOSUB_SELF1_SINKS_MERGER(struct runner *r, struct cell *ci) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (ci->nodeID != engine_rank)
@@ -594,10 +320,10 @@ void DOSUB_SELF1_SINKS_MERGER(struct runner *r, struct cell *ci, int gettimer) {
     /* Loop over all progeny. */
     for (int k = 0; k < 8; k++)
       if (ci->progeny[k] != NULL) {
-        DOSUB_SELF1_SINKS_MERGER(r, ci->progeny[k], 0);
+        DOSUB_SELF1_SINKS_MERGER(r, ci->progeny[k]);
         for (int j = k + 1; j < 8; j++)
           if (ci->progeny[j] != NULL)
-            DOSUB_PAIR1_SINKS_MERGER(r, ci->progeny[k], ci->progeny[j], 0);
+            DOSUB_PAIR1_SINKS_MERGER(r, ci->progeny[k], ci->progeny[j]);
       }
   }
 
@@ -606,10 +332,9 @@ void DOSUB_SELF1_SINKS_MERGER(struct runner *r, struct cell *ci, int gettimer) {
 
     /* Drift the cell to the current timestep if needed. */
     if (!cell_are_sink_drifted(ci, r->e)) {
-      message("%lli %lli %p", ci->sinks.ti_old_part, r->e->ti_current, ci);
       error("Interacting undrifted cell.");
     }
 
-    DOSELF1_BRANCH_SINKS_MERGER(r, ci);
+    DOSELF1_SINKS_MERGER(r, ci);
   }
 }
