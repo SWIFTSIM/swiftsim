@@ -416,7 +416,17 @@ def get_function_calls(name):
         return pre + txt + app
 
 
-def write_task(f, name, implicit, mpi, task_level, with_calls, with_levels):
+def write_task(
+    f,
+    name,
+    implicit,
+    mpi,
+    task_is_in_top,
+    task_is_in_hydro_super,
+    task_is_in_grav_super,
+    with_calls,
+    with_levels,
+):
     """
     Write the special task (e.g. implicit and mpi)
 
@@ -435,13 +445,14 @@ def write_task(f, name, implicit, mpi, task_level, with_calls, with_levels):
     mpi: int
         Is the task MPI related
 
-    task_level: int
-        Level at which task is executed.
-        0: top
-        1: super
-        2: hydro super
-        3: gravity super
-        4: something else
+    task_is_in_hydro_super: bool
+        whether task is in top level cell
+
+    task_is_in_hydro_super: bool
+        whether task is in hydro super cell
+    
+    task_is_in_grav_super: bool
+        whether task is in grav super cell
 
     with_calls: bool
         if True, write down the function calls
@@ -457,19 +468,24 @@ def write_task(f, name, implicit, mpi, task_level, with_calls, with_levels):
     if mpi:
         txt += "shape=diamond,style=filled,fillcolor=azure,"
     if with_levels:
-        if task_level == 0:
+        levelstr = ""
+        if task_is_in_top:
             levelstr = "top"
-        elif task_level == 1:
-            levelstr = "super"
-        elif task_level == 2:
-            levelstr = "super hydro"
-        elif task_level == 3:
-            levelstr = "super grav"
-        elif task_level > 3:
+        if task_is_in_hydro_super:
+            if len(levelstr) > 0:
+                levelstr += " + "
+            levelstr += "hydro super"
+        if task_is_in_grav_super:
+            if len(levelstr) > 0:
+                levelstr += " + "
+            levelstr += "grav super"
+
+        if (
+            (not task_is_in_top)
+            and (not task_is_in_grav_super)
+            and (not task_is_in_hydro_super)
+        ):
             levelstr = "below super"
-        else:
-            raise ValueError("Couldn't process task level", level)
-            levelstr = "unknown/error"
 
         txt += "\n\t\tlabel=<\n"
         txt += '\t\t\t<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">\n'
@@ -479,7 +495,7 @@ def write_task(f, name, implicit, mpi, task_level, with_calls, with_levels):
             + " </FONT> </B> </TD> </TR> <!-- task name -->\n"
         )
         txt += (
-            '\t\t\t\t<TR> <TD> <I><FONT POINT-SIZE="16">'
+            '\t\t\t\t<TR> <TD> <I> <FONT POINT-SIZE="16">'
             + levelstr
             + "</FONT> </I> </TD> </TR> <!-- task level -->\n"
         )
@@ -550,7 +566,9 @@ def write_header(f, data, git, opt):
             ta,
             data["implicit_in"][i],
             data["mpi_in"][i],
-            data["task_in_level"][i],
+            data["task_in_is_top"][i] == 1,
+            data["task_in_is_hydro_super"][i] == 1,
+            data["task_in_is_grav_super"][i] == 1,
             opt.with_calls,
             opt.with_levels,
         )
@@ -567,7 +585,9 @@ def write_header(f, data, git, opt):
             tb,
             data["implicit_out"][i],
             data["mpi_out"][i],
-            data["task_in_level"][i],
+            data["task_in_is_top"][i] == 1,
+            data["task_in_is_hydro_super"][i] == 1,
+            data["task_in_is_grav_super"][i] == 1,
             opt.with_calls,
             opt.with_levels,
         )
