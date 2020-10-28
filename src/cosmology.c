@@ -69,8 +69,7 @@ static INLINE double interp_table(const double *table, const double x,
                                   const double x_min, const double x_max,
                                   const int table_length) {
 
-  const double xx =
-      ((x - x_min) / (x_max - x_min)) * ((double)table_length);
+  const double xx = ((x - x_min) / (x_max - x_min)) * ((double)table_length);
 
   const int i = (int)xx;
   const int ii = min(table_length - 1, i);
@@ -438,11 +437,11 @@ double neutrino_density_integrate(gsl_integration_workspace *space, double y) {
 void neutrino_find_relativistic_redshift(struct cosmology *c, double tol,
                                          gsl_integration_workspace *space) {
 
- /* Find the largest neutrino mass */
- double M_max_eV = c->M_nu_eV[0];
- for (int i=1; i<c->N_nu; i++) {
-   M_max_eV = fmax(M_max_eV, c->M_nu_eV[i]);
- }
+  /* Find the largest neutrino mass */
+  double M_max_eV = c->M_nu_eV[0];
+  for (int i = 1; i < c->N_nu; i++) {
+    M_max_eV = fmax(M_max_eV, c->M_nu_eV[i]);
+  }
 
   /* A safe starting time */
   double a_safe = 0.5 * tol / M_max_eV;
@@ -480,14 +479,15 @@ void cosmology_init_neutrino_tables(struct cosmology *c) {
     error("Failed to allocate cosmology interpolation table");
 
   /* Initalise the GSL workspace */
-  gsl_integration_workspace *space = gsl_integration_workspace_alloc(GSL_workspace_size);
+  gsl_integration_workspace *space =
+      gsl_integration_workspace_alloc(GSL_workspace_size);
 
   /* Find a safe redshift to start the neutrino density interpolation table */
   neutrino_find_relativistic_redshift(c, 1e-7, space);
 
   const double pre_factor = 15. * pow(c->T_nu_0 / c->T_CMB_0, 4) / pow(M_PI, 4);
-  const double early_delta_a =
-      (c->log_a_long_mid - c->log_a_long_begin) / cosmology_early_nu_table_length;
+  const double early_delta_a = (c->log_a_long_mid - c->log_a_long_begin) /
+                               cosmology_early_nu_table_length;
   const double late_delta_a =
       (c->log_a_long_end - c->log_a_long_mid) / cosmology_late_nu_table_length;
 
@@ -532,7 +532,6 @@ void cosmology_init_neutrino_tables(struct cosmology *c) {
 
 #endif
 }
-
 
 /**
  * @brief Initialise the interpolation tables for the integrals.
@@ -736,9 +735,9 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
     c->deg_nu = (double *)swift_malloc("degnu", c->N_nu * sizeof(double));
 
     /* Set default values */
-    for (int i=0; i<c->N_nu; i++) {
-        c->M_nu_eV[i] = 0.0;
-        c->deg_nu[i] = 1.0;
+    for (int i = 0; i < c->N_nu; i++) {
+      c->M_nu_eV[i] = 0.0;
+      c->deg_nu[i] = 1.0;
     }
 
     parser_get_opt_param_double_array(params, "Cosmology:M_nu_eV", c->N_nu,
@@ -747,8 +746,8 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
                                       c->deg_nu);
 
     /* Instruct the user to use N_ur for massless neutrinos */
-    for (int i=0; i<c->N_nu; i++)
-      if(c->M_nu_eV[i] == 0.) error("Specified nu with 0 mass (use N_ur).");
+    for (int i = 0; i < c->N_nu; i++)
+      if (c->M_nu_eV[i] == 0.) error("Specified nu with 0 mass (use N_ur).");
   }
 
   /* Read the start and end of the simulation */
@@ -804,7 +803,8 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
     c->T_nu_0 = c->T_CMB_0 * decoupling_factor;
   }
 
-  c->T_nu_0_eV = c->T_nu_0 * phys_const->const_boltzmann_k / phys_const->const_electron_volt;
+  c->T_nu_0_eV = c->T_nu_0 * phys_const->const_boltzmann_k /
+                 phys_const->const_electron_volt;
 
   if (c->T_CMB_0 != 0) {
     /* Infer CMB density from the temperature */
@@ -833,7 +833,7 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
 
   /* Retrieve the present-day total density due to massive neutrinos */
   c->Omega_nu_0 = cosmology_get_neutrino_density(c, 1);
-  c->Omega_nu = c->Omega_nu_0; //will be updated
+  c->Omega_nu = c->Omega_nu_0;  // will be updated
 
   /* Infer Omega_cdm from Omega_m and Omega_nu_0 */
   c->Omega_cdm = c->Omega_m - c->Omega_b - c->Omega_nu_0;
@@ -965,12 +965,12 @@ double cosmology_get_drift_factor(const struct cosmology *c,
   const double a_start = c->log_a_begin + ti_start * c->time_base;
   const double a_end = c->log_a_begin + ti_end * c->time_base;
 
-  const double int_start = interp_table(c->drift_fac_interp_table, a_start,
-                                        c->log_a_begin, c->log_a_end,
-                                        cosmology_table_length);
-  const double int_end = interp_table(c->drift_fac_interp_table, a_end,
-                                      c->log_a_begin, c->log_a_end,
-                                      cosmology_table_length);
+  const double int_start =
+      interp_table(c->drift_fac_interp_table, a_start, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
+  const double int_end =
+      interp_table(c->drift_fac_interp_table, a_end, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
 
   return int_end - int_start;
 }
@@ -995,12 +995,12 @@ double cosmology_get_grav_kick_factor(const struct cosmology *c,
   const double a_start = c->log_a_begin + ti_start * c->time_base;
   const double a_end = c->log_a_begin + ti_end * c->time_base;
 
-  const double int_start = interp_table(c->grav_kick_fac_interp_table, a_start,
-                                        c->log_a_begin, c->log_a_end,
-                                        cosmology_table_length);
-  const double int_end = interp_table(c->grav_kick_fac_interp_table, a_end,
-                                      c->log_a_begin, c->log_a_end,
-                                      cosmology_table_length);
+  const double int_start =
+      interp_table(c->grav_kick_fac_interp_table, a_start, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
+  const double int_end =
+      interp_table(c->grav_kick_fac_interp_table, a_end, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
 
   return int_end - int_start;
 }
@@ -1026,12 +1026,12 @@ double cosmology_get_hydro_kick_factor(const struct cosmology *c,
   const double a_start = c->log_a_begin + ti_start * c->time_base;
   const double a_end = c->log_a_begin + ti_end * c->time_base;
 
-  const double int_start = interp_table(c->hydro_kick_fac_interp_table, a_start,
-                                        c->log_a_begin, c->log_a_end,
-                                        cosmology_table_length);
-  const double int_end = interp_table(c->hydro_kick_fac_interp_table, a_end,
-                                      c->log_a_begin, c->log_a_end,
-                                      cosmology_table_length);
+  const double int_start =
+      interp_table(c->hydro_kick_fac_interp_table, a_start, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
+  const double int_end =
+      interp_table(c->hydro_kick_fac_interp_table, a_end, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
 
   return int_end - int_start;
 }
@@ -1057,12 +1057,12 @@ double cosmology_get_corr_kick_factor(const struct cosmology *c,
   const double a_start = c->log_a_begin + ti_start * c->time_base;
   const double a_end = c->log_a_begin + ti_end * c->time_base;
 
-  const double int_start = interp_table(c->hydro_kick_corr_interp_table,
-                                        a_start, c->log_a_begin, c->log_a_end,
-                                        cosmology_table_length);
-  const double int_end = interp_table(c->hydro_kick_corr_interp_table, a_end,
-                                      c->log_a_begin, c->log_a_end,
-                                      cosmology_table_length);
+  const double int_start =
+      interp_table(c->hydro_kick_corr_interp_table, a_start, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
+  const double int_end =
+      interp_table(c->hydro_kick_corr_interp_table, a_end, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
 
   return int_end - int_start;
 }
@@ -1088,12 +1088,12 @@ double cosmology_get_therm_kick_factor(const struct cosmology *c,
   const double a_start = c->log_a_begin + ti_start * c->time_base;
   const double a_end = c->log_a_begin + ti_end * c->time_base;
 
-  const double int_start = interp_table(c->drift_fac_interp_table, a_start,
-                                        c->log_a_begin, c->log_a_end,
-                                        cosmology_table_length);
-  const double int_end = interp_table(c->drift_fac_interp_table, a_end,
-                                      c->log_a_begin, c->log_a_end,
-                                      cosmology_table_length);
+  const double int_start =
+      interp_table(c->drift_fac_interp_table, a_start, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
+  const double int_end =
+      interp_table(c->drift_fac_interp_table, a_end, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
 
   return int_end - int_start;
 }
@@ -1118,14 +1118,14 @@ double cosmology_get_delta_time(const struct cosmology *c,
   const double log_a_end = c->log_a_begin + ti_end * c->time_base;
 
   /* Time between a_begin and a_start */
-  const double t1 = interp_table(c->time_interp_table, log_a_start,
-                                 c->log_a_begin, c->log_a_end,
-                                 cosmology_table_length);
+  const double t1 =
+      interp_table(c->time_interp_table, log_a_start, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
 
   /* Time between a_begin and a_end */
-  const double t2 = interp_table(c->time_interp_table, log_a_end,
-                                 c->log_a_begin, c->log_a_end,
-                                 cosmology_table_length);
+  const double t2 =
+      interp_table(c->time_interp_table, log_a_end, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
 
   return t2 - t1;
 }
@@ -1176,14 +1176,14 @@ double cosmology_get_delta_time_from_scale_factors(const struct cosmology *c,
   const double log_a_end = log(a_end);
 
   /* Time between a_begin and a_start */
-  const double t1 = interp_table(c->time_interp_table, log_a_start,
-                                 c->log_a_begin, c->log_a_end,
-                                 cosmology_table_length);
+  const double t1 =
+      interp_table(c->time_interp_table, log_a_start, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
 
   /* Time between a_begin and a_end */
-  const double t2 = interp_table(c->time_interp_table, log_a_end,
-                                 c->log_a_begin, c->log_a_end,
-                                 cosmology_table_length);
+  const double t2 =
+      interp_table(c->time_interp_table, log_a_end, c->log_a_begin,
+                   c->log_a_end, cosmology_table_length);
 
   return t2 - t1;
 }
@@ -1259,13 +1259,16 @@ void cosmology_print(const struct cosmology *c) {
   message(
       "Density parameters: [O_m, O_l, O_b, O_k, O_r] = [%f, %f, %f, %f, %f]",
       c->Omega_m, c->Omega_lambda, c->Omega_b, c->Omega_k, c->Omega_r);
-  message("Additional density parameters: [O_nu_0, O_cdm, O_ur, O_g] = [%f, "
-          "%f, %f, %f]", c->Omega_nu, c->Omega_cdm, c->Omega_ur, c->Omega_g);
+  message(
+      "Additional density parameters: [O_nu_0, O_cdm, O_ur, O_g] = [%f, "
+      "%f, %f, %f]",
+      c->Omega_nu, c->Omega_cdm, c->Omega_ur, c->Omega_g);
   message("Dark energy equation of state: w_0=%f w_a=%f", c->w_0, c->w_a);
   message("Dark energy equation of state: w_0=%f w_a=%f", c->w_0, c->w_a);
   message("Hubble constant: h = %f, H_0 = %e U_t^(-1)", c->h, c->H0);
   message("Hubble time: 1/H0 = %e U_t", c->Hubble_time);
-  message("CMB temperature at z=0 implied by cosmology: T_CMB = %e U_T", c->T_CMB_0);
+  message("CMB temperature at z=0 implied by cosmology: T_CMB = %e U_T",
+          c->T_CMB_0);
   message("Neutrino temperature at z=0: T_nu = %e U_T", c->T_nu_0);
   message("Numbers of relatistic species: [N_nu, N_ur, N_eff] = [%d, %f, %f]",
           c->N_nu, c->N_ur, c->N_eff);
@@ -1273,7 +1276,7 @@ void cosmology_print(const struct cosmology *c) {
   if (c->N_nu > 0) {
     char neutrino_mass_string[10 * c->N_nu];
     char neutrino_deg_string[10 * c->N_nu];
-    for (int i=0; i<c->N_nu; i++) {
+    for (int i = 0; i < c->N_nu; i++) {
       sprintf(neutrino_mass_string + i * 10, "%.2e  ", c->M_nu_eV[i]);
       sprintf(neutrino_deg_string + i * 10, "%.2e  ", c->deg_nu[i]);
     }
@@ -1378,14 +1381,14 @@ void cosmology_struct_restore(int enabled, struct cosmology *cosmology,
 
   /* Restore the neutrino mass and degeneracy arrays if necessary */
   if (cosmology->N_nu > 0) {
-    cosmology->M_nu_eV = (double *)swift_malloc("Mnu", cosmology->N_nu * sizeof(double));
+    cosmology->M_nu_eV =
+        (double *)swift_malloc("Mnu", cosmology->N_nu * sizeof(double));
     restart_read_blocks((double *)cosmology->M_nu_eV, sizeof(double),
-                        cosmology->N_nu, stream, NULL,
-                        "neutrino masses eV");
-    cosmology->deg_nu = (double *)swift_malloc("degnu", cosmology->N_nu * sizeof(double));
+                        cosmology->N_nu, stream, NULL, "neutrino masses eV");
+    cosmology->deg_nu =
+        (double *)swift_malloc("degnu", cosmology->N_nu * sizeof(double));
     restart_read_blocks((double *)cosmology->deg_nu, sizeof(double),
-                        cosmology->N_nu, stream, NULL,
-                        "neutrino degeneracies");
+                        cosmology->N_nu, stream, NULL, "neutrino degeneracies");
   }
 
   /* Re-initialise the tables if using a cosmology. */

@@ -29,7 +29,7 @@
 
 #define N_CHECK 20
 #define TOLERANCE 1e-6
-#define EXTERNAL_TOLERANCE 1e-5 //comparing against CLASS
+#define EXTERNAL_TOLERANCE 1e-5  // comparing against CLASS
 
 void test_params_init(struct swift_params *params, int testnr) {
   switch (testnr) {
@@ -93,8 +93,10 @@ void test_params_init(struct swift_params *params, int testnr) {
   }
 
   parser_set_param(params, "InternalUnitSystem:UnitMass_in_cgs:1.988435e+43");
-  parser_set_param(params, "InternalUnitSystem:UnitLength_in_cgs:3.0856775815e+24");
-  parser_set_param(params, "InternalUnitSystem:UnitVelocity_in_cgs:9.7846194238e+07");
+  parser_set_param(params,
+                   "InternalUnitSystem:UnitLength_in_cgs:3.0856775815e+24");
+  parser_set_param(params,
+                   "InternalUnitSystem:UnitVelocity_in_cgs:9.7846194238e+07");
   parser_set_param(params, "InternalUnitSystem:UnitCurrent_in_cgs:1");
   parser_set_param(params, "InternalUnitSystem:UnitTemp_in_cgs:1");
 }
@@ -113,9 +115,9 @@ int main(int argc, char *argv[]) {
     if (row == 0) continue;
     char *tmp = strdup(line);
     char *ptr = NULL;
-    CLASS_table[0 + (row-1)*3] = strtod(tmp, &ptr);
-    CLASS_table[1 + (row-1)*3] = strtod(ptr+1, &ptr);
-    CLASS_table[2 + (row-1)*3] = strtod(ptr+1, &ptr);
+    CLASS_table[0 + (row - 1) * 3] = strtod(tmp, &ptr);
+    CLASS_table[1 + (row - 1) * 3] = strtod(ptr + 1, &ptr);
+    CLASS_table[2 + (row - 1) * 3] = strtod(ptr + 1, &ptr);
     free(tmp);
   }
   fclose(stream);
@@ -169,14 +171,15 @@ int main(int argc, char *argv[]) {
       assert(fabs(rel_err) < TOLERANCE);
     }
 
-    if (testnr==0) {
+    if (testnr == 0) {
       /* For cosmology 0, compare against independently computed array */
       message("Relative to CLASS values (a, t, Omega_nu(a))");
       const double delta_a = (cosmo.log_a_end - cosmo.log_a_begin) / 10000;
-      for (int j=0; j<50; j++) {
-        double a1 = exp(cosmo.log_a_begin + delta_a * (j*200 + 1));
+      for (int j = 0; j < 50; j++) {
+        double a1 = exp(cosmo.log_a_begin + delta_a * (j * 200 + 1));
         double time1 = cosmology_get_time_since_big_bang(&cosmo, a1);
-        // double time1 = cosmo.time_interp_table[j*200] + cosmo.time_interp_table_offset;
+        // double time1 = cosmo.time_interp_table[j*200] +
+        // cosmo.time_interp_table_offset;
         double Onu1 = cosmology_get_neutrino_density(&cosmo, a1);
 
         double a2 = CLASS_table[0 + 3 * j];
@@ -190,7 +193,8 @@ int main(int argc, char *argv[]) {
         // assert(fabs(time1 - time2)/(time1 + time2) < EXTERNAL_TOLERANCE);
         // assert(fabs(Onu1 - Onu2)/(Onu1 + Onu2) < EXTERNAL_TOLERANCE);
 
-        message("At a = %e: (%e, %e, %e)", a1, a1/a2, time1/time2, Onu1/Onu2);
+        message("At a = %e: (%e, %e, %e)", a1, a1 / a2, time1 / time2,
+                Onu1 / Onu2);
       }
     }
 
@@ -246,18 +250,16 @@ int main(int argc, char *argv[]) {
   const double eV = phys_const.const_electron_volt;
 
   /* Non-relativistic limit (limit not reached, so lower tolerance is fine)*/
-  double Omega_nu_late =
-      cosmology_get_neutrino_density(&cosmo, 1.0);
+  double Omega_nu_late = cosmology_get_neutrino_density(&cosmo, 1.0);
   double Omega_nu_nr = 0.;
-  for (int i=0; i<cosmo.N_nu; i++) {
-    Omega_nu_nr += 6 * zeta3 / (11 * M_PI * M_PI) * pow(kb * cosmo.T_CMB_0, 3)
-                   / pow(cvel * hbar, 3) * cosmo.M_nu_eV[i] * eV
-                   / (cosmo.critical_density_0 * cvel * cvel);
+  for (int i = 0; i < cosmo.N_nu; i++) {
+    Omega_nu_nr += 6 * zeta3 / (11 * M_PI * M_PI) * pow(kb * cosmo.T_CMB_0, 3) /
+                   pow(cvel * hbar, 3) * cosmo.M_nu_eV[i] * eV /
+                   (cosmo.critical_density_0 * cvel * cvel);
   }
   double err2 = (Omega_nu_late - Omega_nu_nr) / Omega_nu_late;
   message("Accuracy of %g of the non-relativistic limit", err2);
   assert(fabs(err2) < 1e-5);
-
 
   message("Neutrino cosmology test successful.");
 

@@ -296,8 +296,7 @@ void fof_allocate(const struct space *s, const long long total_nr_DM_particles,
     const double Omega_nu_0 = s->e->cosmology->Omega_nu_0;
     const double critical_density_0 = s->e->cosmology->critical_density_0;
     double mean_matter_density = Omega_cdm * critical_density_0;
-    if (!s->with_hydro)
-      mean_matter_density += Omega_b * critical_density_0;
+    if (!s->with_hydro) mean_matter_density += Omega_b * critical_density_0;
     if (!s->with_neutrinos)
       mean_matter_density += Omega_nu_0 * critical_density_0;
 

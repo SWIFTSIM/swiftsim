@@ -844,8 +844,7 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
      * is used in the zoom region. */
     double mean_matter_density;
     double mean_matter_density = Omega_cdm * critical_density_0;
-    if (!s->with_hydro)
-      mean_matter_density += Omega_b * critical_density_0;
+    if (!s->with_hydro) mean_matter_density += Omega_b * critical_density_0;
     if (!s->with_neutrinos)
       mean_matter_density += Omega_nu_0 * critical_density_0;
 

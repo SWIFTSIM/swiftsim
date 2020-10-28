@@ -543,7 +543,7 @@ int main(int argc, char *argv[]) {
       N_total[swift_type_dark_matter_background] > 0;
 
   /* Do we have neutrino particles? */
-  const int with_neutrinos = 0; //no for now
+  const int with_neutrinos = 0;  // no for now
 
   /* Initialize the space with these data. */
   if (myrank == 0) clocks_gettime(&tic);
