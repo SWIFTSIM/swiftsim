@@ -35,7 +35,7 @@ high_metal = -5.5  # High metal abundance
 sigma_metal = 0.2  # relative standard deviation for Z
 max_shift = 1      # Shift between the different elements
 
-Nelem = 2
+Nelem = 10
 # shift all metals in order to obtain nicer plots
 low_metal = [low_metal] * Nelem + np.linspace(0, max_shift, Nelem)
 low_metal = 10**low_metal
@@ -88,8 +88,15 @@ git = sim["Code"].attrs["Git Revision"]
 
 pos = sim["/PartType0/Coordinates"][:, :]
 d = pos[:, 0] - boxSize / 2
-smooth_metal = sim["/PartType0/SmoothedMetalMassFractions"][:, :]
-metal = sim["/PartType0/MetalMassFractions"][:, :]
+gear_name = "/PartType0/MetalMassFractions"
+eagle_name = "/PartType0/ElementAbundances"
+if gear_name in sim:
+    smooth_metal = sim["/PartType0/SmoothedMetalMassFractions"][:, :]
+    metal = sim[gear_name][:, :]
+else:
+    smooth_metal = sim["/PartType0/SmoothedElementAbundances"][:, :]
+    metal = sim[eagle_name][:, :]
+
 h = sim["/PartType0/SmoothingLengths"][:]
 h = np.mean(h)
 
