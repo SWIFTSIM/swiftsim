@@ -315,8 +315,10 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
 
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     ch->metal_mass[i] += ch->metal_mass_dt[i] * dt * factor;
-    /* Make sure that the metallicity is >= 0 */
-    ch->metal_mass[i] = max(ch->metal_mass[i], 0.);
+    /* Make sure that the metallicity is 0 <= x <= 1 */
+    if (ch->metal_mass[i] < 0 || ch->metal_mass[i] > hydro_get_mass(p)) {
+      error("Negative mass or mass fraction larger than 1.");
+    }
   }
 }
 
@@ -557,4 +559,31 @@ chemistry_get_bh_total_metal_mass_for_stats(const struct bpart* restrict bp) {
   error("Not implemented");
   return 0.f;
 }
+
+/**
+ * @brief Returns the total metallicity (metal mass fraction) of the
+ * gas particle to be used in the stats related routines.
+ *
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float
+chemistry_get_total_metal_mass_for_stats(const struct part* restrict p) {
+
+  return p->chemistry_data.metal_mass[GEAR_CHEMISTRY_ELEMENT_COUNT - 1];
+}
+
+/**
+ * @brief Returns the total metallicity (metal mass fraction) of the
+ * star particle to be used in the stats related routines.
+ *
+ * @param p Pointer to the particle data.
+ */
+__attribute__((always_inline)) INLINE static float
+chemistry_get_star_total_metal_mass_for_stats(const struct spart* restrict sp) {
+
+  return sp->chemistry_data
+             .metal_mass_fraction[GEAR_CHEMISTRY_ELEMENT_COUNT - 1] *
+         sp->mass;
+}
+
 #endif /* SWIFT_CHEMISTRY_GEAR_DIFFUSION_H */

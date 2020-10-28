@@ -27,7 +27,7 @@ import numpy as np
 gamma = 5./3.      # Gas adiabatic index
 rho0 = 1.          # Background density
 P0 = 1e-6          # Background pressure
-Nelem = 2          # Gear: 10, EAGLE: 9
+Nelem = 10         # Gear: 10, EAGLE: 9
 low_metal = -6     # Low iron fraction
 high_metal = -5.5  # high iron fraction
 max_shift = 1      # Shift between the different elements
@@ -109,6 +109,7 @@ grp.create_dataset('SmoothingLength', data=h, dtype='f')
 grp.create_dataset('InternalEnergy', data=u, dtype='f')
 grp.create_dataset('ParticleIDs', data=ids, dtype='L')
 grp.create_dataset('MetalMassFraction', data=mass_frac, dtype='d')
+grp.create_dataset('ElementAbundance', data=mass_frac, dtype='d')
 
 
 file.close()

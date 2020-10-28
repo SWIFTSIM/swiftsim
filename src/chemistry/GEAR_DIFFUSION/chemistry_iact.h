@@ -261,10 +261,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     /* Get r */
     const float r = sqrtf(r2);
 
-    /* part j */
-    /* Get the kernel for hj */
-    const float hj_inv = 1.0f / hj;
-
     /* part i */
     /* Get the kernel for hi */
     const float hi_inv = 1.0f / hi;

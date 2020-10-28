@@ -24,7 +24,7 @@
  */
 struct chemistry_global_data {
 
-  /* Initial metallicity Z */
+  /* Initial mass fraction */
   double initial_metallicities[GEAR_CHEMISTRY_ELEMENT_COUNT];
 };
 

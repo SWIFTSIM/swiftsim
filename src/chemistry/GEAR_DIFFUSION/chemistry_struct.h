@@ -24,10 +24,10 @@
  */
 struct chemistry_global_data {
 
-  /* Initial metallicity Z */
+  /* Initial mass fraction */
   double initial_metallicities[GEAR_CHEMISTRY_ELEMENT_COUNT];
 
-  /*! Diffusion coefficent */
+  /*! Diffusion coefficent (no unit) */
   float C;
 };
 
