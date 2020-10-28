@@ -471,14 +471,18 @@ def write_task(
         levelstr = ""
         if task_is_in_top:
             levelstr = "top"
-        if task_is_in_hydro_super:
+        if task_is_in_hydro_super and not task_is_in_grav_super:
             if len(levelstr) > 0:
-                levelstr += " + "
+                levelstr += " / "
             levelstr += "hydro super"
-        if task_is_in_grav_super:
+        if task_is_in_grav_super and not task_is_in_hydro_super:
             if len(levelstr) > 0:
-                levelstr += " + "
+                levelstr += " / "
             levelstr += "grav super"
+        if task_is_in_grav_super and task_is_in_hydro_super:
+            if len(levelstr) > 0:
+                levelstr += " / "
+            levelstr += "super"
 
         if (
             (not task_is_in_top)
@@ -490,14 +494,14 @@ def write_task(
         txt += "\n\t\tlabel=<\n"
         txt += '\t\t\t<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">\n'
         txt += (
-            '\t\t\t\t<TR> <TD> <B> <FONT POINT-SIZE="24">'
+            '\t\t\t\t<TR> <TD> <B> <FONT POINT-SIZE="18">'
             + name
             + " </FONT> </B> </TD> </TR> <!-- task name -->\n"
         )
         txt += (
-            '\t\t\t\t<TR> <TD> <I> <FONT POINT-SIZE="16">'
+            '\t\t\t\t<TR> <TD> <FONT POINT-SIZE="18">'
             + levelstr
-            + "</FONT> </I> </TD> </TR> <!-- task level -->\n"
+            + "</FONT> </TD> </TR> <!-- task level -->\n"
         )
         txt += "\t\t\t</TABLE>\n"
         txt += "\t\t\t>,\n\t\t"
@@ -585,9 +589,9 @@ def write_header(f, data, git, opt):
             tb,
             data["implicit_out"][i],
             data["mpi_out"][i],
-            data["task_in_is_top"][i] == 1,
-            data["task_in_is_hydro_super"][i] == 1,
-            data["task_in_is_grav_super"][i] == 1,
+            data["task_out_is_top"][i] == 1,
+            data["task_out_is_hydro_super"][i] == 1,
+            data["task_out_is_grav_super"][i] == 1,
             opt.with_calls,
             opt.with_levels,
         )
