@@ -401,7 +401,6 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
         }
 
         if (with_rt) {
-          rt_init_spart(sp);
 
           /* get star's age and time step for stellar emission rates */
           const integertime_t ti_begin =
