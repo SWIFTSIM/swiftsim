@@ -1019,7 +1019,7 @@ void space_init(struct space *s, struct swift_params *params,
                 size_t Nspart, size_t Nbpart, int periodic, int replicate,
                 int remap_ids, int generate_gas_in_ics, int hydro,
                 int self_gravity, int star_formation, int DM_background,
-                int verbose, int dry_run, int nr_nodes) {
+                int neutrinos, int verbose, int dry_run, int nr_nodes) {
 
   /* Clean-up everything */
   bzero(s, sizeof(struct space));
@@ -1033,6 +1033,7 @@ void space_init(struct space *s, struct swift_params *params,
   s->with_hydro = hydro;
   s->with_star_formation = star_formation;
   s->with_DM_background = DM_background;
+  s->with_neutrinos = neutrinos;
   s->nr_parts = Npart;
   s->nr_gparts = Ngpart;
   s->nr_sparts = Nspart;
@@ -1710,8 +1711,11 @@ void space_generate_gas(struct space *s, const struct cosmology *cosmo,
   bzero(parts, s->nr_parts * sizeof(struct part));
 
   /* Compute some constants */
-  const double mass_ratio = cosmo->Omega_b / cosmo->Omega_m;
-  const double bg_density = cosmo->Omega_m * cosmo->critical_density_0;
+  double Omega_cdm_b = cosmo->Omega_cdm + cosmo->Omega_b;
+  if (!s->with_neutrinos)
+    Omega_cdm_b += cosmo->Omega_nu_0;
+  const double mass_ratio = cosmo->Omega_b / Omega_cdm_b;
+  const double bg_density = Omega_cdm_b * cosmo->critical_density_0;
   const double bg_density_inv = 1. / bg_density;
 
   message("%zd", current_nr_gparts);
