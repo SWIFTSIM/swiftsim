@@ -132,4 +132,5 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
         star_age, dt);
   }
 }
+
 #endif /* SWIFT_RT_DEBUG_H */

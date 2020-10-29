@@ -52,4 +52,4 @@ __attribute__((always_inline)) INLINE static void rt_gradients_nonsym_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj) {}
 
-#endif /* SWIFT_RT_GRADIENT_none_H */
+#endif /* SWIFT_RT_GRADIENTS_NONE_H */
