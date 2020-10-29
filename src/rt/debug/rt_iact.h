@@ -116,6 +116,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
       pj->rt_data.calls_iact_transport += 1;
     }
   }
+}
 
 /**
  * @brief Flux calculation between particle i and particle j
