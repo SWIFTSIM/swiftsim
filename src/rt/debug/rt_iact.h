@@ -38,11 +38,11 @@
  * @param xpj Hydro particle extra data.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
-    const float r2, float* dx, const float hi, const float hj,
-    struct spart* restrict si, struct part* restrict pj) {
+    const float r2, float *dx, const float hi, const float hj,
+    struct spart *restrict si, struct part *restrict pj) {
 
-  struct rt_spart_data* restrict sd = &(si->rt_data);
-  struct rt_part_data* restrict pd = &(pj->rt_data);
+  struct rt_spart_data *restrict sd = &(si->rt_data);
+  struct rt_part_data *restrict pd = &(pj->rt_data);
 
   sd->calls_tot += 1;
   sd->calls_per_step += 1;
@@ -81,18 +81,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, float a, float H, int mode) {
 
+  pi->rt_data.calls_tot += 1;
+  pi->rt_data.calls_per_step += 1;
+  pi->rt_data.calls_iact_transport += 1;
 
-    pi->rt_data.calls_tot += 1;
-    pi->rt_data.calls_per_step += 1;
-    pi->rt_data.calls_iact_transport += 1;
-
-    if (mode == 1){
-      pj->rt_data.calls_tot += 1;
-      pj->rt_data.calls_per_step += 1;
-      pj->rt_data.calls_iact_transport += 1;
-    }
-
+  if (mode == 1) {
+    pj->rt_data.calls_tot += 1;
+    pj->rt_data.calls_per_step += 1;
+    pj->rt_data.calls_iact_transport += 1;
   }
+}
 
 /**
  * @brief Flux calculation between particle i and particle j
@@ -112,9 +110,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
 __attribute__((always_inline)) INLINE static void runner_iact_rt_transport(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, float a, float H) {
-    
+
   runner_iact_rt_flux_common(r2, dx, hi, hj, pi, pj, a, H, 1);
-  }
+}
 
 /**
  * @brief Flux calculation between particle i and particle j: non-symmetric
@@ -138,8 +136,7 @@ runner_iact_nonsym_rt_transport(float r2, const float *dx, float hi, float hj,
                                 struct part *restrict pj, float a, float H) {
 
   runner_iact_rt_flux_common(r2, dx, hi, hj, pi, pj, a, H, 0);
-
-  }
+}
 
 /**
  * @brief Calculate the gradient interaction between particle i and particle j
@@ -162,8 +159,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_gradient(
     struct part *restrict pj, float a, float H) {
 
   rt_gradients_collect(r2, dx, hi, hj, pi, pj);
-
-  }
+}
 
 /**
  * @brief Calculate the gradient interaction between particle i and particle j:
@@ -188,8 +184,6 @@ runner_iact_nonsym_rt_gradient(float r2, const float *dx, float hi, float hj,
                                struct part *restrict pj, float a, float H) {
 
   rt_gradients_nonsym_collect(r2, dx, hi, hj, pi, pj);
-
-  }
-
+}
 
 #endif /* SWIFT_RT_IACT_DEBUG_H */
