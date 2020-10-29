@@ -40,6 +40,8 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.iact_stars_inject = 0;
   p->rt_data.calls_self_inject = 0;
   p->rt_data.calls_pair_inject = 0;
+  p->rt_data.calls_iact_gradient = 0;
+  p->rt_data.calls_iact_transport = 0;
   p->rt_data.photon_number_updated = 0;
 }
 
@@ -47,7 +49,7 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
  * @brief First initialisation of the RT extra hydro particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_first_init_part(
-    struct part *restrict p) {
+    struct part* restrict p) {
 
   p->rt_data.calls_tot = 0;
   rt_init_part(p);
@@ -78,7 +80,7 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
  * @brief First initialisation of the RT extra star particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_first_init_spart(
-    struct spart *restrict sp) {
+    struct spart* restrict sp) {
 
   sp->rt_data.calls_tot = 0;
   rt_init_spart(sp);
@@ -118,6 +120,7 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
   if (time == 0.) {
     /* if this is the zeroth step, time is still at zero.
      * Do some bogus stuff for now. */
+    /* TODO: check that this covers every possible case */
     star_age += 2 * dt;
   }
   if (star_age - dt >= 0.) {
