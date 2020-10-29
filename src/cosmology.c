@@ -895,6 +895,7 @@ void cosmology_init_no_cosmo(struct cosmology *c) {
   c->log_a_begin = 0.;
   c->log_a_end = 0.;
   c->log_a_long_begin = 0.;
+  c->log_a_long_mid = 0.;
   c->log_a_long_end = 0.;
 
   c->H = 0.;
@@ -1262,7 +1263,7 @@ void cosmology_print(const struct cosmology *c) {
   message(
       "Additional density parameters: [O_nu_0, O_cdm, O_ur, O_g] = [%f, "
       "%f, %f, %f]",
-      c->Omega_nu, c->Omega_cdm, c->Omega_ur, c->Omega_g);
+      c->Omega_nu_0, c->Omega_cdm, c->Omega_ur, c->Omega_g);
   message("Dark energy equation of state: w_0=%f w_a=%f", c->w_0, c->w_a);
   message("Dark energy equation of state: w_0=%f w_a=%f", c->w_0, c->w_a);
   message("Hubble constant: h = %f, H_0 = %e U_t^(-1)", c->h, c->H0);
@@ -1323,9 +1324,11 @@ void cosmology_write_model(hid_t h_grp, const struct cosmology *c) {
   io_write_attribute_d(h_grp, "Omega_k", c->Omega_k);
   io_write_attribute_d(h_grp, "Omega_lambda", c->Omega_lambda);
   io_write_attribute_d(h_grp, "Omega_nu", c->Omega_nu);
+  io_write_attribute_d(h_grp, "Omega_nu", c->Omega_nu_0);
   io_write_attribute_d(h_grp, "Omega_ur", c->Omega_ur);
   io_write_attribute_d(h_grp, "Omega_cdm", c->Omega_cdm);
-  io_write_attribute_d(h_grp, "T_nu_0", c->T_nu_0);
+  io_write_attribute_d(h_grp, "T_nu_0 [internal units]", c->T_nu_0);
+  io_write_attribute_d(h_grp, "T_nu_0 [eV]", c->T_nu_0_eV);
   io_write_attribute_d(h_grp, "N_eff", c->N_eff);
   io_write_attribute_d(h_grp, "N_ur", c->N_ur);
   io_write_attribute_d(h_grp, "N_nu", c->N_nu);

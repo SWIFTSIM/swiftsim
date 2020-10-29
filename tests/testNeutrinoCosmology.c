@@ -189,9 +189,9 @@ int main(int argc, char *argv[]) {
         /* Class defines years as 365.25 days, we use 365 days. */
         time2 *= 365.25 / 365.0;
 
-        // assert(fabs(a1 - a2)/(a1 + a2) < EXTERNAL_TOLERANCE);
-        // assert(fabs(time1 - time2)/(time1 + time2) < EXTERNAL_TOLERANCE);
-        // assert(fabs(Onu1 - Onu2)/(Onu1 + Onu2) < EXTERNAL_TOLERANCE);
+        assert(fabs(a1 - a2) / (a1 + a2) < EXTERNAL_TOLERANCE);
+        assert(fabs(time1 - time2) / (time1 + time2) < EXTERNAL_TOLERANCE);
+        assert(fabs(Onu1 - Onu2) / (Onu1 + Onu2) < EXTERNAL_TOLERANCE);
 
         message("At a = %e: (%e, %e, %e)", a1, a1 / a2, time1 / time2,
                 Onu1 / Onu2);
