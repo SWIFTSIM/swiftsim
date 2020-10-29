@@ -2167,7 +2167,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
         }
         scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
-        /* TODO: CHECK THIS */
         scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
         scheduler_addunlock(sched, t_rt_gradient,
                             ci->super->hydro.rt_gradient_out);
@@ -2436,7 +2435,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 t_rt_inject);
           }
           scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
-          /* TODO: CHECK THIS */
           scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
           scheduler_addunlock(sched, t_rt_gradient,
                               ci->super->hydro.rt_gradient_out);
@@ -2541,7 +2539,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                   t_rt_inject);
             }
             scheduler_addunlock(sched, t_rt_inject, cj->super->hydro.rt_ghost1);
-            /* TODO: CHECK THIS */
             scheduler_addunlock(sched, cj->super->hydro.rt_ghost1,
                                 t_rt_gradient);
             scheduler_addunlock(sched, t_rt_gradient,
@@ -2801,7 +2798,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
         }
         scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
-        /* TODO: CHECK THIS */
         scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
         scheduler_addunlock(sched, t_rt_gradient,
                             ci->super->hydro.rt_gradient_out);
@@ -3077,7 +3073,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 t_rt_inject);
           }
           scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
-          /* TODO: CHECK THIS */
           scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
           scheduler_addunlock(sched, t_rt_gradient,
                               ci->super->hydro.rt_gradient_out);
@@ -3180,7 +3175,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                   t_rt_inject);
             }
             scheduler_addunlock(sched, t_rt_inject, cj->super->hydro.rt_ghost1);
-            /* TODO: CHECK THIS */
             scheduler_addunlock(sched, cj->super->hydro.rt_ghost1,
                                 t_rt_gradient);
             scheduler_addunlock(sched, t_rt_gradient,
