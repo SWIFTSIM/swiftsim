@@ -100,6 +100,37 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
  * @param pj Particle j.
  * @param a Current scale factor.
  * @param H Current Hubble parameter.
+ * @param mode 0 if non-symmetric interaction, 1 if symmetric
+ */
+__attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
+    float r2, const float *dx, float hi, float hj, struct part *restrict pi,
+    struct part *restrict pj, float a, float H, int mode) {
+
+    pi->rt_data.calls_tot += 1;
+    pi->rt_data.calls_per_step += 1;
+    pi->rt_data.calls_iact_transport += 1;
+
+    if (mode == 1){
+      pj->rt_data.calls_tot += 1;
+      pj->rt_data.calls_per_step += 1;
+      pj->rt_data.calls_iact_transport += 1;
+    }
+  }
+
+/**
+ * @brief Flux calculation between particle i and particle j
+ *
+ * This method calls runner_iact_rt_fluxes_common with mode 1.
+ *
+ * @param r2 Comoving squared distance between particle i and particle j.
+ * @param dx Comoving distance vector between the particles (dx = pi->x -
+ * pj->x).
+ * @param hi Comoving smoothing-length of particle i.
+ * @param hj Comoving smoothing-length of particle j.
+ * @param pi Particle i.
+ * @param pj Particle j.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_rt_transport(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,

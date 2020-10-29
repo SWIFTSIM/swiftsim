@@ -70,6 +70,7 @@ INLINE static int rt_write_particles(const struct part* parts,
                            0, parts, rt_data.calls_iact_transport,
                            "number of calls to this particle during the"
                            "transport interaction loop");
+
   return 8;
 }
 
