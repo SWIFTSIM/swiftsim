@@ -346,7 +346,7 @@ INLINE static int star_formation_is_star_forming_subgrid(
   const double subgrid_n_H = subgrid_rho * XH / phys_const->const_proton_mass;
   const double subgrid_n_H_cgs = subgrid_n_H * number_density_to_cgs;
 
-  /* Second, determine whether we are very cold or (cold and dense) enough
+  /* Now, determine whether we are very cold or (cold and dense) enough
    *
    * This would typically be (T < 10^3 OR (T < 10^4.5 AND n_H > 10))
    * with T and n_H subgrid properties.
@@ -401,11 +401,13 @@ INLINE static int star_formation_is_star_forming(
                                                   cosmo, hydro_props, us,
                                                   cooling, entropy_floor_props);
       break;
+
     case eagle_star_formation_threshold_subgrid:
       return star_formation_is_star_forming_subgrid(
           p, xp, starform, phys_const, cosmo, hydro_props, us, cooling,
           entropy_floor_props);
       break;
+
     default:
       error("Invalid star formation threshold model!!!");
       return 0;
@@ -863,6 +865,9 @@ INLINE static void starformation_init_backend(
 
   if (strcmp(temp_SF, "Zdep") == 0) {
 
+    /* Z-dep (Schaye+2004) model */
+    starform->SF_threshold = eagle_star_formation_threshold_Z_dep;
+
     starform->Z_dep_thresh.entropy_margin_threshold_dex =
         parser_get_opt_param_double(parameter_file,
                                     "EAGLEStarFormation:EOS_entropy_margin_dex",
@@ -901,6 +906,9 @@ INLINE static void starformation_init_backend(
         number_density_from_cgs;
 
   } else if (strcmp(temp_SF, "Subgrid") == 0) {
+
+    /* Subgrid quantities based model */
+    starform->SF_threshold = eagle_star_formation_threshold_subgrid;
 
     /* Read threshold properties */
     starform->subgrid_thresh.T_threshold1 = parser_get_param_double(
