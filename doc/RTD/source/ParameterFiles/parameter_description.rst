@@ -247,7 +247,7 @@ the Universe. That is :math:`\epsilon_{\rm background} =
 f\sqrt[3]{\frac{m}{\Omega_m\rho_{\rm crit}}}`, where :math:`f` is the
 user-defined value (typically of order 0.05).
 
-The accuracy of the gravity calculation is governed by the following four parameters:
+The accuracy of the gravity calculation is governed by the following two parameters:
 
 * The multipole acceptance criterion: ``MAC``
 * The fixed opening angle used in the geometric MAC :math:`\theta_{\rm cr}`: ``theta_cr``,
@@ -466,7 +466,7 @@ The full section to start a typical cosmological run would be:
      minimal_temperature:                100   # U_T
      H_mass_fraction:                    0.755
      H_ionization_temperature:           1e4   # U_T
-     particle_splitting:                 1
+     particle_splitting:                 1 
      particle_splitting_mass_threshold:  5e-3  # U_M
 
 .. _Parameters_Stars:
@@ -477,7 +477,7 @@ Stars
 The ``Stars`` section is used to set parameters that describe the Stars
 calculations when doing feedback or enrichment. Note that if stars only act
 gravitationally (i.e. SWIFT is run *without* ``--feedback``) no parameters
-in this section are used.
+in this section are used. 
 
 The first four parameters are related to the neighbour search:
 
@@ -651,7 +651,7 @@ Finally, SWIFT also offers these options:
 * Whether to replicate the box along each axis: ``replicate`` (default: ``1``).
 * Whether to re-map the IDs to the range ``[0, N]`` and hence discard
   the original IDs from the IC file: ``remap_ids`` (default: ``0``).
-
+  
 The shift is expressed in internal units. The option to replicate the
 box is especially useful for weak-scaling tests. When set to an
 integer >1, the box size is multiplied by this integer along each axis
@@ -904,16 +904,16 @@ Equation of State (EoS)
 
 The ``EoS`` section contains options for the equations of state.
 Multiple EoS can be used for :ref:`planetary`,
-see :ref:`planetary_eos` for more information.
+see :ref:`planetary_eos` for more information. 
 
 To enable one or multiple of these EoS, the corresponding ``planetary_use_*:``
 flag(s) must be set to ``1`` in the parameter file for a simulation,
-along with the path to any table files, which are provided with the
+along with the path to any table files, which are provided with the 
 ``planetary_*_table_file:`` parameters.
-This currently means that all EoS within each base type are prepared at once,
+This currently means that all EoS within each base type are prepared at once, 
 which we intend to simplify in the future.
 
-The data files for the tabulated EoS can be downloaded using
+The data files for the tabulated EoS can be downloaded using 
 the ``examples/EoSTables/get_eos_tables.sh`` script.
 
 For the (non-planetary) isothermal EoS, the ``isothermal_internal_energy:``
@@ -1403,11 +1403,11 @@ necessary and one would use:
     invoke_stf:        1                              # We want VELOCIraptor to be called when snapshots are dumped.
     # ...
     # Rest of the snapshots properties
-
+	  
   StructureFinding:
     config_file_name:  my_stf_configuration_file.cfg  # See the VELOCIraptor manual for the content of this file.
     basename:          ./haloes/                      # Write the catalogs in this sub-directory
-
+     
 If one additionally want to call VELOCIraptor at times not linked with
 snapshots, the additional parameters need to be supplied.
 
