@@ -32,7 +32,6 @@ Cosmology:
   M_nu_eV:                      # (Optional) Comma-separated list of N_nu nonzero neutrino masses in electron-volts
   deg_nu:                       # (Optional) Comma-separated list of N_nu neutrino degeneracies (default values of 1.0)
 
-
 # Parameters for the hydrodynamics scheme
 SPH:
   resolution_eta:                    1.2348   # Target smoothing length in units of the mean inter-particle separation (1.2348 == 48Ngbs with the cubic spline kernel).
@@ -95,7 +94,7 @@ Gravity:
   r_cut_max:                     4.5       # (Optional) Cut-off in number of top-level cells beyond which no FMM forces are computed (this is the default value).
   r_cut_min:                     0.1       # (Optional) Cut-off in number of top-level cells below which no truncation of FMM forces are performed (this is the default value).
 
-# Parameters when running with SWIFT_GRAVITY_FORCE_CHECKS
+# Parameters when running with SWIFT_GRAVITY_FORCE_CHECKS 
 ForceChecks:
   only_when_all_active: 1  # (Optional) Only compute exact forces during timesteps when all gparts are active (default: 0).
   only_at_snapshots:    1  # (Optional) Only compute exact forces during timesteps when a snapshot is being dumped (default: 0).
@@ -103,7 +102,7 @@ ForceChecks:
 FOF:
   basename:                        fof_output  # Filename for the FOF outputs (Unused when FoF is only run to seed BHs).
   scale_factor_first:              0.91        # Scale-factor of first FoF black hole seeding calls (needed for cosmological runs).
-  time_first:                      0.2         # Time of first FoF black hole seeding calls (needed for non-cosmological runs).
+  time_first:                      0.2         # Time of first FoF black hole seeding calls (needed for non-cosmological runs).	
   delta_time:                      1.005       # Time between consecutive FoF black hole seeding calls.
   min_group_size:                  256         # The minimum no. of particles required for a group.
   linking_length_ratio:            0.2         # Linking length in units of the main inter-particle separation.
