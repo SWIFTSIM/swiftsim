@@ -2572,6 +2572,37 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
     }
   }
 
+  for (struct link *l = c->hydro.rt_transport; l != NULL; l = l->next) {
+    struct task *t = l->t;
+    struct cell *ci = t->ci;
+    struct cell *cj = t->cj;
+    const int ci_active = cell_is_active_hydro(ci, e);
+    const int cj_active = (cj != NULL) ? cell_is_active_hydro(cj, e) : 0;
+#ifdef WITH_MPI
+    const int ci_nodeID = ci->nodeID;
+    const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
+#else
+    const int ci_nodeID = nodeID;
+    const int cj_nodeID = nodeID;
+#endif
+
+    /* Only activate tasks that involve a local active cell. */
+    if ((ci_active && ci_nodeID == nodeID) ||
+        (cj_active && cj_nodeID == nodeID)) {
+
+      scheduler_activate(s, t);
+
+      if (t->type == task_type_sub_self) {
+        cell_activate_subcell_rt_tasks(ci, NULL, s);
+      }
+
+      else if (t->type == task_type_sub_pair) {
+        cell_activate_subcell_rt_tasks(ci, cj, s);
+      }
+    }
+  }
+
+
   /* Unskip all the other task types */
   if (c->nodeID == nodeID) {
     if (cell_is_active_hydro(c, e)) {
