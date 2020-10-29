@@ -371,6 +371,7 @@ double time_integrand(double a, void *param) {
  *
  * @param x The momentum integration variable
  * @param param Neutrino mass y scaled by temperature at redshift of interest.
+ * @return The integrand evaluated at x
  */
 double neutrino_density_integrand(double x, void *param) {
   double y = *(double *)param;
@@ -393,6 +394,7 @@ double neutrino_density_integrand(double x, void *param) {
  *
  * @param w The transformed momentum integration variable w=1/x
  * @param param Neutrino mass y scaled by temperature at redshift of interest.
+ * @return The integrand evaluated at w
  */
 double neutrino_density_integrand_transformed(double w, void *param) {
   return neutrino_density_integrand(1. / w, param) / (w * w);
@@ -406,6 +408,7 @@ double neutrino_density_integrand_transformed(double w, void *param) {
  *
  * @param space The GSL working space
  * @param y Neutrino mass y scaled by temperature at redshift of interest.
+ * @return The integral evaluated at y
  */
 double neutrino_density_integrate(gsl_integration_workspace *space, double y) {
   double intermediate, abserr;
@@ -428,7 +431,8 @@ double neutrino_density_integrate(gsl_integration_workspace *space, double y) {
 }
 
 /**
- * @brief Find a time when all neutrinos are still relativistic.
+ * @brief Find a time when all neutrinos are still relativistic. Store the
+ * starting, mid, and end points of the neutrino interpolation tables in c.
  *
  * @param c The cosmology structure
  * @param tol Tolerance in density integral

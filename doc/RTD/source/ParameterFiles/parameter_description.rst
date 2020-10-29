@@ -171,6 +171,28 @@ w_0 + w_a (1 - a)`. The two parameters in the YAML file are:
 If unspecified these parameters default to the default
 :math:`\Lambda\rm{CDM}` values of :math:`w_0 = -1` and :math:`w_a = 0`.
 
+The radiation density can also be specified with two optional parameters:
+
+* The number of ultra-relativistic degrees of freedom :math:`N_{ur}`: ``N_ur``
+* The present-day CMB temperature :math:`T_{\rm{CMB},0}`: ``T_CMB_0``
+
+This parametrization cannot be used together with :math:`\Omega_r`. If neither
+parametrization is used, SWIFT defaults to :math:`\Omega_r = 0`. If only
+``N_ur`` is specified, the default temperature :math:`T_{\rm{CMB},0}=2.7255`
+Kelvin is assumed. Note that :math:`N_{ur}` differs from :math:`N_\rm{eff}`,
+which also includes massive neutrinos.
+
+Massive neutrinos can be included by specifying the optional parameters:
+
+* The number of massive neutrino species :math:`N_{\nu}`: ``N_nu``
+* A comma-separated list of neutrino masses in eV: ``M_nu_eV``
+* A comma-separated list of neutrino degeneracies: ``deg_nu``
+* The present-day neutrino temperature :math:`T_{\nu,0}`: ``T_nu_0``
+
+When including massive neutrinos, only ``N_nu`` and ``M_nu_eV`` are necessary.
+By default, SWIFT will assume singular degeneracies and
+:math:`T_{\nu,0}=(4/11)^{1/3}T_{\rm{CMB},0}`.
+
 For a Planck+13 cosmological model (ignoring radiation density as is
 commonly done) and running from :math:`z=127` to :math:`z=0`, one would hence
 use the following parameters:
@@ -444,7 +466,7 @@ The full section to start a typical cosmological run would be:
      minimal_temperature:                100   # U_T
      H_mass_fraction:                    0.755
      H_ionization_temperature:           1e4   # U_T
-     particle_splitting:                 1 
+     particle_splitting:                 1
      particle_splitting_mass_threshold:  5e-3  # U_M
 
 .. _Parameters_Stars:
@@ -455,7 +477,7 @@ Stars
 The ``Stars`` section is used to set parameters that describe the Stars
 calculations when doing feedback or enrichment. Note that if stars only act
 gravitationally (i.e. SWIFT is run *without* ``--feedback``) no parameters
-in this section are used. 
+in this section are used.
 
 The first four parameters are related to the neighbour search:
 
@@ -629,7 +651,7 @@ Finally, SWIFT also offers these options:
 * Whether to replicate the box along each axis: ``replicate`` (default: ``1``).
 * Whether to re-map the IDs to the range ``[0, N]`` and hence discard
   the original IDs from the IC file: ``remap_ids`` (default: ``0``).
-  
+
 The shift is expressed in internal units. The option to replicate the
 box is especially useful for weak-scaling tests. When set to an
 integer >1, the box size is multiplied by this integer along each axis
@@ -882,16 +904,16 @@ Equation of State (EoS)
 
 The ``EoS`` section contains options for the equations of state.
 Multiple EoS can be used for :ref:`planetary`,
-see :ref:`planetary_eos` for more information. 
+see :ref:`planetary_eos` for more information.
 
 To enable one or multiple of these EoS, the corresponding ``planetary_use_*:``
 flag(s) must be set to ``1`` in the parameter file for a simulation,
-along with the path to any table files, which are provided with the 
+along with the path to any table files, which are provided with the
 ``planetary_*_table_file:`` parameters.
-This currently means that all EoS within each base type are prepared at once, 
+This currently means that all EoS within each base type are prepared at once,
 which we intend to simplify in the future.
 
-The data files for the tabulated EoS can be downloaded using 
+The data files for the tabulated EoS can be downloaded using
 the ``examples/EoSTables/get_eos_tables.sh`` script.
 
 For the (non-planetary) isothermal EoS, the ``isothermal_internal_energy:``
@@ -1381,11 +1403,11 @@ necessary and one would use:
     invoke_stf:        1                              # We want VELOCIraptor to be called when snapshots are dumped.
     # ...
     # Rest of the snapshots properties
-	  
+
   StructureFinding:
     config_file_name:  my_stf_configuration_file.cfg  # See the VELOCIraptor manual for the content of this file.
     basename:          ./haloes/                      # Write the catalogs in this sub-directory
-     
+
 If one additionally want to call VELOCIraptor at times not linked with
 snapshots, the additional parameters need to be supplied.
 
