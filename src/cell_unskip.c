@@ -1043,6 +1043,7 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
       /* We have reached the bottom of the tree: activate drift */
       cell_activate_drift_sink(ci, s);
       cell_activate_drift_part(ci, s);
+      cell_activate_sink_formation_tasks(ci->top, s);
       if (with_timestep_sync) cell_activate_sync_part(ci, s);
     }
   }
@@ -1079,8 +1080,16 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
     else {
 
       /* For the sink mergers */
-      if (ci->nodeID == engine_rank) cell_activate_drift_sink(ci, s);
-      if (cj->nodeID == engine_rank) cell_activate_drift_sink(cj, s);
+      if (ci->nodeID == engine_rank) {
+        cell_activate_drift_sink(ci, s);
+        cell_activate_sink_formation_tasks(ci->top, s);
+      }
+      if (cj->nodeID == engine_rank) {
+        cell_activate_drift_sink(cj, s);
+        if (ci->top != cj->top) {
+          cell_activate_sink_formation_tasks(cj->top, s);
+        }
+      }
 
       if (ci_active) {
 
@@ -1632,9 +1641,6 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
 
     if (c->top->hydro.star_formation != NULL) {
       cell_activate_star_formation_tasks(c->top, s, with_feedback);
-    }
-    if (c->top->hydro.sink_formation != NULL) {
-      cell_activate_sink_formation_tasks(c->top, s);
     }
   }
 
@@ -2372,6 +2378,7 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
     if (t->type == task_type_self && ci_active) {
       cell_activate_drift_sink(ci, s);
       cell_activate_drift_part(ci, s);
+      cell_activate_sink_formation_tasks(ci->top, s);
       if (with_timestep_sync) cell_activate_sync_part(ci, s);
     }
 
@@ -2381,6 +2388,18 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
       scheduler_activate(s, t);
 
       if (t->type == task_type_pair) {
+        /* For the mergers */
+        if (cj_nodeID == nodeID) {
+          cell_activate_drift_sink(cj, s);
+          cell_activate_sink_formation_tasks(cj->top, s);
+        }
+        if (ci_nodeID == nodeID) {
+          cell_activate_drift_sink(ci, s);
+          if (ci->top != cj->top) {
+            cell_activate_sink_formation_tasks(ci->top, s);
+          }
+        }
+
         /* Do ci */
         if (ci_active) {
           /* hydro for cj */
@@ -2388,10 +2407,7 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
           cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
 
           /* Activate the drift tasks. */
-          if (ci_nodeID == nodeID) cell_activate_drift_sink(ci, s);
           if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
-          /* For the mergers */
-          if (cj_nodeID == nodeID) cell_activate_drift_sink(cj, s);
           if (cj_nodeID == nodeID && with_timestep_sync)
             cell_activate_sync_part(cj, s);
 
@@ -2406,10 +2422,7 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
           ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
 
           /* Activate the drift tasks. */
-          if (cj_nodeID == nodeID) cell_activate_drift_sink(cj, s);
           if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
-          /* For the merger */
-          if (ci_nodeID == nodeID) cell_activate_drift_sink(ci, s);
           if (ci_nodeID == nodeID && with_timestep_sync)
             cell_activate_sync_part(ci, s);
 
@@ -2440,55 +2453,11 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
     }
   }
 
-  /* Un-skip the merger tasks involved with this cell. */
-  for (struct link *l = c->sinks.merger; l != NULL; l = l->next) {
-    struct task *t = l->t;
-    struct cell *ci = t->ci;
-    struct cell *cj = t->cj;
-#ifdef WITH_MPI
-    const int ci_nodeID = ci->nodeID;
-    const int cj_nodeID = (cj != NULL) ? cj->nodeID : -1;
-#else
-    const int ci_nodeID = nodeID;
-    const int cj_nodeID = nodeID;
-#endif
-
-    const int ci_active = cell_is_active_sinks(ci, e) ||
-                          cell_is_active_hydro(ci, e);
-
-    const int cj_active =
-        (cj != NULL) && (cell_is_active_sinks(cj, e) ||
-                         cell_is_active_hydro(cj, e));
-
-    if (t->type == task_type_self && ci_active) {
-      scheduler_activate(s, t);
-    }
-
-    else if (t->type == task_type_sub_self && ci_active) {
-      scheduler_activate(s, t);
-    }
-
-    else if (t->type == task_type_pair || t->type == task_type_sub_pair) {
-      /* We only want to activate the task if the cell is active and is
-         going to update some gas on the *local* node */
-      if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
-          (ci_active || cj_active)) {
-        scheduler_activate(s, t);
-
-      } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && (cj_active)) {
-        scheduler_activate(s, t);
-
-      } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && (ci_active)) {
-        scheduler_activate(s, t);
-      }
-    }
-
-    /* Nothing more to do here, all drifts and sorts activated above */
-  }
-
 /* Unskip all the other task types. */
-  if (c->nodeID == nodeID)
-    if (cell_is_active_sinks(c, e) || cell_is_active_hydro(c, e)) {
+  if (c->nodeID == nodeID && (cell_is_active_sinks(c, e) || cell_is_active_hydro(c, e))) {
+      for (struct link *l = c->sinks.merger; l != NULL; l = l->next)
+        scheduler_activate(s, l->t);
+
       if (c->sinks.sink_in != NULL) scheduler_activate(s, c->sinks.sink_in);
       if (c->sinks.sink_out != NULL) scheduler_activate(s, c->sinks.sink_out);
       if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
@@ -2497,7 +2466,7 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
 #ifdef WITH_LOGGER
       if (c->logger != NULL) scheduler_activate(s, c->logger);
 #endif
-    }
+  }
 
   return rebuild;
 }

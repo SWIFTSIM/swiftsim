@@ -64,11 +64,13 @@ runner_iact_nonsym_sinks_compute_formation(const float r2, const float *dx,
  * Possible value: (sink_merger_remove_none/first/second)
  */
 __attribute__((always_inline)) INLINE static int
-runner_iact_nonsym_sinks_merger(const float r2, const float *dx,
-                                const float hi, const float hj,
-                                struct sink *restrict si,
-                                const struct sink *restrict sj,
-                                const float a, const float H) {
+runner_iact_sym_sinks_merger(const float r2, const float *dx,
+                             const float hi, const float hj,
+                             struct sink *restrict si,
+                             struct sink *restrict sj,
+                             const float a, const float H) {
+
+  message("Merger");
   return sink_merger_remove_first;
 
 #ifdef DEBUG_INTERACTIONS_SINKS

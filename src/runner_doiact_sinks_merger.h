@@ -37,8 +37,8 @@
 #define _DOSUB_SELF1_SINKS_MERGER(f) PASTE(runner_dosub_self_sinks, f)
 #define DOSUB_SELF1_SINKS_MERGER _DOSUB_SELF1_SINKS_MERGER(FUNCTION)
 
-#define _IACT_SINK(f) PASTE(runner_iact_nonsym_sinks, f)
-#define IACT_SINK _IACT_SINK(FUNCTION)
+#define _IACT_SINK_MERGER(f) PASTE(runner_iact_sym_sinks, f)
+#define IACT_SINK_MERGER _IACT_SINK_MERGER(FUNCTION)
 
 void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c);
 void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci, struct cell *cj);

@@ -670,7 +670,8 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
 #ifdef SWIFT_DEBUG_CHECKS
         if ((e->policy & engine_policy_self_gravity) &&
             !(e->policy & engine_policy_black_holes) &&
-            !(e->policy & engine_policy_star_formation)) {
+            !(e->policy & engine_policy_star_formation) &&
+            !(e->policy & engine_policy_sinks)) {
 
           /* Let's add a self interaction to simplify the count */
           gp->num_interacted++;
