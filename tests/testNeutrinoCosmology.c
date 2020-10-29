@@ -109,15 +109,15 @@ int main(int argc, char *argv[]) {
   double CLASS_table[rows * cols];
   FILE *stream = fopen("testNeutrinoCosmology.dat", "r");
   char line[1024];
-  int row = -1;
+  int row = 0;
   while (fgets(line, 1024, stream)) {
-    row++;
-    if (row == 0) continue;
+    if (line[0] == '#') continue;
     char *tmp = strdup(line);
     char *ptr = NULL;
-    CLASS_table[0 + (row - 1) * 3] = strtod(tmp, &ptr);
-    CLASS_table[1 + (row - 1) * 3] = strtod(ptr + 1, &ptr);
-    CLASS_table[2 + (row - 1) * 3] = strtod(ptr + 1, &ptr);
+    CLASS_table[0 + row * 3] = strtod(tmp, &ptr);
+    CLASS_table[1 + row * 3] = strtod(ptr + 1, &ptr);
+    CLASS_table[2 + row * 3] = strtod(ptr + 1, &ptr);
+    row++;
     free(tmp);
   }
   fclose(stream);
