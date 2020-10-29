@@ -120,7 +120,7 @@ INLINE static int sink_is_forming(
     const struct cooling_function_data* restrict cooling,
     const struct entropy_floor_properties* restrict entropy_floor) {
 
-  return 1;
+  return 0;
 }
 
 /**
@@ -140,10 +140,10 @@ INLINE static int sink_should_convert_to_sink(
     const struct part* p, const struct xpart* xp,
     const struct sink_props* sink_props, const struct engine* e,
     const double dt_sink) {
-  const float random_number =
-    random_unit_interval(p->id, e->ti_current, random_number_star_formation);
-  return random_number < 5e-4;
-  //return 0;
+  /* const float random_number = */
+  /*   random_unit_interval(p->id, e->ti_current, random_number_star_formation); */
+  /* return random_number < 5e-4; */
+  return 0;
 }
 
 /**

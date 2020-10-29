@@ -70,8 +70,7 @@ runner_iact_sym_sinks_merger(const float r2, const float *dx,
                              struct sink *restrict sj,
                              const float a, const float H) {
 
-  message("Merger");
-  return sink_merger_remove_first;
+  return sink_merger_remove_none;
 
 #ifdef DEBUG_INTERACTIONS_SINKS
   /* Update ngb counters */
