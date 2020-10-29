@@ -60,8 +60,18 @@ INLINE static int rt_write_particles(const struct part* parts,
       io_make_output_field("RTPhotonsUpdated", INT, 1, UNIT_CONV_NO_UNITS, 0,
                            parts, rt_data.photon_number_updated,
                            "=1 if photon number has been updated in this step");
+  list[6] =
+      io_make_output_field("RTCallsIactGradient", INT, 1, UNIT_CONV_NO_UNITS,
+                           0, parts, rt_data.calls_iact_gradient,
+                           "number of calls to this particle during the"
+                           "gradient interaction loop");
+  list[7] =
+      io_make_output_field("RTCallsIactTransport", INT, 1, UNIT_CONV_NO_UNITS,
+                           0, parts, rt_data.calls_iact_transport,
+                           "number of calls to this particle during the"
+                           "gradient interaction loop");
 
-  return 6;
+  return 8;
 }
 
 /**
