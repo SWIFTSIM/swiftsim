@@ -38,6 +38,13 @@ __attribute__((always_inline)) INLINE static void rt_gradients_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj) {
 
+  pi->rt_data.calls_iact_gradient += 1;
+  pi->rt_data.calls_per_step += 1;
+  pi->rt_data.calls_tot += 1;
+
+  pj->rt_data.calls_iact_gradient += 1;
+  pj->rt_data.calls_per_step += 1;
+  pj->rt_data.calls_tot += 1;
 }
 
 /**
@@ -52,6 +59,11 @@ __attribute__((always_inline)) INLINE static void rt_gradients_collect(
  */
 __attribute__((always_inline)) INLINE static void rt_gradients_nonsym_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj) {}
+    struct part *restrict pj) {
+
+  pi->rt_data.calls_iact_gradient += 1;
+  pi->rt_data.calls_per_step += 1;
+  pi->rt_data.calls_tot += 1;
+}
 
 #endif /* SWIFT_RT_GRADIENT_DEBUG_H */

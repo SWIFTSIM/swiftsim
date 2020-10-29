@@ -2602,7 +2602,6 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
     }
   }
 
-
   /* Unskip all the other task types */
   if (c->nodeID == nodeID) {
     if (cell_is_active_hydro(c, e)) {

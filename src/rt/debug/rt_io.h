@@ -61,8 +61,8 @@ INLINE static int rt_write_particles(const struct part* parts,
                            parts, rt_data.photon_number_updated,
                            "=1 if photon number has been updated in this step");
   list[6] =
-      io_make_output_field("RTCallsIactGradient", INT, 1, UNIT_CONV_NO_UNITS,
-                           0, parts, rt_data.calls_iact_gradient,
+      io_make_output_field("RTCallsIactGradient", INT, 1, UNIT_CONV_NO_UNITS, 0,
+                           parts, rt_data.calls_iact_gradient,
                            "number of calls to this particle during the"
                            "gradient interaction loop");
   list[7] =
@@ -103,10 +103,10 @@ INLINE static int rt_write_stars(const struct spart* sparts,
                            0, sparts, rt_data.calls_pair_inject,
                            "number of calls to this particle during one time "
                            "step in injection pair task");
-
   list[5] = io_make_output_field(
       "RTEmissionRateSet", INT, 1, UNIT_CONV_NO_UNITS, 0, sparts,
       rt_data.emission_rate_set, "Stellar photon emission rates set?");
+
   return 6;
 }
 #endif /* SWIFT_RT_IO_DEBUG_H */
