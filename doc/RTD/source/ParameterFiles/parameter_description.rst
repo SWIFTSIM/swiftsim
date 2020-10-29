@@ -180,7 +180,7 @@ This parametrization cannot be used together with :math:`\Omega_r`. If neither
 parametrization is used, SWIFT defaults to :math:`\Omega_r = 0`. If only
 ``N_ur`` is specified, the default temperature :math:`T_{\rm{CMB},0}=2.7255`
 Kelvin is assumed. Note that :math:`N_{ur}` differs from :math:`N_\rm{eff}`,
-which also includes massive neutrinos.
+the latter of which also includes massive neutrinos.
 
 Massive neutrinos can be included by specifying the optional parameters:
 
