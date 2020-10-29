@@ -671,8 +671,8 @@ void space_sinks_get_cell_index_mapper(void *map_data, int nr_sinks,
       min_mass = min(min_mass, sink->mass);
 
       /* Compute sum of velocity norm */
-      sum_vel_norm +=
-        sink->v[0] * sink->v[0] + sink->v[1] * sink->v[1] + sink->v[2] * sink->v[2];
+      sum_vel_norm += sink->v[0] * sink->v[0] + sink->v[1] * sink->v[1] +
+                      sink->v[2] * sink->v[2];
 
       /* Update the position */
       sink->x[0] = pos_x;

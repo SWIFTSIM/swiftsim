@@ -141,7 +141,8 @@ INLINE static int sink_should_convert_to_sink(
     const struct sink_props* sink_props, const struct engine* e,
     const double dt_sink) {
   /* const float random_number = */
-  /*   random_unit_interval(p->id, e->ti_current, random_number_star_formation); */
+  /*   random_unit_interval(p->id, e->ti_current, random_number_star_formation);
+   */
   /* return random_number < 5e-4; */
   return 0;
 }
@@ -168,8 +169,6 @@ INLINE static void sink_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling) {
-  sink->ti_creation = e->ti_current;
-}
+    const struct cooling_function_data* restrict cooling) {}
 
 #endif /* SWIFT_DEFAULT_SINK_H */

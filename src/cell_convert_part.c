@@ -732,7 +732,6 @@ void cell_remove_sink(const struct engine *e, struct cell *c,
   sink->gpart = NULL;
 }
 
-
 /**
  * @brief "Remove" a gas particle from the calculation and convert its gpart
  * friend to a dark matter particle.

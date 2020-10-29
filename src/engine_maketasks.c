@@ -2000,9 +2000,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_sink_formation = scheduler_addtask(
             sched, task_type_self, task_subtype_sink_compute_formation, flags,
             0, ci, NULL);
-        t_sink_merger = scheduler_addtask(
-                                          sched, task_type_self, task_subtype_sink_merger, flags,
-                                          0, ci, NULL);
+        t_sink_merger =
+            scheduler_addtask(sched, task_type_self, task_subtype_sink_merger,
+                              flags, 0, ci, NULL);
       }
 
       /* The black hole feedback tasks */
@@ -2219,8 +2219,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             sched, task_type_pair, task_subtype_sink_compute_formation, flags,
             0, ci, cj);
         t_sink_merger = scheduler_addtask(
-                                          sched, task_type_pair, task_subtype_sink_merger, flags,
-                                          0, ci, cj);
+            sched, task_type_pair, task_subtype_sink_merger, flags, 0, ci, cj);
       }
 
       /* The black hole feedback tasks */
@@ -2499,7 +2498,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 t_sink_merger);
             scheduler_addunlock(sched, t_sink_merger,
                                 cj->hydro.super->sinks.sink_out);
-
           }
 
           if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
@@ -2624,9 +2622,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_sink_formation = scheduler_addtask(
             sched, task_type_sub_self, task_subtype_sink_compute_formation,
             flags, 0, ci, NULL);
-        t_sink_merger = scheduler_addtask(
-                                          sched, task_type_sub_self, task_subtype_sink_merger,
-                                          flags, 0, ci, NULL);
+        t_sink_merger =
+            scheduler_addtask(sched, task_type_sub_self,
+                              task_subtype_sink_merger, flags, 0, ci, NULL);
       }
 
       /* The black hole feedback tasks */
@@ -2856,9 +2854,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_sink_formation = scheduler_addtask(
             sched, task_type_sub_pair, task_subtype_sink_compute_formation,
             flags, 0, ci, cj);
-        t_sink_merger = scheduler_addtask(
-                                          sched, task_type_sub_pair, task_subtype_sink_merger,
-                                          flags, 0, ci, cj);
+        t_sink_merger =
+            scheduler_addtask(sched, task_type_sub_pair,
+                              task_subtype_sink_merger, flags, 0, ci, cj);
       }
 
       /* The black hole feedback tasks */

@@ -101,8 +101,8 @@ void DOSELF1_SINKS(struct runner *r, struct cell *c, int timer) {
       if (r2 < ri2) {
         IACT_SINK(r2, dx, ri, hj, si, pj, a, H);
       }
-    }  /* loop over the sinks in ci. */
-  }    /* loop over the parts in ci. */
+    } /* loop over the sinks in ci. */
+  }   /* loop over the parts in ci. */
 }
 
 /**

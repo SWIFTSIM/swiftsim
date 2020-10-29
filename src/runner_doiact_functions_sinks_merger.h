@@ -61,8 +61,7 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c) {
     struct sink *restrict si = &sinks[sid];
 
     /* Skip inhibited particles */
-    if (sink_is_inhibited(si, e))
-      continue;
+    if (sink_is_inhibited(si, e)) continue;
 
     const float ri = si->r_cut;
     const float ri2 = ri * ri;
@@ -77,8 +76,7 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c) {
       struct sink *restrict sj = &sinks[sjd];
 
       /* Early abort? */
-      if (!sink_is_active(si, e) && !sink_is_active(sj, e))
-        continue;
+      if (!sink_is_active(si, e) && !sink_is_active(sj, e)) continue;
       if (sink_is_inhibited(sj, e)) continue;
 
       /* Get the cutoff radius */
@@ -101,7 +99,7 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c) {
 #endif
       if (r2 < ri2 || r2 < rj2) {
         enum sink_merger_remove remove =
-          IACT_SINK_MERGER(r2, dx, ri, rj, si, sj, a, H);
+            IACT_SINK_MERGER(r2, dx, ri, rj, si, sj, a, H);
 
         /* Remove the particle. */
         switch (remove) {
@@ -178,8 +176,7 @@ void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *restrict ci,
     struct sink *restrict si = &sinks_i[sid];
 
     /* Skip inhibited particles */
-    if (sink_is_inhibited(si, e))
-      continue;
+    if (sink_is_inhibited(si, e)) continue;
 
     const float ri = si->r_cut;
     const float ri2 = ri * ri;
@@ -194,8 +191,7 @@ void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *restrict ci,
       struct sink *restrict sj = &sinks_j[sjd];
 
       /* Early abort? */
-      if (!sink_is_active(si, e) && !sink_is_active(sj, e))
-        continue;
+      if (!sink_is_active(si, e) && !sink_is_active(sj, e)) continue;
       if (sink_is_inhibited(sj, e)) continue;
 
       /* Get the cutoff radius */
@@ -219,7 +215,7 @@ void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *restrict ci,
 
       if (r2 < ri2 || r2 < rj2) {
         enum sink_merger_remove remove =
-          IACT_SINK_MERGER(r2, dx, ri, rj, si, sj, a, H);
+            IACT_SINK_MERGER(r2, dx, ri, rj, si, sj, a, H);
 
         /* Remove the particle. */
         switch (remove) {
@@ -254,7 +250,8 @@ void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *restrict ci,
  * @todo Hard-code the sid on the recursive calls to avoid the
  * redundant computations to find the sid on-the-fly.
  */
-void DOSUB_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci, struct cell *cj) {
+void DOSUB_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci,
+                              struct cell *cj) {
 
   struct space *s = r->e->s;
   const struct engine *e = r->e;
@@ -265,10 +262,8 @@ void DOSUB_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci, struct cell *cj
 #endif
 
   /* Should we even bother? */
-  if (!cell_is_active_sinks(ci, e) && !cell_is_active_sinks(cj, e))
-    return;
-  if (ci->sinks.count == 0 || cj->sinks.count == 0)
-    return;
+  if (!cell_is_active_sinks(ci, e) && !cell_is_active_sinks(cj, e)) return;
+  if (ci->sinks.count == 0 || cj->sinks.count == 0) return;
 
   /* Get the type of pair and flip ci/cj if needed. */
   double shift[3];
@@ -314,8 +309,7 @@ void DOSUB_SELF1_SINKS_MERGER(struct runner *r, struct cell *ci) {
 #endif
 
   /* Should we even bother? */
-  if (ci->sinks.count == 0 || !cell_is_active_sinks(ci, r->e))
-    return;
+  if (ci->sinks.count == 0 || !cell_is_active_sinks(ci, r->e)) return;
 
   /* Recurse? */
   if (cell_can_recurse_in_self_sinks_task(ci)) {

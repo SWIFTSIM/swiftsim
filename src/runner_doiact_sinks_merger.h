@@ -27,8 +27,7 @@
 #define _DOSELF1_SINKS_MERGER(f) PASTE(runner_doself_sinks, f)
 #define DOSELF1_SINKS_MERGER _DOSELF1_SINKS_MERGER(FUNCTION)
 
-#define _DO_SYM_PAIR1_SINKS_MERGER(f) \
-  PASTE(runner_do_sym_pair_sinks, f)
+#define _DO_SYM_PAIR1_SINKS_MERGER(f) PASTE(runner_do_sym_pair_sinks, f)
 #define DO_SYM_PAIR1_SINKS_MERGER _DO_SYM_PAIR1_SINKS_MERGER(FUNCTION)
 
 #define _DOSUB_PAIR1_SINKS_MERGER(f) PASTE(runner_dosub_pair_sinks, f)
@@ -41,7 +40,9 @@
 #define IACT_SINK_MERGER _IACT_SINK_MERGER(FUNCTION)
 
 void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c);
-void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci, struct cell *cj);
+void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci,
+                               struct cell *cj);
 
 void DOSUB_SELF1_SINKS_MERGER(struct runner *r, struct cell *ci);
-void DOSUB_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci, struct cell *cj);
+void DOSUB_PAIR1_SINKS_MERGER(struct runner *r, struct cell *ci,
+                              struct cell *cj);

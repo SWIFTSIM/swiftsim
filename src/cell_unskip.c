@@ -2367,12 +2367,11 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
     const int cj_nodeID = nodeID;
 #endif
 
-    const int ci_active = cell_is_active_sinks(ci, e) ||
-                          cell_is_active_hydro(ci, e);
+    const int ci_active =
+        cell_is_active_sinks(ci, e) || cell_is_active_hydro(ci, e);
 
-    const int cj_active =
-        (cj != NULL) && (cell_is_active_sinks(cj, e) ||
-                         cell_is_active_hydro(cj, e));
+    const int cj_active = (cj != NULL) && (cell_is_active_sinks(cj, e) ||
+                                           cell_is_active_hydro(cj, e));
 
     /* Activate the drifts */
     if (t->type == task_type_self && ci_active) {
@@ -2453,18 +2452,19 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
     }
   }
 
-/* Unskip all the other task types. */
-  if (c->nodeID == nodeID && (cell_is_active_sinks(c, e) || cell_is_active_hydro(c, e))) {
-      for (struct link *l = c->sinks.merger; l != NULL; l = l->next)
-        scheduler_activate(s, l->t);
+  /* Unskip all the other task types. */
+  if (c->nodeID == nodeID &&
+      (cell_is_active_sinks(c, e) || cell_is_active_hydro(c, e))) {
+    for (struct link *l = c->sinks.merger; l != NULL; l = l->next)
+      scheduler_activate(s, l->t);
 
-      if (c->sinks.sink_in != NULL) scheduler_activate(s, c->sinks.sink_in);
-      if (c->sinks.sink_out != NULL) scheduler_activate(s, c->sinks.sink_out);
-      if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
-      if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
-      if (c->timestep != NULL) scheduler_activate(s, c->timestep);
+    if (c->sinks.sink_in != NULL) scheduler_activate(s, c->sinks.sink_in);
+    if (c->sinks.sink_out != NULL) scheduler_activate(s, c->sinks.sink_out);
+    if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
+    if (c->kick2 != NULL) scheduler_activate(s, c->kick2);
+    if (c->timestep != NULL) scheduler_activate(s, c->timestep);
 #ifdef WITH_LOGGER
-      if (c->logger != NULL) scheduler_activate(s, c->logger);
+    if (c->logger != NULL) scheduler_activate(s, c->logger);
 #endif
   }
 

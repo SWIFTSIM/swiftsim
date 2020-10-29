@@ -1595,13 +1595,15 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
 
         } else if (t->subtype == task_subtype_sink_merger) {
           if (t->ci->nodeID != nodeID)
-            cost = 3.f * wscale * sink_count_i * sink_count_j * sid_scale[t->flags];
+            cost = 3.f * wscale * sink_count_i * sink_count_j *
+                   sid_scale[t->flags];
           else if (t->cj->nodeID != nodeID)
-            cost = 3.f * wscale * sink_count_i * sink_count_j * sid_scale[t->flags];
+            cost = 3.f * wscale * sink_count_i * sink_count_j *
+                   sid_scale[t->flags];
           else
             cost = 2.f * wscale *
-              (sink_count_i * sink_count_j + sink_count_j * sink_count_i) *
-              sid_scale[t->flags];
+                   (sink_count_i * sink_count_j + sink_count_j * sink_count_i) *
+                   sid_scale[t->flags];
 
         } else if (t->subtype == task_subtype_bh_density ||
                    t->subtype == task_subtype_bh_swallow ||
@@ -1659,23 +1661,23 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
         } else if (t->subtype == task_subtype_sink_compute_formation) {
           if (t->ci->nodeID != nodeID) {
             cost =
-              3.f * (wscale * count_i) * sink_count_j * sid_scale[t->flags];
+                3.f * (wscale * count_i) * sink_count_j * sid_scale[t->flags];
           } else if (t->cj->nodeID != nodeID) {
             cost =
-              3.f * (wscale * sink_count_i) * count_j * sid_scale[t->flags];
+                3.f * (wscale * sink_count_i) * count_j * sid_scale[t->flags];
           } else {
             cost = 2.f * wscale *
-              (sink_count_i * count_j + sink_count_j * count_i) *
-              sid_scale[t->flags];
+                   (sink_count_i * count_j + sink_count_j * count_i) *
+                   sid_scale[t->flags];
           }
 
         } else if (t->subtype == task_subtype_sink_merger) {
           if (t->ci->nodeID != nodeID) {
-            cost =
-                3.f * (wscale * sink_count_i) * sink_count_j * sid_scale[t->flags];
+            cost = 3.f * (wscale * sink_count_i) * sink_count_j *
+                   sid_scale[t->flags];
           } else if (t->cj->nodeID != nodeID) {
-            cost =
-                3.f * (wscale * sink_count_i) * sink_count_j * sid_scale[t->flags];
+            cost = 3.f * (wscale * sink_count_i) * sink_count_j *
+                   sid_scale[t->flags];
           } else {
             cost = 2.f * wscale *
                    (sink_count_i * sink_count_j + sink_count_j * sink_count_i) *

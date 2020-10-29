@@ -503,7 +503,6 @@ void part_verify_links(struct part *parts, struct gpart *gparts,
 
       /* Check the link */
       if (sinks[k].gpart->id_or_neg_offset != -(ptrdiff_t)k) {
-        message("%lli %zi", sinks[k].gpart->id_or_neg_offset, k);
         error("Linking problem !");
       }
 

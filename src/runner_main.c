@@ -244,7 +244,7 @@ void *runner_main(void *data) {
             runner_doself_branch_sinks_compute_formation(r, ci);
           else if (t->subtype == task_subtype_sink_merger)
             runner_doself_sinks_merger(r, ci);
-         else
+          else
             error("Unknown/invalid task subtype (%s).",
                   subtaskID_names[t->subtype]);
           break;
