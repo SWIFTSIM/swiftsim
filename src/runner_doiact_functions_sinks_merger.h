@@ -60,6 +60,10 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c) {
     /* Get a hold of the ith sink in ci. */
     struct sink *restrict si = &sinks[sid];
 
+    /* Skip inhibited particles */
+    if (sink_is_inhibited(si, e))
+      continue;
+
     const float ri = si->r_cut;
     const float ri2 = ri * ri;
     const float six[3] = {(float)(si->x[0] - c->loc[0]),
@@ -67,7 +71,7 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c) {
                           (float)(si->x[2] - c->loc[2])};
 
     /* Loop over the parts in cj. */
-    for (int sjd = 0; sjd < scount; sjd++) {
+    for (int sjd = sid + 1; sjd < scount; sjd++) {
 
       /* Get a pointer to the jth particle. */
       struct sink *restrict sj = &sinks[sjd];
@@ -92,25 +96,22 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c) {
       /* Check that particles have been drifted to the current time */
       if (sj->ti_drift != e->ti_current)
         error("Particle sj not drifted to current time");
+      if (si->ti_drift != e->ti_current)
+        error("Particle si not drifted to current time");
 #endif
-
       if (r2 < ri2 || r2 < rj2) {
         enum sink_merger_remove remove =
-          IACT_SINK(r2, dx, ri, rj, si, sj, a, H);
+          IACT_SINK_MERGER(r2, dx, ri, rj, si, sj, a, H);
 
         /* Remove the particle. */
         switch (remove) {
           case sink_merger_remove_none:
             break;
           case sink_merger_remove_first:
-            //cell_remove_gpart(e, c, si->gpart);
-            //si->gpart = NULL;
-            //cell_remove_sink(e, c, si);
+            cell_remove_sink(e, c, si);
             break;
           case sink_merger_remove_second:
-            //cell_remove_gpart(e, c, sj->gpart);
-            //sj->gpart = NULL;
-            //cell_remove_sink(e, c, sj);
+            cell_remove_sink(e, c, sj);
             break;
           default:
             error("Unknown value, please check your iact function.");
@@ -176,6 +177,10 @@ void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *restrict ci,
     /* Get a hold of the ith sink in ci. */
     struct sink *restrict si = &sinks_i[sid];
 
+    /* Skip inhibited particles */
+    if (sink_is_inhibited(si, e))
+      continue;
+
     const float ri = si->r_cut;
     const float ri2 = ri * ri;
     const float six[3] = {(float)(si->x[0] - (cj->loc[0] + shift[0])),
@@ -208,25 +213,23 @@ void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *restrict ci,
       /* Check that particles have been drifted to the current time */
       if (sj->ti_drift != e->ti_current)
         error("Particle sj not drifted to current time");
+      if (si->ti_drift != e->ti_current)
+        error("Particle si not drifted to current time");
 #endif
 
       if (r2 < ri2 || r2 < rj2) {
         enum sink_merger_remove remove =
-          IACT_SINK(r2, dx, ri, rj, si, sj, a, H);
+          IACT_SINK_MERGER(r2, dx, ri, rj, si, sj, a, H);
 
         /* Remove the particle. */
         switch (remove) {
           case sink_merger_remove_none:
             break;
           case sink_merger_remove_first:
-            //cell_remove_gpart(e, ci, si->gpart);
-            //si->gpart = NULL;
-            //cell_remove_sink(e, ci, si);
+            cell_remove_sink(e, ci, si);
             break;
           case sink_merger_remove_second:
-            //cell_remove_gpart(e, cj, sj->gpart);
-            //sj->gpart = NULL;
-            //cell_remove_sink(e, cj, sj);
+            cell_remove_sink(e, cj, sj);
             break;
           default:
             error("Unknown value, please check your iact function.");
