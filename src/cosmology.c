@@ -817,8 +817,11 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
     c->Omega_r = c->Omega_g + c->Omega_ur;
 
     /* Compute effective number of relativistic species at early times */
-    c->N_eff = c->N_ur + c->N_nu * pow(c->T_nu_0 / c->T_CMB_0, 4) / dec_4;
-
+    double N_nu_tot_deg = 0.;
+    for (int i = 0; i < c->N_nu; i++) {
+      N_nu_tot_deg += c->deg_nu[i];
+    }
+    c->N_eff = c->N_ur + N_nu_tot_deg * pow(c->T_nu_0 / c->T_CMB_0, 4) / dec_4;
   } else {
     c->Omega_g = 0.;
     c->Omega_ur = 0.;
@@ -1264,7 +1267,6 @@ void cosmology_print(const struct cosmology *c) {
       "Additional density parameters: [O_nu_0, O_cdm, O_ur, O_g] = [%f, "
       "%f, %f, %f]",
       c->Omega_nu_0, c->Omega_cdm, c->Omega_ur, c->Omega_g);
-  message("Dark energy equation of state: w_0=%f w_a=%f", c->w_0, c->w_a);
   message("Dark energy equation of state: w_0=%f w_a=%f", c->w_0, c->w_a);
   message("Hubble constant: h = %f, H_0 = %e U_t^(-1)", c->h, c->H0);
   message("Hubble time: 1/H0 = %e U_t", c->Hubble_time);
