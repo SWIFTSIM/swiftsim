@@ -747,7 +747,8 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
 
     /* Instruct the user to use N_ur for massless neutrinos */
     for (int i = 0; i < c->N_nu; i++)
-      if (c->M_nu_eV[i] == 0.) error("Specified nu with 0 mass (use N_ur).");
+      if (c->M_nu_eV[i] == 0.)
+        error("Specified massive neutrino with m=0 (use N_ur instead).");
   }
 
   /* Read the start and end of the simulation */
@@ -780,40 +781,53 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
   c->critical_density_0 =
       3. * c->H0 * c->H0 / (8. * M_PI * phys_const->const_newton_G);
 
-  /* Infer T_CMB_0 from Omega_r if the latter is specified */
-  const double cc = phys_const->const_speed_light_c;
-  const double rho_c3_on_4sigma = c->critical_density_0 * cc * cc * cc /
-                                  (4. * phys_const->const_stefan_boltzmann);
-  if (c->T_CMB_0 == 0. && c->Omega_r != 0) {
-    c->T_CMB_0 = pow(c->Omega_r * rho_c3_on_4sigma, 1. / 4.);
-  }
+  /* Handle neutrinos and radiation if present */
+  if (c->Omega_r == 0. && c->T_CMB_0 == 0. && c->N_ur == 0. && c->N_nu == 0) {
+    c->T_CMB_0_K = 0.;
+    c->T_nu_0 = 0.;
+    c->T_nu_0_eV = 0.;
+    c->Omega_g = 0.;
+    c->Omega_ur = 0.;
+    c->Omega_nu_0 = 0.;
+    c->Omega_nu = 0.;
+    c->N_eff = 0.;
 
-  /* If we have neutrinos, but not Omega_r or T_CMB_0, use the default value */
-  else if (c->T_CMB_0 == 0. && (c->N_ur != 0. || c->N_nu != 0)) {
-    c->T_CMB_0 = phys_const->const_T_CMB_0;
-  }
+    c->neutrino_density_early_table = NULL;
+    c->neutrino_density_late_table = NULL;
+  } else {
+    /* Infer T_CMB_0 from Omega_r if the latter is specified */
+    const double cc = phys_const->const_speed_light_c;
+    const double rho_c3_on_4sigma = c->critical_density_0 * cc * cc * cc /
+                                    (4. * phys_const->const_stefan_boltzmann);
+    if (c->T_CMB_0 == 0. && c->Omega_r != 0) {
+      c->T_CMB_0 = pow(c->Omega_r * rho_c3_on_4sigma, 1. / 4.);
+    }
 
-  c->T_CMB_0_K =
-      c->T_CMB_0 / units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
+    /* If we have neutrinos, but not Omega_r / T_CMB_0, use the default value */
+    else if (c->T_CMB_0 == 0.) {
+      c->T_CMB_0 = phys_const->const_T_CMB_0;
+    }
 
-  /* Approximate the neutrino temperature if unspecified */
-  const double decoupling_factor = pow(4. / 11., 1. / 3.);
-  const double dec_4 = pow(decoupling_factor, 4);
-  if (c->T_nu_0 == 0.) {
-    c->T_nu_0 = c->T_CMB_0 * decoupling_factor;
-  }
+    /* Approximate the neutrino temperature if unspecified */
+    const double decoupling_factor = pow(4. / 11., 1. / 3.);
+    const double dec_4 = pow(decoupling_factor, 4);
+    if (c->T_nu_0 == 0.) {
+      c->T_nu_0 = c->T_CMB_0 * decoupling_factor;
+    }
 
-  c->T_nu_0_eV = c->T_nu_0 * phys_const->const_boltzmann_k /
-                 phys_const->const_electron_volt;
+    /* Unit conversions */
+    c->T_CMB_0_K =
+        c->T_CMB_0 / units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
+    c->T_nu_0_eV = c->T_nu_0 * phys_const->const_boltzmann_k /
+                   phys_const->const_electron_volt;
 
-  if (c->T_CMB_0 != 0) {
     /* Infer CMB density from the temperature */
     c->Omega_g = pow(c->T_CMB_0, 4) / rho_c3_on_4sigma;
 
-    /* Infer the density of ultra-relativistic fermionic species */
+    /* Compute the density of ultra-relativistic fermionic species */
     c->Omega_ur = c->N_ur * 7. / 8. * dec_4 * c->Omega_g;
 
-    /* Infer the total radiation density */
+    /* Compute the total radiation density */
     c->Omega_r = c->Omega_g + c->Omega_ur;
 
     /* Compute effective number of relativistic species at early times */
@@ -822,23 +836,18 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
       N_nu_tot_deg += c->deg_nu[i];
     }
     c->N_eff = c->N_ur + N_nu_tot_deg * pow(c->T_nu_0 / c->T_CMB_0, 4) / dec_4;
-  } else {
-    c->Omega_g = 0.;
-    c->Omega_ur = 0.;
-    c->Omega_r = 0.;
-    c->N_eff = 0.;
+
+    /* Initialise the neutrino density interpolation tables if necessary */
+    c->neutrino_density_early_table = NULL;
+    c->neutrino_density_late_table = NULL;
+    cosmology_init_neutrino_tables(c);
+
+    /* Retrieve the present-day total density due to massive neutrinos */
+    c->Omega_nu_0 = cosmology_get_neutrino_density(c, 1);
+    c->Omega_nu = c->Omega_nu_0;  // will be updated
   }
 
-  /* Initialise the neutrino density interpolation tables if necessary */
-  c->neutrino_density_early_table = NULL;
-  c->neutrino_density_late_table = NULL;
-  cosmology_init_neutrino_tables(c);
-
-  /* Retrieve the present-day total density due to massive neutrinos */
-  c->Omega_nu_0 = cosmology_get_neutrino_density(c, 1);
-  c->Omega_nu = c->Omega_nu_0;  // will be updated
-
-  /* Infer Omega_cdm from Omega_m and Omega_nu_0 */
+  /* Cold dark matter density */
   c->Omega_cdm = c->Omega_m - c->Omega_b - c->Omega_nu_0;
 
   /* Curvature density (for closure) */
