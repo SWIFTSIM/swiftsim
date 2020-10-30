@@ -52,6 +52,9 @@ struct rt_part_data {
   int neigh_iact_transp_free;
   long long this_cell;
 
+  int gradients_finished;    /* finalised computing gradients? */
+  int transport_done;        /* transport step done? */
+  int thermochem_done;       /* thermochemistry done? */
 };
 
 /* Additional RT data in star particle struct */

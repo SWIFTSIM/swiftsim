@@ -114,7 +114,18 @@ INLINE static int rt_write_particles(const struct part* parts,
   list[18] =
       io_make_output_field("RTThisCell", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.this_cell,
                            "the cell this particle is in");
-  return 19;
+
+  list[19] = io_make_output_field(
+      "RTGradientsFinished", INT, 1, UNIT_CONV_NO_UNITS, 0, parts,
+      rt_data.gradients_finished, "Have gradients been finalised?");
+  list[20] = io_make_output_field("RTTransportDone", INT, 1, UNIT_CONV_NO_UNITS,
+                                 0, parts, rt_data.transport_done,
+                                 "Have gradients been finalised?");
+  list[21] = io_make_output_field(
+      "RTThermochemistryDone", INT, 1, UNIT_CONV_NO_UNITS, 0, parts,
+      rt_data.thermochem_done, "Has thermochemistry been done?");
+
+  return 22;
 }
 
 /**

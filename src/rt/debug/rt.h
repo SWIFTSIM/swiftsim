@@ -19,6 +19,8 @@
 #ifndef SWIFT_RT_DEBUG_H
 #define SWIFT_RT_DEBUG_H
 
+#include "rt_thermochemistry.h"
+
 /**
  * @file src/rt/debug/rt.h
  * @brief Main header file for the debug radiative transfer scheme.
@@ -58,6 +60,10 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.neigh_iact_grad_free = 0;
   p->rt_data.neigh_iact_transp_free = 0;
   p->rt_data.this_cell = 0LL;
+
+  p->rt_data.gradients_finished = 0;
+  p->rt_data.transport_done = 0;
+  p->rt_data.thermochem_done = 0;
 }
 
 /**
@@ -146,6 +152,44 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
         " %10.3g %10.3g",
         star_age, dt);
   }
+}
+
+/**
+ * @brief finishes up the gradient computation
+ *
+ * @param p particle to work on
+ */
+__attribute__((always_inline)) INLINE static void rt_finalise_gradient(
+    struct part* restrict p) {
+
+  p->rt_data.gradients_finished += 1;
+}
+
+/**
+ * @brief finishes up the transport step by actually doing the time integration
+ *
+ * @param p particle to work on
+ */
+__attribute__((always_inline)) INLINE static void rt_finalise_transport(
+    struct part* restrict p) {
+
+  if (!p->rt_data.gradients_finished)
+    error(
+        "Trying to do finalise_transport when rt_finalise_gradient hasn't been "
+        "done");
+
+  p->rt_data.transport_done += 1;
+}
+
+/**
+ * @brief Wraps around rt_compute_thermochemistry function
+ *
+ * @param p particle to work on
+ */
+__attribute__((always_inline)) INLINE static void rt_do_thermochemistry(
+    struct part* restrict p) {
+
+  rt_compute_thermochemistry(p);
 }
 
 #endif /* SWIFT_RT_DEBUG_H */

@@ -1281,14 +1281,22 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
         c->hydro.rt_ghost1 = scheduler_addtask(
             s, task_type_rt_ghost1, task_subtype_none, 0, 0, c, NULL);
 
-        c->hydro.rt_gradient_out =
-            scheduler_addtask(s, task_type_rt_gradient_out, task_subtype_none,
-                              0, /*implicit= */ 1, c, NULL);
+        /* non-implicit ghost 2 */
+        c->hydro.rt_ghost2 = scheduler_addtask(
+            s, task_type_rt_ghost2, task_subtype_none, 0, 0, c, NULL);
+
+        /* implicit transport out */
         c->hydro.rt_transport_out =
             scheduler_addtask(s, task_type_rt_transport_out, task_subtype_none,
                               0, /*implicit= */ 1, c, NULL);
 
-        scheduler_addunlock(s, c->hydro.rt_transport_out, c->hydro.rt_out);
+        /* non-implicit ghost 2 */
+        c->hydro.rt_thermochemistry = scheduler_addtask(
+            s, task_type_rt_thermochemistry, task_subtype_none, 0, 0, c, NULL);
+
+        scheduler_addunlock(s, c->hydro.rt_transport_out,
+                            c->hydro.rt_thermochemistry);
+        scheduler_addunlock(s, c->hydro.rt_thermochemistry, c->hydro.rt_out);
       }
 
       /* Subgrid tasks: sink */
@@ -2172,10 +2180,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
         scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
         scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
-        scheduler_addunlock(sched, t_rt_gradient,
-                            ci->super->hydro.rt_gradient_out);
-        scheduler_addunlock(sched, ci->super->hydro.rt_gradient_out,
-                            t_rt_transport);
+        scheduler_addunlock(sched, t_rt_gradient, ci->super->hydro.rt_ghost2);
+        scheduler_addunlock(sched, ci->super->hydro.rt_ghost2, t_rt_transport);
         scheduler_addunlock(sched, t_rt_transport,
                             ci->super->hydro.rt_transport_out);
       }
@@ -2448,9 +2454,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           }
           scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
           scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
-          scheduler_addunlock(sched, t_rt_gradient,
-                              ci->super->hydro.rt_gradient_out);
-          scheduler_addunlock(sched, ci->super->hydro.rt_gradient_out,
+          scheduler_addunlock(sched, t_rt_gradient, ci->super->hydro.rt_ghost2);
+          scheduler_addunlock(sched, ci->super->hydro.rt_ghost2,
                               t_rt_transport);
           scheduler_addunlock(sched, t_rt_transport,
                               ci->super->hydro.rt_transport_out);
@@ -2554,8 +2559,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             scheduler_addunlock(sched, cj->super->hydro.rt_ghost1,
                                 t_rt_gradient);
             scheduler_addunlock(sched, t_rt_gradient,
-                                cj->super->hydro.rt_gradient_out);
-            scheduler_addunlock(sched, cj->super->hydro.rt_gradient_out,
+                                cj->super->hydro.rt_ghost2);
+            scheduler_addunlock(sched, cj->super->hydro.rt_ghost2,
                                 t_rt_transport);
             scheduler_addunlock(sched, t_rt_transport,
                                 cj->super->hydro.rt_transport_out);
@@ -2815,10 +2820,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
         scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
         scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
-        scheduler_addunlock(sched, t_rt_gradient,
-                            ci->super->hydro.rt_gradient_out);
-        scheduler_addunlock(sched, ci->super->hydro.rt_gradient_out,
-                            t_rt_transport);
+        scheduler_addunlock(sched, t_rt_gradient, ci->super->hydro.rt_ghost2);
+        scheduler_addunlock(sched, ci->super->hydro.rt_ghost2, t_rt_transport);
         scheduler_addunlock(sched, t_rt_transport,
                             ci->super->hydro.rt_transport_out);
       }
@@ -3098,9 +3101,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           }
           scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
           scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
-          scheduler_addunlock(sched, t_rt_gradient,
-                              ci->super->hydro.rt_gradient_out);
-          scheduler_addunlock(sched, ci->super->hydro.rt_gradient_out,
+          scheduler_addunlock(sched, t_rt_gradient, ci->super->hydro.rt_ghost2);
+          scheduler_addunlock(sched, ci->super->hydro.rt_ghost2,
                               t_rt_transport);
           scheduler_addunlock(sched, t_rt_transport,
                               ci->super->hydro.rt_transport_out);
@@ -3202,8 +3204,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             scheduler_addunlock(sched, cj->super->hydro.rt_ghost1,
                                 t_rt_gradient);
             scheduler_addunlock(sched, t_rt_gradient,
-                                cj->super->hydro.rt_gradient_out);
-            scheduler_addunlock(sched, cj->super->hydro.rt_gradient_out,
+                                cj->super->hydro.rt_ghost2);
+            scheduler_addunlock(sched, cj->super->hydro.rt_ghost2,
                                 t_rt_transport);
             scheduler_addunlock(sched, t_rt_transport,
                                 cj->super->hydro.rt_transport_out);
