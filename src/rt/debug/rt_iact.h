@@ -81,6 +81,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, float a, float H, int mode) {
 
+  if (!pi->rt_data.gradients_finished)
+    error(
+        "Trying to compute fluxes for particle where gradients aren't "
+        "finished");
+  if (!pj->rt_data.gradients_finished)
+    error(
+        "Trying to compute fluxes for particle where gradients aren't "
+        "finished");
+
   pi->rt_data.calls_tot += 1;
   pi->rt_data.calls_per_step += 1;
   pi->rt_data.calls_iact_transport += 1;
@@ -158,6 +167,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_gradient(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, float a, float H) {
 
+  if (!pi->rt_data.photon_number_updated)
+    error(
+        "Trying to compute gradients on particle where injection wasn't "
+        "finished");
+  if (!pj->rt_data.photon_number_updated)
+    error(
+        "Trying to compute gradients on particle where injection wasn't "
+        "finished");
+
   rt_gradients_collect(r2, dx, hi, hj, pi, pj);
 }
 
@@ -182,6 +200,15 @@ __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_rt_gradient(float r2, const float *dx, float hi, float hj,
                                struct part *restrict pi,
                                struct part *restrict pj, float a, float H) {
+
+  if (!pi->rt_data.photon_number_updated)
+    error(
+        "Trying to compute gradients on particle where injection wasn't "
+        "finished");
+  if (!pj->rt_data.photon_number_updated)
+    error(
+        "Trying to compute gradients on particle where injection wasn't "
+        "finished");
 
   rt_gradients_nonsym_collect(r2, dx, hi, hj, pi, pj);
 }

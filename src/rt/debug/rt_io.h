@@ -70,8 +70,17 @@ INLINE static int rt_write_particles(const struct part* parts,
                            0, parts, rt_data.calls_iact_transport,
                            "number of calls to this particle during the"
                            "gradient interaction loop");
+  list[8] = io_make_output_field(
+      "RTGradientsFinished", INT, 1, UNIT_CONV_NO_UNITS, 0, parts,
+      rt_data.gradients_finished, "Have gradients been finalised?");
+  list[9] = io_make_output_field("RTTransportDone", INT, 1, UNIT_CONV_NO_UNITS,
+                                 0, parts, rt_data.transport_done,
+                                 "Have gradients been finalised?");
+  list[10] = io_make_output_field(
+      "RTThermochemistryDone", INT, 1, UNIT_CONV_NO_UNITS, 0, parts,
+      rt_data.thermochem_done, "Has thermochemistry been done?");
 
-  return 8;
+  return 11;
 }
 
 /**
