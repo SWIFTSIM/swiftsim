@@ -66,12 +66,32 @@ INLINE static int rt_write_particles(const struct part* parts,
                            "number of calls to this particle during the"
                            "gradient interaction loop");
   list[7] =
+      io_make_output_field("RTCallsIactGradientSym", INT, 1, UNIT_CONV_NO_UNITS, 0,
+                           parts, rt_data.calls_iact_gradient_sym,
+                           "number of symmetric calls to this particle during the"
+                           "gradient interaction loop");
+  list[8] =
+      io_make_output_field("RTCallsIactGradientNonSym", INT, 1, UNIT_CONV_NO_UNITS, 0,
+                           parts, rt_data.calls_iact_gradient_nonsym,
+                           "number of nonsymmetric calls to this particle during the"
+                           "gradient interaction loop");
+  list[9] =
       io_make_output_field("RTCallsIactTransport", INT, 1, UNIT_CONV_NO_UNITS,
                            0, parts, rt_data.calls_iact_transport,
                            "number of calls to this particle during the"
                            "transport interaction loop");
+  list[10] =
+      io_make_output_field("RTCallsIactTransportSym", INT, 1, UNIT_CONV_NO_UNITS,
+                           0, parts, rt_data.calls_iact_transport_sym,
+                           "number of symmetric calls to this particle during the"
+                           "gradient interaction loop");
+  list[11] =
+      io_make_output_field("RTCallsIactTransportNonSym", INT, 1, UNIT_CONV_NO_UNITS,
+                           0, parts, rt_data.calls_iact_transport_nonsym,
+                           "number of non-symmetric calls to this particle during the"
+                           "gradient interaction loop");
 
-  return 8;
+  return 12;
 }
 
 /**
