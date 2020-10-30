@@ -41,7 +41,11 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.calls_self_inject = 0;
   p->rt_data.calls_pair_inject = 0;
   p->rt_data.calls_iact_gradient = 0;
+  p->rt_data.calls_iact_gradient_sym = 0;
+  p->rt_data.calls_iact_gradient_nonsym = 0;
   p->rt_data.calls_iact_transport = 0;
+  p->rt_data.calls_iact_transport_sym = 0;
+  p->rt_data.calls_iact_transport_nonsym = 0;
   p->rt_data.photon_number_updated = 0;
 }
 
