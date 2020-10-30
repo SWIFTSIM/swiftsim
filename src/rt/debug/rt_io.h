@@ -71,6 +71,7 @@ INLINE static int rt_write_particles(const struct part* parts,
                            "number of calls to this particle during the"
                            "transport interaction loop");
   return 8;
+
 }
 
 /**

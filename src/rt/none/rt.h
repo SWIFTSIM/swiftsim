@@ -82,4 +82,31 @@ __attribute__((always_inline)) INLINE static void
 rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
                                  double star_age, double dt) {}
 
+/**
+ * @brief finishes up the gradient computation
+ *
+ * @param p particle to work on
+ */
+__attribute__((always_inline)) INLINE static void rt_finalise_gradient(
+    struct part* restrict p) {}
+
+/**
+ * @brief finishes up the transport step by actually doing the time integration
+ *
+ * @param p particle to work on
+ */
+__attribute__((always_inline)) INLINE static void rt_finalise_transport(
+    struct part* restrict p) {}
+
+/**
+ * @brief Wraps around rt_compute_thermochemistry function
+ *
+ * @param p particle to work on
+ */
+__attribute__((always_inline)) INLINE static void rt_do_thermochemistry(
+    struct part* restrict p) {
+
+  rt_compute_thermochemistry(p);
+}
+
 #endif /* SWIFT_RT_NONE_H */
