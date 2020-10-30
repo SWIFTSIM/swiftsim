@@ -726,11 +726,8 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
   c->N_nu = parser_get_opt_param_int(params, "Cosmology:N_nu", 0);
 
   /* Make sure that the cosmological parameters are not overdetermined */
-  if (c->Omega_r != 0. && c->T_CMB_0 != 0.) {
-    error("Specify at most one of Cosmology:Omega_r and Cosmology:T_CMB_0.");
-  }
-  if (c->Omega_r != 0. && c->N_ur != 0.) {
-    error("Specify at most one of Cosmology:Omega_r and N_ur (use T_CMB_0).");
+  if (c->Omega_r != 0. && (c->T_CMB_0 != 0. || c->N_ur != 0.)) {
+    error("Cannot use Cosmology:Omega_r and (T_CMB_0 or N_ur).");
   }
 
   /* If there are massive neutrinos, read the masses and degeneracies */
@@ -748,11 +745,6 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
                                       c->M_nu_eV);
     parser_get_opt_param_double_array(params, "Cosmology:deg_nu", c->N_nu,
                                       c->deg_nu);
-
-    /* Instruct the user to use N_ur for massless neutrinos */
-    for (int i = 0; i < c->N_nu; i++)
-      if (c->M_nu_eV[i] == 0.)
-        error("Specified massive neutrino with m=0 (use N_ur instead).");
   }
 
   /* Read the start and end of the simulation */
@@ -785,12 +777,21 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
   c->critical_density_0 =
       3. * c->H0 * c->H0 / (8. * M_PI * phys_const->const_newton_G);
 
+  /* Some constants */
+  const double cc = phys_const->const_speed_light_c;
+  const double rho_c3_on_4sigma = c->critical_density_0 * cc * cc * cc /
+                                  (4. * phys_const->const_stefan_boltzmann);
+
   /* Handle neutrinos and radiation if present */
-  if (c->Omega_r == 0. && c->T_CMB_0 == 0. && c->N_ur == 0. && c->N_nu == 0) {
-    c->T_CMB_0_K = 0.;
+  if (c->T_CMB_0 == 0. && c->N_ur == 0. && c->N_nu == 0) {
+    /* Infer T_CMB_0 from Omega_r */
+    c->T_CMB_0 = pow(c->Omega_r * rho_c3_on_4sigma, 1. / 4.);
+    c->T_CMB_0_K =
+        c->T_CMB_0 / units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
+
+    c->Omega_g = c->Omega_r;
     c->T_nu_0 = 0.;
     c->T_nu_0_eV = 0.;
-    c->Omega_g = 0.;
     c->Omega_ur = 0.;
     c->Omega_nu_0 = 0.;
     c->Omega_nu = 0.;
@@ -800,9 +801,6 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
     c->neutrino_density_late_table = NULL;
   } else {
     /* Infer T_CMB_0 from Omega_r if the latter is specified */
-    const double cc = phys_const->const_speed_light_c;
-    const double rho_c3_on_4sigma = c->critical_density_0 * cc * cc * cc /
-                                    (4. * phys_const->const_stefan_boltzmann);
     if (c->T_CMB_0 == 0. && c->Omega_r != 0) {
       c->T_CMB_0 = pow(c->Omega_r * rho_c3_on_4sigma, 1. / 4.);
     }
@@ -825,14 +823,20 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
     c->T_nu_0_eV = c->T_nu_0 * phys_const->const_boltzmann_k /
                    phys_const->const_electron_volt;
 
-    /* Infer CMB density from the temperature */
-    c->Omega_g = pow(c->T_CMB_0, 4) / rho_c3_on_4sigma;
+    /* Set photon density and compute radiation density if necessary */
+    if (c->Omega_r != 0.) {
+      c->Omega_g = c->Omega_r;
+      c->Omega_ur = 0.;
+    } else {
+      /* Infer CMB density from the temperature */
+      c->Omega_g = pow(c->T_CMB_0, 4) / rho_c3_on_4sigma;
 
-    /* Compute the density of ultra-relativistic fermionic species */
-    c->Omega_ur = c->N_ur * 7. / 8. * dec_4 * c->Omega_g;
+      /* Compute the density of ultra-relativistic fermionic species */
+      c->Omega_ur = c->N_ur * 7. / 8. * dec_4 * c->Omega_g;
 
-    /* Compute the total radiation density */
-    c->Omega_r = c->Omega_g + c->Omega_ur;
+      /* Compute the total radiation density */
+      c->Omega_r = c->Omega_g + c->Omega_ur;
+    }
 
     /* Compute effective number of relativistic species at early times */
     double N_nu_tot_deg = 0.;
