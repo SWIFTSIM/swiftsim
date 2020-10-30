@@ -531,6 +531,12 @@ void *runner_main(void *data) {
         case task_type_rt_ghost1:
           runner_do_rt_ghost1(r, t->ci, 1);
           break;
+        case task_type_rt_ghost2:
+          runner_do_rt_ghost2(r, t->ci, 1);
+          break;
+        case task_type_rt_thermochemistry:
+          runner_do_rt_thermochemistry(r, t->ci, 1);
+          break;
         default:
           error("Unknown/invalid task type (%d).", t->type);
       }
