@@ -36,7 +36,11 @@ struct rt_part_data {
   int calls_self_inject;     /* calls from self inject tasks */
   int calls_pair_inject;     /* calls from pair inject tasks */
   int calls_iact_gradient;   /* calls from gradient interaction loop */
+  int calls_iact_gradient_sym;   /* calls from gradient interaction loop */
+  int calls_iact_gradient_nonsym;  /* calls from gradient interaction loop */
   int calls_iact_transport;  /* calls from transport interaction loop */
+  int calls_iact_transport_sym;  /* calls from transport interaction loop */
+  int calls_iact_transport_nonsym; /* calls from transport interaction loop */
   int photon_number_updated; /* calls from ghost1 tasks */
 };
 
