@@ -60,8 +60,6 @@ struct spart {
   /*! Particle smoothing length. */
   float h;
 
-  float rho;
-
   struct {
 
     /* Number of neighbours. */
@@ -146,6 +144,12 @@ struct spart {
 
   /*! Has this particle interacted with any unhibited neighbour? */
   char inhibited_exact;
+
+  float n;
+
+  float n_exact;
+
+  float rho;
 
   /*! Exact value of the density field obtained via brute-force loop */
   float rho_exact;
