@@ -182,6 +182,16 @@ void header_read(struct header *h, struct logger_logfile *log) {
     error_python("Unable to find the timestamp mask.");
   }
 
+  /* check the special flag. */
+  if (strcmp(h->masks[logger_index_special_flags].name, "SpecialFlags") != 0) {
+    error("The special flag is expected to be at position %i",
+          logger_index_special_flags);
+  }
+
+  if (h->masks[logger_index_special_flags].size != sizeof(uint32_t)) {
+    error("The special flag is expected to be 32 bits");
+  }
+
   /* Check the logfile header's size. */
   if (map != (char *)log->log.map + h->offset_first_record) {
     size_t offset = (char *)map - (char *)log->log.map;
