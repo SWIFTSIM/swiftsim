@@ -44,6 +44,7 @@
 #include "./hydro/Planetary/hydro_io.h"
 #elif defined(SPHENIX_SPH)
 #include "./hydro/SPHENIX/hydro_io.h"
+#include "./hydro/SPHENIX/hydro_logger.h"
 #elif defined(ANARCHY_PU_SPH)
 #include "./hydro/AnarchyPU/hydro_io.h"
 #else
