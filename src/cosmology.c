@@ -717,8 +717,7 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
   c->w_a = parser_get_opt_param_double(params, "Cosmology:w_a", 0.);
   c->h = parser_get_param_double(params, "Cosmology:h");
 
-  /* CMB temperature and neutrino temperature (inferred if not specified) */
-  c->T_CMB_0 = parser_get_opt_param_double(params, "Cosmology:T_CMB_0", 0.);
+  /* Neutrino temperature (inferred from T_CMB_0 if not specified) */
   c->T_nu_0 = parser_get_opt_param_double(params, "Cosmology:T_nu_0", 0.);
 
   /* Number of ultra-relativistic (massless) and massive neutrino species */
@@ -726,8 +725,8 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
   c->N_nu = parser_get_opt_param_int(params, "Cosmology:N_nu", 0);
 
   /* Make sure that the cosmological parameters are not overdetermined */
-  if (c->Omega_r != 0. && (c->T_CMB_0 != 0. || c->N_ur != 0.)) {
-    error("Cannot use Cosmology:Omega_r and (T_CMB_0 or N_ur).");
+  if (c->Omega_r != 0. && c->N_ur != 0.) {
+    error("Cannot use both Cosmology:Omega_r and Cosmology:N_ur.");
   }
 
   /* If there are massive neutrinos, read the masses and degeneracies */
@@ -782,8 +781,8 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
   const double rho_c3_on_4sigma = c->critical_density_0 * cc * cc * cc /
                                   (4. * phys_const->const_stefan_boltzmann);
 
-  /* Handle neutrinos and radiation if present */
-  if (c->T_CMB_0 == 0. && c->N_ur == 0. && c->N_nu == 0) {
+  /* Handle neutrinos only if present */
+  if (c->N_ur == 0. && c->N_nu == 0) {
     /* Infer T_CMB_0 from Omega_r */
     c->T_CMB_0 = pow(c->Omega_r * rho_c3_on_4sigma, 1. / 4.);
     c->T_CMB_0_K =
@@ -801,12 +800,9 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
     c->neutrino_density_late_table = NULL;
   } else {
     /* Infer T_CMB_0 from Omega_r if the latter is specified */
-    if (c->T_CMB_0 == 0. && c->Omega_r != 0) {
+    if (c->Omega_r != 0) {
       c->T_CMB_0 = pow(c->Omega_r * rho_c3_on_4sigma, 1. / 4.);
-    }
-
-    /* If we have neutrinos, but not Omega_r / T_CMB_0, use the default value */
-    else if (c->T_CMB_0 == 0.) {
+    } else {
       c->T_CMB_0 = phys_const->const_T_CMB_0;
     }
 

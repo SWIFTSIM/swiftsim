@@ -42,7 +42,6 @@ void test_params_init(struct swift_params *params, int testnr) {
       parser_set_param(params, "Cosmology:h:0.6737");
       parser_set_param(params, "Cosmology:a_begin:1e-2");
       parser_set_param(params, "Cosmology:a_end:1.0");
-      parser_set_param(params, "Cosmology:T_CMB_0:2.7255");
       parser_set_param(params, "Cosmology:T_nu_0:1.95176");
       parser_set_param(params, "Cosmology:N_nu:1");
       parser_set_param(params, "Cosmology:N_ur:1.0196");
@@ -58,7 +57,6 @@ void test_params_init(struct swift_params *params, int testnr) {
       parser_set_param(params, "Cosmology:h:0.6737");
       parser_set_param(params, "Cosmology:a_begin:1e-2");
       parser_set_param(params, "Cosmology:a_end:1.0");
-      parser_set_param(params, "Cosmology:T_CMB_0:2.7255");
       parser_set_param(params, "Cosmology:N_nu:3");
       parser_set_param(params, "Cosmology:M_nu_eV:0.2,0.3,0.4");
       break;
@@ -71,7 +69,6 @@ void test_params_init(struct swift_params *params, int testnr) {
       parser_set_param(params, "Cosmology:h:0.6737");
       parser_set_param(params, "Cosmology:a_begin:1e-2");
       parser_set_param(params, "Cosmology:a_end:1.0");
-      parser_set_param(params, "Cosmology:T_CMB_0:2.7255");
       parser_set_param(params, "Cosmology:T_nu_0:1.95176");
       parser_set_param(params, "Cosmology:N_ur:2");
       parser_set_param(params, "Cosmology:N_nu:1");
@@ -86,7 +83,6 @@ void test_params_init(struct swift_params *params, int testnr) {
       parser_set_param(params, "Cosmology:h:0.6737");
       parser_set_param(params, "Cosmology:a_begin:1e-3");
       parser_set_param(params, "Cosmology:a_end:1.0");
-      parser_set_param(params, "Cosmology:T_CMB_0:2.7255");
       parser_set_param(params, "Cosmology:N_nu:3");
       parser_set_param(params, "Cosmology:M_nu_eV:0.2,0.3,0.4");
       break;

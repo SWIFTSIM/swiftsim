@@ -171,26 +171,28 @@ w_0 + w_a (1 - a)`. The two parameters in the YAML file are:
 If unspecified these parameters default to the default
 :math:`\Lambda\rm{CDM}` values of :math:`w_0 = -1` and :math:`w_a = 0`.
 
-The radiation density can also be specified with two optional parameters:
+The radiation density :math:`\Omega_r` can also be specified by setting
+an alternative optional parameter:
 
-* The number of ultra-relativistic degrees of freedom :math:`N_{ur}`: ``N_ur``
-* The present-day CMB temperature :math:`T_{\rm{CMB},0}`: ``T_CMB_0``
+* The number of ultra-relativistic degrees of freedom :math:`N_\rm{ur}`:
+  ``N_ur``.
 
-This parametrization cannot be used together with :math:`\Omega_r`. If neither
-parametrization is used, SWIFT defaults to :math:`\Omega_r = 0`. If only
-``N_ur`` is specified, the default temperature :math:`T_{\rm{CMB},0}=2.7255`
-Kelvin is assumed. Note that :math:`N_{ur}` differs from :math:`N_\rm{eff}`,
-the latter of which also includes massive neutrinos.
+The radiation density is the sum of the ultra-relativistic density and the
+CMB density, which is inferred from the present-day temperature
+:math:`T_{\rm{CMB},0}=2.7255` Kelvin. This parametrization cannot be used
+together with :math:`\Omega_r`. If neither parameter is used, SWIFT defaults
+to :math:`\Omega_r = 0`. Note that :math:`N_\rm{ur}` differs from
+:math:`N_\rm{eff}`, the latter of which also includes massive neutrinos.
 
 Massive neutrinos can be included by specifying the optional parameters:
 
-* The number of massive neutrino species :math:`N_{\nu}`: ``N_nu``
-* A comma-separated list of neutrino masses in eV: ``M_nu_eV``
-* A comma-separated list of neutrino degeneracies: ``deg_nu``
-* The present-day neutrino temperature :math:`T_{\nu,0}`: ``T_nu_0``
+* The number of massive neutrino species :math:`N_{\nu}`: ``N_nu``,
+* A comma-separated list of neutrino masses in eV: ``M_nu_eV``,
+* A comma-separated list of neutrino degeneracies: ``deg_nu``,
+* The present-day neutrino temperature :math:`T_{\nu,0}`: ``T_nu_0``.
 
 When including massive neutrinos, only ``N_nu`` and ``M_nu_eV`` are necessary.
-By default, SWIFT will assume singular degeneracies and
+By default, SWIFT will assume non-degenerate species and
 :math:`T_{\nu,0}=(4/11)^{1/3}T_{\rm{CMB},0}`.
 
 For a Planck+13 cosmological model (ignoring radiation density as is
