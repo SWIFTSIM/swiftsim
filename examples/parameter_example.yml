@@ -22,10 +22,9 @@ Cosmology:
   Omega_m:        0.307         # Matter density parameter
   Omega_lambda:   0.693         # Dark-energy density parameter
   Omega_b:        0.0482519     # Baryon density parameter
-  Omega_r:        0.            # (Optional) Radiation density parameter (alternatively specify T_CMB_0)
+  Omega_r:        0.            # (Optional) Radiation density parameter
   w_0:            -1.0          # (Optional) Dark-energy equation-of-state parameter at z=0.
   w_a:            0.            # (Optional) Dark-energy equation-of-state time evolution parameter.
-  T_CMB_0:        0.            # (Optional) Present-day CMB temperature in internal units (alternatively specify Omega_r)
   T_nu_0:         0.            # (Optional) Present-day neutrino temperature in internal units, used for massive neutrinos
   N_ur:           0.            # (Optional) Number of ultra-relativistic species (e.g. massless neutrinos). Assumes instantaneous decoupling T_ur/T_g=(4/11)^(1/3). Cannot be used together with Omega_r.
   N_nu:           0             # (Optional) Integer number of massive neutrinos
