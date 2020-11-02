@@ -559,6 +559,7 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
         error_python("Particle type not implemented");
     }
   }
+  return 0;
 }
 
 /**
