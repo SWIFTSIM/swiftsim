@@ -45,7 +45,7 @@ lib_LTLIBRARIES = liblogger.la
 
 GRAVITY_SRC = gravity/MultiSoftening/logger_gravity.c
 STARS_SRC = stars/Default/logger_stars.c
-HYDRO_SRC = hydro/Gadget2/logger_hydro.c
+HYDRO_SRC = hydro/Gadget2/logger_hydro.c hydro/SPHENIX/logger_hydro.c
 
 # subdirectories
 SUBDIRS = tests
@@ -70,7 +70,8 @@ endif
 # Include files for distribution, not installation.
 nobase_noinst_HEADERS = logger_hydro.h hydro/Gadget2/logger_hydro.h \
 	logger_stars.h stars/Default/logger_stars.h \
-	logger_gravity.h gravity/MultiSoftening/logger_gravity.h
+	logger_gravity.h gravity/MultiSoftening/logger_gravity.h \
+  hydro/SPHENIX/logger_hydro.h
 
 # Sources and flags for regular library
 liblogger_la_SOURCES = $(AM_SOURCES)

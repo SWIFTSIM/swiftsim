@@ -30,6 +30,7 @@
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
 #include "feedback_struct.h"
+#include "logger.h"
 #include "pressure_floor_struct.h"
 #include "star_formation_struct.h"
 #include "timestep_limiter_struct.h"
@@ -70,6 +71,11 @@ struct xpart {
 
   /* Additional data used by the feedback */
   struct feedback_part_data feedback_data;
+
+#ifdef WITH_LOGGER
+  /* Additional data for the particle logger */
+  struct logger_part_data logger_data;
+#endif
 
 } SWIFT_STRUCT_ALIGN;
 
