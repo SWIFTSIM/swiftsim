@@ -212,7 +212,11 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
   }
 
   /* Write double time */
-  fwrite(&e->time, sizeof(double), 1, f);
+  if (e->policy & engine_policy_cosmology) {
+    fwrite(&e->cosmology->a, sizeof(double), 1, f);
+  } else {
+    fwrite(&e->time, sizeof(double), 1, f);
+  }
 
   /* Write integer time */
   fwrite(&e->ti_current, sizeof(integertime_t), 1, f);

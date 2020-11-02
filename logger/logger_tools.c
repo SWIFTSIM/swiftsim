@@ -139,7 +139,6 @@ size_t tools_reverse_offset(const struct header *h, void *file_map,
 
   /* first records do not have a previous partner. */
   if (prev_offset == cur_offset) return after_current_record;
-
   if (prev_offset > cur_offset)
     error_python("Unexpected offset: header %lu, current %lu.", prev_offset,
                  cur_offset);
@@ -187,8 +186,20 @@ size_t tools_check_record_consistency(const struct logger_reader *reader,
   size_t mask;
   size_t pointed_offset;
 
+  const size_t mask_special_flag =
+      h->masks[header_get_field_index(h, "SpecialFlags")].mask;
+
   /* read mask + offset. */
   map = logger_loader_io_read_mask(h, map, &mask, &pointed_offset);
+
+  /* set offset after current record. */
+  map = (char *)map + header_get_record_size_from_mask(h, mask);
+  const size_t offset_ret = (size_t)((char *)map - (char *)file_init);
+
+  /* If something happened, skip the check. */
+  if (mask & mask_special_flag) {
+    return offset_ret;
+  }
 
   /* get absolute offset. */
   if (header_is_forward(h))
@@ -202,11 +213,7 @@ size_t tools_check_record_consistency(const struct logger_reader *reader,
     error_python("Offset are corrupted.");
   }
 
-  /* set offset after current record. */
-  map = (char *)map + header_get_record_size_from_mask(h, mask);
-
-  if (pointed_offset == offset || pointed_offset == 0)
-    return (size_t)((char *)map - (char *)file_init);
+  if (pointed_offset == offset || pointed_offset == 0) return offset_ret;
 
   /* read mask of the pointed record. */
   size_t pointed_mask = 0;
@@ -219,7 +226,7 @@ size_t tools_check_record_consistency(const struct logger_reader *reader,
     error_python("Error in the offset (mask %lu at %lu != %lu at %lu).", mask,
                  offset, pointed_mask, pointed_offset);
 
-  return (size_t)((char *)map - (char *)file_init);
+  return offset_ret;
 }
 
 /**

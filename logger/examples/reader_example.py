@@ -6,6 +6,7 @@ Example: ./reader_example.py ../../examples/SedovBlast_3D/index 0.1
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+from glob import glob
 from mpl_toolkits.mplot3d import Axes3D
 sys.path.append("../.libs/")
 
@@ -31,33 +32,43 @@ def plot2D(pos, entropies):
     plt.ylabel("Entropy")
 
 
-basename = "../../examples/HydroTests/SedovBlast_3D/index_0000"
-time = 0.03
+filenames = "../../examples/HydroTests/SedovBlast_3D/index_*dump"
+filenames = glob(filenames)
+time = 0.01
 if len(sys.argv) >= 2:
-    basename = sys.argv[1]
-else:
-    print("No basename supplied (first argument), using default.")
-if len(sys.argv) >= 3:
-    time = float(sys.argv[2])
+    time = float(sys.argv[1])
 else:
     print("No time supplied (second argument), using default.")
-if len(sys.argv) > 3:
-    print("Ignoring excess arguments '%s'." % sys.argv[3:])
-print("basename: %s" % basename)
+if len(sys.argv) >= 3:
+    filenames = sys.argv[2:]
+else:
+    print("No filenames supplied (first argument), using default.")
+
+print("basename: %s" % filenames)
 print("time: %g" % time)
 
 # read the logger
-gas_type = 0
-with logger.Reader(basename, verbose=0) as reader:
-    t = reader.get_time_limits()
+pos = None
+ent = None
+for f in filenames:
+    filename = f[:-5]
+    with logger.Reader(filename, verbose=0) as reader:
+        t = reader.get_time_limits()
+        pos_tmp, ent_tmp = reader.get_particle_data(
+            ["Coordinates", "Entropies"], time)
 
-    fields = reader.get_list_fields(gas_type)
-    if ("Coordinates" not in fields or
-        "Entropies" not in fields):
-        raise Exception("Field not found in the logfile")
+        fields = reader.get_list_fields(gas_type)
+        if ("Coordinates" not in fields or
+            "Entropies" not in fields):
+            raise Exception("Field not found in the logfile")
 
-    pos, ent = reader.get_particle_data(
-        ["Coordinates", "Entropies"], time, gas_type)
+        # add the data to the list
+        if pos is None:
+            pos = pos_tmp
+            ent = ent_tmp
+        else:
+            pos = np.append(pos, pos_tmp, axis=0)
+            ent = np.append(ent, ent_tmp, axis=0)
 
 print("Min/Max of the position:", pos.min(), pos.max())
 print("Min/Max of the entropy:", ent.min(), ent.max())

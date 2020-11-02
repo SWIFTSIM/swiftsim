@@ -474,10 +474,10 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   logger_reader_set_time(reader, time);
 
   /* Get the number of particles. */
-  int n_type = 0;
-  const uint64_t *n_part = logger_reader_get_number_particles(reader, &n_type);
+  uint64_t n_part[swift_type_count];
+  logger_reader_get_number_particles(reader, n_part);
   uint64_t n_tot = 0;
-  for (int i = 0; i < n_type; i++) {
+  for (int i = 0; i < swift_type_count; i++) {
     n_tot += n_part[i];
   }
 
