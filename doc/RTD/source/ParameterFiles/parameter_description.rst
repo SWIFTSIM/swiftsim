@@ -177,11 +177,11 @@ an alternative optional parameter:
 * The number of ultra-relativistic degrees of freedom :math:`N_\rm{ur}`:
   ``N_ur``.
 
-The radiation density is the sum of the ultra-relativistic density and the
-CMB density, which is inferred from the present-day temperature
-:math:`T_{\rm{CMB},0}=2.7255` Kelvin. This parametrization cannot be used
-together with :math:`\Omega_r`. If neither parameter is used, SWIFT defaults
-to :math:`\Omega_r = 0`. Note that :math:`N_\rm{ur}` differs from
+The radiation density :math:`\Omega_r` is then automatically inferred from
+:math:`N_\rm{ur}` and the present-day CMB temperature
+:math:`T_{\rm{CMB},0}=2.7255` Kelvin. This parametrization cannot
+be used together with :math:`\Omega_r`. If neither parameter is used, SWIFT
+defaults to :math:`\Omega_r = 0`. Note that :math:`N_\rm{ur}` differs from
 :math:`N_\rm{eff}`, the latter of which also includes massive neutrinos.
 
 Massive neutrinos can be included by specifying the optional parameters:
