@@ -19,7 +19,7 @@
 
 #include "config.h"
 
-#if defined(GADGET2_SPH)
+#if defined(SPHENIX_SPH)
 
 #include "logger_hydro.h"
 
@@ -33,9 +33,13 @@ const int hydro_logger_field_size[hydro_logger_field_count] = {
     member_size(struct part, a_hydro),  // accelerations
     member_size(struct part, mass),     // massses
     member_size(struct part, h),        // Smoothing Length
-    member_size(struct part, entropy),  // Entropy
+    member_size(struct part, u),        // InternalEnergies
     member_size(struct part, id),       // IDs
     member_size(struct part, rho),      // density
+    sizeof(float),     // Entropy
+    sizeof(float),     // Pressure
+    3 * sizeof(float), // Viscosity / diffusion
+    2 * sizeof(float), // Velocity divergence + deriv
 };
 
 #endif
