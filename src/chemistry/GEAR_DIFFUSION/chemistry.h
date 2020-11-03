@@ -322,8 +322,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
     /* Make sure that we do not have more metals than the sum. */
     if (i != GEAR_CHEMISTRY_ELEMENT_COUNT) {
       sum += ch->metal_mass[i];
-    }
-    else if (sum > ch->metal_mass[i]) {
+    } else if (sum > ch->metal_mass[i]) {
       error("Found more individual elements than the sum of all of them.");
     }
   }
