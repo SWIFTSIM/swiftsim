@@ -211,9 +211,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_diffusion(
     const float coef_j = coef * mi_dw_r;
 
     /* Compute the time derivative */
+    const float inv_mi = 1.f / hydro_get_mass(pi);
+    const float inv_mj = 1.f / hydro_get_mass(pj);
     for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
-      const double mi_frac = chi->metal_mass[i] / hydro_get_mass(pi);
-      const double mj_frac = chj->metal_mass[i] / hydro_get_mass(pj);
+      const double mi_frac = chi->metal_mass[i] * inv_mi;
+      const double mj_frac = chj->metal_mass[i] * inv_mj;
       const double dm = mi_frac - mj_frac;
       chi->metal_mass_dt[i] += coef_i * dm;
       chj->metal_mass_dt[i] -= coef_j * dm;
@@ -281,9 +283,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_diffusion(
     const float coef_i = coef * mj_dw_r;
 
     /* Compute the time derivative */
+    const float inv_mi = 1.f / hydro_get_mass(pi);
+    const float inv_mj = 1.f / hydro_get_mass(pj);
     for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
-      const double mi_frac = chi->metal_mass[i] / hydro_get_mass(pi);
-      const double mj_frac = chj->metal_mass[i] / hydro_get_mass(pj);
+      const double mi_frac = chi->metal_mass[i] * inv_mi ;
+      const double mj_frac = chj->metal_mass[i] * inv_mj;
       const double dm = mi_frac - mj_frac;
       chi->metal_mass_dt[i] += coef_i * dm;
     }
