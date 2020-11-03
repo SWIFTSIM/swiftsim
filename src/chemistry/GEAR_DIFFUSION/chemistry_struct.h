@@ -49,7 +49,7 @@ struct chemistry_part_data {
   /*! Variation of the metal mass */
   double metal_mass_dt[GEAR_CHEMISTRY_ELEMENT_COUNT];
 
-  /*! shear tensor */
+  /*! shear tensor in internal and physical units. */
   float S[3][3];
 };
 

@@ -285,8 +285,7 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
 
   /* Compute the diffusion coefficient in physical coordinates.
    * The norm is already in physical coordinates.
-   * As kernel_gamma -> infinity for gaussian kernel,
-   * we do not include it. */
+   * We do not include kernel_gamma on purpose. */
   const float h_phys = cosmo->a * p->h;
   cpd->diff_coef = cd->C * norm * h_phys * h_phys;
 }
@@ -313,11 +312,19 @@ __attribute__((always_inline)) INLINE static void chemistry_end_force(
   /* Missing factors in iact. */
   const float factor = h_inv_dim * h_inv;
 
+  const double sum = 0;
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     ch->metal_mass[i] += ch->metal_mass_dt[i] * dt * factor;
     /* Make sure that the metallicity is 0 <= x <= 1 */
     if (ch->metal_mass[i] < 0 || ch->metal_mass[i] > hydro_get_mass(p)) {
       error("Negative mass or mass fraction larger than 1.");
+    }
+    /* Make sure that we do not have more metals than the sum. */
+    if (i != GEAR_CHEMISTRY_ELEMENT_COUNT) {
+      sum += ch->metal_mass[i];
+    }
+    else if (sum > ch->metal_mass[i]) {
+      error("Found more individual elements than the sum of all of them.");
     }
   }
 }
