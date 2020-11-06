@@ -93,15 +93,98 @@ void feedback_update_part(struct part* restrict p, struct xpart* restrict xp,
  * @param feedback_props The #feedback_props.
  * @param with_cosmology Is the cosmology switch on?
  * @param cosmo The #cosmology.
+ * @param e The #engine.
  * @param time The current time.
  */
-int feedback_will_do_feedback(const struct spart* sp,
+int feedback_will_do_feedback(struct spart* sp,
                               const struct feedback_props* feedback_props,
                               const int with_cosmology,
                               const struct cosmology* cosmo,
+                              const struct engine *e,
                               const double time) {
 
-  return (sp->birth_time != -1.);
+  /* Reset the variable and check if early exit */
+  sp->feedback_data.will_do_feedback = 0;
+  if (sp->birth_time == -1.) {
+    return 0;
+  }
+
+  // TODO check
+  /* Get the times */
+  const integertime_t ti_step = get_integer_timestep(sp->time_bin);
+  const integertime_t ti_begin =
+    get_integer_time_begin(e->ti_current - 1, sp->time_bin);
+
+  /* Get particle time-step */
+  double dt_star;
+  if (with_cosmology) {
+    dt_star = cosmology_get_delta_time(cosmo, ti_begin,
+                                       ti_begin + ti_step);
+  } else {
+    dt_star = get_timestep(sp->time_bin, e->time_base);
+  }
+
+  /* Calculate age of the star at current time */
+  double star_age_end_step;
+  if (with_cosmology) {
+    star_age_end_step = cosmology_get_delta_time_from_scale_factors(
+        cosmo, (double)sp->birth_scale_factor, cosmo->a);
+  } else {
+    star_age_end_step = e->time - (double)sp->birth_time;
+  }
+
+  /* Has this star been around for a while ? */
+  if (star_age_end_step <= 0.)
+    return 0;
+
+  /* Get the length of the enrichment time-step */
+  const double dt_enrichment = feedback_get_enrichment_timestep(
+    sp, with_cosmology, cosmo, e->time, dt_star);
+  const double star_age_beg_step =
+    star_age_end_step - dt_enrichment;
+
+  const double star_age_beg_step_safe =
+    star_age_beg_step < 0 ? 0 : star_age_beg_step;
+
+  /* Pick the correct table. (if only one table, threshold is < 0) */
+  const float metal =
+    chemistry_get_star_total_metal_mass_fraction_for_feedback(sp);
+  const float threshold = feedback_props->metallicity_max_first_stars;
+
+  const struct stellar_model* model =
+    metal < threshold ? &feedback_props->stellar_model_first_stars
+    : &feedback_props->stellar_model;
+
+  /* Convert the inputs */
+  const double conversion_to_myr = e->physical_constants->const_year * 1e6;
+  const double star_age_beg_step_myr = star_age_beg_step_safe / conversion_to_myr;
+  const double dt_myr = dt_enrichment / conversion_to_myr;
+
+  /* Get the metallicity */
+  const float metallicity =
+    chemistry_get_star_total_metal_mass_fraction_for_feedback(sp);
+
+  /* Compute masses corresponding to the time at beg and end. */
+  const float log_m_beg_step =
+    star_age_beg_step_safe == 0.
+    ? FLT_MAX
+    : lifetime_get_log_mass_from_lifetime(
+        &model->lifetime, log10(star_age_beg_step_myr), metallicity);
+  const float log_m_end_step = lifetime_get_log_mass_from_lifetime(
+      &model->lifetime, log10(star_age_beg_step_myr + dt_myr), metallicity);
+
+  const float m_beg_step =
+    star_age_beg_step_safe == 0. ? FLT_MAX : exp10(log_m_beg_step);
+  const float m_end_step = exp10(log_m_end_step);
+
+  /* Check if the star can produce a supernovae */
+  const int can_produce_snia =
+    supernovae_ia_can_explode(&model->snia, m_end_step, m_beg_step);
+  const int can_produce_snii =
+    supernovae_ii_can_explode(&model->snii, m_end_step, m_beg_step);
+
+  sp->feedback_data.will_do_feedback = can_produce_snia || can_produce_snii;
+  return sp->feedback_data.will_do_feedback;
 }
 
 /**
@@ -116,14 +199,7 @@ int feedback_is_active(const struct spart* sp, const double time,
                        const struct cosmology* cosmo,
                        const int with_cosmology) {
 
-  // TODO improve this with estimates for SNII and SNIa
-  if (sp->birth_time == -1.) return 0;
-
-  if (with_cosmology) {
-    return ((double)cosmo->a) > sp->birth_scale_factor;
-  } else {
-    return time > sp->birth_time;
-  }
+  return sp->feedback_data.will_do_feedback;
 }
 
 /**

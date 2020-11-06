@@ -32,10 +32,11 @@
 void feedback_update_part(struct part* restrict p, struct xpart* restrict xp,
                           const struct engine* restrict e);
 
-int feedback_will_do_feedback(const struct spart* sp,
+int feedback_will_do_feedback(struct spart* sp,
                               const struct feedback_props* feedback_props,
                               const int with_cosmology,
-                              const struct cosmology* cosmo, const double time);
+                              const struct cosmology* cosmo,
+                              const struct engine *, const double time);
 
 int feedback_is_active(const struct spart* sp, const double time,
                        const struct cosmology* cosmo, const int with_cosmology);
