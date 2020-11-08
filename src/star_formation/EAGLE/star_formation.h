@@ -931,7 +931,41 @@ INLINE static void starformation_init_backend(
 INLINE static void starformation_print_backend(
     const struct star_formation* starform) {
 
-  message("Star formation law is EAGLE");
+  message("Star formation model is EAGLE");
+
+  switch (starform->SF_threshold) {
+    case eagle_star_formation_threshold_Z_dep:
+
+      message("Density threshold follows Schaye (2004)");
+      message(
+          "the normalization of the density threshold is given by"
+          " %e #/cm^3, with metallicity slope of %e, and metallicity "
+          "normalization"
+          " of %e, the maximum density threshold is given by %e #/cm^3",
+          starform->Z_dep_thresh.density_threshold_HpCM3,
+          starform->Z_dep_thresh.n_Z0, starform->Z_dep_thresh.Z0,
+          starform->Z_dep_thresh.density_threshold_max_HpCM3);
+      message(
+          "Temperature threshold is given by Dalla Vecchia and Schaye (2012)");
+      message(
+          "The temperature threshold offset from the EOS is given by: %e dex",
+          starform->Z_dep_thresh.entropy_margin_threshold_dex);
+
+      break;
+    case eagle_star_formation_threshold_subgrid:
+
+      message("Density threshold uses subgrid quantities");
+      message(
+          "Particles are star-forming if their properties obey (T_sub < %e K "
+          "OR (T_sub < %e K AND n_H,sub > %e cm^-3))",
+          starform->subgrid_thresh.T_threshold1,
+          starform->subgrid_thresh.T_threshold2,
+          starform->subgrid_thresh.nH_threshold);
+
+      break;
+    default:
+      error("Invalid star formation threshold!!!");
+  }
 
   switch (starform->SF_law) {
     case eagle_star_formation_schmidt_law:
@@ -953,7 +987,7 @@ INLINE static void starformation_print_backend(
               starform->pressure_law.KS_high_den_power_law);
       break;
     default:
-      error("Invalid star formation model!!!");
+      error("Invalid star formation law!!!");
   }
 
   message(
