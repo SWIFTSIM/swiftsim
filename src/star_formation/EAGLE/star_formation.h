@@ -341,8 +341,8 @@ INLINE static int star_formation_is_star_forming_subgrid(
 
   /* Get the subgrid properties
    * Note these are both in physical frame already */
-  const double subgrid_T_cgs = p->cooling_data.subgrid_temp;
-  const double subgrid_rho = p->cooling_data.subgrid_dens;
+  const double subgrid_T_cgs = cooling_get_subgrid_temperature(p, xp);
+  const double subgrid_rho = cooling_get_subgrid_density(p, xp);
   const double subgrid_n_H = subgrid_rho * XH / phys_const->const_proton_mass;
   const double subgrid_n_H_cgs = subgrid_n_H * number_density_to_cgs;
 

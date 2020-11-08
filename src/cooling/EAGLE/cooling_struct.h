@@ -22,14 +22,7 @@
 /**
  * @brief Properties of the cooling stored in the #part data.
  */
-struct cooling_part_data {
-
-  /*! Subgrid temperature */
-  float subgrid_temp;
-
-  /*! Subgrid density (internal units, physical frame) */
-  float subgrid_dens;
-};
+struct cooling_part_data {};
 
 /**
  * @brief Properties of the cooling stored in the extended particle data.
