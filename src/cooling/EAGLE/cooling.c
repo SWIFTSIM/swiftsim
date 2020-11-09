@@ -710,7 +710,7 @@ double compute_subgrid_density(
 }
 
 /**
- * @param Returns the subgrid temperature of a particle.
+ * @brief Returns the subgrid temperature of a particle.
  *
  * This model has no subgrid quantity. We return an error.
  *
@@ -724,7 +724,7 @@ float cooling_get_subgrid_temperature(const struct part *p,
 }
 
 /**
- * @param Returns the subgrid density of a particle.
+ * @brief Returns the subgrid density of a particle.
  *
  * This model has no subgrid quantity. We return an error.
  *

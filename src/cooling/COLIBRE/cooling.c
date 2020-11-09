@@ -1073,7 +1073,7 @@ void cooling_set_particle_subgrid_properties(
 }
 
 /**
- * @param Returns the subgrid temperature of a particle.
+ * @brief Returns the subgrid temperature of a particle.
  *
  * @param p The particle.
  * @param xp The extended particle data.
@@ -1085,7 +1085,7 @@ float cooling_get_subgrid_temperature(const struct part *p,
 }
 
 /**
- * @param Returns the subgrid density of a particle.
+ * @brief Returns the subgrid density of a particle.
  *
  * @param p The particle.
  * @param xp The extended particle data.
