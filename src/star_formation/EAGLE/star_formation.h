@@ -124,32 +124,6 @@ struct star_formation {
 
   } pressure_law;
 
-  /* Internal EoS of the SF law (not always used) -------------------------- */
-
-  /*! Polytropic index */
-  double EOS_polytropic_index;
-
-  /*! EOS density norm (H atoms per cm^3) */
-  double EOS_density_norm_HpCM3;
-
-  /*! EOS Temperature norm (Kelvin)  */
-  double EOS_temperature_norm_K;
-
-  /*! EOS pressure norm, eq. 13 of Schaye & Dalla Vecchia 2008 (internal units)
-   */
-  double EOS_pressure_c;
-
-  /*! EOS Temperarure norm, eq. 13 of Schaye & Dalla Vecchia 2008 (internal
-   * units) */
-  double EOS_temperature_c;
-
-  /*! EOS density norm, eq. 13 of Schaye & Dalla Vecchia 2008 (internal units)
-   */
-  double EOS_density_c;
-
-  /*! Inverse of EOS density norm (internal units) */
-  double EOS_density_c_inv;
-
   /* Density for direct conversion to star -------------------------------- */
 
   /*! Max physical density (H atoms per cm^3)*/
@@ -212,39 +186,6 @@ struct star_formation {
 };
 
 /**
- * @brief Compute the pressure on the polytropic equation of state for a given
- * Hydrogen number density.
- *
- * Schaye & Dalla Vecchia 2008, eq. 13.
- *
- * @param n_H The Hydrogen number density in internal units.
- * @param starform The properties of the star formation model.
- * @return The pressure on the equation of state in internal units.
- */
-INLINE static double EOS_pressure(const double n_H,
-                                  const struct star_formation* starform) {
-
-  return starform->EOS_pressure_c *
-         pow(n_H * starform->EOS_density_c_inv, starform->EOS_polytropic_index);
-}
-
-/**
- * @brief Compute the entropy of the polytropic equation of state for a given
- * Hydrogen number density.
- *
- * @param n_H The Hydrogen number density in internal units.
- * @param starform The properties of the star formation model.
- * @param rho The physical density
- * @return The pressure on the equation of state in internal units.
- */
-INLINE static double EOS_entropy(const double n_H,
-                                 const struct star_formation* starform,
-                                 const double rho) {
-
-  return gas_entropy_from_pressure(rho, EOS_pressure(n_H, starform));
-}
-
-/**
  * @brief Calculate if the satisfies the conditions for star formation.
  *
  * @param starform the star formation law properties to use.
@@ -299,10 +240,8 @@ INLINE static int star_formation_is_star_forming_Z_dep(
   const double entropy = hydro_get_physical_entropy(p, xp, cosmo);
 
   /* Calculate the entropy that will be used to calculate
-   * the off-set, this is the maximum between the entropy
-   * floor and the star formation polytropic EOS. */
-  const double entropy_eos = max(entropy_floor(p, cosmo, entropy_floor_props),
-                                 EOS_entropy(n_H, starform, physical_density));
+   * the off-set from the EoS */
+  const double entropy_eos = entropy_floor(p, cosmo, entropy_floor_props);
 
   /* Check the Schaye & Dalla Vecchia 2012 EOS-based temperature criterion */
   return (entropy <
@@ -471,15 +410,12 @@ INLINE static void star_formation_compute_SFR_pressure_law(
   /* Hydrogen number density of this particle (assuming primordial H abundance)
    */
   const double physical_density = hydro_get_physical_density(p, cosmo);
-  const double n_H = physical_density * hydro_props->hydrogen_mass_fraction;
 
   /* Get the pressure used for the star formation, this is
-   * the maximum of the star formation EOS pressure,
-   * the physical pressure of the particle and the
+   * the maximum the physical pressure of the particle and the
    * floor pressure. The floor pressure is used implicitly
    * when getting the physical pressure. */
-  const double pressure =
-      max(EOS_pressure(n_H, starform), hydro_get_physical_pressure(p, cosmo));
+  const double pressure = hydro_get_physical_pressure(p, cosmo);
 
   /* Calculate the specific star formation rate */
   double SFRpergasmass;
@@ -690,21 +626,19 @@ INLINE static void star_formation_copy_properties(
  * @param phys_const Physical constants in internal units
  * @param us The current internal system of units.
  * @param hydro_props The propertis of the hydro model.
+ * @param entropy_floor The properties of the entropy floor used in this
+ * simulation.
  * @param starform the star formation law properties to initialize
  */
 INLINE static void starformation_init_backend(
     struct swift_params* parameter_file, const struct phys_const* phys_const,
     const struct unit_system* us, const struct hydro_props* hydro_props,
+    const struct cosmology* cosmo,
+    const struct entropy_floor_properties* entropy_floor,
     struct star_formation* starform) {
 
   /* Get the Gravitational constant */
   const double G_newton = phys_const->const_newton_G;
-
-  /* Initial Hydrogen abundance (mass fraction) */
-  const double X_H = hydro_props->hydrogen_mass_fraction;
-
-  /* Mean molecular weight assuming neutral gas */
-  const double mean_molecular_weight = hydro_props->mu_neutral;
 
   /* Get the surface density unit Msun / pc^2 in internal units */
   const double Msun_per_pc2 =
@@ -719,28 +653,6 @@ INLINE static void starformation_init_backend(
   /* Conversion of number density from cgs */
   const double number_density_from_cgs =
       1. / units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
-
-  /* Load the equation of state for this model */
-  starform->EOS_polytropic_index = parser_get_param_double(
-      parameter_file, "EAGLEStarFormation:EOS_gamma_effective");
-  starform->EOS_temperature_norm_K = parser_get_param_double(
-      parameter_file, "EAGLEStarFormation:EOS_temperature_norm_K");
-  starform->EOS_density_norm_HpCM3 = parser_get_param_double(
-      parameter_file, "EAGLEStarFormation:EOS_density_norm_H_p_cm3");
-  starform->EOS_density_c =
-      starform->EOS_density_norm_HpCM3 * number_density_from_cgs;
-  starform->EOS_density_c_inv = 1. / starform->EOS_density_c;
-
-  /* Calculate the EOS pressure normalization */
-  starform->EOS_pressure_c =
-      starform->EOS_density_c * starform->EOS_temperature_norm_K *
-      phys_const->const_boltzmann_k / mean_molecular_weight / X_H;
-
-  /* Normalisation of the temperature in the EOS calculatio */
-  starform->EOS_temperature_c =
-      starform->EOS_pressure_c / phys_const->const_boltzmann_k;
-  starform->EOS_temperature_c *=
-      pow(starform->EOS_density_c, starform->EOS_polytropic_index);
 
   /* Check if we are using the Schmidt law for the star formation rate,
    * defaults to pressure law if is not explicitely set to a Schmidt law */
@@ -816,9 +728,15 @@ INLINE static void starformation_init_backend(
         starform->pressure_law.KS_high_den_thresh_HpCM3 *
         number_density_from_cgs;
 
-    /* Pressure at the high-density threshold */
+    /* Pressure on the entropy floor at the high-density threshold
+     *
+     * Note that we use FLT_MAX as the comoving density to make sure
+     * the floor is applied no matter what redshift we are at. This will
+     * always be a density above the comoving density threashold for the floor
+     * to be used.*/
     const double EOS_high_den_pressure =
-        EOS_pressure(starform->pressure_law.KS_high_den_thresh, starform);
+        entropy_floor_gas_pressure(starform->pressure_law.KS_high_den_thresh,
+                                   FLT_MAX, cosmo, entropy_floor);
 
     /* Calculate the KS high density normalization
      * We want the SF law to be continous so the normalisation of the second
@@ -990,12 +908,6 @@ INLINE static void starformation_print_backend(
       error("Invalid star formation law!!!");
   }
 
-  message(
-      "The effective equation of state is given by: polytropic "
-      "index = %e , normalization density = %e #/cm^3 and normalization "
-      "temperature = %e K",
-      starform->EOS_polytropic_index, starform->EOS_density_norm_HpCM3,
-      starform->EOS_temperature_norm_K);
   message("Running with a direct conversion density of: %e #/cm^3",
           starform->gas_density_direct_HpCM3);
 }
