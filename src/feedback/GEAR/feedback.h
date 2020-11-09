@@ -36,7 +36,7 @@ int feedback_will_do_feedback(struct spart* sp,
                               const struct feedback_props* feedback_props,
                               const int with_cosmology,
                               const struct cosmology* cosmo,
-                              const struct engine *, const double time);
+                              const struct engine*, const double time);
 
 int feedback_is_active(const struct spart* sp, const double time,
                        const struct cosmology* cosmo, const int with_cosmology);

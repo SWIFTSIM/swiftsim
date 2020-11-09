@@ -231,7 +231,7 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
 __attribute__((always_inline)) INLINE static int feedback_will_do_feedback(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const int with_cosmology, const struct cosmology* cosmo,
-    const struct engine *e, const double time) {
+    const struct engine* e, const double time) {
 
   /* Special case for new-born stars */
   if (with_cosmology) {
