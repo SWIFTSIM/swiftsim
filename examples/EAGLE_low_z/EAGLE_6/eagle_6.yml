@@ -147,9 +147,9 @@ EAGLEStarFormation:
   threshold_Z0:                      0.002        # When using Z-based SF threshold, reference metallicity (metal mass fraction) for the metal-dependant threshold for star formation.
   threshold_slope:                   -0.64        # When using Z-based SF threshold, slope of the metal-dependant star formation threshold
   threshold_max_density_H_p_cm3:     10.0         # When using Z-based SF threshold, maximal density of the metal-dependant density threshold for star formation in Hydrogen atoms per cm^3.
-  threshold_temperature1_K:          1000         # When using subgrid-based SF threshold, subgrid temperature above which gas is star-forming.
-  threshold_temperature2_K:          31622        # When using subgrid-based SF threshold, subgrid temperature above which gas is star-forming if also above the density limit.
-  threshold_number_density_H_p_cm3:  10           # When using subgrid-based SF threshold, subgrid number density above which gas is star-forming if also above the second temperature limit.
+  threshold_temperature1_K:          1000         # When using subgrid-based SF threshold, subgrid temperature below which gas is star-forming.
+  threshold_temperature2_K:          31622        # When using subgrid-based SF threshold, subgrid temperature below which gas is star-forming if also above the density limit.
+  threshold_number_density_H_p_cm3:  10           # When using subgrid-based SF threshold, subgrid number density above which gas is star-forming if also below the second temperature limit.
   
 # Parameters for the EAGLE "equation of state"
 EAGLEEntropyFloor:
