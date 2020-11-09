@@ -34,6 +34,8 @@
 #include <gperftools/profiler.h>
 #endif
 
+#define unskip_level 2
+
 /**
  * @brief Broad categories of tasks.
  *
@@ -59,7 +61,7 @@ struct unskip_data {
   struct engine *e;
 
   /*! Pointer to the start of the list of cells to unskip */
-  int *list_base;
+  struct cell **list_base;
 
   /*! Number of times the list has been duplicated */
   int multiplier;
@@ -71,13 +73,38 @@ struct unskip_data {
   enum task_broad_types task_types[task_broad_types_count];
 };
 
+enum recursion_type {
+    recursion_type_above,
+    recursion_type_below,
+    recursion_type_both,
+};
+
 /**
  * @brief Unskip any hydro tasks associated with active cells.
  *
  * @param c The cell.
  * @param e The engine.
  */
-static void engine_do_unskip_hydro(struct cell *c, struct engine *e) {
+static void engine_do_unskip_hydro(struct cell *c, struct engine *e,
+                                   enum recursion_type recursion) {
+  if (recursion == recursion_type_both && c->parent != NULL) {
+    struct cell *parent = c->parent;
+    /* Do the cells above only if c is the first progeny */
+    for(int i = 0; i < 8; i++) {
+      if (parent->progeny[i] == c) {
+        engine_do_unskip_hydro(parent, e, recursion_type_above);
+        break;
+      }
+      if (parent->progeny[i] != NULL) {
+        break;
+      }
+    }
+  }
+  if (recursion == recursion_type_above) {
+    if (c->parent != NULL) {
+      engine_do_unskip_hydro(c->parent, e, recursion_type_above);
+    }
+  }
 
   /* Early abort (are we below the level where tasks are)? */
   if (!cell_get_flag(c, cell_flag_has_tasks)) return;
@@ -89,11 +116,12 @@ static void engine_do_unskip_hydro(struct cell *c, struct engine *e) {
   if (!cell_is_active_hydro(c, e)) return;
 
   /* Recurse */
-  if (c->split) {
+  if (c->split && (recursion == recursion_type_below ||
+                   recursion == recursion_type_both)) {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
         struct cell *cp = c->progeny[k];
-        engine_do_unskip_hydro(cp, e);
+        engine_do_unskip_hydro(cp, e, recursion_type_below);
       }
     }
   }
@@ -111,7 +139,26 @@ static void engine_do_unskip_hydro(struct cell *c, struct engine *e) {
  * @param with_star_formation Are we running with star formation switched on?
  */
 static void engine_do_unskip_stars(struct cell *c, struct engine *e,
-                                   const int with_star_formation) {
+                                   const int with_star_formation, enum recursion_type recursion) {
+
+  if (recursion == recursion_type_both && c->parent != NULL) {
+    struct cell *parent = c->parent;
+    /* Do the cells above only if c is the first progeny */
+    for(int i = 0; i < 8; i++) {
+      if (parent->progeny[i] == c) {
+        engine_do_unskip_stars(parent, e, with_star_formation, recursion_type_above);
+        break;
+      }
+      if (parent->progeny[i] != NULL) {
+        break;
+      }
+    }
+  }
+  if (recursion == recursion_type_above) {
+    if (c->parent != NULL) {
+      engine_do_unskip_stars(c->parent, e, with_star_formation, recursion_type_above);
+    }
+  }
 
   /* Early abort (are we below the level where tasks are)? */
   if (!cell_get_flag(c, cell_flag_has_tasks)) return;
@@ -129,11 +176,12 @@ static void engine_do_unskip_stars(struct cell *c, struct engine *e,
   if (!ci_active) return;
 
   /* Recurse */
-  if (c->split) {
+  if (c->split && (recursion == recursion_type_below ||
+                   recursion == recursion_type_both)) {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
         struct cell *cp = c->progeny[k];
-        engine_do_unskip_stars(cp, e, with_star_formation);
+        engine_do_unskip_stars(cp, e, with_star_formation, recursion_type_below);
       }
     }
   }
@@ -150,7 +198,27 @@ static void engine_do_unskip_stars(struct cell *c, struct engine *e,
  * @param c The cell.
  * @param e The engine.
  */
-static void engine_do_unskip_black_holes(struct cell *c, struct engine *e) {
+static void engine_do_unskip_black_holes(struct cell *c, struct engine *e,
+                                         enum recursion_type recursion) {
+
+  if (recursion == recursion_type_both && c->parent != NULL) {
+    struct cell *parent = c->parent;
+    /* Do the cells above only if c is the first progeny */
+    for(int i = 0; i < 8; i++) {
+      if (parent->progeny[i] == c) {
+        engine_do_unskip_black_holes(parent, e, recursion_type_above);
+        break;
+      }
+      if (parent->progeny[i] != NULL) {
+        break;
+      }
+    }
+  }
+  if (recursion == recursion_type_above) {
+    if (c->parent != NULL) {
+      engine_do_unskip_black_holes(c->parent, e, recursion_type_above);
+    }
+  }
 
   /* Early abort (are we below the level where tasks are)? */
   if (!cell_get_flag(c, cell_flag_has_tasks)) return;
@@ -162,11 +230,12 @@ static void engine_do_unskip_black_holes(struct cell *c, struct engine *e) {
   if (!cell_is_active_black_holes(c, e)) return;
 
   /* Recurse */
-  if (c->split) {
+  if (c->split && (recursion == recursion_type_below ||
+                   recursion == recursion_type_both)) {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
         struct cell *cp = c->progeny[k];
-        engine_do_unskip_black_holes(cp, e);
+        engine_do_unskip_black_holes(cp, e, recursion_type_below);
       }
     }
   }
@@ -182,7 +251,27 @@ static void engine_do_unskip_black_holes(struct cell *c, struct engine *e) {
  * @param c The cell.
  * @param e The engine.
  */
-static void engine_do_unskip_sinks(struct cell *c, struct engine *e) {
+static void engine_do_unskip_sinks(struct cell *c, struct engine *e,
+                                   enum recursion_type recursion) {
+
+  if (recursion == recursion_type_both && c->parent != NULL) {
+    struct cell *parent = c->parent;
+    /* Do the cells above only if c is the first progeny */
+    for(int i = 0; i < 8; i++) {
+      if (parent->progeny[i] == c) {
+        engine_do_unskip_sinks(parent, e, recursion_type_above);
+        break;
+      }
+      if (parent->progeny[i] != NULL) {
+        break;
+      }
+    }
+  }
+  if (recursion == recursion_type_above) {
+    if (c->parent != NULL) {
+      engine_do_unskip_sinks(c->parent, e, recursion_type_above);
+    }
+  }
 
   /* Early abort (are we below the level where tasks are)? */
   if (!cell_get_flag(c, cell_flag_has_tasks)) return;
@@ -194,11 +283,12 @@ static void engine_do_unskip_sinks(struct cell *c, struct engine *e) {
   if (!cell_is_active_sinks(c, e) && !cell_is_active_hydro(c, e)) return;
 
   /* Recurse */
-  if (c->split) {
+  if (c->split && (recursion == recursion_type_below ||
+                   recursion == recursion_type_both)) {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
         struct cell *cp = c->progeny[k];
-        engine_do_unskip_sinks(cp, e);
+        engine_do_unskip_sinks(cp, e, recursion_type_below);
       }
     }
   }
@@ -214,7 +304,27 @@ static void engine_do_unskip_sinks(struct cell *c, struct engine *e) {
  * @param c The cell.
  * @param e The engine.
  */
-static void engine_do_unskip_gravity(struct cell *c, struct engine *e) {
+static void engine_do_unskip_gravity(struct cell *c, struct engine *e,
+                                     enum recursion_type recursion) {
+
+  if (recursion == recursion_type_both && c->parent != NULL) {
+    struct cell *parent = c->parent;
+    /* Do the cells above only if c is the first progeny */
+    for(int i = 0; i < 8; i++) {
+      if (parent->progeny[i] == c) {
+        engine_do_unskip_gravity(parent, e, recursion_type_above);
+        break;
+      }
+      if (parent->progeny[i] != NULL) {
+        break;
+      }
+    }
+  }
+  if (recursion == recursion_type_above) {
+    if (c->parent != NULL) {
+      engine_do_unskip_gravity(c->parent, e, recursion_type_above);
+    }
+  }
 
   /* Early abort (are we below the level where tasks are)? */
   if (!cell_get_flag(c, cell_flag_has_tasks)) return;
@@ -226,11 +336,13 @@ static void engine_do_unskip_gravity(struct cell *c, struct engine *e) {
   if (!cell_is_active_gravity(c, e)) return;
 
   /* Recurse */
-  if (c->split && ((c->maxdepth - c->depth) >= space_subdepth_diff_grav)) {
+  if (c->split && ((c->maxdepth - c->depth) >= space_subdepth_diff_grav)
+      && (recursion == recursion_type_below ||
+          recursion == recursion_type_both)) {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
         struct cell *cp = c->progeny[k];
-        engine_do_unskip_gravity(cp, e);
+        engine_do_unskip_gravity(cp, e, recursion_type_below);
       }
     }
   }
@@ -245,7 +357,27 @@ static void engine_do_unskip_gravity(struct cell *c, struct engine *e) {
  * @param c The cell.
  * @param e The engine.
  */
-static void engine_do_unskip_rt(struct cell *c, struct engine *e) {
+static void engine_do_unskip_rt(struct cell *c, struct engine *e,
+                                enum recursion_type recursion) {
+
+  if (recursion == recursion_type_both && c->parent != NULL) {
+    struct cell *parent = c->parent;
+    /* Do the cells above only if c is the first progeny */
+    for(int i = 0; i < 8; i++) {
+      if (parent->progeny[i] == c) {
+        engine_do_unskip_rt(parent, e, recursion_type_above);
+        break;
+      }
+      if (parent->progeny[i] != NULL) {
+        break;
+      }
+    }
+  }
+  if (recursion == recursion_type_above) {
+    if (c->parent != NULL) {
+      engine_do_unskip_rt(c->parent, e, recursion_type_above);
+    }
+  }
 
   /* Early abort (are we below the level where tasks are)? */
   if (!cell_get_flag(c, cell_flag_has_tasks)) return;
@@ -257,11 +389,13 @@ static void engine_do_unskip_rt(struct cell *c, struct engine *e) {
   if (!cell_is_active_hydro(c, e)) return;
 
   /* Recurse */
-  if (c->split) {
+  if (c->split
+      && (recursion == recursion_type_below ||
+          recursion == recursion_type_both)) {
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
         struct cell *cp = c->progeny[k];
-        engine_do_unskip_rt(cp, e);
+        engine_do_unskip_rt(cp, e, recursion_type_below);
       }
     }
   }
@@ -285,21 +419,20 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
   struct unskip_data *data = (struct unskip_data *)extra_data;
   const int num_active_cells = data->num_active_cells;
   const enum task_broad_types *const task_types = data->task_types;
-  const int *const list_base = data->list_base;
+  struct cell **list_base = data->list_base;
   struct engine *e = data->e;
-  struct cell *const cells_top = e->s->cells_top;
 
   /* What policies are we running? */
   const int with_star_formation = e->policy & engine_policy_star_formation;
 
   /* The current chunk of active cells */
-  const int *const local_cells = (int *)map_data;
+  struct cell **const local_cells = (struct cell **)map_data;
 
   /* Loop over this thread's chunk of cells to unskip */
   for (int ind = 0; ind < num_elements; ind++) {
 
     /* Handle on the cell */
-    struct cell *const c = &cells_top[local_cells[ind]];
+    struct cell *const c = local_cells[ind];
 
     /* In what copy of the global list are we?
      * This gives us the broad type of task we are working on. */
@@ -318,7 +451,7 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
         if (!(e->policy & engine_policy_hydro))
           error("Trying to unskip hydro tasks in a non-hydro run!");
 #endif
-        engine_do_unskip_hydro(c, e);
+        engine_do_unskip_hydro(c, e, recursion_type_both);
         break;
       case task_broad_types_gravity:
 #ifdef SWIFT_DEBUG_CHECKS
@@ -326,35 +459,35 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
             !(e->policy & engine_policy_external_gravity))
           error("Trying to unskip gravity tasks in a non-gravity run!");
 #endif
-        engine_do_unskip_gravity(c, e);
+        engine_do_unskip_gravity(c, e, recursion_type_both);
         break;
       case task_broad_types_stars:
 #ifdef SWIFT_DEBUG_CHECKS
         if (!(e->policy & engine_policy_stars))
           error("Trying to unskip star tasks in a non-stars run!");
 #endif
-        engine_do_unskip_stars(c, e, with_star_formation);
+        engine_do_unskip_stars(c, e, with_star_formation, recursion_type_both);
         break;
       case task_broad_types_sinks:
 #ifdef SWIFT_DEBUG_CHECKS
         if (!(e->policy & engine_policy_sinks))
           error("Trying to unskip sink tasks in a non-sinks run!");
 #endif
-        engine_do_unskip_sinks(c, e);
+        engine_do_unskip_sinks(c, e, recursion_type_both);
         break;
       case task_broad_types_black_holes:
 #ifdef SWIFT_DEBUG_CHECKS
         if (!(e->policy & engine_policy_black_holes))
           error("Trying to unskip black holes tasks in a non-BH run!");
 #endif
-        engine_do_unskip_black_holes(c, e);
+        engine_do_unskip_black_holes(c, e, recursion_type_both);
         break;
       case task_broad_types_rt:
 #ifdef SWIFT_DEBUG_CHECKS
         if (!(e->policy & engine_policy_rt))
           error("Trying to unskip radiative transfer tasks in a non-rt run!");
 #endif
-        engine_do_unskip_rt(c, e);
+        engine_do_unskip_rt(c, e, recursion_type_both);
         break;
       default:
 #ifdef SWIFT_DEBUG_CHECKS
@@ -365,12 +498,30 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
   }
 }
 
+struct cell **engine_unskip_copy_cell(struct cell *c, struct cell **local_active_cells, const int level) {
+  if (c->split && c->depth != level) {
+    for(int i = 0; i < 8; i++) {
+      if (c->progeny[i] != NULL) {
+        local_active_cells = engine_unskip_copy_cell(c->progeny[i], local_active_cells, level);
+      }
+    }
+  }
+  else {
+    local_active_cells[0] = c;
+    local_active_cells++;
+  }
+
+  return local_active_cells;
+}
+
 /**
  * @brief Unskip all the tasks that act on active cells at this time.
  *
  * @param e The #engine.
  */
 void engine_unskip(struct engine *e) {
+
+  const int level = unskip_level;
 
   const ticks tic = getticks();
   struct space *s = e->s;
@@ -444,37 +595,47 @@ void engine_unskip(struct engine *e) {
 
   /* Should we duplicate the list of active cells to better parallelise the
      unskip over the threads ? */
-  int *local_active_cells;
-  if (multiplier > 1) {
-
-    /* Make space for copies of the list */
-    local_active_cells =
-        (int *)malloc(multiplier * num_active_cells * sizeof(int));
-    if (local_active_cells == NULL)
-      error(
-          "Couldn't allocate memory for duplicated list of local active "
-          "cells.");
-
-    /* Make blind copies of the list */
-    for (int m = 0; m < multiplier; m++) {
-      memcpy(local_active_cells + m * num_active_cells, local_cells,
-             num_active_cells * sizeof(int));
-    }
-  } else {
-    local_active_cells = local_cells;
+  struct cell **local_active_cells;
+  const int cells_per_top = 1 << (3 * level);
+  const int total_size = multiplier * num_active_cells
+    * cells_per_top * sizeof(struct cell*);
+  local_active_cells = (struct cell **) malloc(total_size);
+  if (local_active_cells == NULL) {
+    error("Failed");
   }
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Reset to 0 in order to ensure a segfault */
+  bzero(local_active_cells, total_size);
+#endif
+
+
+  /* Construct the cell array */
+  struct cell **current = local_active_cells;
+  for(int i = 0; i < num_active_cells; i++) {
+    struct cell *c = &s->cells_top[local_cells[i]];
+    current = engine_unskip_copy_cell(c, current, level);
+  }
+  const int number_cells = current - local_active_cells;
+
+  /* Make blind copies of the list */
+  for (int m = 1; m < multiplier; m++) {
+    memcpy(local_active_cells + m * number_cells, local_active_cells,
+           number_cells * sizeof(struct cell *));
+  }
+
 
   /* We now have a list of local active cells duplicated as many times as
    * we have broad task types. We can now release all the threads on the list */
 
   data.e = e;
   data.list_base = local_active_cells;
-  data.num_active_cells = num_active_cells;
+  data.num_active_cells = number_cells;
   data.multiplier = multiplier;
 
   /* Activate all the regular tasks */
   threadpool_map(&e->threadpool, engine_do_unskip_mapper, local_active_cells,
-                 num_active_cells * multiplier, sizeof(int), /*chunk=*/1,
+                 number_cells * multiplier, sizeof(struct cell*), /*chunk=*/1,
                  &data);
 
 #ifdef WITH_PROFILER
@@ -482,9 +643,7 @@ void engine_unskip(struct engine *e) {
 #endif  // WITH_PROFILER
 
   /* Free stuff? */
-  if (multiplier > 1) {
-    free(local_active_cells);
-  }
+  free(local_active_cells);
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
