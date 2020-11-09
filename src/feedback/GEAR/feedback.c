@@ -109,11 +109,10 @@ int feedback_will_do_feedback(struct spart* sp,
     return 0;
   }
 
-  // TODO check
   /* Get the times */
   const integertime_t ti_step = get_integer_timestep(sp->time_bin);
   const integertime_t ti_begin =
-    get_integer_time_begin(e->ti_current - 1, sp->time_bin);
+    get_integer_time_begin(e->ti_current + 1, sp->time_bin);
 
   /* Get particle time-step */
   double dt_star;
