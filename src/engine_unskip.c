@@ -498,11 +498,33 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
   }
 }
 
-struct cell **engine_unskip_copy_cell(struct cell *c, struct cell **local_active_cells, const int level) {
+struct cell **engine_unskip_copy_cell(struct cell *c, struct cell **local_active_cells, const int level, const struct engine *e) {
+
+  const int nodeID = e->nodeID;
+  const int with_hydro = e->policy & engine_policy_hydro;
+  const int with_self_grav = e->policy & engine_policy_self_gravity;
+  const int with_ext_grav = e->policy & engine_policy_external_gravity;
+  const int with_stars = e->policy & engine_policy_stars;
+  const int with_sinks = e->policy & engine_policy_sinks;
+  const int with_feedback = e->policy & engine_policy_feedback;
+  const int with_black_holes = e->policy & engine_policy_black_holes;
+  const int cell_active = (with_hydro && cell_is_active_hydro(c, e)) ||
+    (with_self_grav && cell_is_active_gravity(c, e)) ||
+    (with_ext_grav && c->nodeID == nodeID &&
+     cell_is_active_gravity(c, e)) ||
+    (with_feedback && cell_is_active_stars(c, e)) ||
+    (with_stars && c->nodeID == nodeID && cell_is_active_stars(c, e)) ||
+    (with_sinks && cell_is_active_sinks(c, e)) ||
+    (with_black_holes && cell_is_active_black_holes(c, e));
+
+  if (!cell_active) {
+    return local_active_cells;
+  }
+
   if (c->split && c->depth != level) {
     for(int i = 0; i < 8; i++) {
       if (c->progeny[i] != NULL) {
-        local_active_cells = engine_unskip_copy_cell(c->progeny[i], local_active_cells, level);
+        local_active_cells = engine_unskip_copy_cell(c->progeny[i], local_active_cells, level, e);
       }
     }
   }
@@ -614,7 +636,7 @@ void engine_unskip(struct engine *e) {
   struct cell **current = local_active_cells;
   for(int i = 0; i < num_active_cells; i++) {
     struct cell *c = &s->cells_top[local_cells[i]];
-    current = engine_unskip_copy_cell(c, current, level);
+    current = engine_unskip_copy_cell(c, current, level, e);
   }
   const int number_cells = current - local_active_cells;
 
