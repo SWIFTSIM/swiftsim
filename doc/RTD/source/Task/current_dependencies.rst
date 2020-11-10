@@ -9,7 +9,7 @@
 Current Task Dependencies
 =========================
 
-In order to compute the physics in the correct order, SWIFT uses dependencies in between the tasks.
+In order to compute physics in the correct order, SWIFT uses dependencies in between 'tasks' performing different parts of the computation.
 In :ref:`Analysis_Tools`, we describe our tool to generate a graph of the dependencies, but
 unfortunately, the graphs tend to be too large.
 Therefore in this section we show some smaller graphs done by hand (thus they can become outdated).
