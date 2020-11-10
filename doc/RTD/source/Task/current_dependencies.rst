@@ -24,7 +24,7 @@ The first graph shows the full graph (without AGN and sink particles) but with s
 
     This figure shows the task dependencies for a run with gravity, hydro, cooling, star formation and stellar feedback.
     The tasks for the hydrodynamics, stellar feedback and gravity are collapsed into a single node.
-    The first tasks to be executed are at top the (without any incoming links) and then in the order of the links
+    The first tasks to be executed are at the top (without any incoming links) and then in follow the order of the links
     until the last tasks without any outgoing links.
 
 As the hydrodynamics are described in :ref:`hydro`, we are only showing the gravity and stellar feedback here:
