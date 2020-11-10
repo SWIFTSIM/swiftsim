@@ -225,7 +225,7 @@ struct pcell {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Cell ID (for debugging) */
-  int cellID;
+  unsigned long long cellID;
 #endif
 
 } SWIFT_STRUCT_ALIGN;
@@ -452,7 +452,7 @@ struct cell {
 
 #if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
   /* Cell ID (for debugging) */
-  int cellID;
+  unsigned long long cellID;
 #endif
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1278,5 +1278,67 @@ __attribute__((always_inline)) INLINE static struct task *cell_get_recv(
   return NULL;
 #endif
 }
+
+/**
+ * @brief Generate the cell ID. Only used for debugging purposes.
+ * TODO: proper documentation
+ * TODO: use 1 "useless" bit to mark non-topcells
+ */
+__attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
+    struct cell *c, int cdim[3], double dim[3], double width[3]) {
+
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
+  if (c->depth != 0) {
+    error("assigning top level cell index to cell with depth > 0");
+  } else {
+    if (cdim[0] > 32 || cdim[1] > 32 || cdim[2] > 32)
+      message("Warning: Got %d x %d x %d top level cells."
+          "IDs are only guaranteed unique if every count is < 32", cdim[0], cdim[1], cdim[2]);
+
+    int i = (int) (c->loc[0] / width[0]);
+    int j = (int) (c->loc[1] / width[1]);
+    int k = (int) (c->loc[2] / width[2]);
+    c->cellID = (unsigned long long) (i + cdim[0] * (j + cdim[1] * k));
+
+  }
+#endif
+}
+
+/**
+ * @brief Generate the cell ID for progeny cells. Only used for debugging purposes.
+ * TODO: proper documentation
+ * TODO: use 1 "useless" bit to mark non-topcells
+ */
+__attribute__((always_inline)) INLINE void cell_assign_cell_index(
+    struct cell *c, struct cell *parent) {
+
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
+  if (c->depth == 0)
+    error("assigning progeny cell index to top level cell.");
+  else if (c->depth > 16)
+    message("Warning: Got depth %d > 16."
+        "IDs are only guaranteed unique if depth < 16", c->depth);
+
+  /* first inherit the parent's ID and mark it as not top-level*/
+  c->cellID = parent->cellID | (1 << 16);
+
+  /* starting index for bit shifts */
+  int shift = 16 + (c->depth - 1) * 3;
+  unsigned long long child_id = 0;
+
+  /* get progeny index in parent cell */
+  if (c->loc[0] > parent->loc[0])
+    child_id |= 1 << shift;
+  if (c->loc[1] > parent->loc[1])
+    child_id |= 1 << (shift + 1);
+  if (c->loc[2] > parent->loc[2])
+    child_id |= 1 << (shift + 2);
+
+  /* add progeny index to cell index */
+  c->cellID |= child_id;
+
+#endif
+}
+
 
 #endif /* SWIFT_CELL_H */
