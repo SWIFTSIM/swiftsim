@@ -88,7 +88,7 @@ Gravity:
   r_cut_max:                     4.5       # (Optional) Cut-off in number of top-level cells beyond which no FMM forces are computed (this is the default value).
   r_cut_min:                     0.1       # (Optional) Cut-off in number of top-level cells below which no truncation of FMM forces are performed (this is the default value).
 
-# Parameters when running with SWIFT_GRAVITY_FORCE_CHECKS 
+# Parameters when running with SWIFT_GRAVITY_FORCE_CHECKS
 ForceChecks:
   only_when_all_active: 1  # (Optional) Only compute exact forces during timesteps when all gparts are active (default: 0).
   only_at_snapshots:    1  # (Optional) Only compute exact forces during timesteps when a snapshot is being dumped (default: 0).
@@ -163,7 +163,7 @@ Logger:
   basename:             index  # Common part of the filenames
   initial_buffer_size:  1      # (Optional) Buffer size in GB
   buffer_scale:	        10     # (Optional) When buffer size is too small, update it with required memory times buffer_scale
-  
+
 # Parameters governing the conserved quantities statistics
 Statistics:
   delta_time:           1e-2        # Time between statistics output
@@ -290,7 +290,7 @@ IsothermalPotential:
   vrot:            200.                # Rotation speed of isothermal potential (internal units)
   timestep_mult:   0.03                # Dimensionless pre-factor for the time-step condition
   epsilon:         0.1                 # Softening size (internal units)
-  
+
 # Hernquist potential parameters
 HernquistPotential:
   useabspos:       0        # 0 -> positions based on centre, 1 -> absolute positions 
@@ -308,7 +308,7 @@ HernquistPotential:
   bulgefraction:              0.00705852860979  # (Optional 1) Bulge mass fraction (equal to MB in MakeNewDisk and GalIC)
   timestep_mult:   0.01     # Dimensionless pre-factor for the time-step condition, basically determines the fraction of the orbital time we use to do the time integration
   epsilon:         0.1      # Softening size (internal units)
- 
+
 # NFW potential parameters
 NFWPotential:
   useabspos:          0             # 0 -> positions based on centre, 1 -> absolute positions 
@@ -330,7 +330,7 @@ NFW_MNPotential:
   Mdisk:            3.0        # Mass of the disk (internal units)
   Rdisk:            4.0        # Effective radius of the disk (internal units)
   Zdisk:            0.4704911  # Scale-height of the disk (internal units)
-  
+
 # Disk-patch potential parameters. The potential is along the x-axis.
 DiscPatchPotential:
   surface_density: 10.      # Surface density of the disc (internal units)
@@ -417,7 +417,7 @@ COLIBRECooling:
   He_reion_eV_p_H:         2.0               # Energy inject by Helium re-ionization in electron-volt per Hydrogen atom
   rapid_cooling_threshold: 0.333333          # Switch to rapid cooling regime for dt / t_cool above this threshold.
   delta_logTEOS_subgrid_properties: 0.3      # delta log T above the EOS below which the subgrid properties use Teq assumption
-  
+
 # Cooling with Grackle 3.0
 GrackleCooling:
   cloudy_table: CloudyData_UVB=HM2012.h5       # Name of the Cloudy Table (available on the grackle bitbucket repository)
@@ -507,8 +507,8 @@ EAGLEFeedback:
   SNII_wind_delay_Gyr:                 0.03            # Time in Gyr between a star's birth and the SNII thermal feedback event when not sampling.
   SNII_delta_T_K:                      3.16228e7       # Change in temperature to apply to the gas particle in a SNII thermal feedback event in Kelvin.
   SNII_energy_erg:                     1.0e51          # Energy of one SNII explosion in ergs.
-  SNII_energy_fraction_min:            0.3             # Maximal fraction of energy applied in a SNII feedback event.
-  SNII_energy_fraction_max:            3.0             # Minimal fraction of energy applied in a SNII feedback event.
+  SNII_energy_fraction_min:            0.3             # Minimal fraction of energy applied in a SNII feedback event.
+  SNII_energy_fraction_max:            3.0             # Maximal fraction of energy applied in a SNII feedback event.
   SNII_energy_fraction_Z_0:            0.0012663729    # Pivot point for the metallicity dependance of the SNII energy fraction (metal mass fraction).
   SNII_energy_fraction_n_0_H_p_cm3:    0.67            # Pivot point for the birth density dependance of the SNII energy fraction in cm^-3.
   SNII_energy_fraction_n_Z:            0.8686          # Power-law for the metallicity dependance of the SNII energy fraction.
@@ -545,7 +545,7 @@ GEARFeedback:
 
 
 # Parameters related to AGN models  -----------------------------------------------
-  
+
 # EAGLE AGN model
 EAGLEAGN:
   subgrid_seed_mass_Msun:             1.5e5      # Black hole subgrid mass at creation time in solar masses.
