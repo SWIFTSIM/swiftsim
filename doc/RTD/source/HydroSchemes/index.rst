@@ -24,7 +24,7 @@ In case the case of a 2 loop scheme, SWIFT removes the gradient loop and the ext
     The first tasks to be executed are at top the (without any incoming links) and then in the order of the links
     until the last tasks without any outgoing links.
     For the hydrodynamics tasks (in blue), the rectangles represent (from top to bottom) the density, gradient and force loops.
-    As this graph is done manually, the task dependencies might become outdated.
+    As this graph was created manually, the task dependencies might be outdated.
 
 .. toctree::
    :maxdepth: 2
