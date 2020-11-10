@@ -317,7 +317,10 @@ void stellar_evolution_evolve_spart(
       supernovae_ii_can_explode(&sm->snii, m_end_step, m_beg_step);
 
   /* Is it possible to generate a supernovae? */
-  if (!can_produce_snia && !can_produce_snii) return;
+  if (!can_produce_snia && !can_produce_snii) {
+    sp->feedback_data.will_do_feedback = 0;
+    return;
+  }
 
   /* Compute the initial mass */
   const float m_init = sp->sf_data.birth_mass / phys_const->const_solar_mass;
@@ -339,7 +342,10 @@ void stellar_evolution_evolve_spart(
   }
 
   /* Does this star produce a supernovae? */
-  if (number_snia_f == 0 && number_snii_f == 0) return;
+  if (number_snia_f == 0 && number_snii_f == 0) {
+    sp->feedback_data.will_do_feedback = 0;
+    return;
+  }
 
   /* Compute the properties of the feedback (e.g. yields) */
   if (sm->discrete_yields) {
@@ -352,7 +358,10 @@ void stellar_evolution_evolve_spart(
         sp, number_snii_f, ti_begin, random_number_stellar_feedback_2);
 
     /* Do we have a supernovae? */
-    if (number_snia == 0 && number_snii == 0) return;
+    if (number_snia == 0 && number_snii == 0) {
+      sp->feedback_data.will_do_feedback = 0;
+      return;
+    }
 
     /* Save the number of supernovae */
     sp->feedback_data.number_sn = number_snia + number_snii;

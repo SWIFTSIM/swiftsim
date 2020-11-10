@@ -841,7 +841,7 @@ void runner_do_timestep(struct runner *r, struct cell *c, const int timer) {
         /* Update feedback related counters */
         if (with_feedback)
           feedback_will_do_feedback(sp, e->feedback_props, with_cosmology,
-                                    e->cosmology, e->time);
+                                    e->cosmology, e, e->time);
 
         /* Number of updated s-particles */
         s_updated++;

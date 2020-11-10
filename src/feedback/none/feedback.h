@@ -164,12 +164,13 @@ __attribute__((always_inline)) INLINE static void feedback_evolve_spart(
  * @param feedback_props The properties of the feedback model.
  * @param with_cosmology Are we running with cosmological time integration?
  * @param cosmo The #cosmology object.
+ * @param e The #engine.
  * @param time The current time (since the Big Bang).
  */
 __attribute__((always_inline)) INLINE static int feedback_will_do_feedback(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const int with_cosmology, const struct cosmology* cosmo,
-    const double time) {
+    const struct engine* e, const double time) {
   return 1;
 }
 
