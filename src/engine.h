@@ -427,8 +427,8 @@ struct engine {
      the creation of communication tasks so needs to be large enough. */
   float links_per_tasks;
 
-  /* At what level the engine_unskip should work (0 means top level). */
-  int unskip_level;
+  /* At what depth the engine_unskip should work (0 means top level). */
+  int unskip_depth;
 
   /* Are we talkative ? */
   int verbose;

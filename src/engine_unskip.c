@@ -529,13 +529,13 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
  * @param level Level at which the unskip is run (0 for top level).
  * @param e The #engine.
  */
-struct cell **engine_unskip_copy_cell(struct cell *c, struct cell **local_active_cells, const int level, const struct engine *e) {
+struct cell **engine_unskip_copy_cell(struct cell *c, struct cell **local_active_cells, const int depth, const struct engine *e) {
 
   /* Should we go lower? */
-  if (c->split && c->depth != level) {
+  if (c->split && c->depth != depth) {
     for(int i = 0; i < 8; i++) {
       if (c->progeny[i] != NULL) {
-        local_active_cells = engine_unskip_copy_cell(c->progeny[i], local_active_cells, level, e);
+        local_active_cells = engine_unskip_copy_cell(c->progeny[i], local_active_cells, depth, e);
       }
     }
   }
@@ -555,7 +555,7 @@ struct cell **engine_unskip_copy_cell(struct cell *c, struct cell **local_active
  */
 void engine_unskip(struct engine *e) {
 
-  const int unskip_level = e->unskip_level;
+  const int unskip_depth = e->unskip_depth;
 
   const ticks tic = getticks();
   struct space *s = e->s;
@@ -596,7 +596,7 @@ void engine_unskip(struct engine *e) {
       if (num_active_top_cells != k)
         memswap(&local_cells[k], &local_cells[num_active_top_cells], sizeof(int));
       num_active_top_cells += 1;
-      const int depth = min(c->maxdepth, unskip_level);
+      const int depth = min(c->maxdepth, unskip_depth);
       total_size += 1 << (3 * depth);
     }
   }
@@ -647,7 +647,7 @@ void engine_unskip(struct engine *e) {
   struct cell **current = local_active_cells;
   for(int i = 0; i < num_active_top_cells; i++) {
     struct cell *c = &s->cells_top[local_cells[i]];
-    current = engine_unskip_copy_cell(c, current, unskip_level, e);
+    current = engine_unskip_copy_cell(c, current, unskip_depth, e);
   }
   const int number_cells = current - local_active_cells;
 
