@@ -6,10 +6,10 @@ digraph task_dep {
 	 ranksep=0.8;
 
 	 # Special tasks
-	 hydro[color=blue3];
-	 limiter[color=black];
-	 grav[color=red3];
-	 stars[color=darkorange1];
+	 hydro[color=blue3,shape=folder];
+	 limiter[color=black,shape=folder];
+	 grav[color=red3,shape=folder];
+	 stars[color=darkorange1,shape=folder];
 	 drift_part[color=blue3];
 	 drift_spart[color=darkorange1];
 	 drift_gpart[color=red3];
