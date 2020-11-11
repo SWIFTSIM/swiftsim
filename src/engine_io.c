@@ -233,7 +233,7 @@ void engine_run_on_dump(struct engine *e) {
     /* Let's trust the user's command... */
     const int result = system(e->snapshot_dump_command);
     if (result != 0) {
-      message("Snapshot dump command returned error code %d", result)
+      message("Snapshot dump command returned error code %d", result);
     }
   }
 }
