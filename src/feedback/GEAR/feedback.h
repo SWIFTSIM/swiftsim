@@ -52,14 +52,18 @@ void feedback_first_init_spart(struct spart* sp,
                                const struct feedback_props* feedback_props);
 void feedback_prepare_spart(struct spart* sp,
                             const struct feedback_props* feedback_props);
-void feedback_evolve_spart(struct spart* restrict sp,
-                           const struct feedback_props* feedback_props,
-                           const struct cosmology* cosmo,
-                           const struct unit_system* us,
-                           const struct phys_const* phys_const,
-                           const double star_age_beg_step, const double dt,
-                           const double time, const integertime_t ti_begin,
-                           const int with_cosmology);
+void feedback_evolve_spart_in_stars_ghost(
+    struct spart* restrict sp, const struct feedback_props* feedback_props,
+    const struct cosmology* cosmo, const struct unit_system* us,
+    const struct phys_const* phys_const, const double star_age_beg_step,
+    const double dt, const double time, const integertime_t ti_begin,
+    const int with_cosmology);
+void feedback_evolve_spart_in_kick2(
+    struct spart* restrict sp, const struct feedback_props* feedback_props,
+    const struct cosmology* cosmo, const struct unit_system* us,
+    const struct phys_const* phys_const, const double star_age_beg_step,
+    const double dt, const double time, const integertime_t ti_begin,
+    const int with_cosmology);
 void feedback_struct_dump(const struct feedback_props* feedback, FILE* stream);
 void feedback_struct_restore(struct feedback_props* feedback, FILE* stream);
 void feedback_clean(struct feedback_props* feedback);
