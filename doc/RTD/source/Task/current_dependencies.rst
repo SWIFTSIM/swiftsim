@@ -26,7 +26,8 @@ The first graph shows the full graph (without AGN and sink particles) but with s
     :alt: Task dependencies for a run with gravity, hydro, cooling, star formation and stellar feedback.
 
     This figure shows the task dependencies for a run with gravity, hydro, cooling, star formation and stellar feedback.
-    The tasks for the hydrodynamics, stellar feedback and gravity are collapsed into a single node.
+    The tasks for the limiter, hydrodynamics, stellar feedback and gravity are collapsed into a single meta-task.
+    The other graphs are showing the details of the collapsed tasks except for the limiter that is done in the same way than the density loop.
     The first tasks to be executed are at the top (without any incoming links) and then follow the order of the links
     until the last tasks without any outgoing links.
     This was done with SWIFT v0.9.0.
