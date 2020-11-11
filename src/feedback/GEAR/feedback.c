@@ -153,12 +153,18 @@ void feedback_init_spart(struct spart* sp) {
  * @brief Prepares a star's feedback field before computing what
  * needs to be distributed.
  */
-void feedback_reset_feedback(struct spart* sp,
+void feedback_reset_feedback_in_kick2(struct spart* sp,
                              const struct feedback_props* feedback_props) {
-
   /* Zero the energy of supernovae */
   sp->feedback_data.energy_ejected = 0;
 }
+
+/**
+ * @brief Prepares a star's feedback field before computing what
+ * needs to be distributed.
+ */
+void feedback_reset_feedback_in_stars_ghost(struct spart* sp,
+                                            const struct feedback_props* feedback_props) {}
 
 /**
  * @brief Initialises the s-particles feedback props for the first time
@@ -174,7 +180,7 @@ void feedback_first_init_spart(struct spart* sp,
 
   feedback_init_spart(sp);
 
-  feedback_reset_feedback(sp, feedback_props);
+  feedback_reset_feedback_in_kick2(sp, feedback_props);
 }
 
 /**
@@ -250,7 +256,7 @@ void feedback_evolve_spart_in_kick2(
       star_age_beg_step < 0 ? 0 : star_age_beg_step;
 
   /* Reset the feedback */
-  feedback_reset_feedback(sp, feedback_props);
+  feedback_reset_feedback_in_kick2(sp, feedback_props);
 
   /* Add missing h factor */
   const float hi_inv = 1.f / sp->h;
