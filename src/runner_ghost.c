@@ -249,11 +249,11 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               } else {
 
                 /* Reset the feedback fields of the star particle */
-                feedback_reset_feedback(sp, feedback_props);
+                feedback_reset_feedback_in_stars_ghost(sp, feedback_props);
               }
             } else {
 
-              feedback_reset_feedback(sp, feedback_props);
+              feedback_reset_feedback_in_stars_ghost(sp, feedback_props);
             }
 
             /* Ok, we are done with this particle */
@@ -393,12 +393,12 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
           } else {
 
             /* Reset the feedback fields of the star particle */
-            feedback_reset_feedback(sp, feedback_props);
+            feedback_reset_feedback_in_stars_ghost(sp, feedback_props);
           }
         } else {
 
           /* Reset the feedback fields of the star particle */
-          feedback_reset_feedback(sp, feedback_props);
+          feedback_reset_feedback_in_stars_ghost(sp, feedback_props);
         }
 
         if (with_rt) {

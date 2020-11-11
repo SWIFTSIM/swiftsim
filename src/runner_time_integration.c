@@ -572,6 +572,9 @@ void runner_do_kick2(struct runner *r, struct cell *c, const int timer) {
               sp, feedback_props, cosmo, us, phys_const, star_age_beg_of_step,
               dt_enrichment, e->time, ti_begin_star, with_cosmology);
         }
+        else {
+          feedback_reset_feedback_in_kick2(sp, feedback_props);
+        }
       }
     }
 
