@@ -16,7 +16,7 @@ Therefore in this section we show some smaller graphs created by hand (thus they
 The task in the form of ellipses are computational tasks while the diamond are communications.
 The colors are picked depending on the type of physics computed (blue for hydro, yellow for stars, red for gravity and black for the rest).
 The gray tasks are implicit tasks that do not compute anything but are useful to simplify the task dependencies.
-The first graph shows the full graph (without AGN and sink particles) but with some tasks collapsed into a single node
+The first graph shows the full graph (without AGN and sink particles) but with some tasks collapsed into a single meta-task
 (hydrodynamics, gravity and stellar feedback):
 
 .. figure:: reduced.png
