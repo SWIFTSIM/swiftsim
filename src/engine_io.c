@@ -39,6 +39,8 @@
 #include "serial_io.h"
 #include "single_io.h"
 
+#include <stdio.h>
+
 /**
  * @brief Check whether an index file has to be written during this
  * step.
@@ -214,6 +216,26 @@ void engine_dump_snapshot(struct engine *e) {
   if (e->verbose)
     message("writing particle properties took %.3f %s.",
             (float)clocks_diff(&time1, &time2), clocks_getunit());
+
+  /* Run the post-dump command if required */
+  engine_run_on_dump(e);
+}
+
+/**
+ * @brief Runs the snapshot_dump_command if relevant. Note that we
+ *        perform no error checking on this command, and assume
+ *        it works fine.
+ *
+ * @param e The #engine.
+ */
+void engine_run_on_dump(struct engine *e) {
+  if (e->snapshot_run_on_dump) {
+    /* Let's trust the user's command... */
+    const int result = system(e->snapshot_dump_command);
+    if (result != 0) {
+      message("Snapshot dump command returned error code %d", result)
+    }
+  }
 }
 
 /**
