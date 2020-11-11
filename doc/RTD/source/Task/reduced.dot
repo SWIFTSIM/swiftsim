@@ -7,12 +7,9 @@ digraph task_dep {
 
 	 # Special tasks
 	 hydro[color=blue3];
-	 self_limiter[color=black];
+	 limiter[color=black];
 	 grav[color=red3];
 	 stars[color=darkorange1];
-	 pair_limiter[color=black];
-	 sub_self_limiter[color=black];
-	 sub_pair_limiter[color=black];
 	 drift_part[color=blue3];
 	 drift_spart[color=darkorange1];
 	 drift_gpart[color=red3];
@@ -36,37 +33,18 @@ digraph task_dep {
 	 send_tend_gpart[shape=diamond,style=filled,fillcolor=azure,color=red3,rank=min];
 	 send_sf_count[shape=diamond,style=filled,fillcolor=azure,color=darkorange1];
 
-	 subgraph clusterTimestep_limiter {
-		 label="";
-		 bgcolor="grey99";
-		 pair_limiter;
-		 self_limiter;
-		 sub_pair_limiter;
-		 sub_self_limiter;
-	 };
-
-
 	 # Dependencies
 	 hydro->stars[fontcolor=blue3,color=blue3]
-	 self_limiter->kick1[fontcolor=black,color=black]
-	 self_limiter->timestep_limiter[fontcolor=black,color=black]
+	 limiter->kick1[fontcolor=black,color=black]
+	 limiter->timestep_limiter[fontcolor=black,color=black]
 	 stars->timestep_sync[fontcolor=darkorange1,color=darkorange1]
 	 hydro->recv_tend_part[fontcolor=blue3,color=blue3]
-	 pair_limiter->kick1[fontcolor=black,color=black]
-	 pair_limiter->timestep_limiter[fontcolor=black,color=black]
 	 grav->recv_tend_gpart[fontcolor=red3,color=red3]
 	 stars->recv_tend_spart[fontcolor=darkorange1,color=darkorange1]
-	 sub_self_limiter->kick1[fontcolor=black,color=black]
-	 sub_self_limiter->timestep_limiter[fontcolor=black,color=black]
-	 sub_pair_limiter->kick1[fontcolor=black,color=black]
-	 sub_pair_limiter->timestep_limiter[fontcolor=black,color=black]
 	 stars->recv_tend_spart[fontcolor=darkorange1,color=darkorange1]
 	 drift_part->hydro[fontcolor=blue3,color=blue3]
 	 drift_part->stars[fontcolor=blue3,color=blue3]
-	 drift_part->self_limiter[fontcolor=blue3,color=blue3]
-	 drift_part->pair_limiter[fontcolor=blue3,color=blue3]
-	 drift_part->sub_self_limiter[fontcolor=blue3,color=blue3]
-	 drift_part->sub_pair_limiter[fontcolor=blue3,color=blue3]
+	 drift_part->limiter[fontcolor=blue3,color=blue3]
 	 drift_spart->kick2[fontcolor=darkorange1,color=darkorange1]
 	 drift_spart->stars[fontcolor=darkorange1,color=darkorange1]
 	 drift_gpart->grav[fontcolor=red3,color=red3]
@@ -77,22 +55,17 @@ digraph task_dep {
 	 timestep->kick1[fontcolor=black,color=black]
 	 timestep->timestep_limiter[fontcolor=black,color=black]
 	 timestep->timestep_sync[fontcolor=black,color=black]
-	 timestep->self_limiter[fontcolor=black,color=black]
-	 timestep->pair_limiter[fontcolor=black,color=black]
+	 timestep->limiter[fontcolor=black,color=black]
 	 timestep->send_tend_part[fontcolor=black,color=black]
 	 timestep->send_limiter[fontcolor=black,color=black]
 	 timestep->send_tend_spart[fontcolor=black,color=black]
 	 timestep->send_tend_gpart[fontcolor=black,color=black]
-	 timestep->sub_self_limiter[fontcolor=black,color=black]
-	 timestep->sub_pair_limiter[fontcolor=black,color=black]
 	 timestep_limiter->kick1[fontcolor=black,color=black]
 	 timestep_limiter->timestep_sync[fontcolor=black,color=black]
 	 timestep_sync->kick1[fontcolor=black,color=black]
-	 recv_limiter->pair_limiter[fontcolor=black,color=black]
-	 recv_limiter->sub_pair_limiter[fontcolor=black,color=black]
-	 recv_tend_part->pair_limiter[fontcolor=blue3,color=blue3]
-	 recv_tend_part->sub_pair_limiter[fontcolor=blue3,color=blue3]
-    recv_sf_count->stars[fontcolor=darkorange1,color=darkorange1]
+	 recv_limiter->limiter[fontcolor=black,color=black]
+	 recv_tend_part->limiter[fontcolor=blue3,color=blue3]
+	  recv_sf_count->stars[fontcolor=darkorange1,color=darkorange1]
 	 grav->kick2[fontcolor=red3,color=red3]
 	 cooling->cooling_out[fontcolor=blue3,color=blue3]
 	 cooling_in->cooling[fontcolor=blue3,color=blue3]
