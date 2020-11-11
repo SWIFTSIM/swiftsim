@@ -2280,7 +2280,7 @@ void space_write_cell(const struct space *s, FILE *f, const struct cell *c) {
 
   /* Get super ID */
   char superID[100] = "";
-  if (c->super != NULL) sprintf(superID, "%lli", c->super->cellID);
+  if (c->super != NULL) sprintf(superID, "%lld", c->super->cellID);
 
   /* Get hydro super ID */
   char hydro_superID[100] = "";
@@ -2292,7 +2292,7 @@ void space_write_cell(const struct space *s, FILE *f, const struct cell *c) {
   fprintf(f, "%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ", c->hydro.count,
           c->stars.count, c->grav.count, superID, hydro_superID, c->loc[0],
           c->loc[1], c->loc[2], c->width[0], c->width[1], c->width[2]);
-  fprintf(f, "%g, %g %i %i\n", c->hydro.h_max, c->stars.h_max, c->depth,
+  fprintf(f, "%g, %g, %i, %i\n", c->hydro.h_max, c->stars.h_max, c->depth,
           c->maxdepth);
 
   /* Write children */
@@ -2329,9 +2329,9 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
 
     /* Write root data */
     fprintf(f, "%i, ,-1,", root_id);
-    fprintf(f, "%li,%li,%li, , , , , , , , , ", s->nr_parts, s->nr_sparts,
+    fprintf(f, "%li,%li,%li, , , , , , , , ,", s->nr_parts, s->nr_sparts,
             s->nr_gparts);
-    fprintf(f, ",\n");
+    fprintf(f, " , , ,\n");
   }
 
   /* Write all the top level cells (and their children) */

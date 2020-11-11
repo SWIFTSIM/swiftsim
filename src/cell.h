@@ -225,7 +225,7 @@ struct pcell {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Cell ID (for debugging) */
-  unsigned long long cellID;
+  long long cellID;
 #endif
 
 } SWIFT_STRUCT_ALIGN;
@@ -452,7 +452,7 @@ struct cell {
 
 #if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
   /* Cell ID (for debugging) */
-  unsigned long long cellID;
+  long long cellID;
 #endif
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1280,9 +1280,14 @@ __attribute__((always_inline)) INLINE static struct task *cell_get_recv(
 }
 
 /**
- * @brief Generate the cell ID. Only used for debugging purposes.
- * TODO: proper documentation
- * TODO: use 1 "useless" bit to mark non-topcells
+ * @brief Generate the cell ID for top level cells. Only used for debugging.
+ *
+ * Cell IDs are stored in the long long `cell->cellID`. Top level cells get
+ * their index according to their location on the top level grid, and are
+ * marked with a minus sign.
+ * We have 15 bits set aside in `cell->cellID` for the top level cells. Hence
+ * if we have more that 32^3 top level cells, the cell IDs won't be guaranteed
+ * to be unique. Top level cells will still be recognizable by the minus sign.
  */
 __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
     struct cell *c, int cdim[3], double dim[3], double width[3]) {
@@ -1293,21 +1298,28 @@ __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
   } else {
     if (cdim[0] > 32 || cdim[1] > 32 || cdim[2] > 32)
       message("Warning: Got %d x %d x %d top level cells."
-          "IDs are only guaranteed unique if every count is < 32", cdim[0], cdim[1], cdim[2]);
+          "Cell IDs are only guaranteed to be unique if every count is < 32", 
+          cdim[0], cdim[1], cdim[2]);
 
     int i = (int) (c->loc[0] / width[0]);
     int j = (int) (c->loc[1] / width[1]);
     int k = (int) (c->loc[2] / width[2]);
-    c->cellID = (unsigned long long) (i + cdim[0] * (j + cdim[1] * k));
+    c->cellID = - (long long) (i + cdim[0] * (j + cdim[1] * k) + 1);
 
   }
 #endif
 }
 
 /**
- * @brief Generate the cell ID for progeny cells. Only used for debugging purposes.
- * TODO: proper documentation
- * TODO: use 1 "useless" bit to mark non-topcells
+ * @brief Generate the cell ID for progeny cells. Only used for debugging.
+ *
+ * Cell IDs are stored in the long long `cell->cellID`.
+ * We have 15 bits set aside in `cell->cellID` for the top level cells, and
+ * one for a minus sign to mark top level cells. The remaining 48 bits are 
+ * for all other cells. Each progeny cell gets a unique ID by inheriting
+ * its parent ID and adding 3 bits on the right side, which are set according 
+ * to the progeny's location within its parent cell. Hence we can store up to 
+ * 16 levels of depth uniquely.
  */
 __attribute__((always_inline)) INLINE void cell_assign_cell_index(
     struct cell *c, struct cell *parent) {
@@ -1317,25 +1329,29 @@ __attribute__((always_inline)) INLINE void cell_assign_cell_index(
     error("assigning progeny cell index to top level cell.");
   else if (c->depth > 16)
     message("Warning: Got depth %d > 16."
-        "IDs are only guaranteed unique if depth < 16", c->depth);
+        "IDs are only guaranteed unique if depth <= 16", c->depth);
+    /* todo: revert to old version here */
+  else {
+    /* we're good to go for unique IDs */
+    /* first inherit the parent's ID and mark it as not top-level*/
+    long long child_id = llabs(parent->cellID);
 
-  /* first inherit the parent's ID and mark it as not top-level*/
-  c->cellID = parent->cellID | (1 << 16);
+    /* make place for new bits */
+    /* parent's ID needs to be leading bits, so 000 children still
+     * change the value of the cellID */
+    child_id = child_id << 3;
 
-  /* starting index for bit shifts */
-  int shift = 16 + (c->depth - 1) * 3;
-  unsigned long long child_id = 0;
+    /* get progeny index in parent cell */
+    if (c->loc[0] > parent->loc[0])
+      child_id |= 1LL;
+    if (c->loc[1] > parent->loc[1])
+      child_id |= 2LL;
+    if (c->loc[2] > parent->loc[2])
+      child_id |= 4LL;
 
-  /* get progeny index in parent cell */
-  if (c->loc[0] > parent->loc[0])
-    child_id |= 1 << shift;
-  if (c->loc[1] > parent->loc[1])
-    child_id |= 1 << (shift + 1);
-  if (c->loc[2] > parent->loc[2])
-    child_id |= 1 << (shift + 2);
-
-  /* add progeny index to cell index */
-  c->cellID |= child_id;
+    /* add progeny index to cell index */
+    c->cellID = child_id;
+  }
 
 #endif
 }
