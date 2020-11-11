@@ -781,7 +781,11 @@ parameters:
 * Command to run after snapshot creation: ``dump_command`` (default: nothing)
 
 These are particularly useful should you wish to submit a job for postprocessing
-the snapshot after it has just been created.
+the snapshot after it has just been created. Your script will be invoked with
+two parameters, the snapshot base-name, and the snapshot number that was just
+output as a zero-padded integer. For example, if the base-name is "eagle" and
+snapshot 7 was just dumped, with ``dump_command`` set to ``./postprocess.sh``,
+then SWIFT will run ``./postprocess.sh eagle 0007``.
 
 Finally, it is possible to specify a different system of units for the snapshots
 than the one that was used internally by SWIFT. The format is identical to the
