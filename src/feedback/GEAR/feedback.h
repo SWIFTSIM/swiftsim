@@ -46,21 +46,21 @@ double feedback_get_enrichment_timestep(const struct spart* sp,
                                         const double dt_star);
 void feedback_init_spart(struct spart* sp);
 
-void feedback_reset_feedback_in_stars_ghost(struct spart* sp,
-                                            const struct feedback_props* feedback_props);
-void feedback_reset_feedback_in_kick2(struct spart* sp,
+void feedback_reset_feedback(struct spart* sp,
+                                const struct feedback_props* feedback_props);
+void feedback_reset_kick2(struct spart* sp,
                                       const struct feedback_props* feedback_props);
 void feedback_first_init_spart(struct spart* sp,
                                const struct feedback_props* feedback_props);
 void feedback_prepare_spart(struct spart* sp,
                             const struct feedback_props* feedback_props);
-void feedback_evolve_spart_in_stars_ghost(
+void feedback_prepare_feedback(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
     const struct phys_const* phys_const, const double star_age_beg_step,
     const double dt, const double time, const integertime_t ti_begin,
     const int with_cosmology);
-void feedback_evolve_spart_in_kick2(
+void feedback_extra_kick2(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
     const struct phys_const* phys_const, const double star_age_beg_step,

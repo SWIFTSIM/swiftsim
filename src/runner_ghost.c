@@ -242,18 +242,18 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
                     star_age_end_of_step - dt_enrichment;
 
                 /* Compute the stellar evolution  */
-                feedback_evolve_spart_in_stars_ghost(
+                feedback_prepare_feedback(
                     sp, feedback_props, cosmo, us, phys_const,
                     star_age_beg_of_step, dt_enrichment, e->time, ti_begin,
                     with_cosmology);
               } else {
 
                 /* Reset the feedback fields of the star particle */
-                feedback_reset_feedback_in_stars_ghost(sp, feedback_props);
+                feedback_reset_feedback(sp, feedback_props);
               }
             } else {
 
-              feedback_reset_feedback_in_stars_ghost(sp, feedback_props);
+              feedback_reset_feedback(sp, feedback_props);
             }
 
             /* Ok, we are done with this particle */
@@ -387,18 +387,18 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
                 star_age_end_of_step - dt_enrichment;
 
             /* Compute the stellar evolution  */
-            feedback_evolve_spart_in_stars_ghost(
+            feedback_prepare_feedback(
                 sp, feedback_props, cosmo, us, phys_const, star_age_beg_of_step,
                 dt_enrichment, e->time, ti_begin, with_cosmology);
           } else {
 
             /* Reset the feedback fields of the star particle */
-            feedback_reset_feedback_in_stars_ghost(sp, feedback_props);
+            feedback_reset_feedback(sp, feedback_props);
           }
         } else {
 
           /* Reset the feedback fields of the star particle */
-          feedback_reset_feedback_in_stars_ghost(sp, feedback_props);
+          feedback_reset_feedback(sp, feedback_props);
         }
 
         if (with_rt) {
