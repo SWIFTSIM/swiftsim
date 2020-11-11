@@ -153,7 +153,7 @@ void feedback_init_spart(struct spart* sp) {
  * @brief Prepares a star's feedback field before computing what
  * needs to be distributed.
  */
-void feedback_reset_feedback_in_kick2(struct spart* sp,
+void feedback_reset_kick2(struct spart* sp,
                              const struct feedback_props* feedback_props) {
   /* Zero the energy of supernovae */
   sp->feedback_data.energy_ejected = 0;
@@ -163,8 +163,8 @@ void feedback_reset_feedback_in_kick2(struct spart* sp,
  * @brief Prepares a star's feedback field before computing what
  * needs to be distributed.
  */
-void feedback_reset_feedback_in_stars_ghost(struct spart* sp,
-                                            const struct feedback_props* feedback_props) {}
+void feedback_reset_feedback(struct spart* sp,
+                            const struct feedback_props* feedback_props) {}
 
 /**
  * @brief Initialises the s-particles feedback props for the first time
@@ -180,7 +180,7 @@ void feedback_first_init_spart(struct spart* sp,
 
   feedback_init_spart(sp);
 
-  feedback_reset_feedback_in_kick2(sp, feedback_props);
+  feedback_reset_kick2(sp, feedback_props);
 }
 
 /**
@@ -213,7 +213,7 @@ void feedback_prepare_spart(struct spart* sp,
  * @param ti_begin The integer time at the beginning of the step.
  * @param with_cosmology Are we running with cosmology on?
  */
-void feedback_evolve_spart_in_stars_ghost(
+void feedback_prepare_feedback(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
     const struct phys_const* phys_const, const double star_age_beg_step,
@@ -238,7 +238,7 @@ void feedback_evolve_spart_in_stars_ghost(
  * @param ti_begin The integer time at the beginning of the step.
  * @param with_cosmology Are we running with cosmology on?
  */
-void feedback_evolve_spart_in_kick2(
+void feedback_extra_kick2(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
     const struct phys_const* phys_const, const double star_age_beg_step,
@@ -256,7 +256,7 @@ void feedback_evolve_spart_in_kick2(
       star_age_beg_step < 0 ? 0 : star_age_beg_step;
 
   /* Reset the feedback */
-  feedback_reset_feedback_in_kick2(sp, feedback_props);
+  feedback_reset_kick2(sp, feedback_props);
 
   /* Add missing h factor */
   const float hi_inv = 1.f / sp->h;

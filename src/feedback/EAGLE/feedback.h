@@ -143,6 +143,13 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
 }
 
 /**
+ * @brief Prepares a star's feedback field before computing what
+ * needs to be distributed.
+ */
+__attribute__((always_inline)) INLINE static void feedback_reset_kick2(
+    struct spart* sp, const struct feedback_props* feedback_props) {}
+
+/**
  * @brief Initialises the s-particles feedback props for the first time
  *
  * This function is called only once just after the ICs have been
@@ -188,14 +195,14 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * @param with_cosmology Are we running with cosmology on?
  */
 __attribute__((always_inline)) INLINE static void
-feedback_evolve_spart_in_kick2(struct spart* restrict sp,
-                               const struct feedback_props* feedback_props,
-                               const struct cosmology* cosmo,
-                               const struct unit_system* us,
-                               const struct phys_const* phys_const,
-                               const double star_age_beg_step, const double dt,
-                               const double time, const integertime_t ti_begin,
-                               const int with_cosmology) {}
+feedback_extra_kick2(struct spart* restrict sp,
+                     const struct feedback_props* feedback_props,
+                     const struct cosmology* cosmo,
+                     const struct unit_system* us,
+                     const struct phys_const* phys_const,
+                     const double star_age_beg_step, const double dt,
+                     const double time, const integertime_t ti_begin,
+                     const int with_cosmology) {}
 
 /**
  * @brief Evolve the stellar properties of a #spart.
@@ -216,7 +223,7 @@ feedback_evolve_spart_in_kick2(struct spart* restrict sp,
  * @param with_cosmology Are we running with cosmology on?
  */
 __attribute__((always_inline)) INLINE static void
-feedback_evolve_spart_in_stars_ghost(
+feedback_prepare_feedback(
     struct spart* restrict sp, const struct feedback_props* feedback_props,
     const struct cosmology* cosmo, const struct unit_system* us,
     const struct phys_const* phys_const, const double star_age_beg_step,
