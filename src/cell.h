@@ -62,6 +62,11 @@ struct scheduler;
 /* Global variables. */
 extern int cell_next_tag;
 
+/*! Counter for cell IDs (when exceeding max values for uniqueness) */
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
+extern long long last_cell_id;
+#endif
+
 /* Struct to temporarily buffer the particle locations and bin id. */
 struct cell_buff {
   double x[3];
@@ -1296,16 +1301,22 @@ __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
   if (c->depth != 0) {
     error("assigning top level cell index to cell with depth > 0");
   } else {
-    if (cdim[0] > 32 || cdim[1] > 32 || cdim[2] > 32)
-      message("Warning: Got %d x %d x %d top level cells."
-          "Cell IDs are only guaranteed to be unique if every count is < 32", 
-          cdim[0], cdim[1], cdim[2]);
+    if (cdim[0] * cdim[1] * cdim[2] > 32 * 32 * 32) {
+      /* print warning only once */
+      if (last_cell_id == 1) {
+        message(
+            "Warning: Got %d x %d x %d top level cells."
+            "Cell IDs are only guaranteed to be unique if count is < 32^3",
+            cdim[0], cdim[1], cdim[2]);
+      }
+      c->cellID = -last_cell_id; /* this seems like it could need atomics...*/
+      last_cell_id++;
+    }
 
-    int i = (int) (c->loc[0] / width[0]);
-    int j = (int) (c->loc[1] / width[1]);
-    int k = (int) (c->loc[2] / width[2]);
-    c->cellID = - (long long) (i + cdim[0] * (j + cdim[1] * k) + 1);
-
+    int i = (int)(c->loc[0] / width[0]);
+    int j = (int)(c->loc[1] / width[1]);
+    int k = (int)(c->loc[2] / width[2]);
+    c->cellID = -(long long)(i + cdim[0] * (j + cdim[1] * k) + 1);
   }
 #endif
 }
@@ -1315,23 +1326,33 @@ __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
  *
  * Cell IDs are stored in the long long `cell->cellID`.
  * We have 15 bits set aside in `cell->cellID` for the top level cells, and
- * one for a minus sign to mark top level cells. The remaining 48 bits are 
+ * one for a minus sign to mark top level cells. The remaining 48 bits are
  * for all other cells. Each progeny cell gets a unique ID by inheriting
- * its parent ID and adding 3 bits on the right side, which are set according 
- * to the progeny's location within its parent cell. Hence we can store up to 
+ * its parent ID and adding 3 bits on the right side, which are set according
+ * to the progeny's location within its parent cell. Hence we can store up to
  * 16 levels of depth uniquely.
+ * If the depth exceeds 16, we use the old scheme where we just add up a
+ * counter. This gives us 32^3 new unique cell IDs, previously reserved for
+ * top level cells, but the IDs won't be thread safe and will vary each run.
+ * After the 32^3 cells are filled, we reach degeneracy.
  */
 __attribute__((always_inline)) INLINE void cell_assign_cell_index(
     struct cell *c, struct cell *parent) {
 
 #if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
-  if (c->depth == 0)
+  if (c->depth == 0) {
     error("assigning progeny cell index to top level cell.");
-  else if (c->depth > 16)
-    message("Warning: Got depth %d > 16."
-        "IDs are only guaranteed unique if depth <= 16", c->depth);
-    /* todo: revert to old version here */
-  else {
+  } else if (c->depth > 16 || last_cell_id > 1) {
+    /* last_cell_id > 1 => too many top level cells for clever IDs */
+    /* print warning only once */
+    if (last_cell_id == 1) {
+      message(
+          "Warning: Got depth %d > 16."
+          "IDs are only guaranteed unique if depth <= 16",
+          c->depth);
+    }
+    c->cellID = last_cell_id++; /* this seems like it could need atomics...*/
+  } else {
     /* we're good to go for unique IDs */
     /* first inherit the parent's ID and mark it as not top-level*/
     long long child_id = llabs(parent->cellID);
@@ -1342,12 +1363,9 @@ __attribute__((always_inline)) INLINE void cell_assign_cell_index(
     child_id = child_id << 3;
 
     /* get progeny index in parent cell */
-    if (c->loc[0] > parent->loc[0])
-      child_id |= 1LL;
-    if (c->loc[1] > parent->loc[1])
-      child_id |= 2LL;
-    if (c->loc[2] > parent->loc[2])
-      child_id |= 4LL;
+    if (c->loc[0] > parent->loc[0]) child_id |= 1LL;
+    if (c->loc[1] > parent->loc[1]) child_id |= 2LL;
+    if (c->loc[2] > parent->loc[2]) child_id |= 4LL;
 
     /* add progeny index to cell index */
     c->cellID = child_id;
@@ -1355,6 +1373,5 @@ __attribute__((always_inline)) INLINE void cell_assign_cell_index(
 
 #endif
 }
-
 
 #endif /* SWIFT_CELL_H */

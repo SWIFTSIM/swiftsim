@@ -94,6 +94,11 @@ int engine_star_resort_task_depth = engine_star_resort_task_depth_default;
 /*! Expected maximal number of strays received at a rebuild */
 int space_expected_max_nr_strays = space_expected_max_nr_strays_default;
 
+/*! Counter for cell IDs (when debugging + max vals for unique IDs exceeded) */
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
+long long last_cell_id;
+#endif
+
 /**
  * @brief Interval stack necessary for parallel particle sorting.
  */
@@ -1194,6 +1199,10 @@ void space_init(struct space *s, struct swift_params *params,
 
   /* Init the space lock. */
   if (lock_init(&s->lock) != 0) error("Failed to create space spin-lock.");
+
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
+  last_cell_id = 1;
+#endif
 
   /* Do we want any spare particles for on the fly creation? */
   if (!star_formation || !swift_star_formation_model_creates_stars) {
