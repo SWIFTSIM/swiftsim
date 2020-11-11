@@ -350,6 +350,9 @@ void runner_do_kick2(struct runner *r, struct cell *c, const int timer) {
   const struct cosmology *cosmo = e->cosmology;
   const struct hydro_props *hydro_props = e->hydro_properties;
   const struct entropy_floor_properties *entropy_floor = e->entropy_floor;
+  const struct unit_system *us = e->internal_units;
+  const struct phys_const *phys_const = e->physical_constants;
+  const struct feedback_props *feedback_props = e->feedback_props;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
   const int periodic = e->s->periodic;
   const int count = c->hydro.count;
@@ -532,6 +535,43 @@ void runner_do_kick2(struct runner *r, struct cell *c, const int timer) {
 
         /* Prepare the values to be drifted */
         stars_reset_predicted_values(sp);
+
+        /* Compute the stellar evolution */
+        const integertime_t ti_begin_star =
+            get_integer_time_begin(e->ti_current - 1, sp->time_bin);
+
+        /* Get particle time-step */
+        double dt_star;
+        if (with_cosmology) {
+          dt_star = cosmology_get_delta_time(e->cosmology, ti_begin_star,
+                                             ti_begin_star + ti_step);
+        } else {
+          dt_star = get_timestep(sp->time_bin, e->time_base);
+        }
+
+        /* Calculate age of the star at current time */
+        double star_age_end_of_step;
+        if (with_cosmology) {
+          star_age_end_of_step = cosmology_get_delta_time_from_scale_factors(
+              cosmo, (double)sp->birth_scale_factor, cosmo->a);
+        } else {
+          star_age_end_of_step = e->time - (double)sp->birth_time;
+        }
+
+        /* Has this star been around for a while ? */
+        if (star_age_end_of_step > 0.) {
+
+          /* Get the length of the enrichment time-step */
+          const double dt_enrichment = feedback_get_enrichment_timestep(
+              sp, with_cosmology, cosmo, e->time, dt_star);
+          const double star_age_beg_of_step =
+              star_age_end_of_step - dt_enrichment;
+
+          /* Compute the stellar evolution  */
+          feedback_evolve_spart_in_kick2(
+              sp, feedback_props, cosmo, us, phys_const, star_age_beg_of_step,
+              dt_enrichment, e->time, ti_begin_star, with_cosmology);
+        }
       }
     }
 

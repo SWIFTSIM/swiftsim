@@ -101,7 +101,7 @@ int feedback_will_do_feedback(const struct spart* sp,
                               const struct cosmology* cosmo,
                               const double time) {
 
-  return (sp->birth_time != -1.);
+  return (sp->birth_time != -1. && sp->feedback_data.will_do_feedback);
 }
 
 /**
@@ -116,14 +116,7 @@ int feedback_is_active(const struct spart* sp, const double time,
                        const struct cosmology* cosmo,
                        const int with_cosmology) {
 
-  // TODO improve this with estimates for SNII and SNIa
-  if (sp->birth_time == -1.) return 0;
-
-  if (with_cosmology) {
-    return ((double)cosmo->a) > sp->birth_scale_factor;
-  } else {
-    return time > sp->birth_time;
-  }
+  return sp->feedback_data.will_do_feedback;
 }
 
 /**
@@ -214,14 +207,37 @@ void feedback_prepare_spart(struct spart* sp,
  * @param ti_begin The integer time at the beginning of the step.
  * @param with_cosmology Are we running with cosmology on?
  */
-void feedback_evolve_spart(struct spart* restrict sp,
-                           const struct feedback_props* feedback_props,
-                           const struct cosmology* cosmo,
-                           const struct unit_system* us,
-                           const struct phys_const* phys_const,
-                           const double star_age_beg_step, const double dt,
-                           const double time, const integertime_t ti_begin,
-                           const int with_cosmology) {
+void feedback_evolve_spart_in_stars_ghost(
+    struct spart* restrict sp, const struct feedback_props* feedback_props,
+    const struct cosmology* cosmo, const struct unit_system* us,
+    const struct phys_const* phys_const, const double star_age_beg_step,
+    const double dt, const double time, const integertime_t ti_begin,
+    const int with_cosmology) {}
+
+/**
+ * @brief Evolve the stellar properties of a #spart.
+ *
+ * This function compute the SN rate and yields before sending
+ * this information to a different MPI rank.
+ *
+ * @param sp The particle to act upon
+ * @param feedback_props The #feedback_props structure.
+ * @param cosmo The current cosmological model.
+ * @param us The unit system.
+ * @param phys_const The #phys_const.
+ * @param star_age_beg_step The age of the star at the star of the time-step in
+ * internal units.
+ * @param dt The time-step size of this star in internal units.
+ * @param time The physical time in internal units.
+ * @param ti_begin The integer time at the beginning of the step.
+ * @param with_cosmology Are we running with cosmology on?
+ */
+void feedback_evolve_spart_in_kick2(
+    struct spart* restrict sp, const struct feedback_props* feedback_props,
+    const struct cosmology* cosmo, const struct unit_system* us,
+    const struct phys_const* phys_const, const double star_age_beg_step,
+    const double dt, const double time, const integertime_t ti_begin,
+    const int with_cosmology) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
@@ -258,6 +274,9 @@ void feedback_evolve_spart(struct spart* restrict sp,
   /* Transform the number of SN to the energy */
   sp->feedback_data.energy_ejected =
       sp->feedback_data.number_sn * feedback_props->energy_per_supernovae;
+
+  /* Set the particle as doing some feedback */
+  sp->feedback_data.will_do_feedback = sp->feedback_data.energy_ejected != 0.;
 }
 
 /**
