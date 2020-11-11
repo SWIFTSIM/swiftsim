@@ -2767,6 +2767,7 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
 #endif
   e->total_nr_cells = 0;
   e->total_nr_tasks = 0;
+  e->unskip_level = parser_get_opt_param_int(params, "Scheduler:unskip_level", 0);
 
 #if defined(WITH_LOGGER)
   if (e->policy & engine_policy_logger) {

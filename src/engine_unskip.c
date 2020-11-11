@@ -34,8 +34,6 @@
 #include <gperftools/profiler.h>
 #endif
 
-#define unskip_level 2
-
 /**
  * @brief Broad categories of tasks.
  *
@@ -84,12 +82,15 @@ enum recursion_type {
  *
  * @param c The cell.
  * @param e The engine.
+ * @param recursion The recursion type (only do above, below or both of them).
  */
 static void engine_do_unskip_hydro(struct cell *c, struct engine *e,
                                    enum recursion_type recursion) {
+
+  /* Unskip the parents of the reference cell. */
   if (recursion == recursion_type_both && c->parent != NULL) {
     struct cell *parent = c->parent;
-    /* Do the cells above only if c is the first progeny */
+    /* Do the cells above only if c is the first progeny. */
     for(int i = 0; i < 8; i++) {
       if (parent->progeny[i] == c) {
         engine_do_unskip_hydro(parent, e, recursion_type_above);
@@ -100,6 +101,8 @@ static void engine_do_unskip_hydro(struct cell *c, struct engine *e,
       }
     }
   }
+
+  /* We only need to climb the three to the top level cell. */
   if (recursion == recursion_type_above) {
     if (c->parent != NULL) {
       engine_do_unskip_hydro(c->parent, e, recursion_type_above);
@@ -115,7 +118,7 @@ static void engine_do_unskip_hydro(struct cell *c, struct engine *e,
   /* Skip inactive cells. */
   if (!cell_is_active_hydro(c, e)) return;
 
-  /* Recurse */
+  /* Do the recursion below the current level. */
   if (c->split && (recursion == recursion_type_below ||
                    recursion == recursion_type_both)) {
     for (int k = 0; k < 8; k++) {
@@ -137,13 +140,15 @@ static void engine_do_unskip_hydro(struct cell *c, struct engine *e,
  * @param c The cell.
  * @param e The engine.
  * @param with_star_formation Are we running with star formation switched on?
+ * @param recursion The recursion type (only do above, below or both of them).
  */
 static void engine_do_unskip_stars(struct cell *c, struct engine *e,
                                    const int with_star_formation, enum recursion_type recursion) {
 
+  /* Unskip the parents of the reference cell. */
   if (recursion == recursion_type_both && c->parent != NULL) {
     struct cell *parent = c->parent;
-    /* Do the cells above only if c is the first progeny */
+    /* Do the cells above only if c is the first progeny. */
     for(int i = 0; i < 8; i++) {
       if (parent->progeny[i] == c) {
         engine_do_unskip_stars(parent, e, with_star_formation, recursion_type_above);
@@ -154,6 +159,8 @@ static void engine_do_unskip_stars(struct cell *c, struct engine *e,
       }
     }
   }
+
+  /* We only need to climb the three to the top level cell. */
   if (recursion == recursion_type_above) {
     if (c->parent != NULL) {
       engine_do_unskip_stars(c->parent, e, with_star_formation, recursion_type_above);
@@ -175,7 +182,7 @@ static void engine_do_unskip_stars(struct cell *c, struct engine *e,
   /* Skip inactive cells. */
   if (!ci_active) return;
 
-  /* Recurse */
+  /* Do the recursion below the current level. */
   if (c->split && (recursion == recursion_type_below ||
                    recursion == recursion_type_both)) {
     for (int k = 0; k < 8; k++) {
@@ -197,13 +204,15 @@ static void engine_do_unskip_stars(struct cell *c, struct engine *e,
  *
  * @param c The cell.
  * @param e The engine.
+ * @param recursion The recursion type (only do above, below or both of them).
  */
 static void engine_do_unskip_black_holes(struct cell *c, struct engine *e,
                                          enum recursion_type recursion) {
 
+  /* Unskip the parents of the reference cell. */
   if (recursion == recursion_type_both && c->parent != NULL) {
     struct cell *parent = c->parent;
-    /* Do the cells above only if c is the first progeny */
+    /* Do the cells above only if c is the first progeny. */
     for(int i = 0; i < 8; i++) {
       if (parent->progeny[i] == c) {
         engine_do_unskip_black_holes(parent, e, recursion_type_above);
@@ -214,6 +223,8 @@ static void engine_do_unskip_black_holes(struct cell *c, struct engine *e,
       }
     }
   }
+
+  /* We only need to climb the three to the top level cell. */
   if (recursion == recursion_type_above) {
     if (c->parent != NULL) {
       engine_do_unskip_black_holes(c->parent, e, recursion_type_above);
@@ -229,7 +240,7 @@ static void engine_do_unskip_black_holes(struct cell *c, struct engine *e,
   /* Skip inactive cells. */
   if (!cell_is_active_black_holes(c, e)) return;
 
-  /* Recurse */
+  /* Do the recursion below the current level. */
   if (c->split && (recursion == recursion_type_below ||
                    recursion == recursion_type_both)) {
     for (int k = 0; k < 8; k++) {
@@ -250,13 +261,15 @@ static void engine_do_unskip_black_holes(struct cell *c, struct engine *e,
  *
  * @param c The cell.
  * @param e The engine.
+ * @param recursion The recursion type (only do above, below or both of them).
  */
 static void engine_do_unskip_sinks(struct cell *c, struct engine *e,
                                    enum recursion_type recursion) {
 
+  /* Unskip the parents of the reference cell. */
   if (recursion == recursion_type_both && c->parent != NULL) {
     struct cell *parent = c->parent;
-    /* Do the cells above only if c is the first progeny */
+    /* Do the cells above only if c is the first progeny. */
     for(int i = 0; i < 8; i++) {
       if (parent->progeny[i] == c) {
         engine_do_unskip_sinks(parent, e, recursion_type_above);
@@ -267,6 +280,8 @@ static void engine_do_unskip_sinks(struct cell *c, struct engine *e,
       }
     }
   }
+
+  /* We only need to climb the three to the top level cell. */
   if (recursion == recursion_type_above) {
     if (c->parent != NULL) {
       engine_do_unskip_sinks(c->parent, e, recursion_type_above);
@@ -282,7 +297,7 @@ static void engine_do_unskip_sinks(struct cell *c, struct engine *e,
   /* Skip inactive cells. */
   if (!cell_is_active_sinks(c, e) && !cell_is_active_hydro(c, e)) return;
 
-  /* Recurse */
+  /* Do the recursion below the current level. */
   if (c->split && (recursion == recursion_type_below ||
                    recursion == recursion_type_both)) {
     for (int k = 0; k < 8; k++) {
@@ -303,13 +318,15 @@ static void engine_do_unskip_sinks(struct cell *c, struct engine *e,
  *
  * @param c The cell.
  * @param e The engine.
+ * @param recursion The recursion type (only do above, below or both of them).
  */
 static void engine_do_unskip_gravity(struct cell *c, struct engine *e,
                                      enum recursion_type recursion) {
 
+  /* Unskip the parents of the reference cell. */
   if (recursion == recursion_type_both && c->parent != NULL) {
     struct cell *parent = c->parent;
-    /* Do the cells above only if c is the first progeny */
+    /* Do the cells above only if c is the first progeny. */
     for(int i = 0; i < 8; i++) {
       if (parent->progeny[i] == c) {
         engine_do_unskip_gravity(parent, e, recursion_type_above);
@@ -320,6 +337,8 @@ static void engine_do_unskip_gravity(struct cell *c, struct engine *e,
       }
     }
   }
+
+  /* We only need to climb the three to the top level cell. */
   if (recursion == recursion_type_above) {
     if (c->parent != NULL) {
       engine_do_unskip_gravity(c->parent, e, recursion_type_above);
@@ -335,7 +354,7 @@ static void engine_do_unskip_gravity(struct cell *c, struct engine *e,
   /* Skip inactive cells. */
   if (!cell_is_active_gravity(c, e)) return;
 
-  /* Recurse */
+  /* Do the recursion below the current level. */
   if (c->split && ((c->maxdepth - c->depth) >= space_subdepth_diff_grav)
       && (recursion == recursion_type_below ||
           recursion == recursion_type_both)) {
@@ -356,13 +375,15 @@ static void engine_do_unskip_gravity(struct cell *c, struct engine *e,
  *
  * @param c The cell.
  * @param e The engine.
+ * @param recursion The recursion type (only do above, below or both of them).
  */
 static void engine_do_unskip_rt(struct cell *c, struct engine *e,
                                 enum recursion_type recursion) {
 
+  /* Unskip the parents of the reference cell. */
   if (recursion == recursion_type_both && c->parent != NULL) {
     struct cell *parent = c->parent;
-    /* Do the cells above only if c is the first progeny */
+    /* Do the cells above only if c is the first progeny. */
     for(int i = 0; i < 8; i++) {
       if (parent->progeny[i] == c) {
         engine_do_unskip_rt(parent, e, recursion_type_above);
@@ -373,6 +394,8 @@ static void engine_do_unskip_rt(struct cell *c, struct engine *e,
       }
     }
   }
+
+  /* We only need to climb the three to the top level cell. */
   if (recursion == recursion_type_above) {
     if (c->parent != NULL) {
       engine_do_unskip_rt(c->parent, e, recursion_type_above);
@@ -388,7 +411,7 @@ static void engine_do_unskip_rt(struct cell *c, struct engine *e,
   /* Skip inactive cells. */
   if (!cell_is_active_hydro(c, e)) return;
 
-  /* Recurse */
+  /* Do the recursion below the current level. */
   if (c->split
       && (recursion == recursion_type_below ||
           recursion == recursion_type_both)) {
@@ -498,29 +521,17 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
   }
 }
 
+/**
+ * @brief Copy the address of the cells that requires an unskip.
+ *
+ * @param c The current #cell.
+ * @param local_active_cells The output array containing the address of the cells.
+ * @param level Level at which the unskip is run (0 for top level).
+ * @param e The #engine.
+ */
 struct cell **engine_unskip_copy_cell(struct cell *c, struct cell **local_active_cells, const int level, const struct engine *e) {
 
-  const int nodeID = e->nodeID;
-  const int with_hydro = e->policy & engine_policy_hydro;
-  const int with_self_grav = e->policy & engine_policy_self_gravity;
-  const int with_ext_grav = e->policy & engine_policy_external_gravity;
-  const int with_stars = e->policy & engine_policy_stars;
-  const int with_sinks = e->policy & engine_policy_sinks;
-  const int with_feedback = e->policy & engine_policy_feedback;
-  const int with_black_holes = e->policy & engine_policy_black_holes;
-  const int cell_active = (with_hydro && cell_is_active_hydro(c, e)) ||
-    (with_self_grav && cell_is_active_gravity(c, e)) ||
-    (with_ext_grav && c->nodeID == nodeID &&
-     cell_is_active_gravity(c, e)) ||
-    (with_feedback && cell_is_active_stars(c, e)) ||
-    (with_stars && c->nodeID == nodeID && cell_is_active_stars(c, e)) ||
-    (with_sinks && cell_is_active_sinks(c, e)) ||
-    (with_black_holes && cell_is_active_black_holes(c, e));
-
-  if (!cell_active) {
-    return local_active_cells;
-  }
-
+  /* Should we go lower? */
   if (c->split && c->depth != level) {
     for(int i = 0; i < 8; i++) {
       if (c->progeny[i] != NULL) {
@@ -528,6 +539,7 @@ struct cell **engine_unskip_copy_cell(struct cell *c, struct cell **local_active
       }
     }
   }
+  /* Correct cell found. */
   else {
     local_active_cells[0] = c;
     local_active_cells++;
@@ -543,7 +555,7 @@ struct cell **engine_unskip_copy_cell(struct cell *c, struct cell **local_active
  */
 void engine_unskip(struct engine *e) {
 
-  const int level = unskip_level;
+  const int unskip_level = e->unskip_level;
 
   const ticks tic = getticks();
   struct space *s = e->s;
@@ -567,7 +579,8 @@ void engine_unskip(struct engine *e) {
 
   /* Move the active local cells to the top of the list. */
   int *local_cells = e->s->local_cells_with_tasks_top;
-  int num_active_cells = 0;
+  int num_active_top_cells = 0;
+  int total_size = 0;
   for (int k = 0; k < s->nr_local_cells_with_tasks; k++) {
     struct cell *c = &s->cells_top[local_cells[k]];
 
@@ -580,9 +593,11 @@ void engine_unskip(struct engine *e) {
         (with_sinks && cell_is_active_sinks(c, e)) ||
         (with_black_holes && cell_is_active_black_holes(c, e))) {
 
-      if (num_active_cells != k)
-        memswap(&local_cells[k], &local_cells[num_active_cells], sizeof(int));
-      num_active_cells += 1;
+      if (num_active_top_cells != k)
+        memswap(&local_cells[k], &local_cells[num_active_top_cells], sizeof(int));
+      num_active_top_cells += 1;
+      const int depth = min(c->maxdepth, unskip_level);
+      total_size += 1 << (3 * depth);
     }
   }
 
@@ -615,28 +630,24 @@ void engine_unskip(struct engine *e) {
     multiplier++;
   }
 
-  /* Should we duplicate the list of active cells to better parallelise the
-     unskip over the threads ? */
+  /* Create the list of active cells for the unskip. */
   struct cell **local_active_cells;
-  const int cells_per_top = 1 << (3 * level);
-  const int total_size = multiplier * num_active_cells
-    * cells_per_top * sizeof(struct cell*);
-  local_active_cells = (struct cell **) malloc(total_size);
+  local_active_cells = (struct cell **) malloc(
+      multiplier * total_size * sizeof(struct cell*));
   if (local_active_cells == NULL) {
-    error("Failed");
+    error("Failed to allocate the cell array.");
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
-  /* Reset to 0 in order to ensure a segfault */
+  /* Reset to 0 in order to ensure a segfault. */
   bzero(local_active_cells, total_size);
 #endif
 
-
   /* Construct the cell array */
   struct cell **current = local_active_cells;
-  for(int i = 0; i < num_active_cells; i++) {
+  for(int i = 0; i < num_active_top_cells; i++) {
     struct cell *c = &s->cells_top[local_cells[i]];
-    current = engine_unskip_copy_cell(c, current, level, e);
+    current = engine_unskip_copy_cell(c, current, unskip_level, e);
   }
   const int number_cells = current - local_active_cells;
 
