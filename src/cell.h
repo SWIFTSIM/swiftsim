@@ -1309,14 +1309,14 @@ __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
             "Cell IDs are only guaranteed to be unique if count is < 32^3",
             cdim[0], cdim[1], cdim[2]);
       }
-      c->cellID = -last_cell_id; /* this seems like it could need atomics...*/
-      last_cell_id++;
+      c->cellID = -last_cell_id;
+      atomic_inc(&last_cell_id);
     }
 
     int i = (int)(c->loc[0] / width[0]);
     int j = (int)(c->loc[1] / width[1]);
     int k = (int)(c->loc[2] / width[2]);
-    c->cellID = -(long long)(i + cdim[0] * (j + cdim[1] * k) + 1);
+    c->cellID = -(long long)(cell_getid(cdim, i, j, k) + 1);
   }
 #endif
 }
@@ -1337,7 +1337,7 @@ __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
  * After the 32^3 cells are filled, we reach degeneracy.
  */
 __attribute__((always_inline)) INLINE void cell_assign_cell_index(
-    struct cell *c, struct cell *parent) {
+    struct cell *c, const struct cell *parent) {
 
 #if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
   if (c->depth == 0) {
@@ -1351,7 +1351,8 @@ __attribute__((always_inline)) INLINE void cell_assign_cell_index(
           "IDs are only guaranteed unique if depth <= 16",
           c->depth);
     }
-    c->cellID = last_cell_id++; /* this seems like it could need atomics...*/
+    c->cellID = last_cell_id;
+    atomic_inc(&last_cell_id);
   } else {
     /* we're good to go for unique IDs */
     /* first inherit the parent's ID and mark it as not top-level*/
@@ -1360,7 +1361,7 @@ __attribute__((always_inline)) INLINE void cell_assign_cell_index(
     /* make place for new bits */
     /* parent's ID needs to be leading bits, so 000 children still
      * change the value of the cellID */
-    child_id = child_id << 3;
+    child_id <<= 3;
 
     /* get progeny index in parent cell */
     if (c->loc[0] > parent->loc[0]) child_id |= 1LL;
