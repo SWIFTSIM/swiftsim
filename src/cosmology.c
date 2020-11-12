@@ -489,7 +489,7 @@ void cosmology_init_neutrino_tables(struct cosmology *c) {
   /* Find a safe redshift to start the neutrino density interpolation table */
   neutrino_find_relativistic_redshift(c, 1e-7, space);
 
-  const double pre_factor = 15. * pow(c->T_nu_0 / c->T_CMB_0, 4) / pow(M_PI, 4);
+  const double pre_factor = 15. * pow(c->T_nu_0 * M_1_PI / c->T_CMB_0, 4);
   const double early_delta_a = (c->log_a_long_mid - c->log_a_long_begin) /
                                cosmology_early_nu_table_length;
   const double late_delta_a =
@@ -807,7 +807,7 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
     }
 
     /* Approximate the neutrino temperature if unspecified */
-    const double decoupling_factor = pow(4. / 11., 1. / 3.);
+    const double decoupling_factor = cbrt(4. / 11);
     const double dec_4 = pow(decoupling_factor, 4);
     if (c->T_nu_0 == 0.) {
       c->T_nu_0 = c->T_CMB_0 * decoupling_factor;
@@ -828,7 +828,7 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
       c->Omega_g = pow(c->T_CMB_0, 4) / rho_c3_on_4sigma;
 
       /* Compute the density of ultra-relativistic fermionic species */
-      c->Omega_ur = c->N_ur * 7. / 8. * dec_4 * c->Omega_g;
+      c->Omega_ur = c->N_ur * (7. / 8.) * dec_4 * c->Omega_g;
 
       /* Compute the total radiation density */
       c->Omega_r = c->Omega_g + c->Omega_ur;
