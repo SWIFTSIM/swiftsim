@@ -53,6 +53,7 @@
 /* Local headers. */
 #include "active.h"
 #include "atomic.h"
+#include "black_holes.h"
 #include "black_holes_properties.h"
 #include "cell.h"
 #include "chemistry.h"
@@ -1867,6 +1868,16 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
     stars_exact_density_check(e->s, e, 1e-2, 1);
 #endif
 
+#ifdef SWIFT_BH_DENSITY_CHECKS
+  /* Run the brute-force BHs calculation for some parts */
+  if (e->policy & engine_policy_black_holes)
+    black_holes_exact_density_compute(e->s, e, 1);
+
+  /* Check the accuracy of the BHs calculation */
+  if (e->policy & engine_policy_black_holes)
+    black_holes_exact_density_check(e->s, e, 1e-2, 1);
+#endif
+
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   /* Check the accuracy of the gravity calculation */
   if (e->policy & engine_policy_self_gravity)
@@ -2301,9 +2312,7 @@ void engine_step(struct engine *e) {
 #ifdef SWIFT_HYDRO_DENSITY_CHECKS
   /* Run the brute-force hydro calculation for some parts */
   if (e->policy & engine_policy_hydro) hydro_exact_density_compute(e->s, e, 1);
-#endif
 
-#ifdef SWIFT_HYDRO_DENSITY_CHECKS
   /* Check the accuracy of the hydro calculation */
   if (e->policy & engine_policy_hydro)
     hydro_exact_density_check(e->s, e, 1e-3, 1);
@@ -2316,6 +2325,16 @@ void engine_step(struct engine *e) {
   /* Check the accuracy of the stars calculation */
   if (e->policy & engine_policy_stars)
     stars_exact_density_check(e->s, e, 1e-2, 1);
+#endif
+
+#ifdef SWIFT_BH_DENSITY_CHECKS
+  /* Run the brute-force stars calculation for some parts */
+  if (e->policy & engine_policy_black_holes)
+    black_holes_exact_density_compute(e->s, e, 1);
+
+  /* Check the accuracy of the stars calculation */
+  if (e->policy & engine_policy_black_holes)
+    black_holes_exact_density_check(e->s, e, 1e-2, 1);
 #endif
 
 #ifdef SWIFT_DEBUG_CHECKS
