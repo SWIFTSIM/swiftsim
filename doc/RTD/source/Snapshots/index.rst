@@ -35,7 +35,7 @@ unless a distributed snapshot was asked).
 
 The field ``InitialMassTable`` contains the *mean* initial mass of each of the
 particle types present in the initial conditions. This can be used as estimator
-of the mass resolution of the run.
+of the mass resolution of the run. The masses are expressed in internal units.
 
 The ``RunName`` field contains the name of the simulation that was specified as
 the ``run_name`` in the :ref:`Parameters_meta_data` section of the YAML
