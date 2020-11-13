@@ -105,8 +105,9 @@ INLINE static double feedback_get_enrichment_timestep(
  * @brief Prepares a star's feedback field before computing what
  * needs to be distributed.
  */
-__attribute__((always_inline)) INLINE static void feedback_reset_kick2(
-    struct spart* sp, const struct feedback_props* feedback_props) {}
+__attribute__((always_inline)) INLINE static void
+feedback_reset_will_do_feedback(struct spart* sp,
+                                const struct feedback_props* feedback_props) {}
 
 /**
  * @brief Prepares a star's feedback field before computing what
@@ -157,21 +158,15 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * @param ti_begin The integer time at the beginning of the step.
  * @param with_cosmology Are we running with cosmology on?
  */
-__attribute__((always_inline)) INLINE static void
-feedback_extra_kick2(struct spart* restrict sp,
-                     const struct feedback_props* feedback_props,
-                     const struct cosmology* cosmo,
-                     const struct unit_system* us,
-                     const struct phys_const* phys_const,
-                     const double star_age_beg_step, const double dt,
-                     const double time, const integertime_t ti_begin,
-                     const int with_cosmology) {}
+__attribute__((always_inline)) INLINE static void feedback_prepare_feedback(
+    struct spart* restrict sp, const struct feedback_props* feedback_props,
+    const struct cosmology* cosmo, const struct unit_system* us,
+    const struct phys_const* phys_const, const double star_age_beg_step,
+    const double dt, const double time, const integertime_t ti_begin,
+    const int with_cosmology) {}
 
 /**
- * @brief Evolve the stellar properties of a #spart.
- *
- * This function allows for example to compute the SN rate before sending
- * this information to a different MPI rank.
+ * @brief Should we do feedback for this star?
  *
  * @param sp The particle to act upon
  * @param feedback_props The #feedback_props structure.
@@ -185,29 +180,12 @@ feedback_extra_kick2(struct spart* restrict sp,
  * @param ti_begin The integer time at the beginning of the step.
  * @param with_cosmology Are we running with cosmology on?
  */
-__attribute__((always_inline)) INLINE static void
-feedback_prepare_feedback(
-    struct spart* restrict sp, const struct feedback_props* feedback_props,
-    const struct cosmology* cosmo, const struct unit_system* us,
-    const struct phys_const* phys_const, const double star_age_beg_step,
-    const double dt, const double time, const integertime_t ti_begin,
-    const int with_cosmology) {}
-
-/**
- * @brief Will this star particle want to do feedback during the next time-step?
- *
- * @param sp The star of interest.
- * @param feedback_props The properties of the feedback model.
- * @param with_cosmology Are we running with cosmological time integration?
- * @param cosmo The #cosmology object.
- * @param time The current time (since the Big Bang).
- */
 __attribute__((always_inline)) INLINE static int feedback_will_do_feedback(
-    struct spart* restrict sp, const struct feedback_props* feedback_props,
-    const int with_cosmology, const struct cosmology* cosmo,
-    const double time) {
-  return 1;
-}
+    const struct spart* sp, const struct feedback_props* feedback_props,
+    const int with_cosmology, const struct cosmology* cosmo, const double time,
+    const struct unit_system* us, const struct phys_const* phys_const,
+    const double star_age_beg_step, const double dt,
+    const integertime_t ti_begin) {}
 
 /**
  * @brief Clean-up the memory allocated for the feedback routines
