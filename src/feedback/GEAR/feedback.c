@@ -123,12 +123,6 @@ void feedback_will_do_feedback(struct spart* sp,
   /* Reset the feedback */
   feedback_reset_will_do_feedback(sp, feedback_props);
 
-  /* Add missing h factor */
-  const float hi_inv = 1.f / sp->h;
-  const float hi_inv_dim = pow_dimension(hi_inv); /* 1/h^d */
-
-  sp->feedback_data.enrichment_weight *= hi_inv_dim;
-
   /* Pick the correct table. (if only one table, threshold is < 0) */
   const float metal =
       chemistry_get_star_total_metal_mass_fraction_for_feedback(sp);
@@ -269,7 +263,12 @@ void feedback_prepare_feedback(struct spart* restrict sp,
                                const struct phys_const* phys_const,
                                const double star_age_beg_step, const double dt,
                                const double time, const integertime_t ti_begin,
-                               const int with_cosmology) {}
+                               const int with_cosmology) {
+  /* Add missing h factor */
+  const float hi_inv = 1.f / sp->h;
+  const float hi_inv_dim = pow_dimension(hi_inv); /* 1/h^d */
+  sp->feedback_data.enrichment_weight *= hi_inv_dim;
+}
 
 /**
  * @brief Write a feedback struct to the given FILE as a stream of bytes.
