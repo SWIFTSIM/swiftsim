@@ -180,7 +180,7 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_feedback(
  * @param ti_begin The integer time at the beginning of the step.
  * @param with_cosmology Are we running with cosmology on?
  */
-__attribute__((always_inline)) INLINE static int feedback_will_do_feedback(
+__attribute__((always_inline)) INLINE static void feedback_will_do_feedback(
     const struct spart* sp, const struct feedback_props* feedback_props,
     const int with_cosmology, const struct cosmology* cosmo, const double time,
     const struct unit_system* us, const struct phys_const* phys_const,
