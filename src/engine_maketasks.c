@@ -2031,6 +2031,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_rt_transport =
             scheduler_addtask(sched, task_type_self, task_subtype_rt_transport,
                               flags, 0, ci, NULL);
+        atomic_inc(&ci->rt_debugging.gradient_self_created);
+        atomic_inc(&ci->rt_debugging.transport_self_created);
       }
 
       /* Link the tasks to the cells */
@@ -2247,6 +2249,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             sched, task_type_pair, task_subtype_rt_gradient, flags, 0, ci, cj);
         t_rt_transport = scheduler_addtask(
             sched, task_type_pair, task_subtype_rt_transport, flags, 0, ci, cj);
+        atomic_inc(&ci->rt_debugging.gradient_pair_created);
+        atomic_inc(&cj->rt_debugging.gradient_pair_created);
+        atomic_inc(&ci->rt_debugging.transport_pair_created);
+        atomic_inc(&cj->rt_debugging.transport_pair_created);
       }
 
       engine_addlink(e, &ci->hydro.force, t_force);
@@ -2655,6 +2661,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_rt_transport =
             scheduler_addtask(sched, task_type_sub_self,
                               task_subtype_rt_transport, flags, 0, ci, NULL);
+        atomic_inc(&ci->rt_debugging.gradient_sub_self_created);
+        atomic_inc(&ci->rt_debugging.transport_sub_self_created);
       }
 
       /* Add the link between the new loop and the cell */
@@ -2885,6 +2893,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_rt_transport =
             scheduler_addtask(sched, task_type_sub_pair,
                               task_subtype_rt_transport, flags, 0, ci, cj);
+        atomic_inc(&ci->rt_debugging.gradient_sub_pair_created);
+        atomic_inc(&cj->rt_debugging.gradient_sub_pair_created);
+        atomic_inc(&ci->rt_debugging.transport_sub_pair_created);
+        atomic_inc(&cj->rt_debugging.transport_sub_pair_created);
       }
 
       engine_addlink(e, &ci->hydro.force, t_force);
