@@ -211,6 +211,31 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->mpi.recv = NULL;
     c->mpi.send = NULL;
 #endif
+  c->rt_debugging.gradient_self_created = 0;
+  c->rt_debugging.gradient_sub_self_created = 0;
+  c->rt_debugging.gradient_pair_created = 0;
+  c->rt_debugging.gradient_sub_pair_created = 0;
+  c->rt_debugging.gradient_cell_unskip_self = 0;
+  c->rt_debugging.gradient_cell_unskip_sub_self = 0;
+  c->rt_debugging.gradient_cell_unskip_pair = 0;
+  c->rt_debugging.gradient_cell_unskip_sub_pair = 0;
+  c->rt_debugging.gradient_marktasks_self = 0;
+  c->rt_debugging.gradient_marktasks_sub_self = 0;
+  c->rt_debugging.gradient_marktasks_pair = 0;
+  c->rt_debugging.gradient_marktasks_sub_pair = 0;
+  c->rt_debugging.transport_self_created = 0;
+  c->rt_debugging.transport_sub_self_created = 0;
+  c->rt_debugging.transport_pair_created = 0;
+  c->rt_debugging.transport_sub_pair_created = 0;
+  c->rt_debugging.transport_cell_unskip_self = 0;
+  c->rt_debugging.transport_cell_unskip_sub_self = 0;
+  c->rt_debugging.transport_cell_unskip_pair = 0;
+  c->rt_debugging.transport_cell_unskip_sub_pair = 0;
+  c->rt_debugging.transport_marktasks_self = 0;
+  c->rt_debugging.transport_marktasks_sub_self = 0;
+  c->rt_debugging.transport_marktasks_pair = 0;
+  c->rt_debugging.transport_marktasks_sub_pair = 0;
+
   }
 }
 

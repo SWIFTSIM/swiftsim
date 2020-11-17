@@ -388,6 +388,33 @@ struct cell {
   /*! Sink particles variables */
   struct cell_sinks sinks;
 
+  struct {
+    int gradient_self_created;
+    int gradient_sub_self_created;
+    int gradient_pair_created;
+    int gradient_sub_pair_created;
+    int gradient_cell_unskip_self;
+    int gradient_cell_unskip_sub_self;
+    int gradient_cell_unskip_pair;
+    int gradient_cell_unskip_sub_pair;
+    int gradient_marktasks_self;
+    int gradient_marktasks_sub_self;
+    int gradient_marktasks_pair;
+    int gradient_marktasks_sub_pair;
+    int transport_self_created;
+    int transport_sub_self_created;
+    int transport_pair_created;
+    int transport_sub_pair_created;
+    int transport_cell_unskip_self;
+    int transport_cell_unskip_sub_self;
+    int transport_cell_unskip_pair;
+    int transport_cell_unskip_sub_pair;
+    int transport_marktasks_self;
+    int transport_marktasks_sub_self;
+    int transport_marktasks_pair;
+    int transport_marktasks_sub_pair;
+  } rt_debugging;
+
 #ifdef WITH_MPI
   /*! MPI variables */
   struct {

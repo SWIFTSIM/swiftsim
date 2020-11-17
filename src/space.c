@@ -2432,7 +2432,7 @@ void space_struct_restore(struct space *s, FILE *stream) {
  * @param f The file to use (already open).
  * @param c The current #cell.
  */
-void space_write_cell(const struct space *s, FILE *f, const struct cell *c) {
+void space_write_cell(const struct space *s, FILE *f, struct cell *c) {
 #ifdef SWIFT_CELL_GRAPH
 
   if (c == NULL) return;
@@ -2455,8 +2455,58 @@ void space_write_cell(const struct space *s, FILE *f, const struct cell *c) {
   fprintf(f, "%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ", c->hydro.count,
           c->stars.count, c->grav.count, superID, hydro_superID, c->loc[0],
           c->loc[1], c->loc[2], c->width[0], c->width[1], c->width[2]);
-  fprintf(f, "%g, %g, %i, %i\n", c->hydro.h_max, c->stars.h_max, c->depth,
+  fprintf(f, "%g, %g, %i, %i, ", c->hydro.h_max, c->stars.h_max, c->depth,
           c->maxdepth);
+  fprintf(f, "%i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i ,%i, %i, %i\n",
+    c->rt_debugging.gradient_self_created,
+    c->rt_debugging.gradient_sub_self_created,
+    c->rt_debugging.gradient_pair_created,
+    c->rt_debugging.gradient_sub_pair_created,
+    c->rt_debugging.gradient_cell_unskip_self,
+    c->rt_debugging.gradient_cell_unskip_sub_self,
+    c->rt_debugging.gradient_cell_unskip_pair,
+    c->rt_debugging.gradient_cell_unskip_sub_pair,
+    c->rt_debugging.gradient_marktasks_self,
+    c->rt_debugging.gradient_marktasks_sub_self,
+    c->rt_debugging.gradient_marktasks_pair,
+    c->rt_debugging.gradient_marktasks_sub_pair,
+    c->rt_debugging.transport_self_created,
+    c->rt_debugging.transport_sub_self_created,
+    c->rt_debugging.transport_pair_created,
+    c->rt_debugging.transport_sub_pair_created,
+    c->rt_debugging.transport_cell_unskip_self,
+    c->rt_debugging.transport_cell_unskip_sub_self,
+    c->rt_debugging.transport_cell_unskip_pair,
+    c->rt_debugging.transport_cell_unskip_sub_pair,
+    c->rt_debugging.transport_marktasks_self,
+    c->rt_debugging.transport_marktasks_sub_self,
+    c->rt_debugging.transport_marktasks_pair,
+    c->rt_debugging.transport_marktasks_sub_pair);
+  /* reset values after writing */
+  c->rt_debugging.gradient_self_created = 0;
+  c->rt_debugging.gradient_sub_self_created = 0;
+  c->rt_debugging.gradient_pair_created = 0;
+  c->rt_debugging.gradient_sub_pair_created = 0;
+  c->rt_debugging.gradient_cell_unskip_self = 0;
+  c->rt_debugging.gradient_cell_unskip_sub_self = 0;
+  c->rt_debugging.gradient_cell_unskip_pair = 0;
+  c->rt_debugging.gradient_cell_unskip_sub_pair = 0;
+  c->rt_debugging.gradient_marktasks_self = 0;
+  c->rt_debugging.gradient_marktasks_sub_self = 0;
+  c->rt_debugging.gradient_marktasks_pair = 0;
+  c->rt_debugging.gradient_marktasks_sub_pair = 0;
+  c->rt_debugging.transport_self_created = 0;
+  c->rt_debugging.transport_sub_self_created = 0;
+  c->rt_debugging.transport_pair_created = 0;
+  c->rt_debugging.transport_sub_pair_created = 0;
+  c->rt_debugging.transport_cell_unskip_self = 0;
+  c->rt_debugging.transport_cell_unskip_sub_self = 0;
+  c->rt_debugging.transport_cell_unskip_pair = 0;
+  c->rt_debugging.transport_cell_unskip_sub_pair = 0;
+  c->rt_debugging.transport_marktasks_self = 0;
+  c->rt_debugging.transport_marktasks_sub_self = 0;
+  c->rt_debugging.transport_marktasks_pair = 0;
+  c->rt_debugging.transport_marktasks_sub_pair = 0;
 
   /* Write children */
   for (int i = 0; i < 8; i++) {
@@ -2488,13 +2538,15 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
     fprintf(f,
             "hydro_count,stars_count,gpart_count,super,hydro_super,"
             "loc1,loc2,loc3,width1,width2,width3,");
-    fprintf(f, "hydro_h_max,stars_h_max,depth,maxdepth\n");
+    fprintf(f, "hydro_h_max,stars_h_max,depth,maxdepth,");
+    fprintf(f, "GCS,GCSS,GCP,GCSP,GunskipS,GunskipSS,GunskipP,GunskipSP,GmarktasksS,GmarktasksSS,GmarktasksP,GmarktasksSP,");
+    fprintf(f, "TCS,TCSS,TCP,TCSP,TunskipS,TunskipSS,TunskipP,TunskipSP,TmarktasksS,TmarktasksSS,TmarktasksP,TmarktasksSP\n");
 
     /* Write root data */
     fprintf(f, "%i, ,-1,", root_id);
     fprintf(f, "%li,%li,%li, , , , , , , , ,", s->nr_parts, s->nr_sparts,
             s->nr_gparts);
-    fprintf(f, " , , ,\n");
+    fprintf(f, " , , , , , , , , , , , , , , , , , , , , , , , , , , \n");
   }
 
   /* Write all the top level cells (and their children) */
