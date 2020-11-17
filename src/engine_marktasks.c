@@ -289,6 +289,18 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                t_subtype == task_subtype_rt_transport) {
         if (ci_active_hydro) {
           scheduler_activate(s, t);
+          if (t_type == task_type_self && t_subtype == task_subtype_rt_gradient) {
+            atomic_inc(&t->ci->rt_debugging.gradient_marktasks_self);
+          }
+          if (t_type == task_type_sub_self && t_subtype == task_subtype_rt_gradient) {
+            atomic_inc(&t->ci->rt_debugging.gradient_marktasks_sub_self);
+          }
+          if (t_type == task_type_self && t_subtype == task_subtype_rt_transport) {
+            atomic_inc(&t->ci->rt_debugging.transport_marktasks_self);
+          }
+          if (t_type == task_type_sub_self && t_subtype == task_subtype_rt_transport) {
+            atomic_inc(&t->ci->rt_debugging.transport_marktasks_sub_self);
+          }
         }
       }
 
@@ -566,14 +578,6 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
             (ci_active_hydro || cj_active_hydro)) {
           scheduler_activate(s, t);
-
-        } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) &&
-                   (cj_active_hydro)) {
-          scheduler_activate(s, t);
-
-        } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) &&
-                   (ci_active_hydro)) {
-          scheduler_activate(s, t);
         }
       }
 
@@ -586,13 +590,22 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             (ci_active_hydro || cj_active_hydro)) {
           scheduler_activate(s, t);
 
-        } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) &&
-                   (cj_active_hydro)) {
-          scheduler_activate(s, t);
-
-        } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) &&
-                   (ci_active_hydro)) {
-          scheduler_activate(s, t);
+          if (t_type == task_type_pair && t_subtype == task_subtype_rt_gradient) {
+            atomic_inc(&ci->rt_debugging.gradient_marktasks_pair);
+            atomic_inc(&cj->rt_debugging.gradient_marktasks_pair);
+          }
+          if (t_type == task_type_sub_self && t_subtype == task_subtype_rt_gradient) {
+            atomic_inc(&ci->rt_debugging.gradient_marktasks_sub_pair);
+            atomic_inc(&cj->rt_debugging.gradient_marktasks_sub_pair);
+          }
+          if (t_type == task_type_self && t_subtype == task_subtype_rt_transport) {
+            atomic_inc(&ci->rt_debugging.transport_marktasks_pair);
+            atomic_inc(&cj->rt_debugging.transport_marktasks_pair);
+          }
+          if (t_type == task_type_sub_pair && t_subtype == task_subtype_rt_transport) {
+            atomic_inc(&ci->rt_debugging.transport_marktasks_sub_pair);
+            atomic_inc(&cj->rt_debugging.transport_marktasks_sub_pair);
+          }
         }
       }
 
@@ -997,13 +1010,13 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         }
 #endif
       } /* Only interested in RT tasks as of here. */
+#ifdef WITH_MPI
       else if (t_subtype == task_subtype_rt_inject ||
                t_subtype == task_subtype_rt_gradient ||
                t_subtype == task_subtype_rt_transport) {
-#ifdef WITH_MPI
         error("RT doesn't work with MPI yet.");
-#endif
       }
+#endif
     }
 
     /* End force for hydro ? */
@@ -1138,19 +1151,18 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
     }
 
     /* Radiative transfer implicit in */
-    else if (t->type == task_type_rt_in && !with_feedback) {
-      if (cell_is_active_hydro(t->ci, e) || cell_is_active_stars(t->ci, e))
+    else if (t->type == task_type_rt_in) {
+      if (with_feedback) error("trying to activate rt_in task while feedback is on");
+      if (cell_is_active_hydro(t->ci, e))
         scheduler_activate(s, t);
     }
 
-    /* Radiative transfer ghost */
-    else if (t->type == task_type_rt_out || t->type == task_type_rt_ghost1) {
-      if (cell_is_active_hydro(t->ci, e)) scheduler_activate(s, t);
-    }
-
-    /* Radiative transfer implicit tasks */
+    /* Radiative transfer tasks */
     else if (t->type == task_type_rt_gradient_out ||
-             t->type == task_type_rt_transport_out) {
+             t->type == task_type_rt_transport_out || 
+             t->type == task_type_rt_out || 
+             t->type == task_type_rt_ghost1
+             ) {
       if (cell_is_active_hydro(t->ci, e)) scheduler_activate(s, t);
     }
 
