@@ -42,6 +42,16 @@ struct rt_part_data {
   int calls_iact_transport_sym;  /* calls from transport interaction loop */
   int calls_iact_transport_nonsym; /* calls from transport interaction loop */
   int photon_number_updated; /* calls from ghost1 tasks */
+
+  /* temp for debugging */
+  long long neigh_iact_grad[200];
+  long long neigh_cell_iact_grad[200];
+  int neigh_iact_grad_free;
+  long long neigh_iact_transp[200];
+  long long neigh_cell_iact_transp[200];
+  int neigh_iact_transp_free;
+  long long this_cell;
+
 };
 
 /* Additional RT data in star particle struct */
