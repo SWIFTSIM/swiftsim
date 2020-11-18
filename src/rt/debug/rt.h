@@ -47,6 +47,17 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.calls_iact_transport_sym = 0;
   p->rt_data.calls_iact_transport_nonsym = 0;
   p->rt_data.photon_number_updated = 0;
+
+  /* temp for debugging */
+  for (int i = 0; i < 200; i++){
+    p->rt_data.neigh_iact_grad[i]  = 0;
+    p->rt_data.neigh_cell_iact_grad[i] = 0LL;
+    p->rt_data.neigh_iact_transp[i] = 0LL;
+    p->rt_data.neigh_cell_iact_transp[i] = 0LL;
+  }
+  p->rt_data.neigh_iact_grad_free = 0;
+  p->rt_data.neigh_iact_transp_free = 0;
+  p->rt_data.this_cell = 0LL;
 }
 
 /**
@@ -58,7 +69,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
   p->rt_data.calls_tot = 0;
   rt_init_part(p);
   rt_reset_part(p);
-}
+ }
 
 /**
  * @brief Initialisation of the RT density loop related particle data.

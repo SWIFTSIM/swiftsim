@@ -91,7 +91,30 @@ INLINE static int rt_write_particles(const struct part* parts,
                            "number of non-symmetric calls to this particle during the"
                            "gradient interaction loop");
 
-  return 12;
+  list[12] =
+      io_make_output_field("RTNeighsIactGrad", LONGLONG, 200, UNIT_CONV_NO_UNITS, 0, parts, rt_data.neigh_iact_grad,
+                           "neighbours interacted with during gradient loop");
+  list[13] =
+      io_make_output_field("RTNeighCellsIactGrad", LONGLONG, 200, UNIT_CONV_NO_UNITS, 0, parts, rt_data.neigh_cell_iact_grad,
+                           "cells of neighbours interacted with during gradient loop");
+  list[14] =
+      io_make_output_field("RTNrNeighIactGrad", INT, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.neigh_iact_grad_free,
+                           "number of neighbours interacted with during gradient loop");
+  list[15] =
+      io_make_output_field("RTNeighsIactTransport", LONGLONG, 200, UNIT_CONV_NO_UNITS, 0, parts, rt_data.neigh_iact_transp,
+                           "neighbours interacted with during gradient loop");
+
+  list[16] =
+      io_make_output_field("RTNeighCellsIactTransport", LONGLONG, 200, UNIT_CONV_NO_UNITS, 0, parts, rt_data.neigh_cell_iact_transp,
+                           "cells of neighbours interacted with during transport loop");
+
+  list[17] =
+      io_make_output_field("RTNrNeighIactTransport", INT, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.neigh_iact_transp_free,
+                           "number of neighbours interacted with during transport loop");
+  list[18] =
+      io_make_output_field("RTThisCell", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.this_cell,
+                           "the cell this particle is in");
+  return 18;
 }
 
 /**
