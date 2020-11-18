@@ -111,7 +111,12 @@ void DOPAIR1_NAIVE(struct runner *r, struct cell *restrict ci,
       /* Hit or miss? */
       if (r2 < hig2 && pi_active) {
 
+#ifdef RT_IACT_MODIFICATIONS
+        IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID, cj->cellID);
+#else
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -127,7 +132,11 @@ void DOPAIR1_NAIVE(struct runner *r, struct cell *restrict ci,
         dx[1] = -dx[1];
         dx[2] = -dx[2];
 
+#ifdef RT_IACT_MODIFICATIONS
+        IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, cj->cellID, ci->cellID);
+#else
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -230,7 +239,12 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
 
         if (pi_active && pj_active) {
 
+#ifdef RT_IACT_MODIFICATIONS
+          IACT(r2, dx, hi, hj, pi, pj, a, H, ci->cellID, cj->cellID);
+#else
           IACT(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
           runner_iact_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -241,7 +255,12 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
 #endif
         } else if (pi_active) {
 
+#ifdef RT_IACT_MODIFICATIONS
+          IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID, cj->cellID);
+#else
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -256,7 +275,12 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
           dx[1] = -dx[1];
           dx[2] = -dx[2];
 
+#ifdef RT_IACT_MODIFICATIONS
+          IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, cj->cellID, ci->cellID);
+#else
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -348,7 +372,12 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
       /* Hit or miss? */
       if (doi && doj) {
 
+#ifdef RT_IACT_MODIFICATIONS
+        IACT(r2, dx, hi, hj, pi, pj, a, H, c->cellID, c->cellID);
+#else
         IACT(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
         runner_iact_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -359,7 +388,12 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
 #endif
       } else if (doi) {
 
+#ifdef RT_IACT_MODIFICATIONS
+        IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, c->cellID, c->cellID);
+#else
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -374,7 +408,12 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
         dx[1] = -dx[1];
         dx[2] = -dx[2];
 
+#ifdef RT_IACT_MODIFICATIONS
+        IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, c->cellID, c->cellID);
+#else
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -465,7 +504,12 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
       /* Hit or miss? */
       if (doi && doj) {
 
+#ifdef RT_IACT_MODIFICATIONS
+        IACT(r2, dx, hi, hj, pi, pj, a, H, c->cellID, c->cellID);
+#else
         IACT(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
         runner_iact_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -476,7 +520,12 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
 #endif
       } else if (doi) {
 
+#ifdef RT_IACT_MODIFICATIONS
+        IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, c->cellID, c->cellID);
+#else
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -491,7 +540,12 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
         dx[1] = -dx[1];
         dx[2] = -dx[2];
 
+#ifdef RT_IACT_MODIFICATIONS
+        IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, c->cellID, c->cellID);
+#else
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -581,7 +635,12 @@ void DOPAIR_SUBSET_NAIVE(struct runner *r, struct cell *restrict ci,
       /* Hit or miss? */
       if (r2 < hig2) {
 
+#ifdef RT_IACT_MODIFICATIONS
+        IACT_NONSYM(r2, dx, hi, pj->h, pi, pj, a, H, ci->cellID, cj->cellID);
+#else
         IACT_NONSYM(r2, dx, hi, pj->h, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, pj->h, pi, pj, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hi, pj->h, pi, pj, a, H);
@@ -678,7 +737,12 @@ void DOPAIR_SUBSET(struct runner *r, struct cell *restrict ci,
         /* Hit or miss? */
         if (r2 < hig2) {
 
+#ifdef RT_IACT_MODIFICATIONS
+          IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID, cj->cellID);
+#else
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -738,7 +802,12 @@ void DOPAIR_SUBSET(struct runner *r, struct cell *restrict ci,
         /* Hit or miss? */
         if (r2 < hig2) {
 
+#ifdef RT_IACT_MODIFICATIONS
+          IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID, cj->cellID);
+#else
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -884,7 +953,12 @@ void DOSELF_SUBSET(struct runner *r, struct cell *restrict ci,
       /* Hit or miss? */
       if (r2 > 0.f && r2 < hig2) {
 
+#ifdef RT_IACT_MODIFICATIONS
+        IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID, ci->cellID);
+#else
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -1052,7 +1126,12 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
         /* Hit or miss? */
         if (r2 < hig2) {
 
+#ifdef RT_IACT_MODIFICATIONS
+          IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID, cj->cellID);
+#else
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -1144,7 +1223,12 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
         /* Hit or miss? */
         if (r2 < hjg2) {
 
+#ifdef RT_IACT_MODIFICATIONS
+          IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, cj->cellID, ci->cellID);
+#else
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -1450,7 +1534,13 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
         /* Hit or miss?
            (note that we will do the other condition in the reverse loop) */
         if (r2 < hig2) {
+
+#ifdef RT_IACT_MODIFICATIONS
+          IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, cj->cellID, ci->cellID);
+#else
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -1525,7 +1615,13 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
 
           /* Does pj need to be updated too? */
           if (part_is_active(pj, e)) {
+
+#ifdef RT_IACT_MODIFICATIONS
+            IACT(r2, dx, hi, hj, pi, pj, a, H, ci->cellID, cj->cellID);
+#else
             IACT(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
             runner_iact_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -1535,7 +1631,12 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
             runner_iact_timebin(r2, dx, hi, hj, pi, pj, a, H);
 #endif
           } else {
+#ifdef RT_IACT_MODIFICATIONS
+            IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID, cj->cellID);
+#else
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
             runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -1642,7 +1743,12 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
         /* Hit or miss?
            (note that we must avoid the r2 < hig2 cases we already processed) */
         if (r2 < hjg2 && r2 >= hig2) {
+#ifdef RT_IACT_MODIFICATIONS
+          IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID, cj->cellID);
+#else
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -1719,7 +1825,12 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
 
           /* Does pi need to be updated too? */
           if (part_is_active(pi, e)) {
+#ifdef RT_IACT_MODIFICATIONS
+            IACT(r2, dx, hj, hi, pj, pi, a, H, cj->cellID, ci->cellID);
+#else
             IACT(r2, dx, hj, hi, pj, pi, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hj, hi, pj, pi, a, H);
             runner_iact_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -1729,7 +1840,12 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
             runner_iact_timebin(r2, dx, hj, hi, pj, pi, a, H);
 #endif
           } else {
+#ifdef RT_IACT_MODIFICATIONS
+            IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, cj->cellID, ci->cellID);
+#else
             IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
             runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -1922,7 +2038,12 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
         /* Hit or miss? */
         if (r2 < hj * hj * kernel_gamma2) {
 
+#ifdef RT_IACT_MODIFICATIONS
+          IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, c->cellID, c->cellID);
+#else
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -1978,7 +2099,12 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
           /* Which parts need to be updated? */
           if (doi && doj) {
 
+#ifdef RT_IACT_MODIFICATIONS
+            IACT(r2, dx, hi, hj, pi, pj, a, H, c->cellID, c->cellID);
+#else
             IACT(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
             runner_iact_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -1989,7 +2115,12 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
 #endif
           } else if (doi) {
 
+#ifdef RT_IACT_MODIFICATIONS
+            IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, c->cellID, c->cellID);
+#else
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
             runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -2003,7 +2134,12 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
             dx[0] = -dx[0];
             dx[1] = -dx[1];
             dx[2] = -dx[2];
+#ifdef RT_IACT_MODIFICATIONS
+            IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, c->cellID, c->cellID);
+#else
             IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
             runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -2134,7 +2270,12 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
         /* Hit or miss? */
         if (r2 < hig2 || r2 < hj * hj * kernel_gamma2) {
 
+#ifdef RT_IACT_MODIFICATIONS
+          IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, c->cellID, c->cellID);
+#else
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -2185,7 +2326,12 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
 
           /* Does pj need to be updated too? */
           if (part_is_active(pj, e)) {
+#ifdef RT_IACT_MODIFICATIONS
+            IACT(r2, dx, hi, hj, pi, pj, a, H, c->cellID, c->cellID);
+#else
             IACT(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
             runner_iact_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -2195,7 +2341,12 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
             runner_iact_timebin(r2, dx, hi, hj, pi, pj, a, H);
 #endif
           } else {
+#ifdef RT_IACT_MODIFICATIONS
+            IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, c->cellID, c->cellID);
+#else
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
+
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
             runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);

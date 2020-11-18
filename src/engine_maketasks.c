@@ -2058,6 +2058,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &ci->hydro.rt_inject, t_rt_inject);
         engine_addlink(e, &ci->hydro.rt_gradient, t_rt_gradient);
         engine_addlink(e, &ci->hydro.rt_transport, t_rt_transport);
+        atomic_inc(&ci->rt_debugging.gradient_link_added);
+        atomic_inc(&ci->rt_debugging.transport_link_added);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2290,6 +2292,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &cj->hydro.rt_gradient, t_rt_gradient);
         engine_addlink(e, &ci->hydro.rt_transport, t_rt_transport);
         engine_addlink(e, &cj->hydro.rt_transport, t_rt_transport);
+        atomic_inc(&ci->rt_debugging.gradient_link_added);
+        atomic_inc(&ci->rt_debugging.transport_link_added);
+        atomic_inc(&cj->rt_debugging.gradient_link_added);
+        atomic_inc(&cj->rt_debugging.transport_link_added);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2688,6 +2694,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &ci->hydro.rt_inject, t_rt_inject);
         engine_addlink(e, &ci->hydro.rt_gradient, t_rt_gradient);
         engine_addlink(e, &ci->hydro.rt_transport, t_rt_transport);
+        atomic_inc(&ci->rt_debugging.gradient_link_added);
+        atomic_inc(&ci->rt_debugging.transport_link_added);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2934,6 +2942,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &cj->hydro.rt_gradient, t_rt_gradient);
         engine_addlink(e, &ci->hydro.rt_transport, t_rt_transport);
         engine_addlink(e, &cj->hydro.rt_transport, t_rt_transport);
+        atomic_inc(&ci->rt_debugging.gradient_link_added);
+        atomic_inc(&ci->rt_debugging.transport_link_added);
+        atomic_inc(&cj->rt_debugging.gradient_link_added);
+        atomic_inc(&cj->rt_debugging.transport_link_added);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
