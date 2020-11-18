@@ -2457,7 +2457,7 @@ void space_write_cell(const struct space *s, FILE *f, struct cell *c) {
           c->loc[1], c->loc[2], c->width[0], c->width[1], c->width[2]);
   fprintf(f, "%g, %g, %i, %i, ", c->hydro.h_max, c->stars.h_max, c->depth,
           c->maxdepth);
-  fprintf(f, "%i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i ,%i, %i, %i\n",
+  fprintf(f, "%i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i ,%i, %i, %i, %i, %i, %i, %i\n",
     c->rt_debugging.gradient_self_created,
     c->rt_debugging.gradient_sub_self_created,
     c->rt_debugging.gradient_pair_created,
@@ -2470,6 +2470,8 @@ void space_write_cell(const struct space *s, FILE *f, struct cell *c) {
     c->rt_debugging.gradient_marktasks_sub_self,
     c->rt_debugging.gradient_marktasks_pair,
     c->rt_debugging.gradient_marktasks_sub_pair,
+    c->rt_debugging.gradient_link_added, 
+    c->rt_debugging.gradient_link_walked, 
     c->rt_debugging.transport_self_created,
     c->rt_debugging.transport_sub_self_created,
     c->rt_debugging.transport_pair_created,
@@ -2481,8 +2483,12 @@ void space_write_cell(const struct space *s, FILE *f, struct cell *c) {
     c->rt_debugging.transport_marktasks_self,
     c->rt_debugging.transport_marktasks_sub_self,
     c->rt_debugging.transport_marktasks_pair,
-    c->rt_debugging.transport_marktasks_sub_pair);
+    c->rt_debugging.transport_marktasks_sub_pair,
+    c->rt_debugging.transport_link_added, 
+    c->rt_debugging.transport_link_walked);
   /* reset values after writing */
+  c->rt_debugging.gradient_link_added = 0;
+  c->rt_debugging.gradient_link_walked = 0;
   c->rt_debugging.gradient_self_created = 0;
   c->rt_debugging.gradient_sub_self_created = 0;
   c->rt_debugging.gradient_pair_created = 0;
@@ -2507,6 +2513,8 @@ void space_write_cell(const struct space *s, FILE *f, struct cell *c) {
   c->rt_debugging.transport_marktasks_sub_self = 0;
   c->rt_debugging.transport_marktasks_pair = 0;
   c->rt_debugging.transport_marktasks_sub_pair = 0;
+  c->rt_debugging.transport_link_added = 0;
+  c->rt_debugging.transport_link_walked = 0;
 
   /* Write children */
   for (int i = 0; i < 8; i++) {
@@ -2539,14 +2547,14 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
             "hydro_count,stars_count,gpart_count,super,hydro_super,"
             "loc1,loc2,loc3,width1,width2,width3,");
     fprintf(f, "hydro_h_max,stars_h_max,depth,maxdepth,");
-    fprintf(f, "GCS,GCSS,GCP,GCSP,GunskipS,GunskipSS,GunskipP,GunskipSP,GmarktasksS,GmarktasksSS,GmarktasksP,GmarktasksSP,");
-    fprintf(f, "TCS,TCSS,TCP,TCSP,TunskipS,TunskipSS,TunskipP,TunskipSP,TmarktasksS,TmarktasksSS,TmarktasksP,TmarktasksSP\n");
+    fprintf(f, "GCS,GCSS,GCP,GCSP,GunskipS,GunskipSS,GunskipP,GunskipSP,GmarktasksS,GmarktasksSS,GmarktasksP,GmarktasksSP,GlinkA,GlinkW,");
+    fprintf(f, "TCS,TCSS,TCP,TCSP,TunskipS,TunskipSS,TunskipP,TunskipSP,TmarktasksS,TmarktasksSS,TmarktasksP,TmarktasksSP,TlinkA,TlinkW\n");
 
     /* Write root data */
     fprintf(f, "%i, ,-1,", root_id);
     fprintf(f, "%li,%li,%li, , , , , , , , ,", s->nr_parts, s->nr_sparts,
             s->nr_gparts);
-    fprintf(f, " , , , , , , , , , , , , , , , , , , , , , , , , , , \n");
+    fprintf(f, " , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , \n");
   }
 
   /* Write all the top level cells (and their children) */

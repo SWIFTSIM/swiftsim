@@ -2392,31 +2392,49 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
     for (struct link *l = c->hydro.rt_gradient; l != NULL; l = l->next){
       scheduler_activate(s, l->t);
       const enum task_types t_type = l->t->type;
-      if (t_type == task_type_self) 
+      if (t_type == task_type_self) {
         atomic_inc(&l->t->ci->rt_debugging.gradient_cell_unskip_self);
-      if (t_type == task_type_sub_self) 
+        atomic_inc(&l->t->ci->rt_debugging.gradient_link_walked);
+      }
+      if (t_type == task_type_sub_self) {
         atomic_inc(&l->t->ci->rt_debugging.gradient_cell_unskip_sub_self);
+        atomic_inc(&l->t->ci->rt_debugging.gradient_link_walked);
+      }
       if (t_type == task_type_pair) {
         atomic_inc(&l->t->ci->rt_debugging.gradient_cell_unskip_pair);
+        atomic_inc(&l->t->ci->rt_debugging.gradient_link_walked);
         atomic_inc(&l->t->cj->rt_debugging.gradient_cell_unskip_pair);
+        atomic_inc(&l->t->cj->rt_debugging.gradient_link_walked);
       }
       if (t_type == task_type_sub_pair) {
         atomic_inc(&l->t->ci->rt_debugging.gradient_cell_unskip_sub_pair);
+        atomic_inc(&l->t->ci->rt_debugging.gradient_link_walked);
         atomic_inc(&l->t->cj->rt_debugging.gradient_cell_unskip_sub_pair);
+        atomic_inc(&l->t->cj->rt_debugging.gradient_link_walked);
       }
     }
     for (struct link *l = c->hydro.rt_transport; l != NULL; l = l->next) {
       scheduler_activate(s, l->t);
       const enum task_types t_type = l->t->type;
-      if (t_type == task_type_self) atomic_inc(&l->t->ci->rt_debugging.transport_cell_unskip_self);
-      if (t_type == task_type_sub_self) atomic_inc(&l->t->ci->rt_debugging.transport_cell_unskip_sub_self);
+      if (t_type == task_type_self) {
+        atomic_inc(&l->t->ci->rt_debugging.transport_cell_unskip_self);
+        atomic_inc(&l->t->ci->rt_debugging.transport_link_walked);
+      }
+      if (t_type == task_type_sub_self) {
+        atomic_inc(&l->t->ci->rt_debugging.transport_cell_unskip_sub_self);
+        atomic_inc(&l->t->ci->rt_debugging.transport_link_walked);
+      }
       if (t_type == task_type_pair) {
         atomic_inc(&l->t->ci->rt_debugging.transport_cell_unskip_pair);
+        atomic_inc(&l->t->ci->rt_debugging.transport_link_walked);
         atomic_inc(&l->t->cj->rt_debugging.transport_cell_unskip_pair);
+        atomic_inc(&l->t->cj->rt_debugging.transport_link_walked);
       }
       if (t_type == task_type_sub_pair) {
         atomic_inc(&l->t->ci->rt_debugging.transport_cell_unskip_sub_pair);
+        atomic_inc(&l->t->ci->rt_debugging.transport_link_walked);
         atomic_inc(&l->t->cj->rt_debugging.transport_cell_unskip_sub_pair);
+        atomic_inc(&l->t->cj->rt_debugging.transport_link_walked);
       }
     }
 

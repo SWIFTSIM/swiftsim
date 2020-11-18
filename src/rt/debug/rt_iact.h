@@ -79,8 +79,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H, int mode) {
-
+    struct part *restrict pj, float a, float H, int mode, long long ciID, long long cjID) {
 
   if (mode == 1) {
     pi->rt_data.calls_iact_transport += 1;
@@ -88,9 +87,32 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
 
     pj->rt_data.calls_iact_transport += 1;
     pj->rt_data.calls_iact_transport_sym += 1;
+
+    int f = pi->rt_data.neigh_iact_transp_free;
+    if (f == 200) error("Reached 200 neighbours for transport particle debugging. Raise limit");
+    pi->rt_data.neigh_iact_transp[f] = pj->id;
+    pi->rt_data.neigh_cell_iact_transp[f] = cjID;
+    pi->rt_data.neigh_iact_transp_free++;
+    pi->rt_data.this_cell = ciID;
+
+    f = pj->rt_data.neigh_iact_transp_free;
+    if (f == 200) error("Reached 200 neighbours for transport particle debugging. Raise limit");
+    pj->rt_data.neigh_iact_transp[f] = pi->id;
+    pj->rt_data.neigh_cell_iact_transp[f] = ciID;
+    pj->rt_data.neigh_iact_transp_free++;
+    pj->rt_data.this_cell = cjID;
+
+
   } else {
     pi->rt_data.calls_iact_transport += 1;
     pi->rt_data.calls_iact_transport_nonsym += 1;
+
+    int f = pi->rt_data.neigh_iact_transp_free;
+    if (f == 200) error("Reached 200 neighbours for transport particle debugging. Raise limit");
+    pi->rt_data.neigh_iact_transp[f] = pj->id;
+    pi->rt_data.neigh_cell_iact_transp[f] = cjID;
+    pi->rt_data.neigh_iact_transp_free++;
+    pi->rt_data.this_cell = ciID;
   }
 }
 
@@ -111,9 +133,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_rt_transport(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H) {
+    struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
 
-  runner_iact_rt_flux_common(r2, dx, hi, hj, pi, pj, a, H, 1);
+  runner_iact_rt_flux_common(r2, dx, hi, hj, pi, pj, a, H, 1, ciID, cjID);
 }
 
 /**
@@ -135,9 +157,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_transport(
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_rt_transport(float r2, const float *dx, float hi, float hj,
                                 struct part *restrict pi,
-                                struct part *restrict pj, float a, float H) {
+                                struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
 
-  runner_iact_rt_flux_common(r2, dx, hi, hj, pi, pj, a, H, 0);
+  runner_iact_rt_flux_common(r2, dx, hi, hj, pi, pj, a, H, 0, ciID, cjID);
 }
 
 /**
@@ -158,9 +180,9 @@ runner_iact_nonsym_rt_transport(float r2, const float *dx, float hi, float hj,
  */
 __attribute__((always_inline)) INLINE static void runner_iact_rt_gradient(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H) {
+    struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
 
-  rt_gradients_collect(r2, dx, hi, hj, pi, pj);
+  rt_gradients_collect(r2, dx, hi, hj, pi, pj, ciID, cjID);
 }
 
 /**
@@ -183,9 +205,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_gradient(
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_rt_gradient(float r2, const float *dx, float hi, float hj,
                                struct part *restrict pi,
-                               struct part *restrict pj, float a, float H) {
+                               struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
 
-  rt_gradients_nonsym_collect(r2, dx, hi, hj, pi, pj);
+  rt_gradients_nonsym_collect(r2, dx, hi, hj, pi, pj, ciID, cjID);
 }
 
 #endif /* SWIFT_RT_IACT_DEBUG_H */

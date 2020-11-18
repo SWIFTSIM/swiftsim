@@ -389,6 +389,7 @@ struct cell {
   struct cell_sinks sinks;
 
   struct {
+    /* TODO: REMOVE!!!!!!!!!! */
     int gradient_self_created;
     int gradient_sub_self_created;
     int gradient_pair_created;
@@ -401,6 +402,8 @@ struct cell {
     int gradient_marktasks_sub_self;
     int gradient_marktasks_pair;
     int gradient_marktasks_sub_pair;
+    int gradient_link_added;
+    int gradient_link_walked;
     int transport_self_created;
     int transport_sub_self_created;
     int transport_pair_created;
@@ -413,6 +416,8 @@ struct cell {
     int transport_marktasks_sub_self;
     int transport_marktasks_pair;
     int transport_marktasks_sub_pair;
+    int transport_link_added;
+    int transport_link_walked;
   } rt_debugging;
 
 #ifdef WITH_MPI

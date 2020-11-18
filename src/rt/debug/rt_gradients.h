@@ -36,13 +36,27 @@
  */
 __attribute__((always_inline)) INLINE static void rt_gradients_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj) {
+    struct part *restrict pj, long long ciID, long long cjID) {
 
   pi->rt_data.calls_iact_gradient += 1;
   pi->rt_data.calls_iact_gradient_sym += 1;
 
+  int f = pi->rt_data.neigh_iact_grad_free;
+  if (f == 200) error("Reached 200 neighbours for grad particle debugging. Raise limit");
+  pi->rt_data.neigh_iact_grad[f] = pj->id;
+  pi->rt_data.neigh_cell_iact_grad[f] = cjID;
+  pi->rt_data.neigh_iact_grad_free++;
+  pi->rt_data.this_cell = ciID;
+
   pj->rt_data.calls_iact_gradient += 1;
   pj->rt_data.calls_iact_gradient_sym += 1;
+
+  f = pj->rt_data.neigh_iact_grad_free;
+  if (f == 200) error("Reached 200 neighbours for grad particle debugging. Raise limit");
+  pj->rt_data.neigh_iact_grad[f] = pi->id;
+  pj->rt_data.neigh_cell_iact_grad[f] = ciID;
+  pj->rt_data.neigh_iact_grad_free++;
+  pj->rt_data.this_cell = cjID;
 }
 
 /**
@@ -57,10 +71,18 @@ __attribute__((always_inline)) INLINE static void rt_gradients_collect(
  */
 __attribute__((always_inline)) INLINE static void rt_gradients_nonsym_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj) {
+    struct part *restrict pj, long long ciID, long long cjID) {
 
   pi->rt_data.calls_iact_gradient += 1;
   pi->rt_data.calls_iact_gradient_nonsym += 1;
+
+  int f = pi->rt_data.neigh_iact_grad_free;
+  if (f == 200) error("Reached 200 neighbours for grad particle debugging. Raise limit");
+  pi->rt_data.neigh_iact_grad[f] = pj->id;
+  pi->rt_data.neigh_cell_iact_grad[f] = cjID;
+  pi->rt_data.neigh_iact_grad_free++;
+  pi->rt_data.this_cell = ciID;
+
 }
 
 #endif /* SWIFT_RT_GRADIENT_DEBUG_H */
