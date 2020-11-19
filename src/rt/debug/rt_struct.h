@@ -44,11 +44,11 @@ struct rt_part_data {
   int photon_number_updated; /* calls from ghost1 tasks */
 
   /* temp for debugging */
-  long long neigh_iact_grad[200];
-  long long neigh_cell_iact_grad[200];
+  long long neigh_iact_grad[400];
+  long long neigh_cell_iact_grad[400];
   int neigh_iact_grad_free;
-  long long neigh_iact_transp[200];
-  long long neigh_cell_iact_transp[200];
+  long long neigh_iact_transp[400];
+  long long neigh_cell_iact_transp[400];
   int neigh_iact_transp_free;
   long long this_cell;
 
