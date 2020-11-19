@@ -49,7 +49,7 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.photon_number_updated = 0;
 
   /* temp for debugging */
-  for (int i = 0; i < 200; i++){
+  for (int i = 0; i < 400; i++){
     p->rt_data.neigh_iact_grad[i]  = 0;
     p->rt_data.neigh_cell_iact_grad[i] = 0LL;
     p->rt_data.neigh_iact_transp[i] = 0LL;
