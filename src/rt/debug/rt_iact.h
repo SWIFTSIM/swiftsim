@@ -88,7 +88,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     pj->rt_data.calls_iact_transport += 1;
     pj->rt_data.calls_iact_transport_sym += 1;
 
-    int f = pi->rt_data.neigh_iact_transp_free;
+    int f; 
+    f = pi->rt_data.neigh_iact_transp_free;
     if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
     pi->rt_data.neigh_iact_transp[f] = pj->id;
     pi->rt_data.neigh_cell_iact_transp[f] = cjID;

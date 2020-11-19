@@ -594,11 +594,11 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
             atomic_inc(&ci->rt_debugging.gradient_marktasks_pair);
             atomic_inc(&cj->rt_debugging.gradient_marktasks_pair);
           }
-          if (t_type == task_type_sub_self && t_subtype == task_subtype_rt_gradient) {
+          if (t_type == task_type_sub_pair && t_subtype == task_subtype_rt_gradient) {
             atomic_inc(&ci->rt_debugging.gradient_marktasks_sub_pair);
             atomic_inc(&cj->rt_debugging.gradient_marktasks_sub_pair);
           }
-          if (t_type == task_type_self && t_subtype == task_subtype_rt_transport) {
+          if (t_type == task_type_pair && t_subtype == task_subtype_rt_transport) {
             atomic_inc(&ci->rt_debugging.transport_marktasks_pair);
             atomic_inc(&cj->rt_debugging.transport_marktasks_pair);
           }
