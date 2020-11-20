@@ -45,9 +45,10 @@ enum hydro_logger_fields {
 
 /* Name of each possible mask. */
 static const char *hydro_logger_field_names[hydro_logger_field_count] = {
-    "Coordinates",      "Velocities", "Accelerations", "Masses",
-    "SmoothingLengths", "InternalEnergies",  "ParticleIDs",   "Densities",
-    "Entropies",        "Pressures", "ViscosityDiffusion", "VelocityDivergences",
+    "Coordinates", "Velocities",         "Accelerations",
+    "Masses",      "SmoothingLengths",   "InternalEnergies",
+    "ParticleIDs", "Densities",          "Entropies",
+    "Pressures",   "ViscosityDiffusion", "VelocityDivergences",
 };
 
 /**
@@ -82,7 +83,8 @@ INLINE static int hydro_logger_writer_populate_mask_data(
       sizeof(float));
 
   mask_data[hydro_logger_field_internal_energies] = logger_create_mask_entry(
-      hydro_logger_field_names[hydro_logger_field_internal_energies], sizeof(float));
+      hydro_logger_field_names[hydro_logger_field_internal_energies],
+      sizeof(float));
 
   mask_data[hydro_logger_field_particle_ids] = logger_create_mask_entry(
       hydro_logger_field_names[hydro_logger_field_particle_ids],
@@ -98,10 +100,12 @@ INLINE static int hydro_logger_writer_populate_mask_data(
       hydro_logger_field_names[hydro_logger_field_pressures], sizeof(float));
 
   mask_data[hydro_logger_field_viscosity_diffusion] = logger_create_mask_entry(
-      hydro_logger_field_names[hydro_logger_field_viscosity_diffusion], 3 * sizeof(float));
+      hydro_logger_field_names[hydro_logger_field_viscosity_diffusion],
+      3 * sizeof(float));
 
   mask_data[hydro_logger_field_velocity_divergences] = logger_create_mask_entry(
-      hydro_logger_field_names[hydro_logger_field_velocity_divergences], 2 * sizeof(float));
+      hydro_logger_field_names[hydro_logger_field_velocity_divergences],
+      2 * sizeof(float));
 
   return hydro_logger_field_count;
 }
@@ -168,12 +172,12 @@ INLINE static void hydro_logger_compute_size_and_mask(
                                     buffer_size);
 
   /* Add the viscosity / diffusion. */
-  *mask |= logger_add_field_to_mask(masks[hydro_logger_field_viscosity_diffusion],
-                                    buffer_size);
+  *mask |= logger_add_field_to_mask(
+      masks[hydro_logger_field_viscosity_diffusion], buffer_size);
 
   /* Add the velocity divergences + derivative. */
-  *mask |= logger_add_field_to_mask(masks[hydro_logger_field_velocity_divergences],
-                                    buffer_size);
+  *mask |= logger_add_field_to_mask(
+      masks[hydro_logger_field_velocity_divergences], buffer_size);
 }
 
 /**
@@ -278,23 +282,20 @@ INLINE static char *hydro_logger_write_particle(
   }
 
   /* Write the viscosity / diffusion. */
-  if (logger_should_write_field(mask_data[hydro_logger_field_viscosity_diffusion],
-                                mask)) {
-    const float coef[3] = {
-      p->viscosity.alpha * p->force.balsara,
-      p->diffusion.alpha,
-      p->diffusion.laplace_u
-    };
+  if (logger_should_write_field(
+          mask_data[hydro_logger_field_viscosity_diffusion], mask)) {
+    const float coef[3] = {p->viscosity.alpha * p->force.balsara,
+                           p->diffusion.alpha, p->diffusion.laplace_u};
     memcpy(buff, coef, sizeof(coef));
     buff += sizeof(coef);
   }
 
   /* Write the velocity divergence. */
-  if (logger_should_write_field(mask_data[hydro_logger_field_velocity_divergences],
-                                mask)) {
+  if (logger_should_write_field(
+          mask_data[hydro_logger_field_velocity_divergences], mask)) {
     const float div[2] = {
-      p->viscosity.div_v,
-      p->viscosity.div_v_dt,
+        p->viscosity.div_v,
+        p->viscosity.div_v_dt,
     };
     memcpy(buff, div, sizeof(div));
     buff += sizeof(div);
