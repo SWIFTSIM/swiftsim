@@ -1644,8 +1644,7 @@ int main(int argc, char *argv[]) {
       if (e.policy & engine_policy_cosmology) {
         logger_log_timestamp(e.logger, e.ti_current, e.cosmology->a,
                              &e.logger->timestamp_offset);
-      }
-      else {
+      } else {
         logger_log_timestamp(e.logger, e.ti_current, e.time,
                              &e.logger->timestamp_offset);
       }
