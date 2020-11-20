@@ -1132,6 +1132,10 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
     /* Do anything? */
     if (ci->grav.count == 0 || !cell_is_active_gravity(ci, e)) return;
 
+    if (cell_get_flag(ci, cell_flag_do_recursion_gravity_self)) return;
+
+    cell_set_flag(ci, cell_flag_do_recursion_gravity_self);
+
     /* Recurse? */
     if (ci->split) {
       /* Loop over all progenies and pairs of progenies */
@@ -1157,19 +1161,29 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
       return;
     if (ci->grav.count == 0 || cj->grav.count == 0) return;
 
+    if (cell_get_flag(ci, cell_flag_do_recursion_gravity_pair) &&
+        cell_get_flag(cj, cell_flag_do_recursion_gravity_pair)) return;
+
     /* Atomically drift the multipole in ci */
-    lock_lock(&ci->grav.mlock);
-    if (ci->grav.ti_old_multipole < e->ti_current) cell_drift_multipole(ci, e);
-    if (lock_unlock(&ci->grav.mlock) != 0) error("Impossible to unlock m-pole");
+    if (ci->grav.ti_old_multipole != e->ti_current) {
+      lock_lock(&ci->grav.mlock);
+      if (ci->grav.ti_old_multipole < e->ti_current) cell_drift_multipole(ci, e);
+      if (lock_unlock(&ci->grav.mlock) != 0) error("Impossible to unlock m-pole");
+    }
 
     /* Atomically drift the multipole in cj */
-    lock_lock(&cj->grav.mlock);
-    if (cj->grav.ti_old_multipole < e->ti_current) cell_drift_multipole(cj, e);
-    if (lock_unlock(&cj->grav.mlock) != 0) error("Impossible to unlock m-pole");
+    if (cj->grav.ti_old_multipole != e->ti_current) {
+      lock_lock(&cj->grav.mlock);
+      if (cj->grav.ti_old_multipole < e->ti_current) cell_drift_multipole(cj, e);
+      if (lock_unlock(&cj->grav.mlock) != 0) error("Impossible to unlock m-pole");
+    }
 
     /* Can we use multipoles ? */
     if (cell_can_use_pair_mm(ci, cj, e, sp, /*use_rebuild_data=*/0,
                              /*is_tree_walk=*/1)) {
+
+      cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
+      cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
 
       /* Ok, no need to drift anything */
       return;
@@ -1181,6 +1195,8 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
         if (ci->nodeID == engine_rank) cell_activate_drift_gpart(ci, s);
         if (cj->nodeID == engine_rank) cell_activate_drift_gpart(cj, s);
       }
+      cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
+      cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
     }
     /* Ok, we can still recurse */
     else {
@@ -1197,6 +1213,7 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
             if (ci->progeny[k] != NULL)
               cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);
           }
+          cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
 
         } else if (cj->split) {
           /* Loop over cj's children */
@@ -1204,6 +1221,7 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
             if (cj->progeny[k] != NULL)
               cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
           }
+          cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
 
         } else {
           error("Fundamental error in the logic");
@@ -1215,6 +1233,7 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
             if (cj->progeny[k] != NULL)
               cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
           }
+          cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
 
         } else if (ci->split) {
           /* Loop over ci's children */
@@ -1222,6 +1241,7 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
             if (ci->progeny[k] != NULL)
               cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);
           }
+          cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
 
         } else {
           error("Fundamental error in the logic");

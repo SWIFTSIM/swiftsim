@@ -285,6 +285,8 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
     /* Clear the drift flags. */
     cell_clear_flag(c, cell_flag_do_grav_drift | cell_flag_do_grav_sub_drift);
 
+    cell_clear_flag_activation(c);
+
     /* Update the time of the last drift */
     c->grav.ti_old_part = ti_current;
 
@@ -392,6 +394,7 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
 
   /* Clear the drift flags. */
   cell_clear_flag(c, cell_flag_do_grav_drift | cell_flag_do_grav_sub_drift);
+  cell_clear_flag_activation(c);
 }
 
 /**

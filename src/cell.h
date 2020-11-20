@@ -332,7 +332,9 @@ enum cell_flags {
   cell_flag_do_stars_resort = (1UL << 15),
   cell_flag_has_tasks = (1UL << 16),
   cell_flag_do_hydro_sync = (1UL << 17),
-  cell_flag_do_hydro_sub_sync = (1UL << 18)
+  cell_flag_do_hydro_sub_sync = (1UL << 18),
+  cell_flag_do_recursion_gravity_self = (1UL << 19),
+  cell_flag_do_recursion_gravity_pair = (1UL << 20),
 };
 
 /**
@@ -1277,6 +1279,19 @@ __attribute__((always_inline)) INLINE static struct task *cell_get_recv(
 #else
   return NULL;
 #endif
+}
+
+__attribute__((always_inline)) INLINE static void cell_clear_flag_activation(struct cell *c) {
+  if (!cell_get_flag(c, cell_flag_do_recursion_gravity_self) &&
+      !cell_get_flag(c, cell_flag_do_recursion_gravity_pair))
+    return;
+
+  cell_clear_flag(c, cell_flag_do_recursion_gravity_self |
+                  cell_flag_do_recursion_gravity_pair);
+
+  if (c->parent != NULL) {
+    cell_clear_flag_activation(c->parent);
+  }
 }
 
 #endif /* SWIFT_CELL_H */
