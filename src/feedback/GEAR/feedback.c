@@ -87,7 +87,11 @@ void feedback_update_part(struct part* restrict p, struct xpart* restrict xp,
 }
 
 /**
- * @brief Should we do feedback for this star?
+ * @brief Will this star particle want to do feedback during the next time-step?
+ *
+ * This is called in the time step task.
+ *
+ * In GEAR, we compute the full stellar evolution here.
  *
  * @param sp The particle to act upon
  * @param feedback_props The #feedback_props structure.
@@ -191,7 +195,9 @@ void feedback_init_spart(struct spart* sp) {
 
 /**
  * @brief Reset the feedback field when the spart is not
- * in a correct state for feeedback_will_do_feedback
+ * in a correct state for feeedback_will_do_feedback.
+ *
+ * This function is called in the timestep task.
  */
 void feedback_reset_will_do_feedback(
     struct spart* sp, const struct feedback_props* feedback_props) {
@@ -202,6 +208,8 @@ void feedback_reset_will_do_feedback(
 /**
  * @brief Prepares a star's feedback field before computing what
  * needs to be distributed.
+ *
+ * This is called in the stars ghost.
  */
 void feedback_reset_feedback(struct spart* sp,
                              const struct feedback_props* feedback_props) {}
@@ -239,10 +247,11 @@ void feedback_prepare_spart(struct spart* sp,
                             const struct feedback_props* feedback_props) {}
 
 /**
- * @brief Evolve the stellar properties of a #spart.
+ * @brief Prepare a #spart for the feedback task.
  *
- * This function compute the SN rate and yields before sending
- * this information to a different MPI rank.
+ * This is called in the stars ghost task.
+ *
+ * In here, we only need to add the missing coefficients.
  *
  * @param sp The particle to act upon
  * @param feedback_props The #feedback_props structure.

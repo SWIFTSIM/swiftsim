@@ -102,8 +102,10 @@ INLINE static double feedback_get_enrichment_timestep(
 }
 
 /**
- * @brief Prepares a star's feedback field before computing what
- * needs to be distributed.
+ * @brief Reset the feedback field when the spart is not
+ * in a correct state for feeedback_will_do_feedback.
+ *
+ * This function is called in the timestep task.
  */
 __attribute__((always_inline)) INLINE static void
 feedback_reset_will_do_feedback(struct spart* sp,
@@ -112,6 +114,8 @@ feedback_reset_will_do_feedback(struct spart* sp,
 /**
  * @brief Prepares a star's feedback field before computing what
  * needs to be distributed.
+ *
+ * This is called in the stars ghost.
  */
 __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
     struct spart* sp, const struct feedback_props* feedback_props) {}
@@ -141,8 +145,9 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
     struct spart* sp, const struct feedback_props* feedback_props) {}
 
 /**
- * @brief Evolve the stellar properties of a #spart.
+ * @brief Prepare a #spart for the feedback task.
  *
+ * This is called in the stars ghost task.
  * This function allows for example to compute the SN rate before sending
  * this information to a different MPI rank.
  *
@@ -166,7 +171,9 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_feedback(
     const int with_cosmology) {}
 
 /**
- * @brief Should we do feedback for this star?
+ * @brief Will this star particle want to do feedback during the next time-step?
+ *
+ * This is called in the time step task.
  *
  * @param sp The particle to act upon
  * @param feedback_props The #feedback_props structure.
