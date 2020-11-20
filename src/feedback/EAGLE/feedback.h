@@ -185,7 +185,7 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
  * @brief Prepare a #spart for the feedback task.
  *
  * This is called in the stars ghost task.
- * In EAGLE, this function evolve the stellar properties of a #spart.
+ * In EAGLE, this function evolves the stellar properties of a #spart.
  *
  * @param sp The particle to act upon
  * @param feedback_props The #feedback_props structure.
