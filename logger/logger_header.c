@@ -171,6 +171,11 @@ void header_read(struct header *h, struct logger_logfile *log) {
     map = logger_loader_io_read_data(map, sizeof(unsigned int),
                                      &h->masks[i].size);
 
+    /* Print the information. */
+    if (reader->verbose > 1) {
+      message("Field %s found in the logfile", h->masks[i].name);
+    }
+
     /* Keep the timestamp mask in memory */
     if (strcmp(h->masks[i].name, "Timestamp") == 0) {
       h->timestamp_mask = h->masks[i].mask;

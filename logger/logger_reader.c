@@ -173,11 +173,11 @@ void logger_reader_set_time(struct logger_reader *reader, double time) {
   /* Read the file */
   logger_index_read_header(&reader->index.index_prev, filename_prev);
   logger_index_map_file(&reader->index.index_prev, filename_prev,
-                           /* sorted */ 1);
+                        /* sorted */ 1);
 
   logger_index_read_header(&reader->index.index_next, filename_next);
   logger_index_map_file(&reader->index.index_next, filename_next,
-                           /* sorted */ 1);
+                        /* sorted */ 1);
 
   /* Get the offset of the time chunk */
   size_t ind = time_array_get_index_from_time(&reader->log.times, time);
@@ -249,7 +249,6 @@ size_t logger_reader_count_number_new_particles(struct logger_reader *reader,
   return ret + 1;
 }
 
-
 /**
  * @brief Count the number of removed particles at the time set since last index
  * file.
@@ -306,19 +305,27 @@ size_t logger_reader_count_number_removed_particles(
  *
  * @param reader The #logger_reader.
  * @param n_parts (out) Number of particles at the time set in the reader.
+ * @param read_types Should we read this type of particles?
  */
 void logger_reader_get_number_particles(struct logger_reader *reader,
-                                        uint64_t *n_parts) {
+                                        uint64_t *n_parts,
+                                        const int *read_types) {
   for (int i = 0; i < swift_type_count; i++) {
-        /* Count the number of particles present in the last index file. */
-        const uint64_t count_prev = reader->index.index_prev.nparts[i];
-        /* Count the number of particles that have been created since last index. */
-        const uint64_t count_new =
-          logger_reader_count_number_new_particles(reader, i);
-        /* Count the number of particles that have been removed since last index. */
-        const uint64_t count_removed =
-          logger_reader_count_number_removed_particles(reader, i);
-        n_parts[i] = (count_prev + count_new) - count_removed;
+    /* Should we skip this type of particles? */
+    if (read_types[i] == 0) {
+      n_parts[i] = 0;
+      continue;
+    }
+
+    /* Count the number of particles present in the last index file. */
+    const uint64_t count_prev = reader->index.index_prev.nparts[i];
+    /* Count the number of particles that have been created since last index. */
+    const uint64_t count_new =
+        logger_reader_count_number_new_particles(reader, i);
+    /* Count the number of particles that have been removed since last index. */
+    const uint64_t count_removed =
+        logger_reader_count_number_removed_particles(reader, i);
+    n_parts[i] = (count_prev + count_new) - count_removed;
   }
 }
 
@@ -351,12 +358,11 @@ void logger_reader_get_number_particles(struct logger_reader *reader,
  * @return Is the particle removed from the logfile?
  */
 int logger_reader_read_field(struct logger_reader *reader, double time,
-                              size_t offset_time,
-                              enum logger_reader_type interp_type,
-                              const size_t offset_last_full_record,
-                              const int field, const int first,
-                              const int second, void *output,
-                              enum part_type type) {
+                             size_t offset_time,
+                             enum logger_reader_type interp_type,
+                             const size_t offset_last_full_record,
+                             const int field, const int first, const int second,
+                             void *output, enum part_type type) {
 
   const struct header *h = &reader->log.header;
   size_t offset = offset_last_full_record;
@@ -416,7 +422,7 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
     if (mask & h->masks[logger_index_special_flags].mask) {
       int data = 0;
       enum logger_special_flags flag = logger_particle_read_special_flag(
-                                                                         reader, offset, &mask, &h_offset, &data);
+          reader, offset, &mask, &h_offset, &data);
       if (flag == logger_flag_change_type || flag == logger_flag_mpi_exit ||
           flag == logger_flag_delete) {
         return 1;
@@ -428,7 +434,7 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
       error_python("No next record found.");
     }
 
-      /* Check if the field is present */
+    /* Check if the field is present */
     if (mask & mask_field->mask) {
       offset_before = offset;
     }
@@ -690,9 +696,9 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   /* Do the hydro. */
   if (n_part[swift_type_gas] != 0) {
     struct index_data *data =
-      logger_index_get_data(&reader->index.index_prev, swift_type_gas);
+        logger_index_get_data(&reader->index.index_prev, swift_type_gas);
     struct index_data *data_created = logger_index_get_created_history(
-                                                                       &reader->index.index_next, swift_type_gas);
+        &reader->index.index_next, swift_type_gas);
 
     /* Sort the fields in order to read the correct bits. */
     logger_reader_global_to_local(
@@ -703,7 +709,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     int reading_history = 0;
     const size_t size_index = reader->index.index_prev.nparts[swift_type_gas];
     const size_t size_history =
-      logger_reader_count_number_new_particles(reader, swift_type_gas);
+        logger_reader_count_number_new_particles(reader, swift_type_gas);
 
     /* Read the particles */
     for (size_t i = 0; i < n_part[swift_type_gas]; i++) {
@@ -750,10 +756,10 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
 
   /* Do the dark matter. */
   if (n_part[swift_type_dark_matter] != 0) {
-    struct index_data *data =
-      logger_index_get_data(&reader->index.index_prev, swift_type_dark_matter);
+    struct index_data *data = logger_index_get_data(&reader->index.index_prev,
+                                                    swift_type_dark_matter);
     struct index_data *data_created = logger_index_get_created_history(
-                                                                       &reader->index.index_next, swift_type_dark_matter);
+        &reader->index.index_next, swift_type_dark_matter);
 
     /* Sort the fields in order to read the correct bits. */
     logger_reader_global_to_local(
@@ -762,9 +768,10 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
 
     size_t current_in_index = 0;
     int reading_history = 0;
-    const size_t size_index = reader->index.index_prev.nparts[swift_type_dark_matter];
-    const size_t size_history =
-      logger_reader_count_number_new_particles(reader, swift_type_dark_matter);
+    const size_t size_index =
+        reader->index.index_prev.nparts[swift_type_dark_matter];
+    const size_t size_history = logger_reader_count_number_new_particles(
+        reader, swift_type_dark_matter);
 
     /* Read the particles */
     for (size_t i = 0; i < n_part[swift_type_dark_matter]; i++) {
@@ -812,9 +819,9 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   /* Do the stars. */
   if (n_part[swift_type_stars] != 0) {
     struct index_data *data =
-      logger_index_get_data(&reader->index.index_prev, swift_type_stars);
+        logger_index_get_data(&reader->index.index_prev, swift_type_stars);
     struct index_data *data_created = logger_index_get_created_history(
-                                                                       &reader->index.index_next, swift_type_stars);
+        &reader->index.index_next, swift_type_stars);
 
     /* Sort the fields in order to read the correct bits. */
     logger_reader_global_to_local(
@@ -825,7 +832,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     int reading_history = 0;
     const size_t size_index = reader->index.index_prev.nparts[swift_type_stars];
     const size_t size_history =
-      logger_reader_count_number_new_particles(reader, swift_type_stars);
+        logger_reader_count_number_new_particles(reader, swift_type_stars);
 
     /* Read the particles */
     for (size_t i = 0; i < n_part[swift_type_stars]; i++) {
@@ -867,7 +874,8 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
         }
         current_in_index++;
       }
-    }  }
+    }
+  }
 
   /* Free the memory. */
   free(local_fields_wanted);

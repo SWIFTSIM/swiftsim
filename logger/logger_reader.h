@@ -123,7 +123,8 @@ double logger_reader_get_time_end(struct logger_reader *reader);
 size_t logger_reader_get_next_offset_from_time(struct logger_reader *reader,
                                                double time);
 void logger_reader_get_number_particles(struct logger_reader *reader,
-                                        uint64_t *n_parts);
+                                        uint64_t *n_parts,
+                                        const int *read_types);
 
 void logger_reader_read_all_particles(struct logger_reader *reader, double time,
                                       enum logger_reader_type interp_type,

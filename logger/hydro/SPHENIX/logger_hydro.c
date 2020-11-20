@@ -36,10 +36,10 @@ const int hydro_logger_field_size[hydro_logger_field_count] = {
     member_size(struct part, u),        // InternalEnergies
     member_size(struct part, id),       // IDs
     member_size(struct part, rho),      // density
-    sizeof(float),     // Entropy
-    sizeof(float),     // Pressure
-    3 * sizeof(float), // Viscosity / diffusion
-    2 * sizeof(float), // Velocity divergence + deriv
+    sizeof(float),                      // Entropy
+    sizeof(float),                      // Pressure
+    3 * sizeof(float),                  // Viscosity / diffusion
+    2 * sizeof(float),                  // Velocity divergence + deriv
 };
 
 #endif

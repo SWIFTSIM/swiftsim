@@ -187,7 +187,7 @@ hydro_logger_interpolate_field(const double t_before,
       x[1] = wa * div_aft[1] + wb * div_bef[1];
       break;
 
-  default:
+    default:
       error("Not implemented");
   }
 }
@@ -213,13 +213,13 @@ __attribute__((always_inline)) INLINE static void hydro_logger_generate_python(
   fields[hydro_logger_field_densities] =
       logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
   fields[hydro_logger_field_entropies] =
-    logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
+      logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
   fields[hydro_logger_field_pressures] =
-    logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
+      logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
   fields[hydro_logger_field_viscosity_diffusion] =
-    logger_loader_python_field(/* Dimension */ 3, NPY_FLOAT32);
+      logger_loader_python_field(/* Dimension */ 3, NPY_FLOAT32);
   fields[hydro_logger_field_velocity_divergences] =
-    logger_loader_python_field(/* Dimension */ 2, NPY_FLOAT32);
+      logger_loader_python_field(/* Dimension */ 2, NPY_FLOAT32);
 }
 
 #endif  // HAVE_PYTHON
