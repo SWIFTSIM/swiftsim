@@ -59,6 +59,15 @@ struct xpart {
   /*! Internal energy at the last full step. */
   float u_full;
 
+  /*! Particle progenitor ID. */
+  long long progenitor_id;
+
+  /*! Binary tree used to show the outcome of splitting events */
+  long split_tree;
+
+  /*! Number of times this particle has been split. */
+  uint8_t split_count;
+
   /*! Additional data used to record cooling information */
   struct cooling_xpart_data cooling_data;
 
@@ -84,6 +93,7 @@ struct part {
 
   /*! Particle unique ID. */
   long long id;
+  ;
 
   /*! Pointer to corresponding gravity part. */
   struct gpart* gpart;
