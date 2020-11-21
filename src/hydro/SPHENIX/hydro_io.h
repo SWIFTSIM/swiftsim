@@ -165,6 +165,26 @@ INLINE static void convert_diffusion(const struct engine* e,
   ret[0] = p->diffusion.alpha;
 }
 
+INLINE static void convert_progenitor_ids(const struct engine* e,
+                                          const struct part* p,
+                                          const struct xpart* xp,
+                                          long long* ret) {
+  ret[0] = xp->progenitor_id;
+}
+
+INLINE static void convert_split_trees(const struct engine* e,
+                                       const struct part* p,
+                                       const struct xpart* xp, long long* ret) {
+  ret[0] = xp->split_tree;
+}
+
+INLINE static void convert_split_counts(const struct engine* e,
+                                        const struct part* p,
+                                        const struct xpart* xp,
+                                        long long* ret) {
+  ret[0] = xp->split_count;
+}
+
 /**
  * @brief Specifies which particle fields to write to a dataset
  *
@@ -177,7 +197,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
                                          struct io_props* list,
                                          int* num_fields) {
 
-  *num_fields = 14;
+  *num_fields = 17;
   /* List what we want to write */
   list[0] = io_make_output_field_convert_part(
       "Coordinates", DOUBLE, 3, UNIT_CONV_LENGTH, 1.f, parts, xparts,
@@ -248,6 +268,29 @@ INLINE static void hydro_write_particles(const struct part* parts,
       "cosmology as this includes a Hubble flow term. To get back to a "
       "peculiar velocity divergence time differential, x_pec = a^4 (x - a^{-2} "
       "n_D dH / dt)");
+
+  list[14] = io_make_output_field_convert_part(
+      "ProgenitorParticleIDs", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, parts,
+      xparts, convert_progenitor_ids,
+      "ID of the progenitor of this particle. If this particle is the result "
+      "of one (or many) splitting event, this ID corresponds to the ID of the "
+      "particle in the initial conditions that its lineage can be traced back "
+      "to.");
+
+  list[15] = io_make_output_field_convert_part(
+      "SplitCounts", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, parts, xparts,
+      convert_split_counts,
+      "Number of times this particle has been split. Note that particles that "
+      "have been split 'from' also have this counter incremented, so the "
+      "number of splitting events in an entire simulation is half of the sum "
+      "of all of these numbers.");
+
+  list[16] = io_make_output_field_convert_part(
+      "SplitTrees", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, parts, xparts,
+      convert_split_trees,
+      "Binary tree describing splitting events. Particles split 'from' receive "
+      "a value of zero in a splitting event, whereas created particles have a "
+      "value of one.");
 }
 
 /**

@@ -170,6 +170,13 @@ void engine_split_gas_particle_split_mapper(void *restrict map_data, int count,
         memcpy(&global_gparts[k_gparts], gp, sizeof(struct gpart));
       }
 
+      /* Update the splitting data of the old and new particle
+       * Particle split from always has a zero in tree, particle
+       * split "to" always has a one */
+      global_xparts[k_parts].split_tree |=
+          (long)1 << global_xparts[k_parts].split_count++;
+      xp->split_count++;
+
       /* Update the IDs. */
       if (generate_random_ids) {
         /* The gas IDs are always odd, so we multiply by two here to
