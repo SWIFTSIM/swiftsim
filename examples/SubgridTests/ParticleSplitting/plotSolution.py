@@ -87,6 +87,8 @@ for particle, tree in enumerate(formatted_split_trees):
 
             add_arrow(line)
 
+            break
+
 ax.scatter(special_coordinates[0], special_coordinates[1], zorder=10)
 
 from matplotlib.lines import Line2D
