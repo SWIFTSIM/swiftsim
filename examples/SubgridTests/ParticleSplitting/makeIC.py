@@ -33,8 +33,14 @@ dataset.gas.velocities = unyt.unyt_array(
     [x.flatten() for x in np.meshgrid(*[base_velocities] * 3)], "cm/s"
 ).T
 
+# Set the particle with the highest mass to be in the centre of
+# the volume for easier plotting later
+special_particle = (
+    np.linalg.norm(dataset.gas.coordinates - unyt.unyt_quantity(0.5, "cm"), axis=1)
+).argmin()
+
 base_masses = np.ones(TOTAL_NUMBER_OF_PARTICLES, dtype=np.float32)
-base_masses[0] = np.float32(PARTICLE_OVER_MASS_FACTOR)
+base_masses[special_particle] = np.float32(PARTICLE_OVER_MASS_FACTOR)
 dataset.gas.masses = unyt.unyt_array(base_masses, "g")
 
 # Set internal energy to be consistent with a CFL time-step of the
