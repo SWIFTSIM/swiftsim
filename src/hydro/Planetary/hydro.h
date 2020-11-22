@@ -558,15 +558,16 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const float dt_alpha) {
 
-  const float fac_mu = cosmo->a_factor_mu;
+  const float fac_Balsara_eps = cosmo->a_factor_Balsara_eps;
 
   /* Compute the norm of the curl */
   const float curl_v = sqrtf(p->density.rot_v[0] * p->density.rot_v[0] +
                              p->density.rot_v[1] * p->density.rot_v[1] +
                              p->density.rot_v[2] * p->density.rot_v[2]);
 
-  /* Compute the norm of div v */
-  const float abs_div_v = fabsf(p->density.div_v);
+  /* Compute the norm of div v including the Hubble flow term */
+  const float div_physical_v = p->density.div_v + hydro_dimension * cosmo->H;
+  const float abs_div_physical_v = fabsf(div_physical_v);
 
 #ifdef PLANETARY_FIXED_ENTROPY
   /* Override the internal energy to satisfy the fixed entropy */
@@ -596,9 +597,11 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
 #ifdef PLANETARY_SPH_NO_BALSARA
   const float balsara = hydro_props->viscosity.alpha;
 #else
-  const float balsara =
-      hydro_props->viscosity.alpha * abs_div_v /
-      (abs_div_v + curl_v + 0.0001f * fac_mu * soundspeed / p->h);
+  /* Pre-multiply in the AV factor; hydro_props are not passed to the iact
+   * functions */
+  const float balsara = hydro_props->viscosity.alpha * abs_div_physical_v /
+                        (abs_div_physical_v + curl_v +
+                         0.0001f * fac_Balsara_eps * soundspeed / p->h);
 #endif
 
   /* Update variables. */
