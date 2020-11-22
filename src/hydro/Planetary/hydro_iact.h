@@ -56,6 +56,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
 
   float wi, wj, wi_dx, wj_dx;
 
+#ifdef SWIFT_DEBUG_CHECKS
+  if (pi->time_bin >= time_bin_inhibited)
+    error("Inhibited pi in interaction function!");
+  if (pj->time_bin >= time_bin_inhibited)
+    error("Inhibited pj in interaction function!");
+#endif
+
   /* Get r. */
   const float r_inv = 1.0f / sqrtf(r2);
   const float r = r2 * r_inv;
@@ -130,6 +137,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 
   float wi, wi_dx;
 
+#ifdef SWIFT_DEBUG_CHECKS
+  if (pi->time_bin >= time_bin_inhibited)
+    error("Inhibited pi in interaction function!");
+  if (pj->time_bin >= time_bin_inhibited)
+    error("Inhibited pj in interaction function!");
+#endif
+
   /* Get the masses. */
   const float mj = pj->mass;
 
@@ -183,6 +197,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 __attribute__((always_inline)) INLINE static void runner_iact_force(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, float a, float H) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (pi->time_bin >= time_bin_inhibited)
+    error("Inhibited pi in interaction function!");
+  if (pj->time_bin >= time_bin_inhibited)
+    error("Inhibited pj in interaction function!");
+#endif
 
   /* Cosmological factors entering the EoMs */
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
@@ -247,7 +268,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float visc = -0.25f * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
 
   /* Convolve with the kernel */
-  const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
+  const float visc_acc_term =
+      0.5f * visc * (wi_dr * f_ij + wj_dr * f_ji) * r_inv;
 
   /* SPH acceleration term */
   const float sph_acc_term =
@@ -304,6 +326,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     const struct part *restrict pj, float a, float H) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (pi->time_bin >= time_bin_inhibited)
+    error("Inhibited pi in interaction function!");
+  if (pj->time_bin >= time_bin_inhibited)
+    error("Inhibited pj in interaction function!");
+#endif
 
   /* Cosmological factors entering the EoMs */
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
@@ -370,7 +399,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float visc = -0.25f * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
 
   /* Convolve with the kernel */
-  const float visc_acc_term = 0.5f * visc * (wi_dr + wj_dr) * r_inv;
+  const float visc_acc_term =
+      0.5f * visc * (wi_dr * f_ij + wj_dr * f_ji) * r_inv;
 
   /* SPH acceleration term */
   const float sph_acc_term =

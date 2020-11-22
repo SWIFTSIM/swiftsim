@@ -392,10 +392,15 @@ hydro_set_drifted_physical_internal_energy(struct part *p,
   /* Now recompute the extra quantities */
 
   /* Compute the sound speed */
+  const float pressure =
+      gas_pressure_from_internal_energy(p->rho, p->u, p->mat_id);
   const float soundspeed = hydro_get_comoving_soundspeed(p);
 
   /* Update variables. */
+  p->force.pressure = pressure;
   p->force.soundspeed = soundspeed;
+
+  p->force.v_sig = max(p->force.v_sig, 2.f * soundspeed);
 }
 
 /**
@@ -472,6 +477,10 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
   p->density.wcount_dh = 0.f;
   p->rho = 0.f;
   p->density.rho_dh = 0.f;
+  p->density.div_v = 0.f;
+  p->density.rot_v[0] = 0.f;
+  p->density.rot_v[1] = 0.f;
+  p->density.rot_v[2] = 0.f;
 }
 
 /**
@@ -507,6 +516,17 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   p->density.rho_dh *= h_inv_dim_plus_one;
   p->density.wcount *= h_inv_dim;
   p->density.wcount_dh *= h_inv_dim_plus_one;
+
+  const float rho_inv = 1.f / p->rho;
+  const float a_inv2 = cosmo->a2_inv;
+
+  /* Finish calculation of the (physical) velocity curl components */
+  p->density.rot_v[0] *= h_inv_dim_plus_one * a_inv2 * rho_inv;
+  p->density.rot_v[1] *= h_inv_dim_plus_one * a_inv2 * rho_inv;
+  p->density.rot_v[2] *= h_inv_dim_plus_one * a_inv2 * rho_inv;
+
+  /* Finish calculation of the (physical) velocity divergence */
+  p->density.div_v *= h_inv_dim_plus_one * a_inv2 * rho_inv;
 }
 
 /**
@@ -534,6 +554,10 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
   p->density.wcount = kernel_root * h_inv_dim;
   p->density.rho_dh = 0.f;
   p->density.wcount_dh = 0.f;
+  p->density.div_v = 0.f;
+  p->density.rot_v[0] = 0.f;
+  p->density.rot_v[1] = 0.f;
+  p->density.rot_v[2] = 0.f;
 }
 
 /**
@@ -668,6 +692,8 @@ __attribute__((always_inline)) INLINE static void hydro_reset_predicted_values(
 
   p->force.pressure = pressure;
   p->force.soundspeed = soundspeed;
+
+  p->force.v_sig = max(p->force.v_sig, 2.f * soundspeed);
 }
 
 /**
@@ -697,7 +723,8 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   p->u += p->u_dt * dt_therm;
 
   /* Check against absolute minimum */
-  const float min_u = hydro_props->minimal_internal_energy;
+  const float min_u = 
+      hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
 
   p->u = max(p->u, min_u);
 
@@ -727,6 +754,8 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
 
   p->force.pressure = pressure;
   p->force.soundspeed = soundspeed;
+
+  p->force.v_sig = max(p->force.v_sig, 2.f * soundspeed);
 }
 
 /**
@@ -773,7 +802,8 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
   xp->u_full = max(xp->u_full + delta_u, 0.5f * xp->u_full);
 
   /* Check against absolute minimum */
-  const float min_u = hydro_props->minimal_internal_energy;
+  const float min_u =
+      hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
 
   if (xp->u_full < min_u) {
     xp->u_full = min_u;
