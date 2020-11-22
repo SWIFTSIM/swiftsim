@@ -78,7 +78,8 @@ INLINE static void hydro_read_particles(struct part* parts,
                                 UNIT_CONV_NO_UNITS, parts, mat_id);
 #ifdef PLANETARY_FIXED_ENTROPY
   list[9] = io_make_input_field("Entropies", FLOAT, 1, COMPULSORY,
-                                UNIT_CONV_PHYSICAL_ENTROPY_PER_UNIT_MASS, parts, s_fixed);
+                                UNIT_CONV_PHYSICAL_ENTROPY_PER_UNIT_MASS, parts,
+                                s_fixed);
 #endif
 }
 

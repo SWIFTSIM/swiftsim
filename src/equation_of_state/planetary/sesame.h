@@ -159,7 +159,7 @@ INLINE static void load_table_SESAME(struct SESAME_params *mat,
     if (c != 1) error("Failed to read the SESAME EoS table %s", table_file);
   }
 
-  // Sp. int. energies (not log yet), pressures, sound speeds, and sp. 
+  // Sp. int. energies (not log yet), pressures, sound speeds, and sp.
   // entropies (not log yet)
   for (int i_T = -1; i_T < mat->num_T; i_T++) {
     for (int i_rho = -1; i_rho < mat->num_rho; i_rho++) {
@@ -249,7 +249,7 @@ INLINE static void prepare_table_SESAME(struct SESAME_params *mat) {
 
       mat->table_log_u_rho_T[i_rho * mat->num_T + i_T] =
           logf(mat->table_log_u_rho_T[i_rho * mat->num_T + i_T]);
-      
+
       if (mat->table_log_s_rho_T[i_rho * mat->num_T + i_T] <= 0) {
         mat->table_log_s_rho_T[i_rho * mat->num_T + i_T] = mat->s_tiny;
       }
@@ -287,21 +287,26 @@ INLINE static void convert_units_SESAME(struct SESAME_params *mat,
       mat->table_c_rho_T[i_rho * mat->num_T + i_T] *=
           1e3f * units_cgs_conversion_factor(&si, UNIT_CONV_SPEED) /
           units_cgs_conversion_factor(us, UNIT_CONV_SPEED);
-      mat->table_log_s_rho_T[i_rho * mat->num_T + i_T] += logf(
-          units_cgs_conversion_factor(&si, UNIT_CONV_PHYSICAL_ENTROPY_PER_UNIT_MASS) /
-          units_cgs_conversion_factor(us, UNIT_CONV_PHYSICAL_ENTROPY_PER_UNIT_MASS));
+      mat->table_log_s_rho_T[i_rho * mat->num_T + i_T] +=
+          logf(units_cgs_conversion_factor(
+                   &si, UNIT_CONV_PHYSICAL_ENTROPY_PER_UNIT_MASS) /
+               units_cgs_conversion_factor(
+                   us, UNIT_CONV_PHYSICAL_ENTROPY_PER_UNIT_MASS));
     }
   }
 
   // Tiny values
-  mat->u_tiny *= units_cgs_conversion_factor(&si, UNIT_CONV_ENERGY_PER_UNIT_MASS) /
-                 units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
+  mat->u_tiny *=
+      units_cgs_conversion_factor(&si, UNIT_CONV_ENERGY_PER_UNIT_MASS) /
+      units_cgs_conversion_factor(us, UNIT_CONV_ENERGY_PER_UNIT_MASS);
   mat->P_tiny *= units_cgs_conversion_factor(&si, UNIT_CONV_PRESSURE) /
                  units_cgs_conversion_factor(us, UNIT_CONV_PRESSURE);
   mat->c_tiny *= 1e3f * units_cgs_conversion_factor(&si, UNIT_CONV_SPEED) /
                  units_cgs_conversion_factor(us, UNIT_CONV_SPEED);
-  mat->s_tiny *= units_cgs_conversion_factor(&si, UNIT_CONV_PHYSICAL_ENTROPY_PER_UNIT_MASS) /
-                 units_cgs_conversion_factor(us, UNIT_CONV_PHYSICAL_ENTROPY_PER_UNIT_MASS);
+  mat->s_tiny *=
+      units_cgs_conversion_factor(&si,
+                                  UNIT_CONV_PHYSICAL_ENTROPY_PER_UNIT_MASS) /
+      units_cgs_conversion_factor(us, UNIT_CONV_PHYSICAL_ENTROPY_PER_UNIT_MASS);
 }
 
 // gas_internal_energy_from_entropy
@@ -380,8 +385,8 @@ INLINE static float SESAME_internal_energy_from_entropy(
   log_u_4 = mat->table_log_u_rho_T[(idx_rho + 1) * mat->num_T + idx_s_2 + 1];
 
   // If below the minimum s at this rho then just use the lowest table values
-  if ((idx_rho > 0.f) &&
-      ((intp_s_1 < 0.f) || (intp_s_2 < 0.f) || (log_u_1 > log_u_2) || (log_u_3 > log_u_4))) {
+  if ((idx_rho > 0.f) && ((intp_s_1 < 0.f) || (intp_s_2 < 0.f) ||
+                          (log_u_1 > log_u_2) || (log_u_3 > log_u_4))) {
     intp_s_1 = 0;
     intp_s_2 = 0;
   }

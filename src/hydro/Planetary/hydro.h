@@ -606,7 +606,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   /* Compute the sound speed */
   const float soundspeed =
       gas_soundspeed_from_internal_energy(p->rho, p->u, p->mat_id);
-      
+
   /* Compute the "grad h" term  - Note here that we have \tilde{x}
    * as 1 as we use the local number density to find neighbours. This
    * introduces a j-component that is considered in the force loop,
@@ -723,7 +723,7 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   p->u += p->u_dt * dt_therm;
 
   /* Check against absolute minimum */
-  const float min_u = 
+  const float min_u =
       hydro_props->minimal_internal_energy / cosmo->a_factor_internal_energy;
 
   p->u = max(p->u, min_u);

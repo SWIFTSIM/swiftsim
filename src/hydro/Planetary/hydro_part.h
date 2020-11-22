@@ -209,8 +209,8 @@ struct part {
 #endif
 
 #ifdef PLANETARY_FIXED_ENTROPY
-    /* Fixed specific entropy */
-    float s_fixed;
+  /* Fixed specific entropy */
+  float s_fixed;
 #endif
 
 } SWIFT_STRUCT_ALIGN;
