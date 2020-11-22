@@ -216,9 +216,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   kernel_deval(xj, &wj, &wj_dx);
   const float wj_dr = hjd_inv * wj_dx;
 
+  /* Variable smoothing length term */
+  const float f_ij = 1.f - pi->force.f / mj;
+  const float f_ji = 1.f - pj->force.f / mi;
+
   /* Compute gradient terms */
-  const float P_over_rho2_i = pressurei / (rhoi * rhoi) * pi->force.f;
-  const float P_over_rho2_j = pressurej / (rhoj * rhoj) * pj->force.f;
+  const float P_over_rho2_i = pressurei / (rhoi * rhoi) * f_ij;
+  const float P_over_rho2_j = pressurej / (rhoj * rhoj) * f_ji;
 
   /* Compute dv dot r. */
   const float dvdr = (pi->v[0] - pj->v[0]) * dx[0] +
@@ -310,7 +314,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float r = r2 * r_inv;
 
   /* Recover some data */
-  // const float mi = pi->mass;
+  const float mi = pi->mass;
   const float mj = pj->mass;
   const float rhoi = pi->rho;
   const float rhoj = pj->rho;
@@ -333,9 +337,13 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   kernel_deval(xj, &wj, &wj_dx);
   const float wj_dr = hjd_inv * wj_dx;
 
+  /* Variable smoothing length term */
+  const float f_ij = 1.f - pi->force.f / mj;
+  const float f_ji = 1.f - pj->force.f / mi;
+
   /* Compute gradient terms */
-  const float P_over_rho2_i = pressurei / (rhoi * rhoi) * pi->force.f;
-  const float P_over_rho2_j = pressurej / (rhoj * rhoj) * pj->force.f;
+  const float P_over_rho2_i = pressurei / (rhoi * rhoi) * f_ij;
+  const float P_over_rho2_j = pressurej / (rhoj * rhoj) * f_ji;
 
   /* Compute dv dot r. */
   const float dvdr = (pi->v[0] - pj->v[0]) * dx[0] +
