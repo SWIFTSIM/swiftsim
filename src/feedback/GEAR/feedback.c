@@ -203,10 +203,15 @@ void feedback_init_spart(struct spart* sp) {
  *
  * This function is called in the timestep task.
  */
-void feedback_reset_will_do_feedback(
+void feedback_init_after_star_formation(
     struct spart* sp, const struct feedback_props* feedback_props) {
+  feedback_init_spart(sp);
+
   /* Zero the energy of supernovae */
   sp->feedback_data.energy_ejected = 0;
+
+  /* Activate the feedback loop for the first step */
+  sp->feedback_data.will_do_feedback = 1;
 }
 
 /**

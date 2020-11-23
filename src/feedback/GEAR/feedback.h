@@ -50,10 +50,10 @@ double feedback_get_enrichment_timestep(const struct spart* sp,
                                         const double dt_star);
 void feedback_init_spart(struct spart* sp);
 
+void feedback_init_after_star_formation(
+    struct spart* sp, const struct feedback_props* feedback_props);
 void feedback_reset_feedback(struct spart* sp,
                              const struct feedback_props* feedback_props);
-void feedback_reset_will_do_feedback(
-    struct spart* sp, const struct feedback_props* feedback_props);
 void feedback_first_init_spart(struct spart* sp,
                                const struct feedback_props* feedback_props);
 void feedback_prepare_spart(struct spart* sp,
