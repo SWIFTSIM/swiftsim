@@ -302,6 +302,9 @@ void space_first_init_sparts_mapper(void *restrict map_data, int count,
     /* Also initialise the chemistry */
     chemistry_first_init_spart(chemistry, &sp[k]);
 
+    /* Also initialise the splitting data */
+    particle_splitting_mark_part_as_not_split(&sp[k].split_data, sp[k].id);
+
     /* And radiative transfer data */
     rt_first_init_spart(&sp[k]);
 
@@ -384,6 +387,9 @@ void space_first_init_bparts_mapper(void *restrict map_data, int count,
   for (int k = 0; k < count; k++) {
 
     black_holes_first_init_bpart(&bp[k], props);
+
+    /* And the splitting data */
+    particle_splitting_mark_part_as_not_split(&bp[k].split_data, bp[k].id);
 
     /* And the black hole merger markers */
     black_holes_mark_bpart_as_not_swallowed(&bp[k].merger_data);
