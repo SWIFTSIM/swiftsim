@@ -17,30 +17,24 @@
  *
  ******************************************************************************/
 
-/**
- * @file particle_splitting.c
- * @brief Particle splitting functions, used for tracking and
- *        outputting split data.
- */
+#ifndef SWIFT_PARTICLE_SPLITTING_STRUCT_H
+#define SWIFT_PARTICLE_SPLITTING_STRUCT_H
 
-/* Local headers. */
-#include "particle_splitting.h"
+#include <stdint.h>
 
 /**
- * @brief Initialise a particle_splitting_data struct
- *        at the start of a run, given an initial
- *        progenitor ID.
- *
- * @param splitting_data the uninitialised particle struct.
- * @param id the ID of the particle (used for progenitor_id)
+ * @brief  Data stored in the xpart, spart, or bpart
+ *         to track the split history of each particle.
  */
-__attribute__((always_inline)) INLINE static void
-particle_splitting_mark_part_as_not_split(
-    struct particle_splitting_data *restrict splitting_data, int id) {
+struct particle_splitting_data {
+  /*! Particle ID of the progenitor */
+  long long progenitor_id;
 
-  splitting_data->progenitor_id = id;
-  splitting_data->split_tree = 0;
-  splitting_data->split_count = 0;
+  /*! Binary tree used to show the outcome of splitting events */
+  long long split_tree;
 
-  return;
-}
+  /*! Number of times this particle has been split. */
+  uint8_t split_count;
+};
+
+#endif
