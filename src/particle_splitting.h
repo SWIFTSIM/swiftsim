@@ -172,7 +172,7 @@ INLINE static int particle_splitting_write_bparticles(
   list[0] = io_make_output_field(
       "ProgenitorParticleIDs", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       split_data.progenitor_id,
-      "Progenitor ID of the gas particle that became this star. If this "
+      "Progenitor ID of the gas particle that became the seed BH. If this "
       "particle is the result of one (or many) splitting events, this ID "
       "corresponds to the ID of the particle in the initial conditions that "
       "its lineage can be traced back to. If the particle was never split, "
@@ -181,7 +181,7 @@ INLINE static int particle_splitting_write_bparticles(
   list[1] = io_make_output_field(
       "SplitCounts", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       split_data.split_count,
-      "Number of times the gas particle that turned into this star particle "
+      "Number of times the gas particle that became this BH seed "
       "was split. Note that both particles that take part in the splitting "
       "have this counter incremented, so the number of splitting events in an "
       "entire simulation is half of the sum of all of these numbers.");
@@ -189,9 +189,9 @@ INLINE static int particle_splitting_write_bparticles(
   list[2] = io_make_output_field(
       "SplitTrees", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       split_data.split_tree,
-      "Binary tree describing splitting events. Particles that keep the "
-      "original ID have a value of zero in a splitting event, whereas"
-      "particles given a new ID have a value of one.");
+      "Binary tree describing splitting events prior to BH seeding. Particles "
+      "that keep the original ID have a value of zero in a splitting event, "
+      "whereas particles given a new ID have a value of one.");
 
   return 3;
 }
