@@ -70,6 +70,8 @@ hid_t io_hdf5_type(enum IO_DATA_TYPE type) {
   switch (type) {
     case INT:
       return H5T_NATIVE_INT;
+    case UINT8:
+      return H5T_NATIVE_UINT8;
     case UINT:
       return H5T_NATIVE_UINT;
     case UINT64:
