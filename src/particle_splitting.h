@@ -21,26 +21,92 @@
 #define SWIFT_PARTICLE_SPLITTING_H
 
 #include "inline.h"
+#include "io_properties.h"
+#include "particle_splitting_struct.h"
 
 #include <stdint.h>
 
 /**
- * @brief  Data stored in the xpart, spart, or bpart
- *         to track the split history of each particle.
+ * @brief Initialise a particle_splitting_data struct
+ *        at the start of a run, given an initial
+ *        progenitor ID.
+ *
+ * @param splitting_data the uninitialised particle struct.
+ * @param id the ID of the particle (used for progenitor_id)
  */
-struct particle_splitting_data {
-  /*! Particle ID of the progenitor */
-  long long progenitor_id;
-
-  /*! Binary tree used to show the outcome of splitting events */
-  long long split_tree;
-
-  /*! Number of times this particle has been split. */
-  uint8_t split_count;
-};
-
 __attribute__((always_inline)) INLINE static void
 particle_splitting_mark_part_as_not_split(
-    struct particle_splitting_data *restrict splitting_data, int id);
+    struct particle_splitting_data* restrict splitting_data, int id) {
 
+  splitting_data->progenitor_id = id;
+  splitting_data->split_tree = 0;
+  splitting_data->split_count = 0;
+}
+
+/**
+ * @brief Updates the binary trees of the particles that
+ *        have been split. pi should retain its original ID,
+ *        and hence gets the relevant part of the tree set
+ *        to zero.
+ *
+ * @param sdi first particle_splitting_data* resulting from
+ *           the splitting event.
+ * @param sdj second particle_splitting_data* resulting from
+ *           the splitting event.
+ */
+__attribute__((always_inline)) INLINE static void
+particle_splitting_update_binary_tree(
+    struct particle_splitting_data* restrict sdi,
+    struct particle_splitting_data* restrict sdj) {
+
+  /* Update the binary tree */
+  sdj->split_tree |= 1LL << sdj->split_count;
+
+  /* Increase counters on both; sdi implicitly has a zero
+   * in the relevant spot in its binary tree */
+  sdj->split_count++;
+  sdi->split_count++;
+}
+
+/**
+ * @brief Specifies the particle-splitting related fields
+ *        to write to a dataset.
+ *
+ * @param parts The particle array.
+ * @param xparts The extra particle array.
+ * @param list The list of i/o properties to write.
+ * @param with_cosmology Are we running with cosmology?
+ *
+ * @return Returns the number of fields to write.
+ */
+INLINE static int particle_splitting_write_particles(const struct part* parts,
+                                                     const struct xpart* xparts,
+                                                     struct io_props* list,
+                                                     const int with_cosmology) {
+
+  list[0] = io_make_output_field(
+      "ProgenitorParticleIDs", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
+      split_data.progenitor_id,
+      "ID of the progenitor of this particle. If this particle is the result "
+      "of one (or many) splitting event, this ID corresponds to the ID of the "
+      "particle in the initial conditions that its lineage can be traced back "
+      "to. If the particle has been split, this is the same as ParticleIDs.");
+
+  list[1] = io_make_output_field(
+      "SplitCounts", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
+      split_data.split_count,
+      "Number of times this particle has been split. Note that particles that "
+      "have been split 'from' also have this counter incremented, so the "
+      "number of splitting events in an entire simulation is half of the sum "
+      "of all of these numbers.");
+
+  list[2] = io_make_output_field(
+      "SplitTrees", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
+      split_data.split_tree,
+      "Binary tree describing splitting events. Particles split 'from' receive "
+      "a value of zero in a splitting event, whereas created particles have a "
+      "value of one.");
+
+  return 3;
+}
 #endif /* SWIFT_PARTICLE_SPLITTING_H */
