@@ -1067,13 +1067,6 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
 
   p->time_bin = 0;
 
-  /* Set the progenitor ID of the particle to the ID we just read in */
-  xp->progenitor_id = p->id;
-  /* Set the splitting count to zero */
-  xp->split_count = 0;
-  /* Initialise the splitting binary tree to be empty */
-  xp->split_tree = 0;
-
   xp->v_full[0] = p->v[0];
   xp->v_full[1] = p->v[1];
   xp->v_full[2] = p->v[2];

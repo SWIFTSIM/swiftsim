@@ -30,6 +30,7 @@
 #include "chemistry.h"
 #include "engine.h"
 #include "gravity.h"
+#include "particle_splitting.h"
 #include "pressure_floor.h"
 #include "rt.h"
 #include "sink.h"
@@ -134,6 +135,9 @@ void space_first_init_parts_mapper(void *restrict map_data, int count,
 
     /* And the black hole markers */
     black_holes_mark_part_as_not_swallowed(&p[k].black_holes_data);
+
+    /* Also initialise the splitting data */
+    particle_splitting_mark_part_as_not_split(&xp[k].split_data, p[k].id);
 
     /* And the radiative transfer */
     rt_first_init_part(&p[k]);
