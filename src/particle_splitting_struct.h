@@ -37,4 +37,4 @@ struct particle_splitting_data {
   uint8_t split_count;
 };
 
-#endif
+#endif /* SWIFT_PARTICLE_SPLITTING_STRUCT_H */
