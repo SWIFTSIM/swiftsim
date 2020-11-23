@@ -764,6 +764,8 @@ size_t io_sizeof_type(enum IO_DATA_TYPE type) {
   switch (type) {
     case INT:
       return sizeof(int);
+    case UINT8:
+      return sizeof(uint8_t);
     case UINT:
       return sizeof(unsigned int);
     case UINT64:
