@@ -30,7 +30,7 @@
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
 #include "feedback_struct.h"
-#include "particle_splitting.h"
+#include "particle_splitting_struct.h"
 #include "pressure_floor_struct.h"
 #include "star_formation_struct.h"
 #include "timestep_limiter_struct.h"
