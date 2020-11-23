@@ -170,7 +170,7 @@ INLINE static int particle_splitting_write_sparticles(
 INLINE static int particle_splitting_write_bparticles(
     const struct bpart* bparts, struct io_props* list) {
   list[0] = io_make_output_field(
-      "ProgenitorParticleIDs", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      "ProgenitorParticleIDs", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       split_data.progenitor_id,
       "Progenitor ID of the gas particle that became the seed BH. If this "
       "particle is the result of one (or many) splitting events, this ID "
@@ -179,7 +179,7 @@ INLINE static int particle_splitting_write_bparticles(
       "this is the same as ParticleIDs.");
 
   list[1] = io_make_output_field(
-      "SplitCounts", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      "SplitCounts", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       split_data.split_count,
       "Number of times the gas particle that became this BH seed "
       "was split. Note that both particles that take part in the splitting "
@@ -187,7 +187,7 @@ INLINE static int particle_splitting_write_bparticles(
       "entire simulation is half of the sum of all of these numbers.");
 
   list[2] = io_make_output_field(
-      "SplitTrees", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      "SplitTrees", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       split_data.split_tree,
       "Binary tree describing splitting events prior to BH seeding. Particles "
       "that keep the original ID have a value of zero in a splitting event, "
