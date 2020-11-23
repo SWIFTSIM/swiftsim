@@ -708,6 +708,8 @@ void write_output_distributed(struct engine* e,
           /* No inhibted particles: easy case */
           Nparticles = Nstars;
           stars_write_particles(sparts, list, &num_fields, with_cosmology);
+          num_fields +=
+              particle_splitting_write_sparticles(sparts, list + num_fields);
           num_fields += chemistry_write_sparticles(sparts, list + num_fields);
           num_fields += tracers_write_sparticles(sparts, list + num_fields,
                                                  with_cosmology);
@@ -738,6 +740,8 @@ void write_output_distributed(struct engine* e,
           /* Select the fields to write */
           stars_write_particles(sparts_written, list, &num_fields,
                                 with_cosmology);
+          num_fields += particle_splitting_write_sparticles(sparts_written,
+                                                            list + num_fields);
           num_fields +=
               chemistry_write_sparticles(sparts_written, list + num_fields);
           num_fields += tracers_write_sparticles(
@@ -762,6 +766,8 @@ void write_output_distributed(struct engine* e,
           Nparticles = Nblackholes;
           black_holes_write_particles(bparts, list, &num_fields,
                                       with_cosmology);
+          num_fields +=
+              particle_splitting_write_bparticles(bparts, list + num_fields);
           num_fields += chemistry_write_bparticles(bparts, list + num_fields);
           if (with_fof) {
             num_fields += fof_write_bparts(bparts, list + num_fields);
@@ -787,6 +793,8 @@ void write_output_distributed(struct engine* e,
           /* Select the fields to write */
           black_holes_write_particles(bparts_written, list, &num_fields,
                                       with_cosmology);
+          num_fields += particle_splitting_write_bparticles(bparts_written,
+                                                            list + num_fields);
           num_fields +=
               chemistry_write_bparticles(bparts_written, list + num_fields);
           if (with_fof) {

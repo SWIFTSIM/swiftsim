@@ -99,25 +99,101 @@ INLINE static int particle_splitting_write_particles(const struct part* parts,
       "ProgenitorParticleIDs", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
       split_data.progenitor_id,
       "ID of the progenitor of this particle. If this particle is the result "
-      "of one (or many) splitting event, this ID corresponds to the ID of the "
+      "of one (or many) splitting events, this ID corresponds to the ID of the "
       "particle in the initial conditions that its lineage can be traced back "
-      "to. If the particle has been split, this is the same as ParticleIDs.");
+      "to. If the particle was never split, this is the same as ParticleIDs.");
 
   list[1] = io_make_output_field(
       "SplitCounts", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
       split_data.split_count,
-      "Number of times this particle has been split. Note that particles that "
-      "have been split 'from' also have this counter incremented, so the "
+      "Number of times this particle has been split. Note that both particles "
+      "that take part in the splitting have counter incremented, so the "
       "number of splitting events in an entire simulation is half of the sum "
       "of all of these numbers.");
 
   list[2] = io_make_output_field(
       "SplitTrees", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
       split_data.split_tree,
-      "Binary tree describing splitting events. Particles split 'from' receive "
-      "a value of zero in a splitting event, whereas created particles have a "
-      "value of one.");
+      "Binary tree describing splitting events. Particles that keep the "
+      "original ID have a value of zero in a splitting event, whereas"
+      "particles given a new ID have a value of one.");
 
   return 3;
 }
+
+/**
+ * @brief Specifies which star particle fields to write to a dataset
+ *
+ * @param sparts The star particle array.
+ * @param list The list of i/o properties to write.
+ *
+ * @return Returns the number of fields to write.
+ */
+INLINE static int particle_splitting_write_sparticles(
+    const struct spart* sparts, struct io_props* list) {
+
+  list[0] = io_make_output_field(
+      "ProgenitorParticleIDs", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      split_data.progenitor_id,
+      "Progenitor ID of the gas particle that became this star. If this "
+      "particle is the result of one (or many) splitting events, this ID "
+      "corresponds to the ID of the particle in the initial conditions that "
+      "its lineage can be traced back to. If the particle was never split, "
+      "this is the same as ParticleIDs.");
+
+  list[1] = io_make_output_field(
+      "SplitCounts", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      split_data.split_count,
+      "Number of times the gas particle that turned into this star particle "
+      "was split. Note that both particles that take part in the splitting "
+      "have this counter incremented, so the number of splitting events in an "
+      "entire simulation is half of the sum of all of these numbers.");
+
+  list[2] = io_make_output_field(
+      "SplitTrees", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      split_data.split_tree,
+      "Binary tree describing splitting events. Particles that keep the "
+      "original ID have a value of zero in a splitting event, whereas"
+      "particles given a new ID have a value of one.");
+
+  return 3;
+}
+
+/**
+ * @brief Specifies which black hole particle fields to write to a dataset
+ *
+ * @param bparts The black hole particle array.
+ * @param list The list of i/o properties to write.
+ *
+ * @return Returns the number of fields to write.
+ */
+INLINE static int particle_splitting_write_bparticles(
+    const struct bpart* bparts, struct io_props* list) {
+  list[0] = io_make_output_field(
+      "ProgenitorParticleIDs", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      split_data.progenitor_id,
+      "Progenitor ID of the gas particle that became this star. If this "
+      "particle is the result of one (or many) splitting events, this ID "
+      "corresponds to the ID of the particle in the initial conditions that "
+      "its lineage can be traced back to. If the particle was never split, "
+      "this is the same as ParticleIDs.");
+
+  list[1] = io_make_output_field(
+      "SplitCounts", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      split_data.split_count,
+      "Number of times the gas particle that turned into this star particle "
+      "was split. Note that both particles that take part in the splitting "
+      "have this counter incremented, so the number of splitting events in an "
+      "entire simulation is half of the sum of all of these numbers.");
+
+  list[2] = io_make_output_field(
+      "SplitTrees", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      split_data.split_tree,
+      "Binary tree describing splitting events. Particles that keep the "
+      "original ID have a value of zero in a splitting event, whereas"
+      "particles given a new ID have a value of one.");
+
+  return 3;
+}
+
 #endif /* SWIFT_PARTICLE_SPLITTING_H */
