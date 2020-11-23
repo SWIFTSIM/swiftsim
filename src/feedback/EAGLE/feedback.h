@@ -109,8 +109,6 @@ INLINE static double feedback_get_enrichment_timestep(
 /**
  * @brief Prepares a star's feedback field before computing what
  * needs to be distributed.
- *
- * This is called in the stars ghost.
  */
 __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
     struct spart* sp, const struct feedback_props* feedback_props) {
@@ -174,7 +172,6 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_spart(
 /**
  * @brief Prepare a #spart for the feedback task.
  *
- * This is called in the stars ghost task.
  * In EAGLE, this function evolves the stellar properties of a #spart.
  *
  * @param sp The particle to act upon
@@ -227,7 +224,8 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_feedback(
 /**
  * @brief Will this star particle want to do feedback during the next time-step?
  *
- * This is called in the time step task.
+ * This is called in the time step task and increases counters of time-steps
+ * that have been performed.
  *
  * @param sp The particle to act upon
  * @param feedback_props The #feedback_props structure.
