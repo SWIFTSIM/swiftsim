@@ -1059,6 +1059,8 @@ void write_output_single(struct engine* e,
           /* Select the fields to write */
           hydro_write_particles(parts_written, xparts_written, list,
                                 &num_fields);
+          num_fields += particle_splitting_write_particles(
+              parts_written, xparts_written, list + num_fields, with_cosmology);
           num_fields += chemistry_write_particles(
               parts_written, xparts_written, list + num_fields, with_cosmology);
           if (with_cooling || with_temperature) {
