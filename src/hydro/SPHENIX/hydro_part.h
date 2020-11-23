@@ -30,6 +30,7 @@
 #include "chemistry_struct.h"
 #include "cooling_struct.h"
 #include "feedback_struct.h"
+#include "particle_splitting.h"
 #include "pressure_floor_struct.h"
 #include "star_formation_struct.h"
 #include "timestep_limiter_struct.h"
@@ -56,14 +57,8 @@ struct xpart {
   /*! Internal energy at the last full step. */
   float u_full;
 
-  /*! Particle progenitor ID. */
-  long long progenitor_id;
-
-  /*! Binary tree used to show the outcome of splitting events */
-  long split_tree;
-
-  /*! Number of times this particle has been split. */
-  uint8_t split_count;
+  /*! Additional data used to record particle splits */
+  struct particle_splitting_data split_data;
 
   /*! Additional data used to record cooling information */
   struct cooling_xpart_data cooling_data;
