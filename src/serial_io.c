@@ -1225,6 +1225,8 @@ void write_output_serial(struct engine* e,
               /* No inhibted particles: easy case */
               Nparticles = Ngas;
               hydro_write_particles(parts, xparts, list, &num_fields);
+              num_fields += particle_splitting_write_particles(
+                  parts, xparts, list + num_fields, with_cosmology);
               num_fields += chemistry_write_particles(
                   parts, xparts, list + num_fields, with_cosmology);
               if (with_cooling || with_temperature) {
