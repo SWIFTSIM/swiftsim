@@ -55,6 +55,7 @@
 #include "output_options.h"
 #include "part.h"
 #include "part_type.h"
+#include "particle_splitting.h"
 #include "rt_io.h"
 #include "sink_io.h"
 #include "star_formation_io.h"
@@ -1267,6 +1268,9 @@ void write_output_serial(struct engine* e,
               /* Select the fields to write */
               hydro_write_particles(parts_written, xparts_written, list,
                                     &num_fields);
+              num_fields += particle_splitting_write_particles(
+                  parts_written, xparts_written, list + num_fields,
+                  with_cosmology);
               num_fields +=
                   chemistry_write_particles(parts_written, xparts_written,
                                             list + num_fields, with_cosmology);
