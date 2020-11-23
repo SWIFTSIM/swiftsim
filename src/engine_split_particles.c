@@ -29,6 +29,7 @@
 #include "chemistry.h"
 #include "cooling.h"
 #include "hydro.h"
+#include "particle_splitting.h"
 #include "random.h"
 #include "star_formation.h"
 #include "tracers.h"
@@ -170,14 +171,9 @@ void engine_split_gas_particle_split_mapper(void *restrict map_data, int count,
         memcpy(&global_gparts[k_gparts], gp, sizeof(struct gpart));
       }
 
-      /* Update the splitting data of the old and new particle
-       * Particle split from always has a zero in tree, particle
-       * split "to" always has a one */
-      global_xparts[k_parts].split_data.split_tree |=
-          1LL << global_xparts[k_parts].split_data.split_count;
-
-      global_xparts[k_parts].split_data.split_count++;
-      xp->split_data.split_count++;
+      /* Update splitting tree */
+      particle_splitting_update_binary_tree(&global_xparts[k_parts].split_data,
+                                            &xp->split_data);
 
       /* Update the IDs. */
       if (generate_random_ids) {
