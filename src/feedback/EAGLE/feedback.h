@@ -254,14 +254,12 @@ __attribute__((always_inline)) INLINE static void feedback_will_do_feedback(
 
       /* Set the counter to "let's do enrichment" */
       sp->count_since_last_enrichment = 0;
-      return;
     }
   } else {
     if (sp->birth_time == (float)time) {
 
       /* Set the counter to "let's do enrichment" */
       sp->count_since_last_enrichment = 0;
-      return;
     }
   }
 
@@ -280,8 +278,6 @@ __attribute__((always_inline)) INLINE static void feedback_will_do_feedback(
     /* Set the counter to "let's do enrichment" */
     sp->count_since_last_enrichment = 0;
 
-    return;
-
   } else {
 
     /* Increment counter */
@@ -292,10 +288,6 @@ __attribute__((always_inline)) INLINE static void feedback_will_do_feedback(
 
       /* Reset counter */
       sp->count_since_last_enrichment = 0;
-      return;
-
-    } else {
-      return;
     }
   }
 }
