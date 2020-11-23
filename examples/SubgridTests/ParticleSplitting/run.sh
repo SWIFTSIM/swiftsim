@@ -9,3 +9,5 @@ fi
 
 # A very simple invocation for this one...
 ../../swift --hydro -t 4 particle_splitting.yml
+
+python3 plotSolution.py
