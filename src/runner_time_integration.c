@@ -866,22 +866,16 @@ void runner_do_timestep(struct runner *r, struct cell *c, const int timer) {
             star_age_end_of_step = e->time - (double)sp->birth_time;
           }
 
-          /* Has this star been around for a while ? */
-          if (star_age_end_of_step > 0.) {
+          /* Get the length of the enrichment time-step */
+          const double dt_enrichment = feedback_get_enrichment_timestep(
+              sp, with_cosmology, cosmo, e->time, dt_star);
+          const double star_age_beg_of_step =
+              star_age_end_of_step - dt_enrichment;
 
-            /* Get the length of the enrichment time-step */
-            const double dt_enrichment = feedback_get_enrichment_timestep(
-                sp, with_cosmology, cosmo, e->time, dt_star);
-            const double star_age_beg_of_step =
-                star_age_end_of_step - dt_enrichment;
-
-            /* Compute the stellar evolution  */
-            feedback_will_do_feedback(
-                sp, feedback_props, with_cosmology, cosmo, e->time, us,
-                phys_const, star_age_beg_of_step, dt_enrichment, ti_begin_star);
-          } else {
-            feedback_reset_will_do_feedback(sp, feedback_props);
-          }
+          /* Compute the stellar evolution  */
+          feedback_will_do_feedback(
+              sp, feedback_props, with_cosmology, cosmo, e->time, us,
+              phys_const, star_age_beg_of_step, dt_enrichment, ti_begin_star);
         }
 
         /* Number of updated s-particles */

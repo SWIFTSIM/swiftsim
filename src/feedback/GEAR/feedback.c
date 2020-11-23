@@ -114,6 +114,10 @@ void feedback_will_do_feedback(struct spart* sp,
                                const double star_age_beg_step, const double dt,
                                const integertime_t ti_begin) {
 
+  /* Zero the energy of supernovae */
+  sp->feedback_data.energy_ejected = 0;
+  sp->feedback_data.will_do_feedback = 0;
+
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
 
@@ -121,11 +125,11 @@ void feedback_will_do_feedback(struct spart* sp,
     error("Negative age for a star");
   }
 #endif
+  /* Has this star been around for a while ? */
+  if (star_age_beg_step + dt <= 0.) return;
+
   const double star_age_beg_step_safe =
       star_age_beg_step < 0 ? 0 : star_age_beg_step;
-
-  /* Reset the feedback */
-  feedback_reset_will_do_feedback(sp, feedback_props);
 
   /* Pick the correct table. (if only one table, threshold is < 0) */
   const float metal =
@@ -228,7 +232,8 @@ void feedback_first_init_spart(struct spart* sp,
 
   feedback_init_spart(sp);
 
-  feedback_reset_will_do_feedback(sp, feedback_props);
+  /* Zero the energy of supernovae */
+  sp->feedback_data.energy_ejected = 0;
 
   /* Activate the feedback loop for the first step */
   sp->feedback_data.will_do_feedback = 1;

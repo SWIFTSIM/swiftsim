@@ -145,16 +145,6 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
 }
 
 /**
- * @brief Reset the feedback field when the spart is not
- * in a correct state for feeedback_will_do_feedback.
- *
- * This function is called in the timestep task.
- */
-__attribute__((always_inline)) INLINE static void
-feedback_reset_will_do_feedback(struct spart* sp,
-                                const struct feedback_props* feedback_props) {}
-
-/**
  * @brief Initialises the s-particles feedback props for the first time
  *
  * This function is called only once just after the ICs have been

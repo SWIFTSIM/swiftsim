@@ -102,16 +102,6 @@ INLINE static double feedback_get_enrichment_timestep(
 }
 
 /**
- * @brief Reset the feedback field when the spart is not
- * in a correct state for feeedback_will_do_feedback.
- *
- * This function is called in the timestep task.
- */
-__attribute__((always_inline)) INLINE static void
-feedback_reset_will_do_feedback(struct spart* sp,
-                                const struct feedback_props* feedback_props) {}
-
-/**
  * @brief Prepares a star's feedback field before computing what
  * needs to be distributed.
  *
