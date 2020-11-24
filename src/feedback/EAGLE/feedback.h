@@ -99,13 +99,10 @@ INLINE static double feedback_get_enrichment_timestep(
     const struct cosmology* cosmo, const double time, const double dt_star) {
 
   if (with_cosmology) {
-    if (cosmo->a > (double)sp->last_enrichment_time)
-      return cosmology_get_delta_time_from_scale_factors(
-          cosmo, (double)sp->last_enrichment_time, cosmo->a);
-    else
-      return 0.;
+    return cosmology_get_delta_time_from_scale_factors(
+        cosmo, (double)sp->last_enrichment_time, cosmo->a);
   } else {
-    return max(time - sp->last_enrichment_time, 0.);
+    return time - sp->last_enrichment_time;
   }
 }
 
@@ -263,13 +260,10 @@ __attribute__((always_inline)) INLINE static void feedback_will_do_feedback(
   /* Calculate age of the star at current time */
   double age_of_star;
   if (with_cosmology) {
-    if (cosmo->a > (double)sp->birth_scale_factor)
-      age_of_star = cosmology_get_delta_time_from_scale_factors(
-          cosmo, (double)sp->birth_scale_factor, cosmo->a);
-    else
-      age_of_star = 0.;
+    age_of_star = cosmology_get_delta_time_from_scale_factors(
+        cosmo, (double)sp->birth_scale_factor, cosmo->a);
   } else {
-    age_of_star = max(time - (double)sp->birth_time, 0.);
+    age_of_star = time - (double)sp->birth_time;
   }
 
   /* Is the star still young? */
