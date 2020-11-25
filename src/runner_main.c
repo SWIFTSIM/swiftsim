@@ -183,6 +183,14 @@ void *runner_main(void *data) {
 #endif
 
       /* Different types of tasks... */
+      cell_clear_flag(ci, cell_flag_do_recursion_gravity_self |
+                      cell_flag_do_recursion_gravity_pair);
+      if (cj != NULL) {
+        cell_clear_flag(cj, cell_flag_do_recursion_gravity_self |
+                        cell_flag_do_recursion_gravity_pair);
+
+      }
+
       switch (t->type) {
         case task_type_self:
           if (t->subtype == task_subtype_density)

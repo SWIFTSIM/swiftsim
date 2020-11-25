@@ -1028,7 +1028,8 @@ void cell_clear_drift_flags(struct cell *c, void *data) {
                          cell_flag_do_bh_drift | cell_flag_do_bh_sub_drift |
                          cell_flag_do_stars_drift |
                          cell_flag_do_stars_sub_drift |
-                         cell_flag_do_sink_drift | cell_flag_do_sink_sub_drift);
+                         cell_flag_do_sink_drift | cell_flag_do_sink_sub_drift |
+                  cell_flag_do_recursion_gravity_self | cell_flag_do_recursion_gravity_pair);
 }
 
 /**
