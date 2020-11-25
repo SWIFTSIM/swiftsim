@@ -2387,6 +2387,7 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
     for (struct link *l = c->hydro.rt_transport; l != NULL; l = l->next) {
       scheduler_activate(s, l->t);
     }
+  }
 
   /* Unskip all the other task types */
   if (c->hydro.rt_in != NULL) scheduler_activate(s, c->hydro.rt_in);
