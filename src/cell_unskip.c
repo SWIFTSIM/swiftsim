@@ -1148,23 +1148,24 @@ int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
                                                s);
         }
       }
+      return 0;
     } else {
       /* We have reached the bottom of the tree: activate gpart drift */
       cell_activate_drift_gpart(ci, s);
+      return 1;
     }
-    return 1;
   }
 
   /* Pair interaction */
   else {
-    /* Anything to do here? */
-    if (!cell_is_active_gravity(ci, e) && !cell_is_active_gravity(cj, e))
-      return 1;
-    if (ci->grav.count == 0 || cj->grav.count == 0) return 1;
-
     /* Is it already done? */
     if (cell_get_flag(ci, cell_flag_do_recursion_gravity_pair) &&
         cell_get_flag(cj, cell_flag_do_recursion_gravity_pair)) return 1;
+
+    /* Anything to do here? */
+    if (!cell_is_active_gravity(ci, e) && !cell_is_active_gravity(cj, e))
+      return 0;
+    if (ci->grav.count == 0 || cj->grav.count == 0) return 0;
 
     /* Atomically drift the multipole in ci */
     lock_lock(&ci->grav.mlock);
@@ -1218,10 +1219,10 @@ int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
         }
       }
 
+      int rec = 0;
       if (ri_max > rj_max) {
         if (ci->split) {
           /* Loop over ci's children */
-          int rec = 0;
           for (int k = 0; k < 8; k++) {
             if (ci->progeny[k] != NULL)
               rec += cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);
@@ -1233,7 +1234,6 @@ int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
 
         } else if (cj->split) {
           /* Loop over cj's children */
-          int rec = 0;
           for (int k = 0; k < 8; k++) {
             if (cj->progeny[k] != NULL)
               rec += cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
@@ -1249,7 +1249,6 @@ int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
       } else if (rj_max >= ri_max) {
         if (cj->split) {
           /* Loop over cj's children */
-          int rec = 0;
           for (int k = 0; k < 8; k++) {
             if (cj->progeny[k] != NULL)
               rec += cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
@@ -1261,7 +1260,6 @@ int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
 
         } else if (ci->split) {
           /* Loop over ci's children */
-          int rec = 0;
           for (int k = 0; k < 8; k++) {
             if (ci->progeny[k] != NULL)
               rec += cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);

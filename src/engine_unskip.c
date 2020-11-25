@@ -386,10 +386,6 @@ void engine_unskip(struct engine *e) {
   const int with_black_holes = e->policy & engine_policy_black_holes;
   const int with_rt = e->policy & engine_policy_rt;
 
-  for(int i = 0; i < s->nr_cells; i++) {
-    cell_clear_flag_recursion_gravity(&s->cells_top[i]);
-  }
-
 #ifdef WITH_PROFILER
   static int count = 0;
   char filename[100];
