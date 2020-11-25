@@ -1121,8 +1121,8 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
  * @param cj The second #cell we recurse in.
  * @param s The task #scheduler.
  */
-void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
-                                      struct scheduler *s) {
+int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
+                                     struct scheduler *s) {
   /* Some constants */
   const struct space *sp = s->space;
   const struct engine *e = sp->e;
@@ -1130,7 +1130,11 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
   /* Self interaction? */
   if (cj == NULL) {
     /* Do anything? */
-    if (ci->grav.count == 0 || !cell_is_active_gravity(ci, e)) return;
+    if (ci->grav.count == 0 || !cell_is_active_gravity(ci, e)) return 1;
+
+    /* /\* Is it already done? *\/ */
+    /* if (cell_get_flag(ci, cell_flag_do_recursion_gravity_self)) return 1; */
+    /* cell_set_flag(ci, cell_flag_do_recursion_gravity_self); */
 
     /* Recurse? */
     if (ci->split) {
@@ -1148,14 +1152,19 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
       /* We have reached the bottom of the tree: activate gpart drift */
       cell_activate_drift_gpart(ci, s);
     }
+    return 1;
   }
 
   /* Pair interaction */
   else {
     /* Anything to do here? */
     if (!cell_is_active_gravity(ci, e) && !cell_is_active_gravity(cj, e))
-      return;
-    if (ci->grav.count == 0 || cj->grav.count == 0) return;
+      return 1;
+    if (ci->grav.count == 0 || cj->grav.count == 0) return 1;
+
+    /* Is it already done? */
+    if (cell_get_flag(ci, cell_flag_do_recursion_gravity_pair) &&
+        cell_get_flag(cj, cell_flag_do_recursion_gravity_pair)) return 1;
 
     /* Atomically drift the multipole in ci */
     lock_lock(&ci->grav.mlock);
@@ -1170,9 +1179,8 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
     /* Can we use multipoles ? */
     if (cell_can_use_pair_mm(ci, cj, e, sp, /*use_rebuild_data=*/0,
                              /*is_tree_walk=*/1)) {
-
       /* Ok, no need to drift anything */
-      return;
+      return 0;
     }
     /* Otherwise, activate the gpart drifts if we are at the bottom. */
     else if (!ci->split && !cj->split) {
@@ -1181,6 +1189,11 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
         if (ci->nodeID == engine_rank) cell_activate_drift_gpart(ci, s);
         if (cj->nodeID == engine_rank) cell_activate_drift_gpart(cj, s);
       }
+      /* Flag the cells as being done. */
+      cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
+      cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
+      return 1;
+
     }
     /* Ok, we can still recurse */
     else {
@@ -1190,20 +1203,45 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
       const double ri_max = multi_i->r_max;
       const double rj_max = multi_j->r_max;
 
+      int ci_number_children = 0;
+      if (ci->split) {
+        for(int k = 0; k < 8; k++) {
+          if (ci->progeny[k] != NULL)
+            ci_number_children += 1;
+        }
+      }
+      int cj_number_children = 0;
+      if (cj->split) {
+        for(int k = 0; k < 8; k++) {
+          if (cj->progeny[k] != NULL)
+            cj_number_children += 1;
+        }
+      }
+
       if (ri_max > rj_max) {
         if (ci->split) {
           /* Loop over ci's children */
+          int rec = 0;
           for (int k = 0; k < 8; k++) {
             if (ci->progeny[k] != NULL)
-              cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);
+              rec += cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);
           }
+          /* Flag the cells as being done. */
+          if (rec == ci_number_children)
+            cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
+          return rec == ci_number_children;
 
         } else if (cj->split) {
           /* Loop over cj's children */
+          int rec = 0;
           for (int k = 0; k < 8; k++) {
             if (cj->progeny[k] != NULL)
-              cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
+              rec += cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
           }
+          /* Flag the cells as being done. */
+          if (rec == cj_number_children)
+            cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
+          return rec == cj_number_children;
 
         } else {
           error("Fundamental error in the logic");
@@ -1211,17 +1249,27 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
       } else if (rj_max >= ri_max) {
         if (cj->split) {
           /* Loop over cj's children */
+          int rec = 0;
           for (int k = 0; k < 8; k++) {
             if (cj->progeny[k] != NULL)
-              cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
+              rec += cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
           }
+          /* Flag the cells as being done. */
+          if (rec == cj_number_children)
+            cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
+          return rec == cj_number_children;
 
         } else if (ci->split) {
           /* Loop over ci's children */
+          int rec = 0;
           for (int k = 0; k < 8; k++) {
             if (ci->progeny[k] != NULL)
-              cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);
+              rec += cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);
           }
+          /* Flag the cells as being done. */
+          if (rec == ci_number_children)
+            cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
+          return rec == ci_number_children;
 
         } else {
           error("Fundamental error in the logic");
@@ -1229,6 +1277,8 @@ void cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
       }
     }
   }
+  error("Not happening");
+  return -1;
 }
 
 /**
