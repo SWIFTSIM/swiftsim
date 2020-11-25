@@ -365,7 +365,6 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
   }
 }
 
-
 /**
  * @brief Unskip all the tasks that act on active cells at this time.
  *

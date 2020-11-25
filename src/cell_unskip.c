@@ -1120,6 +1120,8 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
  * @param ci The first #cell we recurse in.
  * @param cj The second #cell we recurse in.
  * @param s The task #scheduler.
+ *
+ * @return 1 if the cell is fully done (0 otherwise)
  */
 int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
                                      struct scheduler *s) {
@@ -1132,9 +1134,9 @@ int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
     /* Do anything? */
     if (ci->grav.count == 0 || !cell_is_active_gravity(ci, e)) return 1;
 
-    /* /\* Is it already done? *\/ */
-    /* if (cell_get_flag(ci, cell_flag_do_recursion_gravity_self)) return 1; */
-    /* cell_set_flag(ci, cell_flag_do_recursion_gravity_self); */
+    /* Is it already done? */
+    if (cell_get_flag(ci, cell_flag_do_recursion_gravity_self)) return 1;
+    cell_set_flag(ci, cell_flag_do_recursion_gravity_self);
 
     /* Recurse? */
     if (ci->split) {
@@ -1148,21 +1150,22 @@ int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
                                                s);
         }
       }
-      return 0;
     } else {
       /* We have reached the bottom of the tree: activate gpart drift */
       cell_activate_drift_gpart(ci, s);
-      return 1;
     }
+    return 1;
   }
 
   /* Pair interaction */
   else {
     /* Is it already done? */
     if (cell_get_flag(ci, cell_flag_do_recursion_gravity_pair) &&
-        cell_get_flag(cj, cell_flag_do_recursion_gravity_pair)) return 1;
+        cell_get_flag(cj, cell_flag_do_recursion_gravity_pair))
+      return 1;
 
     /* Anything to do here? */
+    /* Here we return 0 as another pair of cells could pass the tests. */
     if (!cell_is_active_gravity(ci, e) && !cell_is_active_gravity(cj, e))
       return 0;
     if (ci->grav.count == 0 || cj->grav.count == 0) return 0;
@@ -1204,44 +1207,49 @@ int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
       const double ri_max = multi_i->r_max;
       const double rj_max = multi_j->r_max;
 
+      /* Count the number of children in ci. */
       int ci_number_children = 0;
       if (ci->split) {
-        for(int k = 0; k < 8; k++) {
-          if (ci->progeny[k] != NULL)
-            ci_number_children += 1;
-        }
-      }
-      int cj_number_children = 0;
-      if (cj->split) {
-        for(int k = 0; k < 8; k++) {
-          if (cj->progeny[k] != NULL)
-            cj_number_children += 1;
+        for (int k = 0; k < 8; k++) {
+          if (ci->progeny[k] != NULL) ci_number_children += 1;
         }
       }
 
-      int rec = 0;
+      /* Count the number of children in cj. */
+      int cj_number_children = 0;
+      if (cj->split) {
+        for (int k = 0; k < 8; k++) {
+          if (cj->progeny[k] != NULL) cj_number_children += 1;
+        }
+      }
+
+      int prog_done = 0;
       if (ri_max > rj_max) {
         if (ci->split) {
           /* Loop over ci's children */
           for (int k = 0; k < 8; k++) {
             if (ci->progeny[k] != NULL)
-              rec += cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);
+              prog_done +=
+                  cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);
           }
+
           /* Flag the cells as being done. */
-          if (rec == ci_number_children)
-            cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
-          return rec == ci_number_children;
+          const int cell_done = prog_done == ci_number_children;
+          if (cell_done) cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
+          return cell_done;
 
         } else if (cj->split) {
           /* Loop over cj's children */
           for (int k = 0; k < 8; k++) {
             if (cj->progeny[k] != NULL)
-              rec += cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
+              prog_done +=
+                  cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
           }
+
           /* Flag the cells as being done. */
-          if (rec == cj_number_children)
-            cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
-          return rec == cj_number_children;
+          const int cell_done = prog_done == cj_number_children;
+          if (cell_done) cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
+          return cell_done;
 
         } else {
           error("Fundamental error in the logic");
@@ -1251,23 +1259,25 @@ int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
           /* Loop over cj's children */
           for (int k = 0; k < 8; k++) {
             if (cj->progeny[k] != NULL)
-              rec += cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
+              prog_done +=
+                  cell_activate_subcell_grav_tasks(ci, cj->progeny[k], s);
           }
           /* Flag the cells as being done. */
-          if (rec == cj_number_children)
-            cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
-          return rec == cj_number_children;
+          const int cell_done = prog_done == cj_number_children;
+          if (cell_done) cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
+          return cell_done;
 
         } else if (ci->split) {
           /* Loop over ci's children */
           for (int k = 0; k < 8; k++) {
             if (ci->progeny[k] != NULL)
-              rec += cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);
+              prog_done +=
+                  cell_activate_subcell_grav_tasks(ci->progeny[k], cj, s);
           }
           /* Flag the cells as being done. */
-          if (rec == ci_number_children)
-            cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
-          return rec == ci_number_children;
+          const int cell_done = prog_done == ci_number_children;
+          if (cell_done) cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
+          return cell_done;
 
         } else {
           error("Fundamental error in the logic");
@@ -1275,7 +1285,7 @@ int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
       }
     }
   }
-  error("Not happening");
+  error("Fundamental error in the logic");
   return -1;
 }
 
