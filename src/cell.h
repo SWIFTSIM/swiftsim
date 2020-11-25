@@ -571,7 +571,7 @@ void cell_activate_subcell_hydro_tasks(struct cell *ci, struct cell *cj,
                                        struct scheduler *s,
                                        const int with_timestep_limiter);
 int cell_activate_subcell_grav_tasks(struct cell *ci, struct cell *cj,
-                                      struct scheduler *s);
+                                     struct scheduler *s);
 void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
                                        struct scheduler *s,
                                        const int with_star_formation,
@@ -1375,33 +1375,6 @@ __attribute__((always_inline)) INLINE void cell_assign_cell_index(
   }
 
 #endif
-}
-
-/**
- * @brief Clear the flags related to the gravity recursion in the current cell and parents.
- */
-INLINE static void cell_clear_flag_recursion_gravity(
-    struct cell *c) {
-
-  /* /\* Check if the cell is already cleared. *\/ */
-  /* if (!cell_get_flag(c, cell_flag_do_recursion_gravity_self) && */
-  /*     !cell_get_flag(c, cell_flag_do_recursion_gravity_pair)) */
-  /*   return; */
-
-  /* Clear the cell */
-  cell_clear_flag(c, cell_flag_do_recursion_gravity_self |
-                  cell_flag_do_recursion_gravity_pair);
-
-  /* /\* Now do the same with the parents. *\/ */
-  /* if (c->parent != NULL) { */
-  /*   cell_clear_flag_recursion_gravity(c->parent); */
-  /* } */
-
-  /* Now the same for the children */
-  for(int i = 0; i < 8; i++) {
-    if (c->progeny[i] != NULL)
-      cell_clear_flag_recursion_gravity(c->progeny[i]);
-  }
 }
 
 #endif /* SWIFT_CELL_H */
