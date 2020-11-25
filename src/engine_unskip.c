@@ -365,6 +365,7 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
   }
 }
 
+
 /**
  * @brief Unskip all the tasks that act on active cells at this time.
  *
@@ -384,6 +385,10 @@ void engine_unskip(struct engine *e) {
   const int with_feedback = e->policy & engine_policy_feedback;
   const int with_black_holes = e->policy & engine_policy_black_holes;
   const int with_rt = e->policy & engine_policy_rt;
+
+  for(int i = 0; i < s->nr_cells; i++) {
+    cell_clear_flag_recursion_gravity(&s->cells_top[i]);
+  }
 
 #ifdef WITH_PROFILER
   static int count = 0;
