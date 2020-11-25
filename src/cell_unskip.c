@@ -2325,6 +2325,7 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
         atomic_inc(&l->t->cj->rt_debugging.transport_link_walked);
       }
     }
+  }
 
   /* Unskip all the other task types */
   if (c->hydro.rt_in != NULL) scheduler_activate(s, c->hydro.rt_in);
