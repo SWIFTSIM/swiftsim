@@ -104,7 +104,7 @@ INLINE static int particle_splitting_write_particles(const struct part* parts,
       "to. If the particle was never split, this is the same as ParticleIDs.");
 
   list[1] = io_make_output_field(
-      "SplitCounts", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
+      "SplitCounts", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
       split_data.split_count,
       "Number of times this particle has been split. Note that both particles "
       "that take part in the splitting have counter incremented, so the "
@@ -112,7 +112,7 @@ INLINE static int particle_splitting_write_particles(const struct part* parts,
       "of all of these numbers.");
 
   list[2] = io_make_output_field(
-      "SplitTrees", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
+      "SplitTrees", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
       split_data.split_tree,
       "Binary tree describing splitting events. Particles that keep the "
       "original ID have a value of zero in a splitting event, whereas"
@@ -142,7 +142,7 @@ INLINE static int particle_splitting_write_sparticles(
       "this is the same as ParticleIDs.");
 
   list[1] = io_make_output_field(
-      "SplitCounts", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      "SplitCounts", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       split_data.split_count,
       "Number of times the gas particle that turned into this star particle "
       "was split. Note that both particles that take part in the splitting "
@@ -150,7 +150,7 @@ INLINE static int particle_splitting_write_sparticles(
       "entire simulation is half of the sum of all of these numbers.");
 
   list[2] = io_make_output_field(
-      "SplitTrees", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
+      "SplitTrees", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       split_data.split_tree,
       "Binary tree describing splitting events. Particles that keep the "
       "original ID have a value of zero in a splitting event, whereas"
@@ -179,7 +179,7 @@ INLINE static int particle_splitting_write_bparticles(
       "this is the same as ParticleIDs.");
 
   list[1] = io_make_output_field(
-      "SplitCounts", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      "SplitCounts", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       split_data.split_count,
       "Number of times the gas particle that became this BH seed "
       "was split. Note that both particles that take part in the splitting "
@@ -187,7 +187,7 @@ INLINE static int particle_splitting_write_bparticles(
       "entire simulation is half of the sum of all of these numbers.");
 
   list[2] = io_make_output_field(
-      "SplitTrees", UINT8, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
+      "SplitTrees", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0.f, bparts,
       split_data.split_tree,
       "Binary tree describing splitting events prior to BH seeding. Particles "
       "that keep the original ID have a value of zero in a splitting event, "
