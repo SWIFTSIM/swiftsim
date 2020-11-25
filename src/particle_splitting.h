@@ -70,7 +70,7 @@ particle_splitting_update_binary_tree(
   /* Print warnings if we have split these particles more
    * than the number of times the tree can accommodate.
    * Warning is only printed once for each particle */
-  if (sdi->split_count == sizeof(sdi->split_tree)) {
+  if (sdi->split_count == 8 * sizeof(sdi->split_tree)) {
     message(
         "Warning: Particle with progenitor ID %lld with binary tree %lld has "
         "been split over the maximum %zu times, making its binary tree "
