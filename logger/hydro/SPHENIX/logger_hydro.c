@@ -24,6 +24,7 @@
 #include "logger_hydro.h"
 
 int hydro_logger_local_to_global[hydro_logger_field_count];
+
 /* Define the size of all the fields. */
 #define member_size(type, member) sizeof(((type *)0)->member)
 

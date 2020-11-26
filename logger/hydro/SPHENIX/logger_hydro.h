@@ -85,8 +85,8 @@ hydro_logger_interpolate_field(const double t_before,
   /* Check the times */
   if (t_before > t || t_after < t) {
     error(
-        "The times for the interpolation are not correct"
-        " %g < %g < %g.",
+        "The times for the interpolation are not "
+        "monotonically increasing %g < %g < %g.",
         t_before, t, t_after);
   }
 #endif
@@ -174,7 +174,7 @@ hydro_logger_interpolate_field(const double t_before,
       *(long long *)output = *(long long *)after->field;
       break;
 
-    case hydro_logger_field_velocity_divergences:;
+    case hydro_logger_field_velocity_divergences: {
       /* Get some variables */
       float *x = (float *)output;
       const float *div_bef = (float *)before->field;
@@ -186,6 +186,7 @@ hydro_logger_interpolate_field(const double t_before,
       /* Use the linear interpolation */
       x[1] = wa * div_aft[1] + wb * div_bef[1];
       break;
+    }
 
     default:
       error("Not implemented");
