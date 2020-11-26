@@ -761,7 +761,8 @@ void runner_do_logger(struct runner *r, struct cell *c, int timer) {
 
       /* Write only the dark matter particles */
       if (gp->type != swift_type_dark_matter &&
-          gp->type != swift_type_dark_matter_background) continue;
+          gp->type != swift_type_dark_matter_background)
+        continue;
 
       /* If particle needs to be log */
       if (gpart_is_active(gp, e)) {

@@ -817,10 +817,10 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     }
   }
 
-    /* Do the dark matter background. */
+  /* Do the dark matter background. */
   if (n_part[swift_type_dark_matter_background] != 0) {
-    struct index_data *data = logger_index_get_data(&reader->index.index_prev,
-                                                    swift_type_dark_matter_background);
+    struct index_data *data = logger_index_get_data(
+        &reader->index.index_prev, swift_type_dark_matter_background);
     struct index_data *data_created = logger_index_get_created_history(
         &reader->index.index_next, swift_type_dark_matter_background);
 
@@ -867,7 +867,8 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
           /* Read the field. */
           particle_removed = logger_reader_read_field(
               reader, time, reader->time.time_offset, interp_type, offset,
-              local, first, second, output_single, swift_type_dark_matter_background);
+              local, first, second, output_single,
+              swift_type_dark_matter_background);
 
           /* Should we continue to read the fields of this particle? */
           if (particle_removed) {
