@@ -76,7 +76,7 @@ void logger_index_read_header(struct logger_index *index,
   memcpy(index->nparts, (char *)index->index.map + logger_index_npart_offset,
          logger_index_npart_size);
 
-  /* Read if the file is sorted. */
+  /* Read whether the file is sorted. */
   memcpy(&index->is_sorted,
          (char *)index->index.map + logger_index_is_sorted_offset,
          logger_index_is_sorted_size);
@@ -129,6 +129,9 @@ void logger_index_write_sorted(struct logger_index *index) {
 /**
  * @brief Get the #index_data of a particle type.
  *
+ * The #index_data contains the ids and offset of the particle.
+ * This function should be used when looking for the last known particles.
+ *
  * @param index The #logger_index.
  * @param type The particle type.
  */
@@ -147,7 +150,10 @@ struct index_data *logger_index_get_data(struct logger_index *index, int type) {
 }
 
 /**
- * @brief Get the #index_data of a particle type.
+ * @brief Get the #index_data for the particles created.
+ *
+ * The #index_data contains the ids and offset of the particle.
+ * This function should be used when looking for the particles created.
  *
  * @param index The #logger_index.
  * @param type The particle type.
@@ -171,7 +177,10 @@ struct index_data *logger_index_get_created_history(struct logger_index *index,
 }
 
 /**
- * @brief Get the #index_data of a particle type.
+ * @brief Get the #index_data for the particles removed.
+ *
+ * The #index_data contains the ids and offset of the particle.
+ * This function should be used when looking for the particles removed.
  *
  * @param index The #logger_index.
  * @param type The particle type.
