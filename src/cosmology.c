@@ -442,7 +442,7 @@ void neutrino_find_relativistic_redshift(struct cosmology *c, double tol,
     M_max_eV = fmax(M_max_eV, c->M_nu_eV[i]);
   }
 
-  /* A safe starting time */
+  /* A safe starting time when neutrinos are relativistic */
   double a_safe = 0.5 * tol / M_max_eV;
 
   /* Dont start the early table later than the simulation */
@@ -451,10 +451,13 @@ void neutrino_find_relativistic_redshift(struct cosmology *c, double tol,
   /* Start the late table just before the start of the simulation */
   double a_midpoint = 0.99 * c->a_begin;
 
-  /* Integrate early table on (a_start, a_mid) and late table on (a_mid, 1) */
+  /* End the late table today (a=1) or at a_end, whichever is later */
+  double a_final = fmax(1.0, c->a_end);
+
+  /* Integrate early table on (a_start, a_mid) and late table on (a_mid, a_f) */
   c->log_a_long_begin = log(a_safe);
   c->log_a_long_mid = log(a_midpoint);
-  c->log_a_long_end = 0;
+  c->log_a_long_end = log(a_final);
 }
 
 /**
