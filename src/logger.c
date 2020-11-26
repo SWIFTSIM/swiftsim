@@ -38,6 +38,7 @@
 #include "logger.h"
 
 /* Local headers. */
+#include "active.h"
 #include "atomic.h"
 #include "dump.h"
 #include "engine.h"
