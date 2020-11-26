@@ -142,20 +142,22 @@ void logger_log_all_particles(struct logger_writer *log,
   const struct space *s = e->s;
 
   /* log the parts. */
-  for(size_t i = 0; i < s->nr_parts; i++) {
+  for (size_t i = 0; i < s->nr_parts; i++) {
     struct part *p = &s->parts[i];
     struct xpart *xp = &s->xparts[i];
     if (!part_is_inhibited(p, e) && p->time_bin != time_bin_not_created) {
       logger_log_part(log, p, xp, e,
-                      /* log_all_fields */ 1, /* Special flags */ 0, /* data */ 0);
+                      /* log_all_fields */ 1, /* Special flags */ 0,
+                      /* data */ 0);
     }
   }
 
   /* log the gparts */
-  for(size_t i = 0; i < s->nr_gparts; i++) {
+  for (size_t i = 0; i < s->nr_gparts; i++) {
     struct gpart *gp = &s->gparts[i];
     if (!gpart_is_inhibited(gp, e) && gp->time_bin != time_bin_not_created &&
-        (gp->type == swift_type_dark_matter || gp->type == swift_type_dark_matter_background)) {
+        (gp->type == swift_type_dark_matter ||
+         gp->type == swift_type_dark_matter_background)) {
       logger_log_gpart(log, gp, e,
                        /* log_all_fields */ 1, /* Special flags */ 0,
                        /* data */ 0);
@@ -163,7 +165,7 @@ void logger_log_all_particles(struct logger_writer *log,
   }
 
   /* log the parts */
-  for(size_t i = 0; i < s->nr_sparts; i++) {
+  for (size_t i = 0; i < s->nr_sparts; i++) {
     struct spart *sp = &s->sparts[i];
     if (!spart_is_inhibited(sp, e) && sp->time_bin != time_bin_not_created) {
       logger_log_spart(log, sp, e,
@@ -578,7 +580,8 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
     for (int i = 0; i < count; i++) {
       /* Log only the dark matter */
       if (p[i].type != swift_type_dark_matter &&
-          p[i].type != swift_type_dark_matter_background) continue;
+          p[i].type != swift_type_dark_matter_background)
+        continue;
 
       unsigned int mask = 0;
       size_t size = 0;
@@ -598,7 +601,8 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
   for (int i = 0; i < count; i++) {
     /* Log only the dark matter */
     if (p[i].type != swift_type_dark_matter &&
-        p[i].type != swift_type_dark_matter_background) continue;
+        p[i].type != swift_type_dark_matter_background)
+      continue;
 
     /* Get the masks */
     size_t size = 0;

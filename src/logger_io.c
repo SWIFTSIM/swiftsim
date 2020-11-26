@@ -205,7 +205,8 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
 
   /* Format things in a Gadget-friendly array */
   uint64_t N_total[swift_type_count] = {
-                                        (uint64_t)Ngas_written,   (uint64_t)Ndm_written,      (uint64_t) Ndm_background, 0,
+      (uint64_t)Ngas_written,   (uint64_t)Ndm_written,
+      (uint64_t)Ndm_background, 0,
       (uint64_t)Nstars_written, (uint64_t)Nblackholes_written};
 
   /* File name */
@@ -331,25 +332,24 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
 
       case swift_type_dark_matter_background: {
 
-          /* Ok, we need to fish out the particles we want */
-          N = Ndm_background;
+        /* Ok, we need to fish out the particles we want */
+        N = Ndm_background;
 
-          /* Allocate temporary array */
-          if (swift_memalign("gparts_written", (void**)&gparts_written,
-                             gpart_align,
-                             Ndm_background * sizeof(struct gpart)) != 0)
-            error("Error while allocating temporary memory for gparts");
+        /* Allocate temporary array */
+        if (swift_memalign("gparts_written", (void**)&gparts_written,
+                           gpart_align,
+                           Ndm_background * sizeof(struct gpart)) != 0)
+          error("Error while allocating temporary memory for gparts");
 
-          /* Collect the non-inhibited DM particles from gpart */
-          const int with_stf = 0;
-          io_collect_gparts_background_to_write(gparts, e->s->gpart_group_data,
-                                     gparts_written, gpart_group_data_written,
-                                     Ntot, Ndm_background, with_stf);
+        /* Collect the non-inhibited DM particles from gpart */
+        const int with_stf = 0;
+        io_collect_gparts_background_to_write(
+            gparts, e->s->gpart_group_data, gparts_written,
+            gpart_group_data_written, Ntot, Ndm_background, with_stf);
 
-          /* Select the fields to write */
-          num_fields += darkmatter_write_index(gparts_written, list);
-        }
-        break;
+        /* Select the fields to write */
+        num_fields += darkmatter_write_index(gparts_written, list);
+      } break;
 
       case swift_type_stars:
         if (Nstars == Nstars_written) {
