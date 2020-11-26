@@ -8,10 +8,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 from glob import glob
 from mpl_toolkits.mplot3d import Axes3D
+import argparse
 sys.path.append("../.libs/")
 
 import liblogger as logger
 
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        description='Read a logfile and plots some basic properties')
+
+    default_files = "../../examples/HydroTests/SedovBlast_3D/index_*dump"
+    default_files = glob(default_files)
+
+    parser.add_argument("-t", '--time', dest='time',
+                        type=float, default=0.01,
+                        help='Simulation time')
+    parser.add_argument('files', metavar='filenames', type=str, nargs="*",
+                        help='The filenames of the logfiles')
+    args = parser.parse_args()
+    if len(args.files) == 0:
+        args.files = default_files
+    return args
 
 def plot3D(pos):
     fig = plt.figure()
@@ -32,30 +50,22 @@ def plot2D(pos, entropies):
     plt.ylabel("Entropy")
 
 
-filenames = "../../examples/HydroTests/SedovBlast_3D/index_*dump"
-filenames = glob(filenames)
-time = 0.01
-if len(sys.argv) >= 2:
-    time = float(sys.argv[1])
-else:
-    print("No time supplied (second argument), using default.")
-if len(sys.argv) >= 3:
-    filenames = sys.argv[2:]
-else:
-    print("No filenames supplied (first argument), using default.")
-
-print("basename: %s" % filenames)
-print("time: %g" % time)
+args = parse_arguments()
+print("basename: %s" % args.files)
+print("time: %g" % args.time)
 
 # read the logger
-pos = None
-ent = None
-for f in filenames:
-    filename = f[:-5]
+positions = np.empty((0, 3))
+entropies = np.empty(0)
+for f in args.files:
+    if f.endswith(".dump"):
+        filename = f[:-5]
+    else:
+        raise Exception("It seems that you are not providing a logfile (.dump)")
     with logger.Reader(filename, verbose=0) as reader:
         t = reader.get_time_limits()
-        pos_tmp, ent_tmp = reader.get_particle_data(
-            ["Coordinates", "Entropies"], time)
+        out = reader.get_particle_data(
+            ["Coordinates", "Entropies"], args.time)
 
         fields = reader.get_list_fields(gas_type)
         if ("Coordinates" not in fields or
@@ -63,15 +73,11 @@ for f in filenames:
             raise Exception("Field not found in the logfile")
 
         # add the data to the list
-        if pos is None:
-            pos = pos_tmp
-            ent = ent_tmp
-        else:
-            pos = np.append(pos, pos_tmp, axis=0)
-            ent = np.append(ent, ent_tmp, axis=0)
+        positions = np.append(positions, out[0], axis=0)
+        entropies = np.append(entropies, out[1], axis=0)
 
-print("Min/Max of the position:", pos.min(), pos.max())
-print("Min/Max of the entropy:", ent.min(), ent.max())
-plot3D(pos)
-plot2D(pos, ent)
+print("Min/Max of the position:", positions.min(), positions.max())
+print("Min/Max of the entropy:", entropies.min(), entropies.max())
+plot3D(positions)
+plot2D(positions, entropies)
 plt.show()
