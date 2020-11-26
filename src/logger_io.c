@@ -329,7 +329,7 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
         }
         break;
 
-      case swift_type_dark_matter_background:
+      case swift_type_dark_matter_background: {
 
           /* Ok, we need to fish out the particles we want */
           N = Ndm_background;

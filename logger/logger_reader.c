@@ -381,6 +381,7 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
       field_count = hydro_logger_field_count;
       break;
     case swift_type_dark_matter:
+    case swift_type_dark_matter_background:
       local_to_global = gravity_logger_local_to_global;
       field_count = gravity_logger_field_count;
       break;
@@ -554,6 +555,7 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
                                        output, time, field);
         break;
       case swift_type_dark_matter:
+      case swift_type_dark_matter_background:
         gravity_logger_interpolate_field(time_before, &before, time_after,
                                          &after, output, time, field);
         break;
@@ -593,22 +595,19 @@ void logger_reader_global_to_local(
   /* Get the correct variables. */
   int n_max = 0;
   int *local_to_global = NULL;
-  const char **local_names = NULL;
   switch (type) {
     case swift_type_gas:
       n_max = hydro_logger_field_count;
       local_to_global = hydro_logger_local_to_global;
-      local_names = hydro_logger_field_names;
       break;
     case swift_type_dark_matter:
+    case swift_type_dark_matter_background:
       n_max = gravity_logger_field_count;
       local_to_global = gravity_logger_local_to_global;
-      local_names = gravity_logger_field_names;
       break;
     case swift_type_stars:
       n_max = stars_logger_field_count;
       local_to_global = stars_logger_local_to_global;
-      local_names = stars_logger_field_names;
       break;
     default:
       error_python("Particle type not implemented yet.");
@@ -646,7 +645,9 @@ void logger_reader_global_to_local(
   /* Check that we found the fields */
   for (int local = 0; local < n_fields_wanted; local++) {
     if (local_fields_wanted[local] < 0) {
-      error_python("Field %s not found in particle type %s", local_names[local],
+      const int global_field = global_fields_wanted[local];
+      const char *name = h->masks[global_field].name;
+      error_python("Field %s not found in particle type %s", name,
                    part_type_names[type]);
     }
   }
@@ -805,6 +806,68 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
           particle_removed = logger_reader_read_field(
               reader, time, reader->time.time_offset, interp_type, offset,
               local, first, second, output_single, swift_type_dark_matter);
+
+          /* Should we continue to read the fields of this particle? */
+          if (particle_removed) {
+            break;
+          }
+        }
+        current_in_index++;
+      }
+    }
+  }
+
+    /* Do the dark matter background. */
+  if (n_part[swift_type_dark_matter_background] != 0) {
+    struct index_data *data = logger_index_get_data(&reader->index.index_prev,
+                                                    swift_type_dark_matter_background);
+    struct index_data *data_created = logger_index_get_created_history(
+        &reader->index.index_next, swift_type_dark_matter_background);
+
+    /* Sort the fields in order to read the correct bits. */
+    logger_reader_global_to_local(
+        reader, global_fields_wanted, local_fields_wanted, local_first_deriv,
+        local_second_deriv, n_fields_wanted, swift_type_dark_matter_background);
+
+    size_t current_in_index = 0;
+    int reading_history = 0;
+    const size_t size_index =
+        reader->index.index_prev.nparts[swift_type_dark_matter_background];
+    const size_t size_history = logger_reader_count_number_new_particles(
+        reader, swift_type_dark_matter_background);
+
+    /* Read the particles */
+    for (size_t i = 0; i < n_part[swift_type_dark_matter_background]; i++) {
+      int particle_removed = 1;
+      /* Do it until finding a particle not removed. */
+      while (particle_removed) {
+        /* Should we start to read the history? */
+        if (!reading_history && current_in_index == size_index) {
+          current_in_index = 0;
+          reading_history = 1;
+        }
+
+        /* Check if we still have some particles available. */
+        if (reading_history && current_in_index == size_history) {
+          error_python("The logger was not able to find enough particles.");
+        }
+
+        /* Get the offset */
+        size_t offset = reading_history ? data_created[current_in_index].offset
+                                        : data[current_in_index].offset;
+
+        /* Sort the output into output_single. */
+        for (int field = 0; field < n_fields_wanted; field++) {
+          const int global = global_fields_wanted[field];
+          const int local = local_fields_wanted[field];
+          const int first = local_first_deriv[field];
+          const int second = local_second_deriv[field];
+          void *output_single = output[field] + i * h->masks[global].size;
+
+          /* Read the field. */
+          particle_removed = logger_reader_read_field(
+              reader, time, reader->time.time_offset, interp_type, offset,
+              local, first, second, output_single, swift_type_dark_matter_background);
 
           /* Should we continue to read the fields of this particle? */
           if (particle_removed) {
