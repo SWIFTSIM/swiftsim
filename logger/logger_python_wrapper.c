@@ -299,7 +299,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   PyObject *types = Py_None;
 
   /* parse the arguments. */
-  if (!PyArg_ParseTuple(args, "Od|O", &fields, &time)) return NULL;
+  if (!PyArg_ParseTuple(args, "Od|O", &fields, &time, &types)) return NULL;
 
   /* Check the inputs. */
   if (!PyList_Check(fields)) {
