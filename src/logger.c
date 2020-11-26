@@ -127,6 +127,7 @@ void logger_write_data(struct dump *d, size_t *offset, size_t size,
 /**
  * @brief log all particles in the engine.
  *
+ * TODO use threadpool + logger function for multiple particles.
  * @param log The #logger_writer
  * @param e The #engine
  */
@@ -140,18 +141,35 @@ void logger_log_all_particles(struct logger_writer *log,
   const struct space *s = e->s;
 
   /* log the parts. */
-  logger_log_parts(log, s->parts, s->xparts, s->nr_parts, e,
-                   /* log_all_fields= */ 1, /* flag= */ 0, /* flag_data= */ 0);
+  for(size_t i = 0; i < s->nr_parts; i++) {
+    struct part *p = &s->parts[i];
+    struct xpart *xp = &s->xparts[i];
+    if (!part_is_inhibited(p, e) && p->time_bin != time_bin_not_created) {
+      logger_log_part(log, p, xp, e,
+                      /* log_all_fields */ 1, /* Special flags */ 0, /* data */ 0);
+    }
+  }
 
   /* log the gparts */
-  logger_log_gparts(log, s->gparts, s->nr_gparts, e,
-                    /* log_all_fields= */ 1, /* flag= */ 0,
-                    /* flag_data= */ 0);
+  for(size_t i = 0; i < s->nr_gparts; i++) {
+    struct gpart *gp = &s->gparts[i];
+    if (!gpart_is_inhibited(gp, e) && gp->time_bin != time_bin_not_created &&
+        (gp->type == swift_type_dark_matter || gp->type == swift_type_dark_matter_background)) {
+      logger_log_gpart(log, gp, e,
+                       /* log_all_fields */ 1, /* Special flags */ 0,
+                       /* data */ 0);
+    }
+  }
 
   /* log the parts */
-  logger_log_sparts(log, s->sparts, s->nr_sparts, e,
-                    /* log_all_fields= */ 1, /* flag= */ 0,
-                    /* flag_data= */ 0);
+  for(size_t i = 0; i < s->nr_sparts; i++) {
+    struct spart *sp = &s->sparts[i];
+    if (!spart_is_inhibited(sp, e) && sp->time_bin != time_bin_not_created) {
+      logger_log_spart(log, sp, e,
+                       /* log_all_fields */ 1, /* Special flags */ 0,
+                       /* data */ 0);
+    }
+  }
 
   if (e->total_nr_bparts > 0) error("Not implemented");
 }
@@ -499,7 +517,7 @@ void logger_copy_gpart_fields(const struct logger_writer *log,
     mask &= ~log->logger_mask_data[logger_index_special_flags].mask;
   }
 
-  /* Write the hydro fields */
+  /* Write the gravity fields */
   buff = gravity_logger_write_particle(log->mask_data_pointers.gravity, gp,
                                        &mask, buff);
 
@@ -558,7 +576,8 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
   } else {
     for (int i = 0; i < count; i++) {
       /* Log only the dark matter */
-      if (p[i].type != swift_type_dark_matter) continue;
+      if (p[i].type != swift_type_dark_matter &&
+          p[i].type != swift_type_dark_matter_background) continue;
 
       unsigned int mask = 0;
       size_t size = 0;
@@ -577,7 +596,8 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
 
   for (int i = 0; i < count; i++) {
     /* Log only the dark matter */
-    if (p[i].type != swift_type_dark_matter) continue;
+    if (p[i].type != swift_type_dark_matter &&
+        p[i].type != swift_type_dark_matter_background) continue;
 
     /* Get the masks */
     size_t size = 0;

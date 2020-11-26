@@ -167,6 +167,8 @@ void logger_write_history(struct logger_history* history, struct engine* e,
  */
 void logger_write_index_file(struct logger_writer* log, struct engine* e) {
 
+  const int with_DM_background = e->s->with_DM_background;
+
   struct part* parts = e->s->parts;
   struct xpart* xparts = e->s->xparts;
   struct gpart* gparts = e->s->gparts;
@@ -177,6 +179,15 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
   const size_t Ngas = e->s->nr_parts;
   const size_t Nstars = e->s->nr_sparts;
   /* const size_t Nblackholes = e->s->nr_bparts; */
+
+  if (e->s->nr_sinks != 0) {
+    error("Sink particles are not implemented");
+  }
+
+  size_t Ndm_background = 0;
+  if (with_DM_background) {
+    Ndm_background = io_count_dm_background_gparts(gparts, Ntot);
+  }
 
   /* Number of particles that we will write */
   const size_t Ntot_written =
@@ -190,11 +201,11 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
   const size_t Nbaryons_written =
       Ngas_written + Nstars_written + Nblackholes_written;
   const size_t Ndm_written =
-      Ntot_written > 0 ? Ntot_written - Nbaryons_written : 0;
+      Ntot_written > 0 ? Ntot_written - Nbaryons_written - Ndm_background : 0;
 
   /* Format things in a Gadget-friendly array */
   uint64_t N_total[swift_type_count] = {
-      (uint64_t)Ngas_written,   (uint64_t)Ndm_written,        0, 0,
+                                        (uint64_t)Ngas_written,   (uint64_t)Ndm_written,      (uint64_t) Ndm_background, 0,
       (uint64_t)Nstars_written, (uint64_t)Nblackholes_written};
 
   /* File name */
@@ -312,6 +323,28 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
           io_collect_gparts_to_write(gparts, e->s->gpart_group_data,
                                      gparts_written, gpart_group_data_written,
                                      Ntot, Ndm_written, with_stf);
+
+          /* Select the fields to write */
+          num_fields += darkmatter_write_index(gparts_written, list);
+        }
+        break;
+
+      case swift_type_dark_matter_background:
+
+          /* Ok, we need to fish out the particles we want */
+          N = Ndm_background;
+
+          /* Allocate temporary array */
+          if (swift_memalign("gparts_written", (void**)&gparts_written,
+                             gpart_align,
+                             Ndm_background * sizeof(struct gpart)) != 0)
+            error("Error while allocating temporary memory for gparts");
+
+          /* Collect the non-inhibited DM particles from gpart */
+          const int with_stf = 0;
+          io_collect_gparts_background_to_write(gparts, e->s->gpart_group_data,
+                                     gparts_written, gpart_group_data_written,
+                                     Ntot, Ndm_background, with_stf);
 
           /* Select the fields to write */
           num_fields += darkmatter_write_index(gparts_written, list);
