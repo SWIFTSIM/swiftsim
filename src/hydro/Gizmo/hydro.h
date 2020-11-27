@@ -750,6 +750,6 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
  * @param time The simulation time.
  */
 __attribute__((always_inline)) INLINE static void hydro_remove_part(
-    const struct part *p, const struct xpart *xp, const double time) {}
+    const struct part* p, const struct xpart* xp, const double time) {}
 
 #endif /* SWIFT_GIZMO_HYDRO_H */

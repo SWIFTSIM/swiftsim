@@ -898,8 +898,8 @@ __attribute__((always_inline)) INLINE static void hydro_remove_part(
       "id, x, y, z, vx, vy, vz, m, u, P, rho, h, mat_id, time \n"
       "%lld, %.7g, %.7g, %.7g, %.7g, %.7g, %.7g, "
       "%.7g, %.7g, %.7g, %.7g, %.7g, %d, %.7g \n",
-      p->id, p->x[0], p->x[1], p->x[2], p->v[0], p->v[1], p->v[2],
-      p->mass, p->u, p->force.pressure, p->rho, p->h, p->mat_id, time);
+      p->id, p->x[0], p->x[1], p->x[2], p->v[0], p->v[1], p->v[2], p->mass,
+      p->u, p->force.pressure, p->rho, p->h, p->mat_id, time);
 }
 
 #endif /* SWIFT_PLANETARY_HYDRO_H */
