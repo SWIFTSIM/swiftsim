@@ -14,8 +14,8 @@ fi
 if [ ! -e evrardCollapse3D_exact.txt ]
 then
     echo "Fetching the reference result for the Evrard collapse example..."
-    ./getReference.sh
+    ../../HydroTests/EvrardCollapse_3D/getReference.sh
 fi
 
 # Plot the solution
-python3 plotSolution.py 8
+python3 ../../HydroTests/EvrardCollapse_3D/plotSolution.py 8

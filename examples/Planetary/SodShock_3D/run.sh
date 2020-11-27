@@ -4,7 +4,7 @@
 if [ ! -e glassCube_64.hdf5 ]
 then
     echo "Fetching initial glass file for the Sod shock example..."
-    ./getGlass.sh
+    ../../HydroTests/SodShock_3D/getGlass.sh
 fi
 if [ ! -e sodShock.hdf5 ]
 then
@@ -15,4 +15,4 @@ fi
 # Run SWIFT
 ../../swift --hydro --threads=4 sodShock.yml 2>&1 | tee output.log
 
-python3 plotSolution.py 1
+python3 ../../HydroTests/SodShock_3D/plotSolution.py 1

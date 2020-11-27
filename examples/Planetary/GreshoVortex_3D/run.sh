@@ -4,7 +4,7 @@
 if [ ! -e glassCube_64.hdf5 ]
 then
     echo "Fetching initial glass file for the Gresho-Chan vortex example..."
-    ./getGlass.sh
+    ../../HydroTests/GreshoVortex_3D/getGlass.sh
 fi
 if [ ! -e greshoVortex.hdf5 ]
 then
@@ -16,4 +16,4 @@ fi
 ../../swift --hydro --threads=4 gresho.yml 2>&1 | tee output.log
 
 # Plot the solution
-python3 plotSolution.py 11
+python3 ../../HydroTests/GreshoVortex_3D/plotSolution.py 11
