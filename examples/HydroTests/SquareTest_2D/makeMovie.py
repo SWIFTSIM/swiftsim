@@ -17,8 +17,6 @@
 #
 ##############################################################################
 
-import matplotlib
-matplotlib.use("Agg")
 from swiftsimio import load
 from swiftsimio.visualisation import project_gas_pixel_grid
 from matplotlib.animation import FuncAnimation
