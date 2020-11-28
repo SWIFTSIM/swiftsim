@@ -45,7 +45,7 @@ struct idg_params {
 INLINE static void set_idg_def(struct idg_params *mat,
                                enum eos_planetary_material_id mat_id) {
   mat->mat_id = mat_id;
-  mat->gamma = hydro_gamma; // set by --with-adiabatic-index, default 5/3
+  mat->gamma = hydro_gamma;  // set by --with-adiabatic-index, default 5/3
   mat->one_over_gamma_minus_one = 1.f / (mat->gamma - 1.f);
 }
 
@@ -72,8 +72,8 @@ INLINE static float idg_internal_energy_from_entropy(
  * @param density The density \f$\rho\f$.
  * @param entropy The entropy \f$A\f$.
  */
-INLINE static float idg_pressure_from_entropy(
-    float density, float entropy, const struct idg_params *mat) {
+INLINE static float idg_pressure_from_entropy(float density, float entropy,
+                                              const struct idg_params *mat) {
 
   return entropy * powf(density, mat->gamma);
 }
@@ -87,8 +87,8 @@ INLINE static float idg_pressure_from_entropy(
  * @param pressure The pressure \f$P\f$.
  * @return The entropy \f$A\f$.
  */
-INLINE static float idg_entropy_from_pressure(
-    float density, float pressure, const struct idg_params *mat) {
+INLINE static float idg_entropy_from_pressure(float density, float pressure,
+                                              const struct idg_params *mat) {
 
   return pressure * powf(density, -mat->gamma);
 }
@@ -101,8 +101,8 @@ INLINE static float idg_entropy_from_pressure(
  * @param density The density \f$\rho\f$.
  * @param entropy The entropy \f$A\f$.
  */
-INLINE static float idg_soundspeed_from_entropy(
-    float density, float entropy, const struct idg_params *mat) {
+INLINE static float idg_soundspeed_from_entropy(float density, float entropy,
+                                                const struct idg_params *mat) {
 
   return sqrtf(mat->gamma * powf(density, mat->gamma - 1.f) * entropy);
 }
@@ -172,8 +172,8 @@ INLINE static float idg_soundspeed_from_internal_energy(
  * @param density The density \f$\rho\f$
  * @param P The pressure \f$P\f$
  */
-INLINE static float idg_soundspeed_from_pressure(
-    float density, float P, const struct idg_params *mat) {
+INLINE static float idg_soundspeed_from_pressure(float density, float P,
+                                                 const struct idg_params *mat) {
 
   return sqrtf(mat->gamma * P / density);
 }

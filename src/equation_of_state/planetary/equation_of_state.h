@@ -75,12 +75,11 @@ enum eos_planetary_material_id {
 
   /* Ideal gas */
 
-  /*! Default 
-   * (adiabatic index set at configure time by --with-adiabatic-index, default 
-   *  value is γ=5/3) 
+  /*! Default
+   * (adiabatic index set at configure time by --with-adiabatic-index, default
+   *  value is γ=5/3)
    */
-  eos_planetary_id_idg_def =
-      eos_planetary_type_idg * eos_planetary_type_factor,
+  eos_planetary_id_idg_def = eos_planetary_type_idg * eos_planetary_type_factor,
 
   /* Tillotson */
 
@@ -149,9 +148,9 @@ enum eos_planetary_material_id {
 
 /* Individual EOS function headers. */
 #include "hm80.h"
+#include "ideal_gas.h"
 #include "sesame.h"
 #include "tillotson.h"
-#include "ideal_gas.h"
 
 /**
  * @brief The parameters of the equation of state.
@@ -1490,12 +1489,12 @@ __attribute__((always_inline)) INLINE static void eos_init(
 
   // Set the parameters and material IDs, load tables, etc. for each material
   // and convert to internal units
-  
+
   // Ideal gas
   if (parser_get_opt_param_int(params, "EoS:planetary_use_idg", 0)) {
     set_idg_def(&e->idg_def, eos_planetary_id_idg_def);
   }
-  
+
   // Tillotson
   if (parser_get_opt_param_int(params, "EoS:planetary_use_Til", 0)) {
     set_Til_iron(&e->Til_iron, eos_planetary_id_Til_iron);
