@@ -1018,6 +1018,7 @@ void DOSELF_SUBSET(struct runner *r, struct cell *restrict ci,
 
 #ifdef RT_IACT_MODIFICATIONS
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID, ci->cellID);
+        /*                            ci is not a mistake here ^ */
 #else
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #endif

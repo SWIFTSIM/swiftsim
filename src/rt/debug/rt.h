@@ -57,7 +57,26 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   }
   p->rt_data.neigh_iact_grad_free = 0;
   p->rt_data.neigh_iact_transp_free = 0;
-  p->rt_data.this_cell = 0LL;
+  p->rt_data.this_cell_grad = 0LL;
+  p->rt_data.this_cell_transport = 0LL;
+
+  for (int i = 0; i < 400; i++){
+    p->rt_data.hydro_neigh_iact_grad[i]  = 0;
+    p->rt_data.hydro_neigh_cell_iact_grad[i] = 0LL;
+    p->rt_data.hydro_neigh_iact_transp[i] = 0LL;
+    p->rt_data.hydro_neigh_cell_iact_transp[i] = 0LL;
+  }
+  p->rt_data.hydro_neigh_iact_grad_free = 0;
+  p->rt_data.hydro_neigh_iact_transp_free = 0;
+  p->rt_data.hydro_this_cell_grad = 0LL;
+  p->rt_data.hydro_this_cell_transport = 0LL;
+
+  p->rt_data.calls_hydro_iact_gradient = 0;
+  p->rt_data.calls_hydro_iact_gradient_sym = 0;
+  p->rt_data.calls_hydro_iact_gradient_nonsym = 0;
+  p->rt_data.calls_hydro_iact_force = 0;
+  p->rt_data.calls_hydro_iact_force_sym = 0;
+  p->rt_data.calls_hydro_iact_force_nonsym = 0;
 }
 
 /**
