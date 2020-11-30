@@ -79,17 +79,17 @@ INLINE static int rt_write_particles(const struct part* parts,
       io_make_output_field("RTCallsIactTransport", INT, 1, UNIT_CONV_NO_UNITS,
                            0, parts, rt_data.calls_iact_transport,
                            "number of calls to this particle during the"
-                           "gradient interaction loop");
+                           "transport interaction loop");
   list[10] =
       io_make_output_field("RTCallsIactTransportSym", INT, 1, UNIT_CONV_NO_UNITS,
                            0, parts, rt_data.calls_iact_transport_sym,
                            "number of symmetric calls to this particle during the"
-                           "gradient interaction loop");
+                           "transport interaction loop");
   list[11] =
       io_make_output_field("RTCallsIactTransportNonSym", INT, 1, UNIT_CONV_NO_UNITS,
                            0, parts, rt_data.calls_iact_transport_nonsym,
                            "number of non-symmetric calls to this particle during the"
-                           "gradient interaction loop");
+                           "transport interaction loop");
 
   list[12] =
       io_make_output_field("RTNeighsIactGrad", LONGLONG, 400, UNIT_CONV_NO_UNITS, 0, parts, rt_data.neigh_iact_grad,
@@ -112,9 +112,71 @@ INLINE static int rt_write_particles(const struct part* parts,
       io_make_output_field("RTNrNeighIactTransport", INT, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.neigh_iact_transp_free,
                            "number of neighbours interacted with during transport loop");
   list[18] =
-      io_make_output_field("RTThisCell", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.this_cell,
-                           "the cell this particle is in");
-  return 19;
+      io_make_output_field("RTThisCellGrad", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.this_cell_grad,
+                           "the cell this particle is in, from gradient tasks");
+  list[19] =
+      io_make_output_field("RTThisCellTransport", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.this_cell_transport,
+                           "the cell this particle is in, from transport tasks");
+
+
+  list[20] =
+      io_make_output_field("RTHydroNeighsIactGrad", LONGLONG, 400, UNIT_CONV_NO_UNITS, 0, parts, rt_data.hydro_neigh_iact_grad,
+                           "neighbours interacted with during gradient loop");
+  list[21] =
+      io_make_output_field("RTHydroNeighCellsIactGrad", LONGLONG, 400, UNIT_CONV_NO_UNITS, 0, parts, rt_data.hydro_neigh_cell_iact_grad,
+                           "cells of neighbours interacted with during gradient loop");
+  list[22] =
+      io_make_output_field("RTHydroNrNeighIactGrad", INT, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.hydro_neigh_iact_grad_free,
+                           "number of neighbours interacted with during gradient loop");
+  list[23] =
+      io_make_output_field("RTHydroNeighsIactTransport", LONGLONG, 400, UNIT_CONV_NO_UNITS, 0, parts, rt_data.hydro_neigh_iact_transp,
+                           "neighbours interacted with during gradient loop");
+
+  list[24] =
+      io_make_output_field("RTHydroNeighCellsIactTransport", LONGLONG, 400, UNIT_CONV_NO_UNITS, 0, parts, rt_data.hydro_neigh_cell_iact_transp,
+                           "cells of neighbours interacted with during transport loop");
+
+  list[25] =
+      io_make_output_field("RTHydroNrNeighIactTransport", INT, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.hydro_neigh_iact_transp_free,
+                           "number of neighbours interacted with during transport loop");
+  list[26] =
+      io_make_output_field("RTHydroThisCellGrad", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.hydro_this_cell_grad,
+                           "the cell this particle is in, according to gradient tasks");
+  list[27] =
+      io_make_output_field("RTHydroThisCellTransport", LONGLONG, 1, UNIT_CONV_NO_UNITS, 0, parts, rt_data.hydro_this_cell_transport, 
+                           "the cell this particle is in, according to force tasks");
+
+  list[28] =
+      io_make_output_field("RTHydroCallsIactGradient", INT, 1, UNIT_CONV_NO_UNITS, 0,
+                           parts, rt_data.calls_hydro_iact_gradient,
+                           "number of calls to this particle during the"
+                           "gradient interaction loop");
+  list[29] =
+      io_make_output_field("RTHydroCallsIactGradientSym", INT, 1, UNIT_CONV_NO_UNITS, 0,
+                           parts, rt_data.calls_hydro_iact_gradient_sym,
+                           "number of symmetric calls to this particle during the"
+                           "gradient interaction loop");
+  list[30] =
+      io_make_output_field("RTHydroCallsIactGradientNonSym", INT, 1, UNIT_CONV_NO_UNITS, 0,
+                           parts, rt_data.calls_hydro_iact_gradient_nonsym,
+                           "number of nonsymmetric calls to this particle during the"
+                           "gradient interaction loop");
+  list[31] =
+      io_make_output_field("RTHydroCallsIactForce", INT, 1, UNIT_CONV_NO_UNITS,
+                           0, parts, rt_data.calls_hydro_iact_force,
+                           "number of calls to this particle during the"
+                           "force interaction loop");
+  list[32] =
+      io_make_output_field("RTHydroCallsIactForceSym", INT, 1, UNIT_CONV_NO_UNITS,
+                           0, parts, rt_data.calls_hydro_iact_force_sym,
+                           "number of symmetric calls to this particle during the"
+                           "force interaction loop");
+  list[33] =
+      io_make_output_field("RTHydroCallsIactForceNonSym", INT, 1, UNIT_CONV_NO_UNITS,
+                           0, parts, rt_data.calls_hydro_iact_force_nonsym,
+                           "number of non-symmetric calls to this particle during the"
+                           "force interaction loop");
+  return 34;
 }
 
 /**

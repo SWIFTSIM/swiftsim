@@ -50,7 +50,27 @@ struct rt_part_data {
   long long neigh_iact_transp[400];
   long long neigh_cell_iact_transp[400];
   int neigh_iact_transp_free;
-  long long this_cell;
+  long long this_cell_grad;
+  long long this_cell_transport;
+
+
+  /* temp for debugging */
+  long long hydro_neigh_iact_grad[400];
+  long long hydro_neigh_cell_iact_grad[400];
+  int hydro_neigh_iact_grad_free;
+  long long hydro_neigh_iact_transp[400];
+  long long hydro_neigh_cell_iact_transp[400];
+  int hydro_neigh_iact_transp_free;
+  long long hydro_this_cell_grad;
+  long long hydro_this_cell_transport;
+
+  /* temp for debugging */
+  int calls_hydro_iact_gradient;
+  int calls_hydro_iact_gradient_sym;
+  int calls_hydro_iact_gradient_nonsym;
+  int calls_hydro_iact_force;
+  int calls_hydro_iact_force_sym;
+  int calls_hydro_iact_force_nonsym;
 
 };
 
