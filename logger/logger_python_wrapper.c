@@ -398,6 +398,9 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
     current += 1;
   }
 
+  /* Free the memory. */
+  free(field_present);
+
   return list;
 }
 
