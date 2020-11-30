@@ -50,14 +50,16 @@ __attribute__((always_inline)) INLINE static void rt_gradients_collect(
   pi->rt_data.neigh_iact_grad[f] = pj->id;
   pi->rt_data.neigh_cell_iact_grad[f] = cjID;
   pi->rt_data.neigh_iact_grad_free++;
-  pi->rt_data.this_cell = ciID;
+  if (llabs(pi->rt_data.this_cell_grad) < llabs(ciID))
+    pi->rt_data.this_cell_grad = ciID;
 
   f = pj->rt_data.neigh_iact_grad_free;
   if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");
   pj->rt_data.neigh_iact_grad[f] = pi->id;
   pj->rt_data.neigh_cell_iact_grad[f] = ciID;
   pj->rt_data.neigh_iact_grad_free++;
-  pj->rt_data.this_cell = cjID;
+  if (llabs(pj->rt_data.this_cell_grad) < llabs(cjID))
+    pj->rt_data.this_cell_grad = cjID;
 }
 
 /**
@@ -82,7 +84,8 @@ __attribute__((always_inline)) INLINE static void rt_gradients_nonsym_collect(
   pi->rt_data.neigh_iact_grad[f] = pj->id;
   pi->rt_data.neigh_cell_iact_grad[f] = cjID;
   pi->rt_data.neigh_iact_grad_free++;
-  pi->rt_data.this_cell = ciID;
+  if (llabs(pi->rt_data.this_cell_grad) < llabs(ciID))
+    pi->rt_data.this_cell_grad = ciID;
 
 }
 

@@ -94,14 +94,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     pi->rt_data.neigh_iact_transp[f] = pj->id;
     pi->rt_data.neigh_cell_iact_transp[f] = cjID;
     pi->rt_data.neigh_iact_transp_free++;
-    pi->rt_data.this_cell = ciID;
+    if (llabs(pi->rt_data.this_cell_transport) < llabs(ciID))
+      pi->rt_data.this_cell_transport = ciID;
 
     f = pj->rt_data.neigh_iact_transp_free;
     if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
     pj->rt_data.neigh_iact_transp[f] = pi->id;
     pj->rt_data.neigh_cell_iact_transp[f] = ciID;
     pj->rt_data.neigh_iact_transp_free++;
-    pj->rt_data.this_cell = cjID;
+    if (llabs(pj->rt_data.this_cell_transport) < llabs(cjID))
+      pj->rt_data.this_cell_transport = cjID;
 
 
   } else {
@@ -113,7 +115,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     pi->rt_data.neigh_iact_transp[f] = pj->id;
     pi->rt_data.neigh_cell_iact_transp[f] = cjID;
     pi->rt_data.neigh_iact_transp_free++;
-    pi->rt_data.this_cell = ciID;
+    if (llabs(pi->rt_data.this_cell_transport) < llabs(ciID))
+      pi->rt_data.this_cell_transport = ciID;
   }
 }
 

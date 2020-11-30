@@ -310,7 +310,7 @@ void pairs_all_gradient(struct runner *r, struct cell *ci, struct cell *cj) {
       if (r2 < hig2 && !part_is_inhibited(pj, e)) {
 
         /* Interact */
-        runner_iact_nonsym_gradient(r2, dx, hi, hj, pi, pj, a, H);
+        runner_iact_nonsym_gradient(r2, dx, hi, hj, pi, pj, a, H, 0LL, 0LL);
       }
     }
   }
@@ -343,7 +343,7 @@ void pairs_all_gradient(struct runner *r, struct cell *ci, struct cell *cj) {
       if (r2 < hjg2 && !part_is_inhibited(pi, e)) {
 
         /* Interact */
-        runner_iact_nonsym_gradient(r2, dx, hj, pi->h, pj, pi, a, H);
+        runner_iact_nonsym_gradient(r2, dx, hj, pi->h, pj, pi, a, H, 0LL, 0LL);
       }
     }
   }
@@ -388,7 +388,7 @@ void pairs_all_force(struct runner *r, struct cell *ci, struct cell *cj) {
       if (r2 < hig2 || r2 < hjg2) {
 
         /* Interact */
-        runner_iact_nonsym_force(r2, dx, hi, hj, pi, pj, a, H);
+        runner_iact_nonsym_force(r2, dx, hi, hj, pi, pj, a, H, 0LL, 0LL);
       }
     }
   }
@@ -421,7 +421,7 @@ void pairs_all_force(struct runner *r, struct cell *ci, struct cell *cj) {
       if (r2 < hjg2 || r2 < hig2) {
 
         /* Interact */
-        runner_iact_nonsym_force(r2, dx, hj, pi->h, pj, pi, a, H);
+        runner_iact_nonsym_force(r2, dx, hj, pi->h, pj, pi, a, H, 0LL, 0LL);
       }
     }
   }
@@ -599,7 +599,7 @@ void self_all_gradient(struct runner *r, struct cell *ci) {
       if (r2 < hig2 && part_is_active(pi, e) && !part_is_inhibited(pj, e)) {
 
         /* Interact */
-        runner_iact_nonsym_gradient(r2, dxi, hi, hj, pi, pj, a, H);
+        runner_iact_nonsym_gradient(r2, dxi, hi, hj, pi, pj, a, H, 0LL, 0LL);
       }
 
       /* Hit or miss? */
@@ -610,7 +610,7 @@ void self_all_gradient(struct runner *r, struct cell *ci) {
         dxi[2] = -dxi[2];
 
         /* Interact */
-        runner_iact_nonsym_gradient(r2, dxi, hj, hi, pj, pi, a, H);
+        runner_iact_nonsym_gradient(r2, dxi, hj, hi, pj, pi, a, H, 0LL, 0LL);
       }
     }
   }
@@ -651,7 +651,7 @@ void self_all_force(struct runner *r, struct cell *ci) {
       if (r2 < hig2 || r2 < hjg2) {
 
         /* Interact */
-        runner_iact_force(r2, dxi, hi, hj, pi, pj, a, H);
+        runner_iact_force(r2, dxi, hi, hj, pi, pj, a, H, 0LL, 0LL);
       }
     }
   }
@@ -784,7 +784,7 @@ void engine_single_force(double *dim, long long int pid,
     if (r2 < p.h * p.h * kernel_gamma2 ||
         r2 < parts[k].h * parts[k].h * kernel_gamma2) {
       hydro_reset_acceleration(&p);
-      runner_iact_nonsym_force(r2, fdx, p.h, parts[k].h, &p, &parts[k], a, H);
+      runner_iact_nonsym_force(r2, fdx, p.h, parts[k].h, &p, &parts[k], a, H, 0LL, 0LL);
     }
   }
 

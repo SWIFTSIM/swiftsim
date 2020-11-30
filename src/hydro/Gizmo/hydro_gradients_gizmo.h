@@ -48,7 +48,29 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_init(
  */
 __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj) {
+    struct part *restrict pj, long long ciID, long long cjID) {
+
+  pi->rt_data.calls_hydro_iact_gradient += 1;
+  pi->rt_data.calls_hydro_iact_gradient_nonsym += 1;
+  pj->rt_data.calls_hydro_iact_gradient += 1;
+  pj->rt_data.calls_hydro_iact_gradient_nonsym += 1;
+
+  int f;
+  f = pi->rt_data.hydro_neigh_iact_grad_free;
+  if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");
+  pi->rt_data.hydro_neigh_iact_grad[f] = pj->id;
+  pi->rt_data.hydro_neigh_cell_iact_grad[f] = cjID;
+  pi->rt_data.hydro_neigh_iact_grad_free++;
+  if (llabs(pi->rt_data.hydro_this_cell_grad) < llabs(ciID))
+    pi->rt_data.hydro_this_cell_grad = ciID;
+
+  f = pj->rt_data.hydro_neigh_iact_grad_free;
+  if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");
+  pj->rt_data.hydro_neigh_iact_grad[f] = pi->id;
+  pj->rt_data.hydro_neigh_cell_iact_grad[f] = ciID;
+  pj->rt_data.hydro_neigh_iact_grad_free++;
+  if (llabs(pj->rt_data.hydro_this_cell_grad) < llabs(cjID))
+    pj->rt_data.hydro_this_cell_grad = cjID;
 
   const float r_inv = 1.0f / sqrtf(r2);
   const float r = r2 * r_inv;
@@ -176,7 +198,18 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
 __attribute__((always_inline)) INLINE static void
 hydro_gradients_nonsym_collect(float r2, const float *dx, float hi, float hj,
                                struct part *restrict pi,
-                               struct part *restrict pj) {
+                               struct part *restrict pj, long long ciID, long long cjID) {
+
+  pi->rt_data.calls_hydro_iact_gradient += 1;
+  pi->rt_data.calls_hydro_iact_gradient_nonsym += 1;
+
+  int f = pi->rt_data.hydro_neigh_iact_grad_free;
+  if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");
+  pi->rt_data.hydro_neigh_iact_grad[f] = pj->id;
+  pi->rt_data.hydro_neigh_cell_iact_grad[f] = cjID;
+  pi->rt_data.hydro_neigh_iact_grad_free++;
+  if (llabs(pi->rt_data.hydro_this_cell_grad) < llabs(ciID))
+    pi->rt_data.hydro_this_cell_grad = ciID;
 
   const float r_inv = 1.0f / sqrtf(r2);
   const float r = r2 * r_inv;
