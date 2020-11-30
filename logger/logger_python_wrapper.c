@@ -333,12 +333,9 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
   }
 
   /* Check all the fields */
-  for (int i = 0; i < h->masks_count; i++) {
-    /* Skip the types that are not required or
-       not found in previous type. */
-    if (read_types[i] == 0 || field_present[i] == 0) {
-      continue;
-    }
+  for (int i = 0; i < swift_type_count; i++) {
+    /* Skip the types that are not required */
+    if (read_types[i] == 0) continue;
 
     /* Get the list of fields for each particle types. */
     const char **field_names = NULL;
@@ -365,13 +362,22 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
         continue;
     }
 
-    /* Check if the field is present */
-    for (int j = 0; j < number_fields; j++) {
-      if (strcmp(h->masks[i].name, field_names[j]) == 0) continue;
-    }
+    for (int j = 0; j < h->masks_count; j++) {
+      /* Skip the fields not found in previous type. */
+      if (field_present[j] == 0) continue;
 
-    /* Field not found */
-    field_present[i] = 0;
+      /* Check if the field is present */
+      int found = 0;
+      for (int k = 0; k < number_fields; k++) {
+        if (strcmp(h->masks[j].name, field_names[k]) == 0) {
+          found = 1;
+          break;
+        }
+      }
+
+      /* Set the field as not found */
+      if (!found) field_present[j] = 0;
+    }
   }
 
   /* Count the number of fields found */
@@ -385,7 +391,7 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
   int current = 0;
   for (int i = 0; i < h->masks_count; i++) {
     /* Keep only the field present. */
-    if (field_present[i] != 1) continue;
+    if (field_present[i] == 0) continue;
 
     PyObject *name = PyUnicode_FromString(h->masks[i].name);
     PyList_SetItem(list, current, name);
