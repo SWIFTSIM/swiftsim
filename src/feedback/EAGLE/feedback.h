@@ -234,13 +234,14 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_feedback(
  * @param phys_const The #phys_const.
  * @param time The physical time in internal units.
  * @param with_cosmology Are we running with cosmology on?
- * @param e The #engine.
+ * @param ti_current The current time (in integer)
+ * @param time_base The time base.
  */
 __attribute__((always_inline)) INLINE static void feedback_will_do_feedback(
     struct spart* sp, const struct feedback_props* feedback_props,
     const int with_cosmology, const struct cosmology* cosmo, const double time,
     const struct unit_system* us, const struct phys_const* phys_const,
-    const struct engine* e) {
+    const integertime_t ti_current, const double time_base) {
 
   /* Special case for new-born stars */
   if (with_cosmology) {

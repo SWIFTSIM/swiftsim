@@ -854,7 +854,8 @@ void runner_do_timestep(struct runner *r, struct cell *c, const int timer) {
         if (with_feedback) {
 
           feedback_will_do_feedback(sp, feedback_props, with_cosmology, cosmo,
-                                    e->time, us, phys_const, e);
+                                    e->time, us, phys_const, e->ti_current,
+                                    e->time_base);
         }
 
         /* Number of updated s-particles */

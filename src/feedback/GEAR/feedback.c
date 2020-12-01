@@ -92,28 +92,31 @@ void feedback_update_part(struct part* restrict p, struct xpart* restrict xp,
  * This function assumed to be called in the time step task.
  *
  * @param sp The #spart to act upon
- * @param e The #engine.
  * @param with_cosmology Are we running with the cosmological expansion?
  * @param cosmo The current cosmological model.
  * @param star_age_beg_of_step (output) Age of the star at the beginning of the
  * step.
  * @param dt_enrichment (output) Time step for the stellar evolution.
  * @param ti_begin_star (output) Integer time at the beginning of the time step.
+ * @param ti_current The current time (in integer)
+ * @param time_base The time base.
+ * @param time The current time (in double)
  */
 void compute_time(struct spart* sp, const struct engine* e,
                   const int with_cosmology, const struct cosmology* cosmo,
                   double* star_age_beg_of_step, double* dt_enrichment,
-                  integertime_t* ti_begin_star) {
+                  integertime_t* ti_begin_star, const integertime_t ti_current,
+                  const double time_base, const double time) {
   const integertime_t ti_step = get_integer_timestep(sp->time_bin);
-  *ti_begin_star = get_integer_time_begin(e->ti_current, sp->time_bin);
+  *ti_begin_star = get_integer_time_begin(ti_current, sp->time_bin);
 
   /* Get particle time-step */
   double dt_star;
   if (with_cosmology) {
-    dt_star = cosmology_get_delta_time(e->cosmology, *ti_begin_star,
+    dt_star = cosmology_get_delta_time(cosmology, *ti_begin_star,
                                        *ti_begin_star + ti_step);
   } else {
-    dt_star = get_timestep(sp->time_bin, e->time_base);
+    dt_star = get_timestep(sp->time_bin, time_base);
   }
 
   /* Calculate age of the star at current time */
@@ -125,12 +128,12 @@ void compute_time(struct spart* sp, const struct engine* e,
     else
       star_age_end_of_step = 0.;
   } else {
-    star_age_end_of_step = max(e->time - (double)sp->birth_time, 0.);
+    star_age_end_of_step = max(time - (double)sp->birth_time, 0.);
   }
 
   /* Get the length of the enrichment time-step */
   *dt_enrichment = feedback_get_enrichment_timestep(sp, with_cosmology, cosmo,
-                                                    e->time, dt_star);
+                                                    time, dt_star);
   *star_age_beg_of_step = star_age_end_of_step - *dt_enrichment;
 }
 
@@ -146,22 +149,22 @@ void compute_time(struct spart* sp, const struct engine* e,
  * @param cosmo The current cosmological model.
  * @param us The unit system.
  * @param phys_const The #phys_const.
- * @param e The #engine.
+ * @param ti_current The current time (in integer)
+ * @param time_base The time base.
+ * @param time The physical time in internal units.
  */
-void feedback_will_do_feedback(struct spart* sp,
-                               const struct feedback_props* feedback_props,
-                               const int with_cosmology,
-                               const struct cosmology* cosmo, const double time,
-                               const struct unit_system* us,
-                               const struct phys_const* phys_const,
-                               const struct engine* e) {
+void feedback_will_do_feedback(
+    struct spart* sp, const struct feedback_props* feedback_props,
+    const int with_cosmology, const struct cosmology* cosmo, const double time,
+    const struct unit_system* us, const struct phys_const* phys_const,
+    const integertime_t ti_current, const double time_base) {
 
   /* Compute the times */
   double star_age_beg_step = 0;
   double dt_enrichment = 0;
   integertime_t ti_begin = 0;
   compute_time(sp, e, with_cosmology, cosmo, &star_age_beg_step, &dt_enrichment,
-               &ti_begin);
+               &ti_begin, ti_current, time_base, time);
 
   /* Zero the energy of supernovae */
   sp->feedback_data.energy_ejected = 0;
