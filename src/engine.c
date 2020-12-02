@@ -1819,7 +1819,7 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
 #endif
 
   scheduler_write_dependencies(&e->sched, e->verbose);
-  if (e->nodeID == 0) scheduler_write_task_level(&e->sched);
+  if (e->nodeID == 0) scheduler_write_task_level(&e->sched, NULL);
 
   /* Run the 0th time-step */
   TIMER_TIC2;

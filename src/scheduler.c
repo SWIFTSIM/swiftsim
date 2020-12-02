@@ -2484,8 +2484,12 @@ void scheduler_free_tasks(struct scheduler *s) {
 
 /**
  * @brief write down each task level
+ * @param s:      pointer to the scheduler struct
+ * @param *step:  pointer to current time step. If = NULL,
+ *                output filename will contain no time step
+ *                number.
  */
-void scheduler_write_task_level(const struct scheduler *s) {
+void scheduler_write_task_level(const struct scheduler *s, const int *step) {
   /* init */
   const int max_depth = 30;
   const struct task *tasks = s->tasks;
@@ -2513,8 +2517,19 @@ void scheduler_write_task_level(const struct scheduler *s) {
     }
   }
 
+  /* generate filename */
+  char filename[200];
+  if (step == NULL) {
+    strcpy(filename, "task_level.txt\0");
+  } else {
+    char stepnr[5];
+    sprintf(stepnr, "%04d", *step);
+    strcpy(filename, "task_level_");
+    strcat(filename, stepnr);
+    strcat(filename, ".txt\0");
+  }
+
   /* Open file */
-  char filename[200] = "task_level.txt";
   FILE *f = fopen(filename, "w");
   if (f == NULL) error("Error opening task level file.");
 

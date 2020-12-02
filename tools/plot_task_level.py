@@ -67,7 +67,6 @@ def parse_args():
 
     args = parser.parse_args()
     filename = args.file
-    print(filename)
 
     if not path.exists(filename):
         raise FileNotFoundError("File not found:'" + filename + "'")
