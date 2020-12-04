@@ -28,22 +28,25 @@
  * List of all possible mask.
  * Outside the module, only chemistry_logger_field_count is used.
  */
-// Here I am only using a single flag in order to free some flags to the other modules.
+// Here I am only using a single flag in order to free some flags to the other
+// modules.
 enum chemistry_logger_fields_part {
-    chemistry_logger_field_part_all = 0,
-    chemistry_logger_field_part_count,
+  chemistry_logger_field_part_all = 0,
+  chemistry_logger_field_part_count,
 };
 enum chemistry_logger_fields_spart {
-    chemistry_logger_field_spart_metal_mass_fractions = 0,
-    chemistry_logger_field_spart_count,
+  chemistry_logger_field_spart_metal_mass_fractions = 0,
+  chemistry_logger_field_spart_count,
 };
 
 /* Name of each possible mask. */
-static const char *chemistry_logger_field_names_part[chemistry_logger_field_part_count] = {
-    "ChemistryHydro",
+static const char
+    *chemistry_logger_field_names_part[chemistry_logger_field_part_count] = {
+        "ChemistryHydro",
 };
-static const char *chemistry_logger_field_names_spart[chemistry_logger_field_spart_count] = {
-    "MetalMassFractions",
+static const char
+    *chemistry_logger_field_names_spart[chemistry_logger_field_spart_count] = {
+        "MetalMassFractions",
 };
 
 /**
@@ -80,13 +83,13 @@ INLINE static int chemistry_logger_writer_populate_mask_data_spart(
     struct mask_data *mask_data) {
   /* We store the metal mass fraction. */
   mask_data[chemistry_logger_field_spart_metal_mass_fractions] =
-    logger_create_mask_entry(
-        chemistry_logger_field_names_spart[chemistry_logger_field_spart_metal_mass_fractions],
-        GEAR_CHEMISTRY_ELEMENT_COUNT * sizeof(double));
+      logger_create_mask_entry(
+          chemistry_logger_field_names_spart
+              [chemistry_logger_field_spart_metal_mass_fractions],
+          GEAR_CHEMISTRY_ELEMENT_COUNT * sizeof(double));
 
   return chemistry_logger_field_spart_count;
 }
-
 
 /**
  * @brief Generates the mask and compute the size of the record for the #part.
@@ -94,7 +97,8 @@ INLINE static int chemistry_logger_writer_populate_mask_data_spart(
  * WARNING: The order should be the same in all the functions and
  * #chemistry_logger_fields_part!
  *
- * @param masks The list of masks (same order than in #chemistry_logger_writer_populate_mask_data_part).
+ * @param masks The list of masks (same order than in
+ * #chemistry_logger_writer_populate_mask_data_part).
  * @param part The #part that will be written.
  * @param xpart The #xpart that will be written.
  * @param write_all Are we forcing to write all the fields?
@@ -117,7 +121,8 @@ INLINE static void chemistry_logger_compute_size_and_mask_part(
  * WARNING: The order should be the same in all the functions and
  * #chemistry_logger_fields_spart!
  *
- * @param masks The list of masks (same order than in #chemistry_logger_writer_populate_mask_data_spart).
+ * @param masks The list of masks (same order than in
+ * #chemistry_logger_writer_populate_mask_data_spart).
  * @param spart The #spart that will be written.
  * @param write_all Are we forcing to write all the fields?
  *
@@ -126,13 +131,11 @@ INLINE static void chemistry_logger_compute_size_and_mask_part(
  */
 INLINE static void chemistry_logger_compute_size_and_mask_spart(
     const struct mask_data *masks, const struct spart *spart,
-    const int write_all, size_t *buffer_size,
-    unsigned int *mask) {
+    const int write_all, size_t *buffer_size, unsigned int *mask) {
 
   /* Add the chemistry. */
   *mask |= logger_add_field_to_mask(
-                                    masks[chemistry_logger_field_spart_metal_mass_fractions],
-                                    buffer_size);
+      masks[chemistry_logger_field_spart_metal_mass_fractions], buffer_size);
 }
 
 /**
@@ -141,7 +144,8 @@ INLINE static void chemistry_logger_compute_size_and_mask_spart(
  * WARNING: The order should be the same in all the functions and
  * #hydro_logger_fields_part!
  *
- * @param masks The list of masks (same order than in #chemistry_logger_writer_populate_mask_data_part).
+ * @param masks The list of masks (same order than in
+ * #chemistry_logger_writer_populate_mask_data_part).
  * @param p The #part to write.
  * @param xp The #xpart to write.
  * @param mask The mask to use for this record.
@@ -154,8 +158,8 @@ INLINE static char *chemistry_logger_write_particle(
     const struct xpart *xp, unsigned int *mask, char *buff) {
 
   /* Write the chemistry. */
-  if (logger_should_write_field(
-      mask_data[chemistry_logger_field_part_all], mask)) {
+  if (logger_should_write_field(mask_data[chemistry_logger_field_part_all],
+                                mask)) {
 
     /* Write the smoothed metal mass fraction */
     memcpy(buff, p->chemistry_data.smoothed_metal_mass_fraction,
@@ -163,9 +167,9 @@ INLINE static char *chemistry_logger_write_particle(
     buff += GEAR_CHEMISTRY_ELEMENT_COUNT * sizeof(double);
 
     /* Write the metal mass */
-    double *frac = (double *) buff;
+    double *frac = (double *)buff;
     const float m = hydro_get_mass(p);
-    for(int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
+    for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
       *frac = p->chemistry_data.metal_mass[i] / m;
       frac += 1;
     }
@@ -180,7 +184,8 @@ INLINE static char *chemistry_logger_write_particle(
  * WARNING: The order should be the same in all the functions and
  * #hydro_logger_fields_spart!
  *
- * @param masks The list of masks (same order than in #chemistry_logger_writer_populate_mask_data_spart).
+ * @param masks The list of masks (same order than in
+ * #chemistry_logger_writer_populate_mask_data_spart).
  * @param sp The #spart to write.
  * @param mask The mask to use for this record.
  * @param buff The buffer where to write the particle.
@@ -193,7 +198,7 @@ INLINE static char *chemistry_logger_write_sparticle(
 
   /* Write the metal mass fraction. */
   if (logger_should_write_field(
-      mask_data[chemistry_logger_field_spart_metal_mass_fractions], mask)) {
+          mask_data[chemistry_logger_field_spart_metal_mass_fractions], mask)) {
 
     /* Write the metal mass fraction */
     memcpy(buff, sp->chemistry_data.metal_mass_fraction,

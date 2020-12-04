@@ -28,13 +28,14 @@
  * Outside the module, only star_formation_logger_field_count is used.
  */
 enum star_formation_logger_fields_spart {
-    star_formation_logger_field_all = 0,
-    star_formation_logger_field_count,
+  star_formation_logger_field_all = 0,
+  star_formation_logger_field_count,
 };
 
 /* Name of each possible mask. */
-static const char *star_formation_logger_field_names[star_formation_logger_field_count] = {
-    "StarFormation",
+static const char
+    *star_formation_logger_field_names[star_formation_logger_field_count] = {
+        "StarFormation",
 };
 
 /**
@@ -57,14 +58,14 @@ INLINE static int star_formation_logger_writer_populate_mask_data(
   return star_formation_logger_field_count;
 }
 
-
 /**
  * @brief Generates the mask and compute the size of the record for the #spart.
  *
  * WARNING: The order should be the same in all the functions and
  * #star_formation_logger_fields_spart!
  *
- * @param masks The list of masks (same order than in #star_formation_logger_writer_populate_mask_data_spart).
+ * @param masks The list of masks (same order than in
+ * #star_formation_logger_writer_populate_mask_data_spart).
  * @param spart The #spart that will be written.
  * @param write_all Are we forcing to write all the fields?
  *
@@ -73,12 +74,10 @@ INLINE static int star_formation_logger_writer_populate_mask_data(
  */
 INLINE static void star_formation_logger_compute_size_and_mask(
     const struct mask_data *masks, const struct spart *spart,
-    const int write_all, size_t *buffer_size,
-    unsigned int *mask) {
+    const int write_all, size_t *buffer_size, unsigned int *mask) {
   /* Add the star formation. */
   *mask |= logger_add_field_to_mask(masks[star_formation_logger_field_all],
                                     buffer_size);
-
 }
 
 /**
@@ -87,7 +86,8 @@ INLINE static void star_formation_logger_compute_size_and_mask(
  * WARNING: The order should be the same in all the functions and
  * #hydro_logger_fields_spart!
  *
- * @param masks The list of masks (same order than in #star_formation_logger_writer_populate_mask_data_spart).
+ * @param masks The list of masks (same order than in
+ * #star_formation_logger_writer_populate_mask_data_spart).
  * @param sp The #spart to write.
  * @param mask The mask to use for this record.
  * @param buff The buffer where to write the particle.
@@ -98,22 +98,19 @@ INLINE static char *star_formation_logger_write_sparticle(
     const struct mask_data *mask_data, const struct spart *sp,
     unsigned int *mask, char *buff) {
   /* Write the star formation. */
-  if (logger_should_write_field(
-        mask_data[star_formation_logger_field_all], mask)) {
+  if (logger_should_write_field(mask_data[star_formation_logger_field_all],
+                                mask)) {
 
     /* Write the birth density */
-    memcpy(buff, &sp->sf_data.birth_density,
-           sizeof(float));
+    memcpy(buff, &sp->sf_data.birth_density, sizeof(float));
     buff += sizeof(float);
 
     /* Write the birth mass  */
-    memcpy(buff, &sp->sf_data.birth_mass,
-           sizeof(float));
+    memcpy(buff, &sp->sf_data.birth_mass, sizeof(float));
     buff += sizeof(float);
 
     /* Write the progenitor id  */
-    memcpy(buff, &sp->sf_data.progenitor_id,
-           sizeof(long long));
+    memcpy(buff, &sp->sf_data.progenitor_id, sizeof(long long));
     buff += sizeof(long long);
   }
   return buff;

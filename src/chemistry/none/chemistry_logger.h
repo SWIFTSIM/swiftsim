@@ -28,15 +28,17 @@
  * Outside the module, only chemistry_logger_field_count is used.
  */
 enum chemistry_logger_fields_part {
-    chemistry_logger_field_part_count = 0,
+  chemistry_logger_field_part_count = 0,
 };
 enum chemistry_logger_fields_spart {
-    chemistry_logger_field_spart_count = 0,
+  chemistry_logger_field_spart_count = 0,
 };
 
 /* Name of each possible mask. */
-// static const char *chemistry_logger_field_names_part[chemistry_logger_field_part_count] = {};
-// static const char *chemistry_logger_field_names_spart[chemistry_logger_field_spart_count] = {};
+// static const char
+// *chemistry_logger_field_names_part[chemistry_logger_field_part_count] = {};
+// static const char
+// *chemistry_logger_field_names_spart[chemistry_logger_field_spart_count] = {};
 
 /**
  * @brief Initialize the logger for the #part.
@@ -68,14 +70,14 @@ INLINE static int chemistry_logger_writer_populate_mask_data_spart(
   return chemistry_logger_field_spart_count;
 }
 
-
 /**
  * @brief Generates the mask and compute the size of the record for the #part.
  *
  * WARNING: The order should be the same in all the functions and
  * #chemistry_logger_fields_part!
  *
- * @param masks The list of masks (same order than in #chemistry_logger_writer_populate_mask_data_part).
+ * @param masks The list of masks (same order than in
+ * #chemistry_logger_writer_populate_mask_data_part).
  * @param part The #part that will be written.
  * @param xpart The #xpart that will be written.
  * @param write_all Are we forcing to write all the fields?
@@ -94,7 +96,8 @@ INLINE static void chemistry_logger_compute_size_and_mask_part(
  * WARNING: The order should be the same in all the functions and
  * #chemistry_logger_fields_spart!
  *
- * @param masks The list of masks (same order than in #chemistry_logger_writer_populate_mask_data_spart).
+ * @param masks The list of masks (same order than in
+ * #chemistry_logger_writer_populate_mask_data_spart).
  * @param spart The #spart that will be written.
  * @param write_all Are we forcing to write all the fields?
  *
@@ -103,8 +106,7 @@ INLINE static void chemistry_logger_compute_size_and_mask_part(
  */
 INLINE static void chemistry_logger_compute_size_and_mask_spart(
     const struct mask_data *masks, const struct spart *spart,
-    const int write_all, size_t *buffer_size,
-    unsigned int *mask) {}
+    const int write_all, size_t *buffer_size, unsigned int *mask) {}
 
 /**
  * @brief Write a #part to the logger.
@@ -112,7 +114,8 @@ INLINE static void chemistry_logger_compute_size_and_mask_spart(
  * WARNING: The order should be the same in all the functions and
  * #hydro_logger_fields_part!
  *
- * @param masks The list of masks (same order than in #chemistry_logger_writer_populate_mask_data_part).
+ * @param masks The list of masks (same order than in
+ * #chemistry_logger_writer_populate_mask_data_part).
  * @param p The #part to write.
  * @param xp The #xpart to write.
  * @param mask The mask to use for this record.
@@ -132,7 +135,8 @@ INLINE static char *chemistry_logger_write_particle(
  * WARNING: The order should be the same in all the functions and
  * #hydro_logger_fields_spart!
  *
- * @param masks The list of masks (same order than in #chemistry_logger_writer_populate_mask_data_spart).
+ * @param masks The list of masks (same order than in
+ * #chemistry_logger_writer_populate_mask_data_spart).
  * @param sp The #spart to write.
  * @param mask The mask to use for this record.
  * @param buff The buffer where to write the particle.
