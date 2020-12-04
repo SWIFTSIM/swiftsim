@@ -45,6 +45,7 @@
 #include "error.h"
 #include "gravity_logger.h"
 #include "hydro_logger.h"
+#include "star_formation.h"
 #include "stars_logger.h"
 #include "units.h"
 
@@ -339,6 +340,8 @@ void logger_copy_spart_fields(const struct logger_writer *log,
                                      buff);
   buff = chemistry_logger_write_sparticle(log->mask_data_pointers.chemistry_spart, sp, &mask,
                                           buff);
+  buff = star_formation_logger_write_sparticle(log->mask_data_pointers.star_formation, sp, &mask,
+                                               buff);
 
   /* Special flags */
   if (mask & log->logger_mask_data[logger_index_special_flags].mask) {
@@ -403,6 +406,9 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
                                          log_all_fields, &size, &mask);
       chemistry_logger_compute_size_and_mask_spart(log->mask_data_pointers.chemistry_spart, &sp[i],
                                                    log_all_fields, &size, &mask);
+      star_formation_logger_compute_size_and_mask(
+          log->mask_data_pointers.star_formation, &sp[i],
+          log_all_fields, &size, &mask);
       size_total += size + logger_header_bytes;
     }
   }
@@ -419,6 +425,9 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
                                        log_all_fields, &size, &mask);
     chemistry_logger_compute_size_and_mask_spart(log->mask_data_pointers.chemistry_spart, &sp[i],
                                                  log_all_fields, &size, &mask);
+    star_formation_logger_compute_size_and_mask(
+        log->mask_data_pointers.star_formation, &sp[i],
+        log_all_fields, &size, &mask);
     size += logger_header_bytes;
 
     if (special_flags != 0) {
@@ -678,6 +687,7 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
   log->mask_data_pointers.chemistry_part = NULL;
   log->mask_data_pointers.chemistry_spart = NULL;
   log->mask_data_pointers.stars = NULL;
+  log->mask_data_pointers.star_formation = NULL;
   log->mask_data_pointers.gravity = NULL;
 
   struct mask_data list[100];
@@ -756,6 +766,21 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
 
   /* Set the masks */
   tmp_num_fields = chemistry_logger_writer_populate_mask_data_spart(tmp);
+  /* Set the particle type */
+  for (int i = 0; i < tmp_num_fields; i++) {
+    tmp[i].type = mask_type_stars;
+  }
+  num_fields += tmp_num_fields;
+
+
+  /* Get all the fields that need to be written for the star_formation. */
+  tmp = &list[num_fields];
+
+  /* Set the mask_data_pointers */
+  log->mask_data_pointers.star_formation = tmp;
+
+  /* Set the masks */
+  tmp_num_fields = star_formation_logger_writer_populate_mask_data_spart(tmp);
   /* Set the particle type */
   for (int i = 0; i < tmp_num_fields; i++) {
     tmp[i].type = mask_type_stars;
@@ -844,6 +869,10 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
     log->mask_data_pointers.chemistry_spart =
       log->logger_mask_data + (log->mask_data_pointers.chemistry_spart - list);
   }
+  if (log->mask_data_pointers.star_formation != NULL) {
+    log->mask_data_pointers.star_formation =
+      log->logger_mask_data + (log->mask_data_pointers.star_formation - list);
+  }
   if (log->mask_data_pointers.gravity != NULL) {
     log->mask_data_pointers.gravity =
         log->logger_mask_data + (log->mask_data_pointers.gravity - list);
@@ -869,6 +898,9 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
   }
   for (int i = 0; i < chemistry_logger_field_spart_count; i++) {
     log->max_size_record_spart += log->mask_data_pointers.chemistry_spart[i].size;
+  }
+  for (int i = 0; i < star_formation_logger_field_count; i++) {
+    log->max_size_record_spart += log->mask_data_pointers.star_formation[i].size;
   }
 
   /* Set the counter */
@@ -1281,6 +1313,9 @@ void logger_struct_restore(struct logger_writer *log, FILE *stream) {
   log->mask_data_pointers.chemistry_spart =
     log->logger_mask_data +
     (log->mask_data_pointers.chemistry_spart - old_logger_mask_data);
+  log->mask_data_pointers.star_formation =
+    log->logger_mask_data +
+    (log->mask_data_pointers.star_formation - old_logger_mask_data);
 
   /* Restart the dump file. */
   char logger_name_file[PARSER_MAX_LINE_SIZE];

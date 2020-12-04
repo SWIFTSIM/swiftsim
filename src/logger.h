@@ -153,6 +153,9 @@ struct logger_writer {
 
     /* pointer for the stars */
     struct mask_data *stars;
+
+    /* pointer for the star formation */
+    struct mask_data *star_formation;
   } mask_data_pointers;
 
   /* Number of elements in logger_mask_data. */
