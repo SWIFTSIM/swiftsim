@@ -43,4 +43,4 @@
 #error "Invalid choice of chemistry function."
 #endif
 
-#endif /* SWIFT_HYDRO_LOGGER_H */
+#endif /* SWIFT_CHEMISTRY_LOGGER_H */
