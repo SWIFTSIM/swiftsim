@@ -78,7 +78,7 @@ INLINE static int chemistry_logger_writer_populate_mask_data_part(
  */
 INLINE static int chemistry_logger_writer_populate_mask_data_spart(
     struct mask_data *mask_data) {
-  /* We store the metal mass fraction and the smoothed one. */
+  /* We store the metal mass fraction. */
   mask_data[chemistry_logger_field_spart_metal_mass_fractions] =
     logger_create_mask_entry(
         chemistry_logger_field_names_spart[chemistry_logger_field_spart_metal_mass_fractions],
