@@ -74,8 +74,7 @@ void logger_history_free(struct logger_history *hist) {
   /* Set the counters to 0 */
   hist->size = 0;
   hist->capacity = 0;
-  if (lock_destroy(&hist->lock) != 0)
-    error("Error destroying lock");
+  if (lock_destroy(&hist->lock) != 0) error("Error destroying lock");
 
   /* Free the memory */
   if (hist->data != NULL) {

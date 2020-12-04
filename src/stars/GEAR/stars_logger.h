@@ -40,9 +40,8 @@ enum stars_logger_fields {
 
 /* Name of each possible mask. */
 static const char *stars_logger_field_names[stars_logger_field_count] = {
-    "Coordinates", "Velocities",       "Accelerations",
-    "Masses",      "SmoothingLengths", "ParticleIDs",
-    "BirthScaleFactors",
+    "Coordinates",      "Velocities",  "Accelerations",     "Masses",
+    "SmoothingLengths", "ParticleIDs", "BirthScaleFactors",
 };
 
 /**
@@ -131,8 +130,8 @@ INLINE static void stars_logger_compute_size_and_mask(
                                     buffer_size);
 
   /* Add the birth scale factor. */
-  *mask |= logger_add_field_to_mask(masks[stars_logger_field_birth_scale_factors],
-                                    buffer_size);
+  *mask |= logger_add_field_to_mask(
+      masks[stars_logger_field_birth_scale_factors], buffer_size);
 }
 
 /**
@@ -194,8 +193,8 @@ INLINE static char *stars_logger_write_particle(
   }
 
   /* Write the birth scale factor. */
-  if (logger_should_write_field(mask_data[stars_logger_field_birth_scale_factors],
-                                mask)) {
+  if (logger_should_write_field(
+          mask_data[stars_logger_field_birth_scale_factors], mask)) {
     memcpy(buff, &p->birth_scale_factor, sizeof(float));
     buff += sizeof(float);
   }
