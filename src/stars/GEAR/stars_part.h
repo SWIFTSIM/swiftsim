@@ -92,6 +92,11 @@ struct spart {
   /*! Chemistry structure */
   struct chemistry_spart_data chemistry_data;
 
+#ifdef WITH_LOGGER
+  /* Additional data for the particle logger */
+  struct logger_part_data logger_data;
+#endif
+
   /*! Radiative Transfer data */
   struct rt_spart_data rt_data;
 

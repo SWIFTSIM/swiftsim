@@ -39,7 +39,7 @@
 
 /* Local headers. */
 #include "atomic.h"
-#include "chemistry_io.h"
+#include "chemistry_logger.h"
 #include "dump.h"
 #include "engine.h"
 #include "error.h"
