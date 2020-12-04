@@ -37,7 +37,7 @@
 #elif defined(STARS_EAGLE)
 #error TODO
 #elif defined(STARS_GEAR)
-#error TODO
+#include "./stars/GEAR/stars_logger.h"
 #else
 #error "Invalid choice of star model"
 #endif

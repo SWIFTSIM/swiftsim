@@ -32,7 +32,7 @@
 #if defined(CHEMISTRY_NONE)
 #include "./chemistry/none/chemistry_logger.h"
 #elif defined(CHEMISTRY_GEAR)
-#error TODO
+#include "./chemistry/GEAR/chemistry_logger.h"
 #elif defined(CHEMISTRY_GEAR_DIFFUSION)
 #error TODO
 #elif defined(CHEMISTRY_QLA)
