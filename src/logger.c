@@ -45,7 +45,7 @@
 #include "error.h"
 #include "gravity_logger.h"
 #include "hydro_logger.h"
-#include "star_formation.h"
+#include "star_formation_particle_logger.h"
 #include "stars_logger.h"
 #include "units.h"
 
@@ -780,7 +780,7 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
   log->mask_data_pointers.star_formation = tmp;
 
   /* Set the masks */
-  tmp_num_fields = star_formation_logger_writer_populate_mask_data_spart(tmp);
+  tmp_num_fields = star_formation_logger_writer_populate_mask_data(tmp);
   /* Set the particle type */
   for (int i = 0; i < tmp_num_fields; i++) {
     tmp[i].type = mask_type_stars;

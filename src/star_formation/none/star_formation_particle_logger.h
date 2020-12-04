@@ -46,7 +46,7 @@ enum star_formation_logger_fields_spart {
  */
 INLINE static int star_formation_logger_writer_populate_mask_data(
     struct mask_data *mask_data) {
-  return star_formation_logger_field_spart_count;
+  return star_formation_logger_field_count;
 }
 
 

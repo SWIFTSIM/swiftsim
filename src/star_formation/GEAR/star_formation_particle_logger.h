@@ -54,7 +54,7 @@ INLINE static int star_formation_logger_writer_populate_mask_data(
       star_formation_logger_field_names[star_formation_logger_field_all],
       2 * sizeof(float) + sizeof(long long));
 
-  return star_formation_logger_field_spart_count;
+  return star_formation_logger_field_count;
 }
 
 
@@ -102,17 +102,17 @@ INLINE static char *star_formation_logger_write_sparticle(
         mask_data[star_formation_logger_field_all], mask)) {
 
     /* Write the birth density */
-    memcpy(buff, p->sf_data.birth_density,
+    memcpy(buff, &sp->sf_data.birth_density,
            sizeof(float));
     buff += sizeof(float);
 
     /* Write the birth mass  */
-    memcpy(buff, p->sf_data.birth_mass,
+    memcpy(buff, &sp->sf_data.birth_mass,
            sizeof(float));
     buff += sizeof(float);
 
     /* Write the progenitor id  */
-    memcpy(buff, p->sf_data.progenitor_id,
+    memcpy(buff, &sp->sf_data.progenitor_id,
            sizeof(long long));
     buff += sizeof(long long);
   }

@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_CHEMISTRY_LOGGER_H
-#define SWIFT_CHEMISTRY_LOGGER_H
+#ifndef SWIFT_STAR_FORMATION_PARTICLE_LOGGER_H
+#define SWIFT_STAR_FORMATION_PARTICLE_LOGGER_H
 
 /* Config parameters. */
 #include "../config.h"
@@ -30,15 +30,15 @@
 
 /* Import the right function */
 #if defined(STAR_FORMATION_NONE)
-#include "./star_formation/none/star_formation_logger.h"
+#include "./star_formation/none/star_formation_particle_logger.h"
 #elif defined(STAR_FORMATION_QLA)
 #error TODO
 #elif defined(STAR_FORMATION_EAGLE)
 #error TODO
 #elif defined(STAR_FORMATION_GEAR)
-#error TODO
+#include "./star_formation/GEAR/star_formation_particle_logger.h"
 #else
 #error "Invalid choice of star formation law"
 #endif
 
-#endif /* SWIFT_HYDRO_LOGGER_H */
+#endif /* SWIFT_STAR_FORMATION_PARTICLE_LOGGER_H */
