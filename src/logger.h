@@ -151,6 +151,12 @@ struct logger_writer {
     /* pointer for the hydro */
     struct mask_data *hydro;
 
+    /* pointer for the chemistry */
+    struct mask_data *chemistry_part;
+
+    /* pointer for the chemistry */
+    struct mask_data *chemistry_spart;
+
     /* pointer for the gravity */
     struct mask_data *gravity;
 

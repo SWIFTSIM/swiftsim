@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Coypright (c) 2020 Loic Hausammann (loic.hausammann@epfl.ch)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,26 +16,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_CHEMISTRY_IO_H
-#define SWIFT_CHEMISTRY_IO_H
+#ifndef SWIFT_CHEMISTRY_LOGGER_H
+#define SWIFT_CHEMISTRY_LOGGER_H
 
 /* Config parameters. */
 #include "../config.h"
 
-/* Import the right functions */
+/* Local includes */
+#include "align.h"
+#include "logger.h"
+#include "part_type.h"
+#include "timeline.h"
+
+/* Import the right function */
 #if defined(CHEMISTRY_NONE)
-#include "./chemistry/none/chemistry_io.h"
 #include "./chemistry/none/chemistry_logger.h"
 #elif defined(CHEMISTRY_GEAR)
-#include "./chemistry/GEAR/chemistry_io.h"
+#error TODO
 #elif defined(CHEMISTRY_GEAR_DIFFUSION)
-#include "./chemistry/GEAR_DIFFUSION/chemistry_io.h"
+#error TODO
 #elif defined(CHEMISTRY_QLA)
-#include "./chemistry/QLA/chemistry_io.h"
+#error TODO
 #elif defined(CHEMISTRY_EAGLE)
-#include "./chemistry/EAGLE/chemistry_io.h"
+#error TODO
 #else
 #error "Invalid choice of chemistry function."
 #endif
 
-#endif /* SWIFT_CHEMISTRY_IO_H */
+#endif /* SWIFT_HYDRO_LOGGER_H */
