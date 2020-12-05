@@ -213,6 +213,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, int mode, float a, float H, long long ciID, long long cjID) {
 
+
   if (mode == 1) {
 
     pi->rt_data.calls_hydro_iact_force += 1;
@@ -227,16 +228,24 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
     pi->rt_data.hydro_neigh_iact_transp[f] = pj->id;
     pi->rt_data.hydro_neigh_cell_iact_transp[f] = cjID;
     pi->rt_data.hydro_neigh_iact_transp_free++;
-    if (llabs(pi->rt_data.hydro_this_cell_transport) < llabs(ciID))
+    if (llabs(pi->rt_data.hydro_this_cell_transport) < llabs(ciID)){
+      long long was = pi->rt_data.hydro_this_cell_transport;
       pi->rt_data.hydro_this_cell_transport = ciID;
+      printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pi->id, ciID, was);
+      fflush(stdout);
+    }
 
     f = pj->rt_data.hydro_neigh_iact_transp_free;
     if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
     pj->rt_data.hydro_neigh_iact_transp[f] = pi->id;
     pj->rt_data.hydro_neigh_cell_iact_transp[f] = ciID;
     pj->rt_data.hydro_neigh_iact_transp_free++;
-    if (llabs(pj->rt_data.hydro_this_cell_transport) < llabs(cjID))
+    if (llabs(pj->rt_data.hydro_this_cell_transport) < llabs(cjID)){
+      long long was = pj->rt_data.hydro_this_cell_transport;
       pj->rt_data.hydro_this_cell_transport = cjID;
+      printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pj->id, cjID, was);
+      fflush(stdout);
+    }
 
 
   } else {
@@ -249,9 +258,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
     pi->rt_data.hydro_neigh_iact_transp[f] = pj->id;
     pi->rt_data.hydro_neigh_cell_iact_transp[f] = cjID;
     pi->rt_data.hydro_neigh_iact_transp_free++;
-    pi->rt_data.hydro_this_cell_transport = ciID;
-    if (llabs(pi->rt_data.hydro_this_cell_transport) < llabs(ciID))
+    if (llabs(pi->rt_data.hydro_this_cell_transport) < llabs(ciID)){
+      long long was = pi->rt_data.hydro_this_cell_transport;
       pi->rt_data.hydro_this_cell_transport = ciID;
+      printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pi->id, ciID, was);
+      fflush(stdout);
+    }
   }
 
 

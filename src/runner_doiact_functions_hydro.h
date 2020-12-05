@@ -2541,6 +2541,18 @@ void DOSUB_PAIR1(struct runner *r, struct cell *ci, struct cell *cj,
 
   TIMER_TIC;
 
+// #if (FUNCTION_TASK_LOOP == TASK_LOOP_GRADIENT)
+// printf("--- called HYDRO GRAD DOSUB_PAIR1 for %18lld; top=%18lld\n", ci->cellID, ci->top->cellID);
+// fflush(stdout);
+// printf("--- called HYDRO GRAD DOSUB_PAIR1 for %18lld; top=%18lld\n", cj->cellID, cj->top->cellID);
+// fflush(stdout);
+// #elif (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+// printf("--- called RT_GRAD DOSUB_PAIR1 for %18lld; top=%18lld\n", ci->cellID, ci->top->cellID);
+// fflush(stdout);
+// printf("--- called RT_GRAD DOSUB_PAIR1 for %18lld; top=%18lld\n", cj->cellID, cj->top->cellID);
+// fflush(stdout);
+// #endif
+
   /* Should we even bother? */
   if (!cell_is_active_hydro(ci, e) && !cell_is_active_hydro(cj, e)) return;
   if (ci->hydro.count == 0 || cj->hydro.count == 0) return;
@@ -2603,6 +2615,13 @@ void DOSUB_SELF1(struct runner *r, struct cell *ci, int gettimer) {
   /* Should we even bother? */
   if (ci->hydro.count == 0 || !cell_is_active_hydro(ci, r->e)) return;
 
+// #if (FUNCTION_TASK_LOOP == TASK_LOOP_GRADIENT)
+// printf("--- called HYDRO GRAD DOSUB_SELF1 for %18lld; top=%18lld\n", ci->cellID, ci->top->cellID);
+// fflush(stdout);
+// #elif (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+// printf("--- called RT GRAD DOSUB_SELF1 for %18lld; top=%18lld\n", ci->cellID, ci->top->cellID);
+// fflush(stdout);
+// #endif
   /* Recurse? */
   if (cell_can_recurse_in_self_hydro_task(ci)) {
 
@@ -2654,6 +2673,18 @@ void DOSUB_PAIR2(struct runner *r, struct cell *ci, struct cell *cj,
   /* Get the type of pair and flip ci/cj if needed. */
   double shift[3];
   const int sid = space_getsid(s, &ci, &cj, shift);
+
+// #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
+// printf("--- called FORCE DOSUB_PAIR2 for %18lld; top=%18lld\n", ci->cellID, ci->top->cellID);
+// fflush(stdout);
+// printf("--- called FORCE DOSUB_PAIR2 for %18lld; top=%18lld\n", cj->cellID, cj->top->cellID);
+// fflush(stdout);
+// #elif (FUNCTION_TASK_LOOP == TASK_LOOP_RT_TRANSPORT)
+// printf("--- called TRANSPORT DOSUB_PAIR2 for %18lld; top=%18lld\n", ci->cellID, ci->top->cellID);
+// fflush(stdout);
+// printf("--- called TRANSPORT DOSUB_PAIR2 for %18lld; top=%18lld\n", cj->cellID, cj->top->cellID);
+// fflush(stdout);
+// #endif
 
   /* Recurse? */
   if (cell_can_recurse_in_pair_hydro_task(ci) &&
@@ -2709,6 +2740,13 @@ void DOSUB_SELF2(struct runner *r, struct cell *ci, int gettimer) {
   /* Should we even bother? */
   if (ci->hydro.count == 0 || !cell_is_active_hydro(ci, r->e)) return;
 
+// #if (FUNCTION_TASK_LOOP == TASK_LOOP_FORCE)
+// printf("--- called FORCE DOSUB_SELF2 for %18lld; top=%18lld\n", ci->cellID, ci->top->cellID);
+// fflush(stdout);
+// #elif (FUNCTION_TASK_LOOP == TASK_LOOP_RT_TRANSPORT)
+// printf("--- called TRANSPORT DOSUB_SELF2 for %18lld; top=%18lld\n", ci->cellID, ci->top->cellID);
+// fflush(stdout);
+// #endif
   /* Recurse? */
   if (cell_can_recurse_in_self_hydro_task(ci)) {
 

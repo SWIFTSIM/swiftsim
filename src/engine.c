@@ -2342,6 +2342,14 @@ void engine_step(struct engine *e) {
   }
 #endif
 
+  if (e->nodeID == 0) scheduler_write_task_level(&e->sched, &e->step);
+  sleep(0.1);
+  fflush(stdout);
+  printf("=====================================================\n");
+  printf("=====================================================\n");
+  printf("=====================================================\n");
+  fflush(stdout);
+
   TIMER_TOC2(timer_step);
 
   clocks_gettime(&time2);
