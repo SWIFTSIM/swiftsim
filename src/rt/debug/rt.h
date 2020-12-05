@@ -36,6 +36,8 @@ __attribute__((always_inline)) INLINE static void rt_init_part(
 __attribute__((always_inline)) INLINE static void rt_reset_part(
     struct part* restrict p) {
 
+  printf("RESETTING PARTID=%lld WAS=%lld\n", p->id, p->rt_data.hydro_this_cell_transport);
+
   p->rt_data.calls_per_step = 0;
   p->rt_data.iact_stars_inject = 0;
   p->rt_data.calls_self_inject = 0;
@@ -50,7 +52,7 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
 
   /* temp for debugging */
   for (int i = 0; i < 400; i++){
-    p->rt_data.neigh_iact_grad[i]  = 0;
+    p->rt_data.neigh_iact_grad[i]  = 0LL;
     p->rt_data.neigh_cell_iact_grad[i] = 0LL;
     p->rt_data.neigh_iact_transp[i] = 0LL;
     p->rt_data.neigh_cell_iact_transp[i] = 0LL;
@@ -61,7 +63,7 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.this_cell_transport = 0LL;
 
   for (int i = 0; i < 400; i++){
-    p->rt_data.hydro_neigh_iact_grad[i]  = 0;
+    p->rt_data.hydro_neigh_iact_grad[i]  = 0LL;
     p->rt_data.hydro_neigh_cell_iact_grad[i] = 0LL;
     p->rt_data.hydro_neigh_iact_transp[i] = 0LL;
     p->rt_data.hydro_neigh_cell_iact_transp[i] = 0LL;
