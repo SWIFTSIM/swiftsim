@@ -119,11 +119,15 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
       else if (t_type == task_type_self && t_subtype == task_subtype_force) {
         if (ci_active_hydro) scheduler_activate(s, t);
+        if (ci_active_hydro) 
+            atomic_inc(&t->ci->rt_debugging.hydro_force_marktasks_self);
       }
 
       else if (t_type == task_type_sub_self &&
                t_subtype == task_subtype_force) {
         if (ci_active_hydro) scheduler_activate(s, t);
+        if (ci_active_hydro) 
+            atomic_inc(&t->ci->rt_debugging.hydro_force_marktasks_sub_self);
       }
 
       else if (t->type == task_type_self &&
@@ -138,11 +142,15 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
       else if (t_type == task_type_self && t_subtype == task_subtype_gradient) {
         if (ci_active_hydro) scheduler_activate(s, t);
+        if (ci_active_hydro) 
+            atomic_inc(&t->ci->rt_debugging.hydro_gradient_marktasks_self);
       }
 
       else if (t_type == task_type_sub_self &&
                t_subtype == task_subtype_gradient) {
         if (ci_active_hydro) scheduler_activate(s, t);
+        if (ci_active_hydro) 
+            atomic_inc(&t->ci->rt_debugging.hydro_gradient_marktasks_sub_self);
       }
 
       /* Activate the star density */
@@ -352,6 +360,22 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
            (cj_active_hydro && cj_nodeID == nodeID))) {
 
         scheduler_activate(s, t);
+        if (t_type == task_type_pair && t_subtype == task_subtype_gradient) {
+          atomic_inc(&t->ci->rt_debugging.hydro_gradient_marktasks_pair);
+          atomic_inc(&t->cj->rt_debugging.hydro_gradient_marktasks_pair);
+        }
+        if (t_type == task_type_sub_pair && t_subtype == task_subtype_gradient) {
+          atomic_inc(&t->ci->rt_debugging.hydro_gradient_marktasks_sub_pair);
+          atomic_inc(&t->cj->rt_debugging.hydro_gradient_marktasks_sub_pair);
+        }
+        if (t_type == task_type_pair && t_subtype == task_subtype_force) {
+          atomic_inc(&t->ci->rt_debugging.hydro_force_marktasks_pair);
+          atomic_inc(&t->cj->rt_debugging.hydro_force_marktasks_pair);
+        }
+        if (t_type == task_type_sub_pair && t_subtype == task_subtype_force) {
+          atomic_inc(&t->ci->rt_debugging.hydro_force_marktasks_sub_pair);
+          atomic_inc(&t->cj->rt_debugging.hydro_force_marktasks_sub_pair);
+        }
 
         /* Set the correct sorting flags */
         if (t_type == task_type_pair && t_subtype == task_subtype_density) {

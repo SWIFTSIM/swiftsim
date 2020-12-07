@@ -229,10 +229,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
     pi->rt_data.hydro_neigh_cell_iact_transp[f] = cjID;
     pi->rt_data.hydro_neigh_iact_transp_free++;
     if (llabs(pi->rt_data.hydro_this_cell_transport) < llabs(ciID)){
-      long long was = pi->rt_data.hydro_this_cell_transport;
+      // long long was = pi->rt_data.hydro_this_cell_transport;
       pi->rt_data.hydro_this_cell_transport = ciID;
-      printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pi->id, ciID, was);
-      fflush(stdout);
+      // printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pi->id, ciID, was);
+      // fflush(stdout);
     }
 
     f = pj->rt_data.hydro_neigh_iact_transp_free;
@@ -241,10 +241,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
     pj->rt_data.hydro_neigh_cell_iact_transp[f] = ciID;
     pj->rt_data.hydro_neigh_iact_transp_free++;
     if (llabs(pj->rt_data.hydro_this_cell_transport) < llabs(cjID)){
-      long long was = pj->rt_data.hydro_this_cell_transport;
+      // long long was = pj->rt_data.hydro_this_cell_transport;
       pj->rt_data.hydro_this_cell_transport = cjID;
-      printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pj->id, cjID, was);
-      fflush(stdout);
+      // printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pj->id, cjID, was);
+      // fflush(stdout);
     }
 
 
@@ -259,10 +259,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
     pi->rt_data.hydro_neigh_cell_iact_transp[f] = cjID;
     pi->rt_data.hydro_neigh_iact_transp_free++;
     if (llabs(pi->rt_data.hydro_this_cell_transport) < llabs(ciID)){
-      long long was = pi->rt_data.hydro_this_cell_transport;
+      // long long was = pi->rt_data.hydro_this_cell_transport;
       pi->rt_data.hydro_this_cell_transport = ciID;
-      printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pi->id, ciID, was);
-      fflush(stdout);
+      // printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pi->id, ciID, was);
+      // fflush(stdout);
     }
   }
 
