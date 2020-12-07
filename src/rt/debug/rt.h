@@ -36,7 +36,7 @@ __attribute__((always_inline)) INLINE static void rt_init_part(
 __attribute__((always_inline)) INLINE static void rt_reset_part(
     struct part* restrict p) {
 
-  printf("RESETTING PARTID=%lld WAS=%lld\n", p->id, p->rt_data.hydro_this_cell_transport);
+  // printf("RESETTING PARTID=%lld WAS=%lld\n", p->id, p->rt_data.hydro_this_cell_transport);
 
   p->rt_data.calls_per_step = 0;
   p->rt_data.iact_stars_inject = 0;
