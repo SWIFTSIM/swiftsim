@@ -338,8 +338,8 @@ enum cell_flags {
   cell_flag_has_tasks = (1UL << 16),
   cell_flag_do_hydro_sync = (1UL << 17),
   cell_flag_do_hydro_sub_sync = (1UL << 18),
-  cell_flag_do_recursion_gravity_self = (1UL << 19),
-  cell_flag_do_recursion_gravity_pair = (1UL << 20)
+  cell_flag_unskip_self_grav_processed = (1UL << 19),
+  cell_flag_unskip_pair_grav_processed = (1UL << 20)
 };
 
 /**
