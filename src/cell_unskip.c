@@ -1138,7 +1138,7 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
     if (ci->grav.count == 0 || !cell_is_active_gravity(ci, e)) return 1;
 
     /* Has it already been processed? */
-    if (cell_get_flag(ci, cell_flag_do_recursion_gravity_self)) return 1;
+    if (cell_get_flag(ci, cell_flag_unskip_self_grav_processed)) return 1;
 
     /* Recurse? */
     if (ci->split) {
@@ -1160,7 +1160,7 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
     }
 
     /* Flag the cell has having been treated */
-    cell_set_flag(ci, cell_flag_do_recursion_gravity_self);
+    cell_set_flag(ci, cell_flag_unskip_self_grav_processed);
 
     /* And also return that information */
     return 1;
@@ -1170,8 +1170,8 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
   else {
 
     /* Has it already been processed? */
-    if (cell_get_flag(ci, cell_flag_do_recursion_gravity_pair) &&
-        cell_get_flag(cj, cell_flag_do_recursion_gravity_pair))
+    if (cell_get_flag(ci, cell_flag_unskip_pair_grav_processed) &&
+        cell_get_flag(cj, cell_flag_unskip_pair_grav_processed))
       return 1;
 
     /* Anything to do here?
@@ -1209,8 +1209,8 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
       }
 
       /* Flag the cells as having been fully processed. */
-      cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
-      cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
+      cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
+      cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
 
       /* And return that information */
       return 1;
@@ -1249,7 +1249,7 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           const int cell_done = (progenies_all_processed == ci_number_children);
 
           /* Flag the cells as being fully processed. */
-          if (cell_done) cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
+          if (cell_done) cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
           return cell_done;
 
         } else if (cj->split) {
@@ -1267,7 +1267,7 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           const int cell_done = (progenies_all_processed == cj_number_children);
 
           /* Flag the cells as being fully processed. */
-          if (cell_done) cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
+          if (cell_done) cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
           return cell_done;
 
         } else {
@@ -1294,7 +1294,7 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           const int cell_done = (progenies_all_processed == cj_number_children);
 
           /* Flag the cells as being fully processed. */
-          if (cell_done) cell_set_flag(cj, cell_flag_do_recursion_gravity_pair);
+          if (cell_done) cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
           return cell_done;
 
         } else if (ci->split) {
@@ -1312,7 +1312,7 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           const int cell_done = (progenies_all_processed == ci_number_children);
 
           /* Flag the cells as being done. */
-          if (cell_done) cell_set_flag(ci, cell_flag_do_recursion_gravity_pair);
+          if (cell_done) cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
           return cell_done;
 
         } else {
