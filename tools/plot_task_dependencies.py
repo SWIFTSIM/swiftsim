@@ -683,11 +683,12 @@ def write_dependencies(f, data):
     N = len(data)
     written = []
     max_rank = data["number_rank"].max()
-    for i in range(N):
+    #  for i in range(N):
+    for i, l in data.iterrows():
         # get data
-        ta = data["task_in"][i]
-        tb = data["task_out"][i]
-        number_link = data["number_link"][i]
+        ta = l["task_in"]
+        tb = l["task_out"]
+        number_link = l["number_link"]
 
         # check if already done
         name = "%s_%s" % (ta, tb)
@@ -697,12 +698,12 @@ def write_dependencies(f, data):
         written.append(name)
 
         # write relation
-        arrow = ",color=%s" % data["task_colour"][i]
-        if data["number_rank"][i] != max_rank:
+        arrow = ",color=%s" % l["task_colour"]
+        if l["number_rank"] != max_rank:
             arrow += ",style=dashed"
         f.write(
             "\t %s->%s[label=%i%s,fontcolor=%s]\n"
-            % (ta, tb, number_link, arrow, data["task_colour"][i])
+            % (ta, tb, number_link, arrow, l["task_colour"])
         )
 
 
@@ -769,6 +770,8 @@ if __name__ == "__main__":
 
     data = append_data(data)
     data = set_task_colours(data)
+    data.sort_values(by=['task_in', 'task_out'], inplace=True)
+    data.reset_index(inplace=True, drop=True)
 
     # write output
     with open(dot_output, "w") as f:

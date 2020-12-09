@@ -406,7 +406,7 @@ void task_dependency_sum(void *in_p, void *out_p, int *len,
  * @param s The #scheduler we are working in.
  * @param verbose Are we verbose about this?
  */
-void scheduler_write_dependencies(struct scheduler *s, int verbose) {
+void scheduler_write_dependencies(struct scheduler *s, int outputnr, int verbose) {
   const ticks tic = getticks();
 
   /* Number of possible relations between tasks */
@@ -592,7 +592,11 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose) {
 
   if (s->nodeID == 0) {
     /* Create file */
-    const char *filename = "dependency_graph.csv";
+    char filename[200] = "dependency_graph-";
+    char stepnr[5];
+    sprintf(stepnr, "%04d", outputnr);
+    strcat(filename, stepnr);
+    strcat(filename, ".csv\0");
     FILE *f = fopen(filename, "w");
     if (f == NULL) error("Error opening dependency graph file.");
 
