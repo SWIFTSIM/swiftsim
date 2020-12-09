@@ -173,7 +173,7 @@ struct part {
   /*! Black holes information (e.g. swallowing ID) */
   struct black_holes_part_data black_holes_data;
 
-  /* Additional Radiative Transfer Data */
+  /*! Additional Radiative Transfer Data */
   struct rt_part_data rt_data;
 
   /*! Time-step length */

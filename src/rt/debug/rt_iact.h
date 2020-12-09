@@ -35,7 +35,7 @@
  * @param hi Comoving smoothing-length of particle i.
  * @param hj Comoving smoothing-length of particle j.
  * @param si Star particle.
- * @param xpj Hydro particle extra data.
+ * @param pj Hydro particle.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
     const float r2, float *dx, const float hi, const float hj,
@@ -96,6 +96,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     pi->rt_data.neigh_iact_transp_free++;
     if (llabs(pi->rt_data.this_cell_transport) < llabs(ciID))
       pi->rt_data.this_cell_transport = ciID;
+    pi->rt_data.h_transport = hi;
 
     f = pj->rt_data.neigh_iact_transp_free;
     if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
@@ -104,6 +105,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     pj->rt_data.neigh_iact_transp_free++;
     if (llabs(pj->rt_data.this_cell_transport) < llabs(cjID))
       pj->rt_data.this_cell_transport = cjID;
+    pj->rt_data.h_transport = hj;
 
 
   } else {
@@ -117,6 +119,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     pi->rt_data.neigh_iact_transp_free++;
     if (llabs(pi->rt_data.this_cell_transport) < llabs(ciID))
       pi->rt_data.this_cell_transport = ciID;
+    pi->rt_data.h_transport = hi;
   }
 }
 
