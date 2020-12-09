@@ -66,6 +66,7 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
   pi->rt_data.hydro_neigh_iact_grad_free++;
   if (llabs(pi->rt_data.hydro_this_cell_grad) < llabs(ciID))
     pi->rt_data.hydro_this_cell_grad = ciID;
+  pi->rt_data.h_hydro_grad = hi;
 
   f = pj->rt_data.hydro_neigh_iact_grad_free;
   if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");
@@ -74,6 +75,7 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
   pj->rt_data.hydro_neigh_iact_grad_free++;
   if (llabs(pj->rt_data.hydro_this_cell_grad) < llabs(cjID))
     pj->rt_data.hydro_this_cell_grad = cjID;
+  pj->rt_data.h_hydro_grad = hj;
 
   const float r_inv = 1.0f / sqrtf(r2);
   const float r = r2 * r_inv;
@@ -213,6 +215,7 @@ hydro_gradients_nonsym_collect(float r2, const float *dx, float hi, float hj,
   pi->rt_data.hydro_neigh_iact_grad_free++;
   if (llabs(pi->rt_data.hydro_this_cell_grad) < llabs(ciID))
     pi->rt_data.hydro_this_cell_grad = ciID;
+  pi->rt_data.h_hydro_grad = hi;
 
   const float r_inv = 1.0f / sqrtf(r2);
   const float r = r2 * r_inv;

@@ -176,7 +176,23 @@ INLINE static int rt_write_particles(const struct part* parts,
                            0, parts, rt_data.calls_hydro_iact_force_nonsym,
                            "number of non-symmetric calls to this particle during the"
                            "force interaction loop");
-  return 34;
+  list[34] =
+      io_make_output_field("RTSmlGrad", FLOAT, 1, UNIT_CONV_NO_UNITS,
+                           0, parts, rt_data.h_grad,
+                           "h used in RT gradient interaction loop");
+  list[35] =
+      io_make_output_field("RTSmlTransport", FLOAT, 1, UNIT_CONV_NO_UNITS,
+                           0, parts, rt_data.h_transport,
+                           "h used in RT transport interaction loop");
+  list[36] =
+      io_make_output_field("RTHydroSmlGrad", FLOAT, 1, UNIT_CONV_NO_UNITS,
+                           0, parts, rt_data.h_hydro_grad,
+                           "h used in hydro gradient interaction loop");
+  list[37] =
+      io_make_output_field("RTHydroSmlForce", FLOAT, 1, UNIT_CONV_NO_UNITS,
+                           0, parts, rt_data.h_force,
+                           "h used in hydro force interaction loop");
+  return 38;
 }
 
 /**

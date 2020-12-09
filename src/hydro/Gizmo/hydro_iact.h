@@ -234,6 +234,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
       // printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pi->id, ciID, was);
       // fflush(stdout);
     }
+    pi->rt_data.h_force = hi;
 
     f = pj->rt_data.hydro_neigh_iact_transp_free;
     if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
@@ -246,6 +247,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
       // printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pj->id, cjID, was);
       // fflush(stdout);
     }
+    pj->rt_data.h_force = hj;
 
 
   } else {
@@ -264,6 +266,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
       // printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pi->id, ciID, was);
       // fflush(stdout);
     }
+    pi->rt_data.h_force = hi;
   }
 
 

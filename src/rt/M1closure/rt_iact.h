@@ -33,7 +33,7 @@
  * @param hi Comoving smoothing-length of particle i.
  * @param hj Comoving smoothing-length of particle j.
  * @param si Star particle.
- * @param xpj Hydro particle extra data.
+ * @param pj Hydro particle.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
     const float r2, float *dx, const float hi, const float hj,
