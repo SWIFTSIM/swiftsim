@@ -1249,7 +1249,8 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           const int cell_done = (progenies_all_processed == ci_number_children);
 
           /* Flag the cells as being fully processed. */
-          if (cell_done) cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
+          if (cell_done)
+            cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
           return cell_done;
 
         } else if (cj->split) {
@@ -1267,7 +1268,8 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           const int cell_done = (progenies_all_processed == cj_number_children);
 
           /* Flag the cells as being fully processed. */
-          if (cell_done) cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
+          if (cell_done)
+            cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
           return cell_done;
 
         } else {
@@ -1294,7 +1296,8 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           const int cell_done = (progenies_all_processed == cj_number_children);
 
           /* Flag the cells as being fully processed. */
-          if (cell_done) cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
+          if (cell_done)
+            cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
           return cell_done;
 
         } else if (ci->split) {
@@ -1312,7 +1315,8 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           const int cell_done = (progenies_all_processed == ci_number_children);
 
           /* Flag the cells as being done. */
-          if (cell_done) cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
+          if (cell_done)
+            cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
           return cell_done;
 
         } else {
