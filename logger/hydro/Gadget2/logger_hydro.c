@@ -19,8 +19,6 @@
 
 #include "config.h"
 
-#if defined(GADGET2_SPH)
-
 #include "logger_hydro.h"
 
 int hydro_logger_local_to_global[hydro_logger_field_count];
@@ -37,5 +35,3 @@ const int hydro_logger_field_size[hydro_logger_field_count] = {
     member_size(struct part, id),       // IDs
     member_size(struct part, rho),      // density
 };
-
-#endif
