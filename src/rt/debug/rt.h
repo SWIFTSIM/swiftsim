@@ -79,6 +79,11 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.calls_hydro_iact_force = 0;
   p->rt_data.calls_hydro_iact_force_sym = 0;
   p->rt_data.calls_hydro_iact_force_nonsym = 0;
+
+  p->rt_data.h_grad = 0.f;
+  p->rt_data.h_transport = 0.f;
+  p->rt_data.h_hydro_grad = 0.f;
+  p->rt_data.h_force = 0.f;
 }
 
 /**

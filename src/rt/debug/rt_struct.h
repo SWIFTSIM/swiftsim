@@ -72,6 +72,12 @@ struct rt_part_data {
   int calls_hydro_iact_force_sym;
   int calls_hydro_iact_force_nonsym;
 
+
+  float h_grad;
+  float h_transport;
+  float h_hydro_grad;
+  float h_force;
+
 };
 
 /* Additional RT data in star particle struct */
