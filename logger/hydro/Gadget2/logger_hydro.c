@@ -17,9 +17,9 @@
  *
  ******************************************************************************/
 
-#include "config.h"
-
 #include "logger_hydro.h"
+
+#include "config.h"
 
 int hydro_logger_local_to_global[hydro_logger_field_count];
 /* Define the size of all the fields. */
