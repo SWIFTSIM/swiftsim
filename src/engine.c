@@ -2294,9 +2294,6 @@ void engine_step(struct engine *e) {
 
   if (e->ti_end_min == e->ti_current && e->ti_end_min < max_nr_timesteps)
     error("Obtained a time-step of size 0");
-
-  /* Verify that all the unskip flags for the gravity have been cleaned */
-  space_check_unskip_flags(e->s);
 #endif
 
   /********************************************************/
