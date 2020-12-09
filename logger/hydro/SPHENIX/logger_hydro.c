@@ -19,8 +19,6 @@
 
 #include "config.h"
 
-#if defined(SPHENIX_SPH)
-
 #include "logger_hydro.h"
 
 int hydro_logger_local_to_global[hydro_logger_field_count];
@@ -42,5 +40,3 @@ const int hydro_logger_field_size[hydro_logger_field_count] = {
     3 * sizeof(float),                  // Viscosity / diffusion
     2 * sizeof(float),                  // Velocity divergence + deriv
 };
-
-#endif

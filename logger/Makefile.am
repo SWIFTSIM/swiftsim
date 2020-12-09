@@ -45,7 +45,13 @@ lib_LTLIBRARIES = liblogger.la
 
 GRAVITY_SRC = gravity/MultiSoftening/logger_gravity.c
 STARS_SRC = stars/Default/logger_stars.c
-HYDRO_SRC = hydro/Gadget2/logger_hydro.c hydro/SPHENIX/logger_hydro.c
+
+if HAVE_SPHENIX
+HYDRO_SRC = hydro/SPHENIX/logger_hydro.c
+endif
+if HAVE_GADGET2
+HYDRO_SRC = hydro/Gadget2/logger_hydro.c
+endif
 
 # subdirectories
 SUBDIRS = tests
