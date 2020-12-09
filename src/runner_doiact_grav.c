@@ -34,6 +34,27 @@
 #include "timers.h"
 
 /**
+ * @brief Clear the unskip flags of this cell and its parents.
+ */
+void runner_clear_grav_flags(struct cell *c) {
+
+  /* Early abort? */
+  if (!cell_get_flag(c, cell_flag_unskip_self_grav_processed) &&
+      !cell_get_flag(c, cell_flag_unskip_pair_grav_processed)) {
+    return;
+  }
+
+  /* Remove the unskip flags. */
+  cell_clear_flag(c, cell_flag_unskip_self_grav_processed |
+                         cell_flag_unskip_pair_grav_processed);
+
+  /* Do the parents */
+  if (c->parent != NULL) {
+    runner_clear_grav_flags(c->parent);
+  }
+}
+
+/**
  * @brief Recursively propagate the multipoles down the tree by applying the
  * L2L and L2P kernels.
  *
@@ -54,6 +75,9 @@ void runner_do_grav_down(struct runner *r, struct cell *c, int timer) {
   if (c->grav.multipole->pot.ti_init != e->ti_current)
     error("c->field tensor not initialised");
 #endif
+
+  /* Clear the flags */
+  runner_clear_grav_flags(c);
 
   if (c->split) {
 
@@ -178,6 +202,9 @@ static INLINE void runner_dopair_grav_pp_full_no_cache(
 #ifdef SWIFT_DEBUG_CHECKS
   if (ci->split) error("Using function above leaf level!");
 #endif
+
+  /* Clear the flags */
+  runner_clear_grav_flags(ci);
 
   /* Loop over sink particles */
   for (int i = 0; i < gcount_i; ++i) {
@@ -353,6 +380,9 @@ static INLINE void runner_dopair_grav_pp_truncated_no_cache(
     const float dim[3], const struct engine *e,
     const struct gravity_props *grav_props, struct gravity_cache *cache_i,
     struct cell *ci, const struct gravity_tensors *multi_j) {
+
+  /* Clear the flags */
+  runner_clear_grav_flags(ci);
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (!e->s->periodic)
@@ -1136,6 +1166,10 @@ static INLINE void runner_dopair_grav_pm_truncated(
 void runner_dopair_grav_pp(struct runner *r, struct cell *ci, struct cell *cj,
                            const int symmetric, const int allow_mpole) {
 
+  /* Clear the flags */
+  runner_clear_grav_flags(ci);
+  runner_clear_grav_flags(cj);
+
   /* Recover some useful constants */
   const struct engine *e = r->e;
   const int periodic = e->mesh->periodic;
@@ -1373,6 +1407,9 @@ void runner_dopair_grav_pp(struct runner *r, struct cell *ci, struct cell *cj,
  */
 void runner_dopair_grav_pp_no_cache(struct runner *r, struct cell *restrict ci,
                                     const struct cell *restrict cj) {
+
+  /* Clear the flags */
+  runner_clear_grav_flags(ci);
 
   /* Recover some useful constants */
   const struct engine *e = r->e;
@@ -1698,6 +1735,8 @@ static INLINE void runner_doself_grav_pp_truncated(
  * @param c The #cell.
  */
 void runner_doself_grav_pp(struct runner *r, struct cell *c) {
+  /* Clear the flags */
+  runner_clear_grav_flags(c);
 
   /* Recover some useful constants */
   const struct engine *e = r->e;
@@ -1794,6 +1833,10 @@ static INLINE void runner_dopair_grav_mm_symmetric(struct runner *r,
                                                    struct cell *restrict ci,
                                                    struct cell *restrict cj) {
 
+  /* Clear the flags */
+  runner_clear_grav_flags(ci);
+  runner_clear_grav_flags(cj);
+
   /* Some constants */
   const struct engine *e = r->e;
   const struct gravity_props *props = e->gravity_properties;
@@ -1878,6 +1921,10 @@ static INLINE void runner_dopair_grav_mm_nonsym(struct runner *r,
                                                 struct cell *restrict ci,
                                                 struct cell *restrict cj) {
 
+  /* Clear the flags */
+  runner_clear_grav_flags(ci);
+  runner_clear_grav_flags(cj);
+
   /* Some constants */
   const struct engine *e = r->e;
   const struct gravity_props *props = e->gravity_properties;
@@ -1945,6 +1992,10 @@ static INLINE void runner_dopair_grav_mm(struct runner *r,
                                          struct cell *restrict ci,
                                          struct cell *restrict cj) {
 
+  /* Clear the flags */
+  runner_clear_grav_flags(ci);
+  runner_clear_grav_flags(cj);
+
   const struct engine *e = r->e;
 
   /* What do we need to do? */
@@ -1980,6 +2031,10 @@ void runner_dopair_grav_mm_progenies(struct runner *r, const long long flags,
                                      struct cell *restrict ci,
                                      struct cell *restrict cj) {
 
+  /* Clear the flags */
+  runner_clear_grav_flags(ci);
+  runner_clear_grav_flags(cj);
+
   /* Loop over all pairs of progenies */
   for (int i = 0; i < 8; i++) {
     if (ci->progeny[i] != NULL) {
@@ -2001,6 +2056,9 @@ void runner_dopair_grav_mm_progenies(struct runner *r, const long long flags,
 
 void runner_dopair_recursive_grav_pm(struct runner *r, struct cell *ci,
                                      const struct cell *cj) {
+  /* Clear the flags */
+  runner_clear_grav_flags(ci);
+
   /* Some constants */
   const struct engine *e = r->e;
   const int periodic = e->mesh->periodic;
@@ -2108,6 +2166,10 @@ void runner_dopair_recursive_grav_pm(struct runner *r, struct cell *ci,
  */
 void runner_dopair_recursive_grav(struct runner *r, struct cell *ci,
                                   struct cell *cj, const int gettimer) {
+
+  /* Clear the flags */
+  runner_clear_grav_flags(ci);
+  runner_clear_grav_flags(cj);
 
   /* Some constants */
   const struct engine *e = r->e;
@@ -2282,6 +2344,9 @@ void runner_dopair_recursive_grav(struct runner *r, struct cell *ci,
 void runner_doself_recursive_grav(struct runner *r, struct cell *c,
                                   const int gettimer) {
 
+  /* Clear the flags */
+  runner_clear_grav_flags(c);
+
   /* Some constants */
   const struct engine *e = r->e;
 
@@ -2333,6 +2398,9 @@ void runner_doself_recursive_grav(struct runner *r, struct cell *c,
  */
 void runner_do_grav_long_range(struct runner *r, struct cell *ci,
                                const int timer) {
+
+  /* Clear the flags */
+  runner_clear_grav_flags(ci);
 
   /* Some constants */
   const struct engine *e = r->e;

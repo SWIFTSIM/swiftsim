@@ -25,6 +25,7 @@
 struct runner;
 struct cell;
 
+void runner_clear_grav_flags(struct cell *c);
 void runner_do_grav_down(struct runner *r, struct cell *c, int timer);
 
 void runner_dopair_grav_pp(struct runner *r, struct cell *ci, struct cell *cj,
