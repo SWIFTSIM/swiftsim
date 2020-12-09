@@ -2343,6 +2343,7 @@ void engine_step(struct engine *e) {
 #endif
 
   if (e->nodeID == 0) scheduler_write_task_level(&e->sched, &e->step);
+  if (e->nodeID == 0) scheduler_write_dependencies(&e->sched, e->step, e->verbose);
 
   TIMER_TOC2(timer_step);
 
