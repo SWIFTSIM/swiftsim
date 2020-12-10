@@ -111,6 +111,9 @@ struct scheduler {
 
   /* Total ticks spent running the tasks */
   ticks total_ticks;
+
+  /* Frequency of the dependency graph dumping. */
+  int frequency_dependency;
 };
 
 /* Inlined functions (for speed). */

@@ -2227,6 +2227,9 @@ void engine_step(struct engine *e) {
   clocks_get_cputimes_used(&start_usertime, &start_systime);
 #endif
 
+  /* Write the dependencies */
+  scheduler_write_dependencies(&e->sched, e->verbose);
+
   /* Start all the tasks. */
   TIMER_TIC;
   engine_launch(e, "tasks");
