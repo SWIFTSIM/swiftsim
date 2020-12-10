@@ -2455,125 +2455,12 @@ void space_write_cell(const struct space *s, FILE *f, struct cell *c) {
   fprintf(f, "%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ", c->hydro.count,
           c->stars.count, c->grav.count, superID, hydro_superID, c->loc[0],
           c->loc[1], c->loc[2], c->width[0], c->width[1], c->width[2]);
-  fprintf(f, "%g, %g, %i, %i, ", c->hydro.h_max, c->stars.h_max, c->depth,
+  fprintf(f, "%g, %g, %i, %i\n", c->hydro.h_max, c->stars.h_max, c->depth,
           c->maxdepth);
-  fprintf(f, "%i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i ,%i, %i, %i, %i, %i, %i, %i, ",
-          c->rt_debugging.gradient_self_created,
-          c->rt_debugging.gradient_sub_self_created,
-          c->rt_debugging.gradient_pair_created,
-          c->rt_debugging.gradient_sub_pair_created,
-          c->rt_debugging.gradient_cell_unskip_self,
-          c->rt_debugging.gradient_cell_unskip_sub_self,
-          c->rt_debugging.gradient_cell_unskip_pair,
-          c->rt_debugging.gradient_cell_unskip_sub_pair,
-          c->rt_debugging.gradient_marktasks_self,
-          c->rt_debugging.gradient_marktasks_sub_self,
-          c->rt_debugging.gradient_marktasks_pair,
-          c->rt_debugging.gradient_marktasks_sub_pair,
-          c->rt_debugging.gradient_link_added, 
-          c->rt_debugging.gradient_link_walked, 
-          c->rt_debugging.transport_self_created,
-          c->rt_debugging.transport_sub_self_created,
-          c->rt_debugging.transport_pair_created,
-          c->rt_debugging.transport_sub_pair_created,
-          c->rt_debugging.transport_cell_unskip_self,
-          c->rt_debugging.transport_cell_unskip_sub_self,
-          c->rt_debugging.transport_cell_unskip_pair,
-          c->rt_debugging.transport_cell_unskip_sub_pair,
-          c->rt_debugging.transport_marktasks_self,
-          c->rt_debugging.transport_marktasks_sub_self,
-          c->rt_debugging.transport_marktasks_pair,
-          c->rt_debugging.transport_marktasks_sub_pair,
-          c->rt_debugging.transport_link_added, 
-          c->rt_debugging.transport_link_walked);
-  fprintf(f, "%i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i ,%i, %i, %i, %i, %i, %i, %i\n",
-          c->rt_debugging.hydro_gradient_self_created,
-          c->rt_debugging.hydro_gradient_sub_self_created,
-          c->rt_debugging.hydro_gradient_pair_created,
-          c->rt_debugging.hydro_gradient_sub_pair_created,
-          c->rt_debugging.hydro_gradient_cell_unskip_self,
-          c->rt_debugging.hydro_gradient_cell_unskip_sub_self,
-          c->rt_debugging.hydro_gradient_cell_unskip_pair,
-          c->rt_debugging.hydro_gradient_cell_unskip_sub_pair,
-          c->rt_debugging.hydro_gradient_marktasks_self,
-          c->rt_debugging.hydro_gradient_marktasks_sub_self,
-          c->rt_debugging.hydro_gradient_marktasks_pair,
-          c->rt_debugging.hydro_gradient_marktasks_sub_pair,
-          c->rt_debugging.hydro_gradient_link_added, 
-          c->rt_debugging.hydro_gradient_link_walked, 
-          c->rt_debugging.hydro_force_self_created,
-          c->rt_debugging.hydro_force_sub_self_created,
-          c->rt_debugging.hydro_force_pair_created,
-          c->rt_debugging.hydro_force_sub_pair_created,
-          c->rt_debugging.hydro_force_cell_unskip_self,
-          c->rt_debugging.hydro_force_cell_unskip_sub_self,
-          c->rt_debugging.hydro_force_cell_unskip_pair,
-          c->rt_debugging.hydro_force_cell_unskip_sub_pair,
-          c->rt_debugging.hydro_force_marktasks_self,
-          c->rt_debugging.hydro_force_marktasks_sub_self,
-          c->rt_debugging.hydro_force_marktasks_pair,
-          c->rt_debugging.hydro_force_marktasks_sub_pair,
-          c->rt_debugging.hydro_force_link_added, 
-          c->rt_debugging.hydro_force_link_walked);
+
   /* reset values after writing */
-  c->rt_debugging.gradient_link_added = 0;
-  c->rt_debugging.gradient_link_walked = 0;
-  c->rt_debugging.gradient_self_created = 0;
-  c->rt_debugging.gradient_sub_self_created = 0;
-  c->rt_debugging.gradient_pair_created = 0;
-  c->rt_debugging.gradient_sub_pair_created = 0;
-  c->rt_debugging.gradient_cell_unskip_self = 0;
-  c->rt_debugging.gradient_cell_unskip_sub_self = 0;
-  c->rt_debugging.gradient_cell_unskip_pair = 0;
-  c->rt_debugging.gradient_cell_unskip_sub_pair = 0;
-  c->rt_debugging.gradient_marktasks_self = 0;
-  c->rt_debugging.gradient_marktasks_sub_self = 0;
-  c->rt_debugging.gradient_marktasks_pair = 0;
-  c->rt_debugging.gradient_marktasks_sub_pair = 0;
-  c->rt_debugging.transport_self_created = 0;
-  c->rt_debugging.transport_sub_self_created = 0;
-  c->rt_debugging.transport_pair_created = 0;
-  c->rt_debugging.transport_sub_pair_created = 0;
-  c->rt_debugging.transport_cell_unskip_self = 0;
-  c->rt_debugging.transport_cell_unskip_sub_self = 0;
-  c->rt_debugging.transport_cell_unskip_pair = 0;
-  c->rt_debugging.transport_cell_unskip_sub_pair = 0;
-  c->rt_debugging.transport_marktasks_self = 0;
-  c->rt_debugging.transport_marktasks_sub_self = 0;
-  c->rt_debugging.transport_marktasks_pair = 0;
-  c->rt_debugging.transport_marktasks_sub_pair = 0;
-  c->rt_debugging.transport_link_added = 0;
-  c->rt_debugging.transport_link_walked = 0;
-
-  c->rt_debugging.hydro_gradient_link_added = 0;
-  c->rt_debugging.hydro_gradient_link_walked = 0;
-  c->rt_debugging.hydro_gradient_self_created = 0;
-  c->rt_debugging.hydro_gradient_sub_self_created = 0;
-  c->rt_debugging.hydro_gradient_pair_created = 0;
-  c->rt_debugging.hydro_gradient_sub_pair_created = 0;
-  c->rt_debugging.hydro_gradient_cell_unskip_self = 0;
-  c->rt_debugging.hydro_gradient_cell_unskip_sub_self = 0;
-  c->rt_debugging.hydro_gradient_cell_unskip_pair = 0;
-  c->rt_debugging.hydro_gradient_cell_unskip_sub_pair = 0;
-  c->rt_debugging.hydro_gradient_marktasks_self = 0;
-  c->rt_debugging.hydro_gradient_marktasks_sub_self = 0;
-  c->rt_debugging.hydro_gradient_marktasks_pair = 0;
-  c->rt_debugging.hydro_gradient_marktasks_sub_pair = 0;
-  c->rt_debugging.hydro_force_self_created = 0;
-  c->rt_debugging.hydro_force_sub_self_created = 0;
-  c->rt_debugging.hydro_force_pair_created = 0;
-  c->rt_debugging.hydro_force_sub_pair_created = 0;
-  c->rt_debugging.hydro_force_cell_unskip_self = 0;
-  c->rt_debugging.hydro_force_cell_unskip_sub_self = 0;
-  c->rt_debugging.hydro_force_cell_unskip_pair = 0;
-  c->rt_debugging.hydro_force_cell_unskip_sub_pair = 0;
-  c->rt_debugging.hydro_force_marktasks_self = 0;
-  c->rt_debugging.hydro_force_marktasks_sub_self = 0;
-  c->rt_debugging.hydro_force_marktasks_pair = 0;
-  c->rt_debugging.hydro_force_marktasks_sub_pair = 0;
-  c->rt_debugging.hydro_force_link_added = 0;
-  c->rt_debugging.hydro_force_link_walked = 0;
-
+  c->rt_debugging.hydro_drifted = 0;
+  c->rt_debugging.stars_drifted = 0;
 
   /* Write children */
   for (int i = 0; i < 8; i++) {

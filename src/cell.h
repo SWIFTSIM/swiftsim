@@ -389,64 +389,8 @@ struct cell {
   struct cell_sinks sinks;
 
   struct {
-    /* TODO: REMOVE!!!!!!!!!! */
-    int gradient_self_created;
-    int gradient_sub_self_created;
-    int gradient_pair_created;
-    int gradient_sub_pair_created;
-    int gradient_cell_unskip_self;
-    int gradient_cell_unskip_sub_self;
-    int gradient_cell_unskip_pair;
-    int gradient_cell_unskip_sub_pair;
-    int gradient_marktasks_self;
-    int gradient_marktasks_sub_self;
-    int gradient_marktasks_pair;
-    int gradient_marktasks_sub_pair;
-    int gradient_link_added;
-    int gradient_link_walked;
-    int transport_self_created;
-    int transport_sub_self_created;
-    int transport_pair_created;
-    int transport_sub_pair_created;
-    int transport_cell_unskip_self;
-    int transport_cell_unskip_sub_self;
-    int transport_cell_unskip_pair;
-    int transport_cell_unskip_sub_pair;
-    int transport_marktasks_self;
-    int transport_marktasks_sub_self;
-    int transport_marktasks_pair;
-    int transport_marktasks_sub_pair;
-    int transport_link_added;
-    int transport_link_walked;
- 
-    int hydro_gradient_self_created;
-    int hydro_gradient_sub_self_created;
-    int hydro_gradient_pair_created;
-    int hydro_gradient_sub_pair_created;
-    int hydro_gradient_cell_unskip_self;
-    int hydro_gradient_cell_unskip_sub_self;
-    int hydro_gradient_cell_unskip_pair;
-    int hydro_gradient_cell_unskip_sub_pair;
-    int hydro_gradient_marktasks_self;
-    int hydro_gradient_marktasks_sub_self;
-    int hydro_gradient_marktasks_pair;
-    int hydro_gradient_marktasks_sub_pair;
-    int hydro_gradient_link_added;
-    int hydro_gradient_link_walked;
-    int hydro_force_self_created;
-    int hydro_force_sub_self_created;
-    int hydro_force_pair_created;
-    int hydro_force_sub_pair_created;
-    int hydro_force_cell_unskip_self;
-    int hydro_force_cell_unskip_sub_self;
-    int hydro_force_cell_unskip_pair;
-    int hydro_force_cell_unskip_sub_pair;
-    int hydro_force_marktasks_self;
-    int hydro_force_marktasks_sub_self;
-    int hydro_force_marktasks_pair;
-    int hydro_force_marktasks_sub_pair;
-    int hydro_force_link_added;
-    int hydro_force_link_walked;
+    int hydro_drifted;
+    int stars_drifted;
   } rt_debugging;
 
 #ifdef WITH_MPI
