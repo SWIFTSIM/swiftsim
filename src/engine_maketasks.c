@@ -1244,11 +1244,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
 #else
         scheduler_addunlock(s, c->super->kick2, c->stars.stars_in);
 #endif
-        if (!with_rt) {
-          /* stars_out is used as rt_in ghost. timestep dependency
-           * follows after RT is done. */
-          scheduler_addunlock(s, c->stars.stars_out, c->super->timestep);
-        }
+        scheduler_addunlock(s, c->stars.stars_out, c->super->timestep);
 
         if (with_feedback && with_star_formation && c->hydro.count > 0) {
           scheduler_addunlock(s, star_resort_cell->hydro.stars_resort,
@@ -1259,22 +1255,13 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
       /* Radiative Transfer */
       if (with_rt) {
         /* RT ghost in task */
-        if (!with_feedback) {
-          c->hydro.rt_in =
-              scheduler_addtask(s, task_type_rt_in, task_subtype_none, 0,
-                                /* implicit= */ 1, c, NULL);
-          if (with_star_formation && c->top->hydro.count > 0) {
-            scheduler_addunlock(s, c->top->hydro.star_formation,
-                                c->hydro.rt_in);
-          } else {
-            scheduler_addunlock(s, c->super->kick2, c->hydro.rt_in);
-          }
-        }
+        c->hydro.rt_in = scheduler_addtask(s, task_type_rt_in, task_subtype_none, 0, /* implicit= */ 1, c, NULL);
+        scheduler_addunlock(s, c->super->kick2, c->hydro.rt_in);
+        if (with_star_formation && c->top->hydro.count > 0) scheduler_addunlock(s, c->top->hydro.star_formation, c->hydro.rt_in);
+        if (with_feedback) scheduler_addunlock(s, c->stars.stars_out, c->hydro.rt_in);
 
-        /* RT ghost out task, always needed */
-        c->hydro.rt_out =
-            scheduler_addtask(s, task_type_rt_out, task_subtype_none, 0,
-                              /* implicit= */ 1, c, NULL);
+        /* RT ghost out task */
+        c->hydro.rt_out = scheduler_addtask(s, task_type_rt_out, task_subtype_none, 0, /* implicit= */ 1, c, NULL);
         scheduler_addunlock(s, c->hydro.rt_out, c->super->timestep);
 
         /* non-implicit ghost 1 */
@@ -2167,13 +2154,7 @@ atomic_inc(&ci->rt_debugging.hydro_gradient_link_added);
       }
 
       if (with_rt) {
-        if (with_feedback) {
-          /* then no rt_in task exists, use star ghost out */
-          scheduler_addunlock(sched, ci->hydro.super->stars.stars_out,
-                              t_rt_inject);
-        } else {
-          scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
-        }
+        scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
         scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
         scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
         scheduler_addunlock(sched, t_rt_gradient,
@@ -2451,14 +2432,7 @@ atomic_inc(&cj->rt_debugging.hydro_gradient_link_added);
         }
 
         if (with_rt) {
-          if (with_feedback) {
-            /* then no rt_in task exists, use star ghost out */
-            scheduler_addunlock(sched, ci->hydro.super->stars.stars_out,
-                                t_rt_inject);
-          } else {
-            scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in,
-                                t_rt_inject);
-          }
+          scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
           scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
           scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
           scheduler_addunlock(sched, t_rt_gradient,
@@ -2555,14 +2529,7 @@ atomic_inc(&cj->rt_debugging.hydro_gradient_link_added);
           }
 
           if (with_rt) {
-            if (with_feedback) {
-              /* then no rt_in task exists, use star ghost out */
-              scheduler_addunlock(sched, cj->hydro.super->stars.stars_out,
-                                  t_rt_inject);
-            } else {
-              scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in,
-                                  t_rt_inject);
-            }
+            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in, t_rt_inject);
             scheduler_addunlock(sched, t_rt_inject, cj->super->hydro.rt_ghost1);
             scheduler_addunlock(sched, cj->super->hydro.rt_ghost1,
                                 t_rt_gradient);
@@ -2823,13 +2790,7 @@ atomic_inc(&ci->rt_debugging.hydro_gradient_link_added);
       }
 
       if (with_rt) {
-        if (with_feedback) {
-          /* then no rt_in task exists, use star ghost out */
-          scheduler_addunlock(sched, ci->hydro.super->stars.stars_out,
-                              t_rt_inject);
-        } else {
-          scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
-        }
+        scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
         scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
         scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
         scheduler_addunlock(sched, t_rt_gradient,
@@ -3113,14 +3074,7 @@ atomic_inc(&cj->rt_debugging.hydro_gradient_link_added);
         }
 
         if (with_rt) {
-          if (with_feedback) {
-            /* then no rt_in task exists, use star ghost out */
-            scheduler_addunlock(sched, ci->hydro.super->stars.stars_out,
-                                t_rt_inject);
-          } else {
-            scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in,
-                                t_rt_inject);
-          }
+          scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
           scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
           scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
           scheduler_addunlock(sched, t_rt_gradient,
@@ -3215,14 +3169,7 @@ atomic_inc(&cj->rt_debugging.hydro_gradient_link_added);
                                 cj->hydro.super->black_holes.black_holes_out);
           }
           if (with_rt) {
-            if (with_feedback) {
-              /* then no rt_in task exists, use star ghost out */
-              scheduler_addunlock(sched, cj->hydro.super->stars.stars_out,
-                                  t_rt_inject);
-            } else {
-              scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in,
-                                  t_rt_inject);
-            }
+            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in, t_rt_inject);
             scheduler_addunlock(sched, t_rt_inject, cj->super->hydro.rt_ghost1);
             scheduler_addunlock(sched, cj->super->hydro.rt_ghost1,
                                 t_rt_gradient);

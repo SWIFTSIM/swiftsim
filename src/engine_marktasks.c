@@ -1176,7 +1176,6 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
     /* Radiative transfer implicit in */
     else if (t->type == task_type_rt_in) {
-      if (with_feedback) error("trying to activate rt_in task while feedback is on");
       if (cell_is_active_hydro(t->ci, e))
         scheduler_activate(s, t);
     }
