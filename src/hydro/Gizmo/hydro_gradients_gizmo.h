@@ -57,6 +57,10 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
 
   atomic_inc(&pj->rt_data.calls_hydro_iact_gradient);
   atomic_inc(&pj->rt_data.calls_hydro_iact_gradient_sym);
+  if (pi->rt_data.ghost_finished != 1) 
+    printf("--- Hydro Grad sym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
+  if (pj->rt_data.ghost_finished != 1) 
+    printf("--- Hydro Grad sym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
 
   int f;
   f = pi->rt_data.hydro_neigh_iact_grad_free;
@@ -207,6 +211,10 @@ hydro_gradients_nonsym_collect(float r2, const float *dx, float hi, float hj,
 
   atomic_inc(&pi->rt_data.calls_hydro_iact_gradient);
   atomic_inc(&pi->rt_data.calls_hydro_iact_gradient_nonsym);
+  if (pi->rt_data.ghost_finished != 1) 
+    printf("--- Hydro Grad nonsym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
+  if (pj->rt_data.ghost_finished != 1) 
+    printf("--- Hydro Grad nonsym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
 
   int f = pi->rt_data.hydro_neigh_iact_grad_free;
   if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");

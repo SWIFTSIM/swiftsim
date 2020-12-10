@@ -40,6 +40,11 @@ __attribute__((always_inline)) INLINE static void rt_gradients_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, long long ciID, long long cjID) {
 
+  if (pi->rt_data.ghost_finished != 1) 
+    printf("--- RT grad sym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
+  if (pj->rt_data.ghost_finished != 1) 
+    printf("--- RT grad sym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
+
   atomic_inc(&pi->rt_data.calls_iact_gradient);
   atomic_inc(&pi->rt_data.calls_iact_gradient_sym);
 
@@ -79,6 +84,11 @@ __attribute__((always_inline)) INLINE static void rt_gradients_collect(
 __attribute__((always_inline)) INLINE static void rt_gradients_nonsym_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, long long ciID, long long cjID) {
+
+  if (pi->rt_data.ghost_finished != 1) 
+    printf("--- RT grad nonsym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
+  if (pj->rt_data.ghost_finished != 1) 
+    printf("--- RT grad nonsym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
 
   atomic_inc(&pi->rt_data.calls_iact_gradient);
   atomic_inc(&pi->rt_data.calls_iact_gradient_nonsym);
