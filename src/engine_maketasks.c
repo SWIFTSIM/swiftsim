@@ -1968,7 +1968,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       /* Task for the second hydro loop, */
       t_force = scheduler_addtask(sched, task_type_self, task_subtype_force,
                                   flags, 0, ci, NULL);
-atomic_inc(&ci->rt_debugging.hydro_force_self_created);
 
       /* the task for the time-step limiter */
       if (with_timestep_limiter) {
@@ -2019,13 +2018,10 @@ atomic_inc(&ci->rt_debugging.hydro_force_self_created);
         t_rt_transport =
             scheduler_addtask(sched, task_type_self, task_subtype_rt_transport,
                               flags, 0, ci, NULL);
-atomic_inc(&ci->rt_debugging.gradient_self_created);
-atomic_inc(&ci->rt_debugging.transport_self_created);
       }
 
       /* Link the tasks to the cells */
       engine_addlink(e, &ci->hydro.force, t_force);
-atomic_inc(&ci->rt_debugging.hydro_force_link_added);
       if (with_timestep_limiter) {
         engine_addlink(e, &ci->hydro.limiter, t_limiter);
       }
@@ -2047,8 +2043,6 @@ atomic_inc(&ci->rt_debugging.hydro_force_link_added);
         engine_addlink(e, &ci->hydro.rt_inject, t_rt_inject);
         engine_addlink(e, &ci->hydro.rt_gradient, t_rt_gradient);
         engine_addlink(e, &ci->hydro.rt_transport, t_rt_transport);
-atomic_inc(&ci->rt_debugging.gradient_link_added);
-atomic_inc(&ci->rt_debugging.transport_link_added);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2056,11 +2050,9 @@ atomic_inc(&ci->rt_debugging.transport_link_added);
       /* Same work for the additional hydro loop */
       t_gradient = scheduler_addtask(sched, task_type_self,
                                      task_subtype_gradient, flags, 0, ci, NULL);
-atomic_inc(&ci->rt_debugging.hydro_gradient_self_created);
 
       /* Add the link between the new loops and the cell */
       engine_addlink(e, &ci->hydro.gradient, t_gradient);
-atomic_inc(&ci->rt_debugging.hydro_gradient_link_added);
 
       /* Now, build all the dependencies for the hydro */
       engine_make_hydro_loops_dependencies(sched, t, t_gradient, t_force,
@@ -2189,8 +2181,6 @@ atomic_inc(&ci->rt_debugging.hydro_gradient_link_added);
       /* New task for the force */
       t_force = scheduler_addtask(sched, task_type_pair, task_subtype_force,
                                   flags, 0, ci, cj);
-atomic_inc(&ci->rt_debugging.hydro_force_pair_created);
-atomic_inc(&cj->rt_debugging.hydro_force_pair_created);
 
       /* and the task for the time-step limiter */
       if (with_timestep_limiter) {
@@ -2238,16 +2228,10 @@ atomic_inc(&cj->rt_debugging.hydro_force_pair_created);
             sched, task_type_pair, task_subtype_rt_gradient, flags, 0, ci, cj);
         t_rt_transport = scheduler_addtask(
             sched, task_type_pair, task_subtype_rt_transport, flags, 0, ci, cj);
-atomic_inc(&ci->rt_debugging.gradient_pair_created);
-atomic_inc(&cj->rt_debugging.gradient_pair_created);
-atomic_inc(&ci->rt_debugging.transport_pair_created);
-atomic_inc(&cj->rt_debugging.transport_pair_created);
       }
 
       engine_addlink(e, &ci->hydro.force, t_force);
       engine_addlink(e, &cj->hydro.force, t_force);
-atomic_inc(&ci->rt_debugging.hydro_force_link_added);
-atomic_inc(&cj->rt_debugging.hydro_force_link_added);
       if (with_timestep_limiter) {
         engine_addlink(e, &ci->hydro.limiter, t_limiter);
         engine_addlink(e, &cj->hydro.limiter, t_limiter);
@@ -2281,10 +2265,6 @@ atomic_inc(&cj->rt_debugging.hydro_force_link_added);
         engine_addlink(e, &cj->hydro.rt_gradient, t_rt_gradient);
         engine_addlink(e, &ci->hydro.rt_transport, t_rt_transport);
         engine_addlink(e, &cj->hydro.rt_transport, t_rt_transport);
-atomic_inc(&ci->rt_debugging.gradient_link_added);
-atomic_inc(&ci->rt_debugging.transport_link_added);
-atomic_inc(&cj->rt_debugging.gradient_link_added);
-atomic_inc(&cj->rt_debugging.transport_link_added);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2292,15 +2272,11 @@ atomic_inc(&cj->rt_debugging.transport_link_added);
       /* Start by constructing the task for the second and third hydro loop */
       t_gradient = scheduler_addtask(sched, task_type_pair,
                                      task_subtype_gradient, flags, 0, ci, cj);
-atomic_inc(&ci->rt_debugging.hydro_gradient_pair_created);
-atomic_inc(&cj->rt_debugging.hydro_gradient_pair_created);
 
       /* Add the link between the new loop and both cells */
       engine_addlink(e, &ci->hydro.gradient, t_gradient);
       engine_addlink(e, &cj->hydro.gradient, t_gradient);
 
-atomic_inc(&ci->rt_debugging.hydro_gradient_link_added);
-atomic_inc(&cj->rt_debugging.hydro_gradient_link_added);
 
       /* Now, build all the dependencies for the hydro for the cells */
       /* that are local and are not descendant of the same super_hydro-cells */
@@ -2591,8 +2567,6 @@ atomic_inc(&cj->rt_debugging.hydro_gradient_link_added);
       /* Start by constructing the task for the second hydro loop */
       t_force = scheduler_addtask(sched, task_type_sub_self, task_subtype_force,
                                   flags, 0, ci, NULL);
-atomic_inc(&ci->rt_debugging.hydro_force_sub_self_created);
-
       /* and the task for the time-step limiter */
       if (with_timestep_limiter) {
         t_limiter = scheduler_addtask(sched, task_type_sub_self,
@@ -2648,13 +2622,10 @@ atomic_inc(&ci->rt_debugging.hydro_force_sub_self_created);
         t_rt_transport =
             scheduler_addtask(sched, task_type_sub_self,
                               task_subtype_rt_transport, flags, 0, ci, NULL);
-atomic_inc(&ci->rt_debugging.gradient_sub_self_created);
-atomic_inc(&ci->rt_debugging.transport_sub_self_created);
       }
 
       /* Add the link between the new loop and the cell */
       engine_addlink(e, &ci->hydro.force, t_force);
-atomic_inc(&ci->rt_debugging.hydro_force_link_added);
       if (with_timestep_limiter) {
         engine_addlink(e, &ci->hydro.limiter, t_limiter);
       }
@@ -2676,8 +2647,6 @@ atomic_inc(&ci->rt_debugging.hydro_force_link_added);
         engine_addlink(e, &ci->hydro.rt_inject, t_rt_inject);
         engine_addlink(e, &ci->hydro.rt_gradient, t_rt_gradient);
         engine_addlink(e, &ci->hydro.rt_transport, t_rt_transport);
-atomic_inc(&ci->rt_debugging.gradient_link_added);
-atomic_inc(&ci->rt_debugging.transport_link_added);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2685,11 +2654,9 @@ atomic_inc(&ci->rt_debugging.transport_link_added);
       /* Start by constructing the task for the second and third hydro loop */
       t_gradient = scheduler_addtask(sched, task_type_sub_self,
                                      task_subtype_gradient, flags, 0, ci, NULL);
-atomic_inc(&ci->rt_debugging.hydro_gradient_sub_self_created);
 
       /* Add the link between the new loop and the cell */
       engine_addlink(e, &ci->hydro.gradient, t_gradient);
-atomic_inc(&ci->rt_debugging.hydro_gradient_link_added);
 
       /* Now, build all the dependencies for the hydro for the cells */
       /* that are local and are not descendant of the same super_hydro-cells */
@@ -2826,9 +2793,6 @@ atomic_inc(&ci->rt_debugging.hydro_gradient_link_added);
       /* New task for the force */
       t_force = scheduler_addtask(sched, task_type_sub_pair, task_subtype_force,
                                   flags, 0, ci, cj);
-atomic_inc(&ci->rt_debugging.hydro_force_sub_pair_created);
-atomic_inc(&cj->rt_debugging.hydro_force_sub_pair_created);
-
       /* and the task for the time-step limiter */
       if (with_timestep_limiter) {
         t_limiter = scheduler_addtask(sched, task_type_sub_pair,
@@ -2881,16 +2845,10 @@ atomic_inc(&cj->rt_debugging.hydro_force_sub_pair_created);
         t_rt_transport =
             scheduler_addtask(sched, task_type_sub_pair,
                               task_subtype_rt_transport, flags, 0, ci, cj);
-atomic_inc(&ci->rt_debugging.gradient_sub_pair_created);
-atomic_inc(&cj->rt_debugging.gradient_sub_pair_created);
-atomic_inc(&ci->rt_debugging.transport_sub_pair_created);
-atomic_inc(&cj->rt_debugging.transport_sub_pair_created);
       }
 
       engine_addlink(e, &ci->hydro.force, t_force);
       engine_addlink(e, &cj->hydro.force, t_force);
-atomic_inc(&ci->rt_debugging.hydro_force_link_added);
-atomic_inc(&cj->rt_debugging.hydro_force_link_added);
       if (with_timestep_limiter) {
         engine_addlink(e, &ci->hydro.limiter, t_limiter);
         engine_addlink(e, &cj->hydro.limiter, t_limiter);
@@ -2924,10 +2882,6 @@ atomic_inc(&cj->rt_debugging.hydro_force_link_added);
         engine_addlink(e, &cj->hydro.rt_gradient, t_rt_gradient);
         engine_addlink(e, &ci->hydro.rt_transport, t_rt_transport);
         engine_addlink(e, &cj->hydro.rt_transport, t_rt_transport);
-atomic_inc(&ci->rt_debugging.gradient_link_added);
-atomic_inc(&ci->rt_debugging.transport_link_added);
-atomic_inc(&cj->rt_debugging.gradient_link_added);
-atomic_inc(&cj->rt_debugging.transport_link_added);
       }
 
 #ifdef EXTRA_HYDRO_LOOP
@@ -2935,14 +2889,10 @@ atomic_inc(&cj->rt_debugging.transport_link_added);
       /* Start by constructing the task for the second and third hydro loop */
       t_gradient = scheduler_addtask(sched, task_type_sub_pair,
                                      task_subtype_gradient, flags, 0, ci, cj);
-atomic_inc(&ci->rt_debugging.hydro_gradient_sub_pair_created);
-atomic_inc(&cj->rt_debugging.hydro_gradient_sub_pair_created);
 
       /* Add the link between the new loop and both cells */
       engine_addlink(e, &ci->hydro.gradient, t_gradient);
       engine_addlink(e, &cj->hydro.gradient, t_gradient);
-atomic_inc(&ci->rt_debugging.hydro_gradient_link_added);
-atomic_inc(&cj->rt_debugging.hydro_gradient_link_added);
 
       /* Now, build all the dependencies for the hydro for the cells */
       /* that are local and are not descendant of the same super_hydro-cells */
