@@ -415,6 +415,8 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
   /* Initialize time step criterion variables */
   p->timestepvars.vmax = 0.;
 
+  p->rt_data.ghost_finished += 1;
+
   hydro_gradients_init(p);
 
   hydro_velocities_prepare_force(p, xp);

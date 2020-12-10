@@ -28,7 +28,9 @@
  * @brief Initialisation of the RT density loop related particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_init_part(
-    struct part* restrict p) {}
+    struct part* restrict p) {
+    p->rt_data.ghost_finished = 0;
+}
 
 /**
  * @brief Reset of the RT extra hydro particle data.
