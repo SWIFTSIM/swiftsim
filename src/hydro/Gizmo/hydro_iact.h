@@ -222,6 +222,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
     pj->rt_data.calls_hydro_iact_force += 1;
     pj->rt_data.calls_hydro_iact_force_sym += 1;
 
+    if (pi->rt_data.ghost_finished != 1) 
+      printf("--- Hydro force sym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
+    if (pj->rt_data.ghost_finished != 1) 
+      printf("--- Hydro force sym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
+
     int f; 
     f = pi->rt_data.hydro_neigh_iact_transp_free;
     if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
@@ -251,6 +256,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
 
 
   } else {
+
+    if (pi->rt_data.ghost_finished != 1) 
+      printf("--- Hydro force nonsym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
+    if (pj->rt_data.ghost_finished != 1) 
+      printf("--- Hydro force nonsym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
 
     pi->rt_data.calls_hydro_iact_force += 1;
     pi->rt_data.calls_hydro_iact_force_nonsym += 1;

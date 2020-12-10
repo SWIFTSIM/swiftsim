@@ -82,6 +82,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     struct part *restrict pj, float a, float H, int mode, long long ciID, long long cjID) {
 
   if (mode == 1) {
+    if (pi->rt_data.ghost_finished != 1) 
+      printf("--- RT transport sym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
+    if (pj->rt_data.ghost_finished != 1) 
+      printf("--- RT transport sym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
+
     pi->rt_data.calls_iact_transport += 1;
     pi->rt_data.calls_iact_transport_sym += 1;
 
@@ -111,6 +116,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
   } else {
     pi->rt_data.calls_iact_transport += 1;
     pi->rt_data.calls_iact_transport_nonsym += 1;
+
+    if (pi->rt_data.ghost_finished != 1) 
+      printf("--- RT transport nonsym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
+    if (pj->rt_data.ghost_finished != 1) 
+      printf("--- RT transport nonsym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
 
     int f = pi->rt_data.neigh_iact_transp_free;
     if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");

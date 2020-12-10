@@ -78,6 +78,8 @@ struct rt_part_data {
   float h_hydro_grad;
   float h_force;
 
+  int ghost_finished;
+
 };
 
 /* Additional RT data in star particle struct */
