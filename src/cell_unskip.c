@@ -1204,13 +1204,15 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
 
       /* Activate the drifts if the cells are local. */
       if (cell_is_active_gravity(ci, e) || cell_is_active_gravity(cj, e)) {
-        if (ci->nodeID == engine_rank) cell_activate_drift_gpart(ci, s);
-        if (cj->nodeID == engine_rank) cell_activate_drift_gpart(cj, s);
+        if (ci->nodeID == engine_rank) {
+          cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
+          cell_activate_drift_gpart(ci, s);
+        }
+        if (cj->nodeID == engine_rank) {
+          cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
+          cell_activate_drift_gpart(cj, s);
+        }
       }
-
-      /* Flag the cells as having been fully processed. */
-      cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
-      cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
 
       /* And return that information */
       return 1;
