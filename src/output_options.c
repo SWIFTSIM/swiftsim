@@ -53,8 +53,9 @@ void output_options_init(struct swift_params* parameter_file, int mpi_rank,
   /* Load select_output */
   struct swift_params* select_output =
       (struct swift_params*)malloc(sizeof(struct swift_params));
-  if (select_output == NULL)
+  if (select_output == NULL) {
     error("Error allocating memory for select output options.");
+  }
 
   if (mpi_rank == 0) {
     const int select_output_on = parser_get_opt_param_int(
@@ -211,20 +212,22 @@ enum lossy_compression_schemes output_options_get_ptype_default_compression(
   /* Make sure that the supplied default option is either on or off, not a
    * compression strategy (these should only be set on a per-field basis) */
   if (!(level_index == compression_do_not_write ||
-        level_index == compression_write_lossless))
+        level_index == compression_write_lossless)) {
     error(
         "A lossy default compression strategy was specified for snapshot "
         "type %s and particle type %d. This is not allowed, lossy "
         "compression must be set on a field-by-field basis.",
         snapshot_type, ptype);
+  }
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check whether we could translate the level string to a known entry. */
-  if (level_index >= compression_level_count)
+  if (level_index >= compression_level_count) {
     error(
         "Could not resolve compression level \"%s\" as default compression "
         "level of particle type %s in snapshot type %s.",
         compression_level, part_type_names[ptype], snapshot_type);
+  }
 
   if (verbose > 0) {
     message(
@@ -263,17 +266,19 @@ int output_options_get_num_fields_to_write(
         selection_name);
 
   /* While we're at it, make sure the selection ID is not impossibly high */
-  if (selection_id >= output_options->select_output->sectionCount)
+  if (selection_id >= output_options->select_output->sectionCount) {
     error(
         "Output selection '%s' was apparently located in index %d of the "
         "output_options structure, but this only has %d sections.",
         selection_name, selection_id,
         output_options->select_output->sectionCount);
+  }
 #endif
 
   /* Special treatment for absent `Default` section */
-  if (selection_id < 0)
+  if (selection_id < 0) {
     selection_id = output_options->select_output->sectionCount;
+  }
 
   return output_options->num_fields_to_write[selection_id][ptype];
 }
