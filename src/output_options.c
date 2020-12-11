@@ -168,8 +168,7 @@ enum lossy_compression_schemes output_options_get_field_compression(
 
   if (verbose > 0) {
     message(
-        "Check for whether %s should be written returned %s from a provided "
-        "value of \"%s\"",
+        "%s should be written? %s from a provided value of \"%s\"",
         field, should_write ? "True" : "False", compression_level);
   }
 #endif
@@ -232,9 +231,8 @@ enum lossy_compression_schemes output_options_get_ptype_default_compression(
 
   if (verbose > 0) {
     message(
-        "Determined default compression level of %s in snapshot type %s "
-        "as \"%s\", corresponding to level code %d",
-        part_type_names[ptype], snapshot_type, compression_level, level_index);
+            "Default compression %s, snapshot type %s, compression level %s and level code %d",
+            part_type_names[ptype], snapshot_type, compression_level, level_index);
   }
 #endif
 
