@@ -2503,7 +2503,6 @@ void space_recurse_check_unskip_flag(const struct cell *c,
           c->depth);
   }
   if (cell_get_flag(c, cell_flag_unskip_pair_grav_processed)) {
-    message("%i %i", c->nodeID, s->e->nodeID);
     error("A cell is still containing a pair unskip flag for the gravity %i",
           c->depth);
   }
@@ -2526,7 +2525,7 @@ void space_check_unskip_flags(const struct space *s) {
   error("This function should not be called without the debugging checks.");
 #endif
 
-  for (int i = 0; i < s->nr_local_cells_with_tasks; i++) {
+  for (int i = 0; i < s->nr_cells; i++) {
     const struct cell *c = &s->cells_top[i];
     space_recurse_check_unskip_flag(c, s);
   }

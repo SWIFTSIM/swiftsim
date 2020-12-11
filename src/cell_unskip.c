@@ -1177,8 +1177,9 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
     /* Anything to do here?
      * Note that Here we return 0 as another pair direction for either of
      * the two cells could pass the tests. */
-    if (!cell_is_active_gravity(ci, e) && !cell_is_active_gravity(cj, e))
-      return 0;
+    const int do_ci = cell_is_active_gravity(ci, e) && ci->nodeID == e->nodeID;
+    const int do_cj = cell_is_active_gravity(cj, e) && cj->nodeID == e->nodeID;
+    if (!do_ci && !do_cj) return 0;
     if (ci->grav.count == 0 || cj->grav.count == 0) return 0;
 
     /* Atomically drift the multipole in ci */
