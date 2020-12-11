@@ -37,21 +37,9 @@
  * @brief Clear the unskip flags of this cell and its parents.
  */
 void runner_clear_grav_flags(struct cell *c) {
-
-  /* Early abort? */
-  if (!cell_get_flag(c, cell_flag_unskip_self_grav_processed) &&
-      !cell_get_flag(c, cell_flag_unskip_pair_grav_processed)) {
-    return;
-  }
-
   /* Remove the unskip flags. */
   cell_clear_flag(c, cell_flag_unskip_self_grav_processed |
                          cell_flag_unskip_pair_grav_processed);
-
-  /* Do the parents */
-  if (c->parent != NULL) {
-    runner_clear_grav_flags(c->parent);
-  }
 }
 
 /**

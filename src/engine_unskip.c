@@ -372,11 +372,6 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
  */
 void engine_unskip(struct engine *e) {
 
-#ifdef SWIFT_DEBUG_CHECKS
-  /* Verify that all the unskip flags for the gravity have been cleaned */
-  space_check_unskip_flags(e->s);
-#endif
-
   const ticks tic = getticks();
   struct space *s = e->s;
   const int nodeID = e->nodeID;

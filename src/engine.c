@@ -2298,6 +2298,9 @@ void engine_step(struct engine *e) {
   space_check_limiter(e->s);
   space_check_sort_flags(e->s);
   space_check_swallow(e->s);
+
+  /* Verify that all the unskip flags for the gravity have been cleaned */
+  space_check_unskip_flags(e->s);
 #endif
 
   /* Collect information about the next time-step */
