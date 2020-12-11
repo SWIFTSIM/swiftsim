@@ -40,7 +40,6 @@
 #include "space.h"
 
 /* Local headers. */
-#include "active.h"
 #include "atomic.h"
 #include "const.h"
 #include "cooling.h"
@@ -2494,23 +2493,25 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
  *
  * @param c The current #cell.
  */
-void space_recurse_check_unskip_flag(const struct cell *c,
-                                     const struct space *s) {
+void space_recurse_check_unskip_flag(const struct cell *c) {
 
   /* Check the current cell. */
   if (cell_get_flag(c, cell_flag_unskip_self_grav_processed)) {
-    error("A cell is still containing a self unskip flag for the gravity %i",
-          c->depth);
+    error(
+        "A cell is still containing a self unskip flag for the gravity "
+        "depth=%d node=%d",
+        c->depth, c->nodeID);
   }
   if (cell_get_flag(c, cell_flag_unskip_pair_grav_processed)) {
-    error("A cell is still containing a pair unskip flag for the gravity %i",
-          c->depth);
+    error(
+        "A cell is still containing a pair unskip flag for the gravity "
+        "depth=%d node=%d",
+        c->depth, c->nodeID);
   }
 
   /* Recurse */
   for (int i = 0; i < 8; i++) {
-    if (c->progeny[i] != NULL)
-      space_recurse_check_unskip_flag(c->progeny[i], s);
+    if (c->progeny[i] != NULL) space_recurse_check_unskip_flag(c->progeny[i]);
   }
 }
 
@@ -2527,6 +2528,6 @@ void space_check_unskip_flags(const struct space *s) {
 
   for (int i = 0; i < s->nr_cells; i++) {
     const struct cell *c = &s->cells_top[i];
-    space_recurse_check_unskip_flag(c, s);
+    space_recurse_check_unskip_flag(c);
   }
 }
