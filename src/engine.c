@@ -2228,7 +2228,9 @@ void engine_step(struct engine *e) {
 #endif
 
   /* Write the dependencies */
-  scheduler_write_dependencies(&e->sched, e->verbose);
+  if (e->sched.frequency_dependency != 0 &&
+      e->step % e->sched.frequency_dependency == 0)
+    scheduler_write_dependencies(&e->sched, e->verbose);
 
   /* Start all the tasks. */
   TIMER_TIC;

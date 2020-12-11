@@ -409,11 +409,6 @@ void task_dependency_sum(void *in_p, void *out_p, int *len,
 void scheduler_write_dependencies(struct scheduler *s, int verbose) {
   const struct engine *e = s->space->e;
 
-  /* Check if we should write the graph */
-  if (e->step != 0 &&
-      (s->frequency_dependency == 0 || e->step % s->frequency_dependency != 0))
-    return;
-
   const ticks tic = getticks();
 
   /* Number of possible relations between tasks */
