@@ -164,11 +164,12 @@ enum lossy_compression_schemes output_options_get_field_compression(
       strcmp(lossy_compression_schemes_names[compression_do_not_write],
              compression_level);
 
-  if (verbose > 0)
+  if (verbose > 0) {
     message(
         "Check for whether %s should be written returned %s from a provided "
         "value of \"%s\"",
         field, should_write ? "True" : "False", compression_level);
+  }
 #endif
 
   return compression_scheme_from_name(compression_level);
@@ -225,11 +226,12 @@ enum lossy_compression_schemes output_options_get_ptype_default_compression(
         "level of particle type %s in snapshot type %s.",
         compression_level, part_type_names[ptype], snapshot_type);
 
-  if (verbose > 0)
+  if (verbose > 0) {
     message(
         "Determined default compression level of %s in snapshot type %s "
         "as \"%s\", corresponding to level code %d",
         part_type_names[ptype], snapshot_type, compression_level, level_index);
+  }
 #endif
 
   return (enum lossy_compression_schemes)level_index;
