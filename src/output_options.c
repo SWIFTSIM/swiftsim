@@ -148,7 +148,7 @@ enum lossy_compression_schemes output_options_get_field_compression(
     const struct output_options* output_options, const char* snapshot_type,
     const char* field_name, const enum part_type ptype,
     const enum lossy_compression_schemes compression_level_current_default,
-    int verbose) {
+    const int verbose) {
 
   /* Full name for the field path */
   char field[PARSER_MAX_LINE_SIZE];
@@ -162,14 +162,13 @@ enum lossy_compression_schemes output_options_get_field_compression(
 
 #ifdef SWIFT_DEBUG_CHECKS
 
-  int should_write =
+  const int should_write =
       strcmp(lossy_compression_schemes_names[compression_do_not_write],
              compression_level);
 
-  if (verbose > 0) {
-    message(
-        "%s should be written? %s from a provided value of \"%s\"",
-        field, should_write ? "True" : "False", compression_level);
+  if (verbose) {
+    message("Field: %s Write: %s Comp level: \"%s\"", field,
+            should_write ? "True" : "False", compression_level);
   }
 #endif
 
@@ -189,7 +188,7 @@ enum lossy_compression_schemes output_options_get_field_compression(
  */
 enum lossy_compression_schemes output_options_get_ptype_default_compression(
     struct swift_params* output_params, const char* snapshot_type,
-    const enum part_type ptype, int verbose) {
+    const enum part_type ptype, const int verbose) {
 
   /* Full name for the default path */
   char field[PARSER_MAX_LINE_SIZE];
@@ -229,10 +228,11 @@ enum lossy_compression_schemes output_options_get_ptype_default_compression(
         compression_level, part_type_names[ptype], snapshot_type);
   }
 
-  if (verbose > 0) {
+  if (verbose) {
     message(
-            "Default compression %s, snapshot type %s, compression level %s and level code %d",
-            part_type_names[ptype], snapshot_type, compression_level, level_index);
+        "Default compression %s, snapshot type %s, compression level %s and "
+        "level code %d",
+        part_type_names[ptype], snapshot_type, compression_level, level_index);
   }
 #endif
 
