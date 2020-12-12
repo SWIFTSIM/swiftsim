@@ -1254,21 +1254,27 @@ cell_get_stars_sorts(const struct cell *c, const int sid) {
   return &c->stars.sort[j * (c->stars.count + 1)];
 }
 
-/** Set the given flag for the given cell. */
-__attribute__((always_inline)) INLINE static void cell_set_flag(struct cell *c,
-                                                                uint32_t flag) {
+/**
+ * @brief Set the given flag for the given cell.
+ */
+__attribute__((always_inline)) INLINE static void cell_set_flag(
+    struct cell *c, const uint32_t flag) {
   atomic_or(&c->flags, flag);
 }
 
-/** Clear the given flag for the given cell. */
+/**
+ * @brief Clear the given flag for the given cell.
+ */
 __attribute__((always_inline)) INLINE static void cell_clear_flag(
-    struct cell *c, uint32_t flag) {
+    struct cell *c, const uint32_t flag) {
   atomic_and(&c->flags, ~flag);
 }
 
-/** Get the given flag for the given cell. */
+/**
+ * @brief  Get the given flag for the given cell.
+ */
 __attribute__((always_inline)) INLINE static int cell_get_flag(
-    const struct cell *c, uint32_t flag) {
+    const struct cell *c, const uint32_t flag) {
   return (c->flags & flag) > 0;
 }
 
