@@ -2515,24 +2515,27 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
  */
 void space_recurse_check_unskip_flag(const struct cell *c) {
 
+#ifdef SWIFT_DEBUG_CHECKS
+
   /* Check the current cell. */
   if (cell_get_flag(c, cell_flag_unskip_self_grav_processed)) {
     error(
         "A cell is still containing a self unskip flag for the gravity "
-        "depth=%d node=%d",
-        c->depth, c->nodeID);
+        "depth=%d node=%d cellID=%lld",
+        c->depth, c->nodeID, c->cellID);
   }
   if (cell_get_flag(c, cell_flag_unskip_pair_grav_processed)) {
     error(
         "A cell is still containing a pair unskip flag for the gravity "
-        "depth=%d node=%d",
-        c->depth, c->nodeID);
+        "depth=%d node=%d cellID=%lld",
+        c->depth, c->nodeID, c->cellID);
   }
 
   /* Recurse */
   for (int i = 0; i < 8; i++) {
     if (c->progeny[i] != NULL) space_recurse_check_unskip_flag(c->progeny[i]);
   }
+#endif
 }
 
 /**
@@ -2542,12 +2545,13 @@ void space_recurse_check_unskip_flag(const struct cell *c) {
  * @param s The #space
  */
 void space_check_unskip_flags(const struct space *s) {
-#ifndef SWIFT_DEBUG_CHECKS
-  error("This function should not be called without the debugging checks.");
-#endif
+#ifdef SWIFT_DEBUG_CHECKS
 
   for (int i = 0; i < s->nr_cells; i++) {
     const struct cell *c = &s->cells_top[i];
     space_recurse_check_unskip_flag(c);
   }
+#else
+  error("This function should not be called without the debugging checks.");
+#endif
 }
