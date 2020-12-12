@@ -1130,7 +1130,7 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
   /* Some constants */
   const struct space *sp = s->space;
   const struct engine *e = sp->e;
-  const int nodeID == e->nodeID;
+  const int nodeID = e->nodeID;
 
   /* Self interaction? */
   if (cj == NULL) {
