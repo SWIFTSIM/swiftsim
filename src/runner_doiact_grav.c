@@ -33,10 +33,13 @@
 #include "space_getsid.h"
 #include "timers.h"
 
-#define CHECK 252069
-
 /**
- * @brief Clear the unskip flags of this cell and its parents.
+ * @brief Clear the unskip flags of this cell.
+ *
+ * For inactive or foreign cells, we additionally need to recurse.
+ *
+ * @brief c The #cell of interest.
+ * @brief e The #engine (to check whether active or not).
  */
 static INLINE void runner_clear_grav_flags(struct cell *c,
                                            const struct engine *e) {
@@ -2004,13 +2007,6 @@ void runner_dopair_grav_mm_progenies(struct runner *r, const long long flags,
   runner_clear_grav_flags(ci, e);
   runner_clear_grav_flags(cj, e);
 
-  if (ci->cellID == CHECK)
-    message("hello ci other=%lld active=%d", cj->cellID,
-            cell_is_active_gravity(ci, e));
-  if (cj->cellID == CHECK)
-    message("hello cj other=%lld active=%d", ci->cellID,
-            cell_is_active_gravity(cj, e));
-
   /* Loop over all pairs of progenies */
   for (int i = 0; i < 8; i++) {
     if (ci->progeny[i] != NULL) {
@@ -2150,13 +2146,6 @@ void runner_dopair_recursive_grav(struct runner *r, struct cell *ci,
   /* Clear the flags */
   runner_clear_grav_flags(ci, e);
   runner_clear_grav_flags(cj, e);
-
-  if (ci->cellID == CHECK)
-    message("hello ci other=%lld active=%d", cj->cellID,
-            cell_is_active_gravity(ci, e));
-  if (cj->cellID == CHECK)
-    message("hello cj other=%lld active=%d", ci->cellID,
-            cell_is_active_gravity(cj, e));
 
   /* Some constants */
   const int nodeID = e->nodeID;
