@@ -33,7 +33,6 @@
 #include "feedback.h"
 #include "kick.h"
 #include "multipole.h"
-#include "runner_doiact_grav.h"
 #include "timers.h"
 #include "timestep.h"
 #include "timestep_limiter.h"
@@ -52,7 +51,6 @@ void runner_do_init_grav(struct runner *r, struct cell *c, const int timer) {
   const struct engine *e = r->e;
 
   TIMER_TIC;
-  runner_clear_grav_flags(c);
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (!(e->policy & engine_policy_self_gravity))
