@@ -1130,6 +1130,7 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
   /* Some constants */
   const struct space *sp = s->space;
   const struct engine *e = sp->e;
+  const int nodeID == e->nodeID;
 
   /* Self interaction? */
   if (cj == NULL) {
@@ -1177,8 +1178,8 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
     /* Anything to do here?
      * Note that Here we return 0 as another pair direction for either of
      * the two cells could pass the tests. */
-    const int do_ci = cell_is_active_gravity(ci, e) && ci->nodeID == e->nodeID;
-    const int do_cj = cell_is_active_gravity(cj, e) && cj->nodeID == e->nodeID;
+    const int do_ci = cell_is_active_gravity(ci, e) && ci->nodeID == nodeID;
+    const int do_cj = cell_is_active_gravity(cj, e) && cj->nodeID == nodeID;
     if (!do_ci && !do_cj) return 0;
     if (ci->grav.count == 0 || cj->grav.count == 0) return 0;
 
@@ -1205,11 +1206,12 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
 
       /* Activate the drifts if the cells are local. */
       if (cell_is_active_gravity(ci, e) || cell_is_active_gravity(cj, e)) {
-        if (ci->nodeID == engine_rank) {
+
+        if (ci->nodeID == nodeID) {
           cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
           cell_activate_drift_gpart(ci, s);
         }
-        if (cj->nodeID == engine_rank) {
+        if (cj->nodeID == nodeID) {
           cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
           cell_activate_drift_gpart(cj, s);
         }
