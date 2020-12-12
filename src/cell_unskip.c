@@ -1113,8 +1113,6 @@ void cell_activate_subcell_sinks_tasks(struct cell *ci, struct cell *cj,
   } /* Otherwise, pair interation */
 }
 
-#define CHECK 252069
-
 /**
  * @brief Traverse a sub-cell task and activate the gravity drift tasks that
  * are required by a self gravity task.
@@ -1210,23 +1208,10 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
       if (cell_is_active_gravity(ci, e) || cell_is_active_gravity(cj, e)) {
 
         cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
-
-        if (ci->cellID == CHECK)
-          message("Setting pair flag %d active=%d", __LINE__,
-                  cell_is_active_gravity(ci, e));
-        if (ci->nodeID == nodeID) {
-
-          cell_activate_drift_gpart(ci, s);
-        }
         cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
 
-        if (cj->cellID == CHECK)
-          message("Setting pair flag %d active=%d", __LINE__,
-                  cell_is_active_gravity(cj, e));
-        if (cj->nodeID == nodeID) {
-
-          cell_activate_drift_gpart(cj, s);
-        }
+        if (ci->nodeID == nodeID) cell_activate_drift_gpart(ci, s);
+        if (cj->nodeID == nodeID) cell_activate_drift_gpart(cj, s);
       }
 
       /* And return that information */
@@ -1268,10 +1253,6 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           /* Flag the cells as being fully processed. */
           if (cell_done) {
             cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
-
-            if (ci->cellID == CHECK)
-              message("Setting pair flag %d active=%d", __LINE__,
-                      cell_is_active_gravity(ci, e));
           }
 
           return cell_done;
@@ -1293,10 +1274,6 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           /* Flag the cells as being fully processed. */
           if (cell_done) {
             cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
-
-            if (cj->cellID == CHECK)
-              message("Setting pair flag %d active=%d", __LINE__,
-                      cell_is_active_gravity(cj, e));
           }
 
           return cell_done;
@@ -1327,10 +1304,6 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           /* Flag the cells as being fully processed. */
           if (cell_done) {
             cell_set_flag(cj, cell_flag_unskip_pair_grav_processed);
-
-            if (cj->cellID == CHECK)
-              message("Setting pair flag %d active=%d", __LINE__,
-                      cell_is_active_gravity(cj, e));
           }
 
           return cell_done;
@@ -1352,10 +1325,6 @@ int cell_activate_subcell_grav_tasks(struct cell *restrict ci,
           /* Flag the cells as being done. */
           if (cell_done) {
             cell_set_flag(ci, cell_flag_unskip_pair_grav_processed);
-
-            if (ci->cellID == CHECK)
-              message("Setting pair flag %d active=%d", __LINE__,
-                      cell_is_active_gravity(ci, e));
           }
 
           return cell_done;
