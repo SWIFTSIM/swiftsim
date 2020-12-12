@@ -51,7 +51,6 @@
 #include "logger.h"
 #include "logger_io.h"
 #include "pressure_floor.h"
-#include "runner_doiact_grav.h"
 #include "space.h"
 #include "star_formation.h"
 #include "star_formation_logger.h"
@@ -77,9 +76,6 @@ void runner_do_grav_external(struct runner *r, struct cell *c, int timer) {
   const double time = r->e->time;
 
   TIMER_TIC;
-
-  /* Clear the unskip flags. */
-  runner_clear_grav_flags(c);
 
   /* Anything to do here? */
   if (!cell_is_active_gravity(c, e)) return;
@@ -583,9 +579,6 @@ void runner_do_end_grav_force(struct runner *r, struct cell *c, int timer) {
   const int with_black_holes = (e->policy & engine_policy_black_holes);
 
   TIMER_TIC;
-
-  /* Clear the unskip flags. */
-  runner_clear_grav_flags(c);
 
   /* Anything to do here? */
   if (!cell_is_active_gravity(c, e)) return;
