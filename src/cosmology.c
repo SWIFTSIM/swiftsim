@@ -850,10 +850,10 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
   }
 
   /* Cold dark matter density */
-  c->Omega_cdm = c->Omega_m - c->Omega_b - c->Omega_nu_0;
+  c->Omega_cdm = c->Omega_m - c->Omega_b;
 
   /* Curvature density (for closure) */
-  c->Omega_k = 1. - (c->Omega_m + c->Omega_r + c->Omega_lambda);
+  c->Omega_k = 1. - (c->Omega_m + c->Omega_r + c->Omega_lambda + c->Omega_nu_0);
 
   /* Initialise the interpolation tables */
   c->drift_fac_interp_table = NULL;

@@ -1711,10 +1711,8 @@ void space_generate_gas(struct space *s, const struct cosmology *cosmo,
   bzero(parts, s->nr_parts * sizeof(struct part));
 
   /* Compute some constants */
-  double Omega_m_cold = cosmo->Omega_cdm + cosmo->Omega_b;
-  if (!s->with_neutrinos) Omega_m_cold += cosmo->Omega_nu_0;
-  const double mass_ratio = cosmo->Omega_b / Omega_m_cold;
-  const double bg_density = Omega_m_cold * cosmo->critical_density_0;
+  const double mass_ratio = cosmo->Omega_b / cosmo->Omega_m;
+  const double bg_density = cosmo->Omega_m * cosmo->critical_density_0;
   const double bg_density_inv = 1. / bg_density;
 
   message("%zd", current_nr_gparts);

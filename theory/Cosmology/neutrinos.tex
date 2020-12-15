@@ -2,13 +2,11 @@
 
 \subsection{Massive neutrinos}
 
-The non-relativistic transition of massive neutrinos occurs at $a^{-1}\approx 1890 (m_\nu/1\text{ eV})$, which changes the background evolution, affecting the Hubble rate $E(a)$ and therefore most integrated quantities described in this document.
+The non-relativistic transition of massive neutrinos occurs at $a^{-1}\approx 1890 (m_\nu/1\text{ eV})$, which changes the background evolution, affecting the Hubble rate $E(a)$ and therefore most integrated quantities described in this document. Users can include this effect by specifying the number of massive neutrino species $N_\nu$ and their nonzero neutrino masses $m_{\nu,i}$ in eV $(m_{\nu,i}\neq 0, i=1,\dots,N_\nu)$ and (optional) degeneracies $g_i$. In addition, users have the option to specify the present-day neutrino temperature $T_{\nu,0}$\footnote{To match the neutrino density from an accurate calculation of decoupling \citep{Mangano2005}, one can use the value $T_{\nu,0}/T_{\mathrm{CMB},0}=0.71599$ \citep{Lesgourgues2011}.} and and an effective number of ultra-relativistic (massless) species $N_\mathrm{ur}$. Together with the present-day CMB temperature $T_{\mathrm{CMB},0}$, these parameters are used to compute the photon density $\Omega_\gamma$, the ultra-relativistic species density $\Omega_\mathrm{ur}$, and the massive neutrino density $\Omega_\nu(a)$, replacing the total radiation density parameter $\Omega_r$.
 
-Users can include this effect by specifying the number of massive neutrino species $N_\nu$ and their nonzero neutrino masses $m_{\nu,i}$ in eV $(m_{\nu,i}\neq 0, i=1,\dots,N_\nu)$ and (optional) degeneracies $g_i$. In addition, users have the option to specify the present-day neutrino temperature $T_{\nu,0}$ and and an effective number of ultra-relativistic (massless) species $N_\mathrm{ur}$. These parameters are used to compute the photon density $\Omega_\gamma$, the ultra-relativistic species density $\Omega_\mathrm{ur}$, and the massive neutrino density $\Omega_\nu(a)$, replacing the total radiation density parameter $\Omega_r$.
-
-The massive neutrino contribution at $a=1$ is also included in the present-day matter density $\Omega_m=\Omega_c+\Omega_b+\Omega_{\nu}(1)$. The radiation term appearing in (\ref{eq:Ea}) is therefore replaced by
+In our conventions, the massive neutrino contribution at $a=1$ is \emph{not} included in the present-day matter density $\Omega_m=\Omega_c+\Omega_b$. The radiation term appearing in (\ref{eq:Ea}) is simply replaced by
 \begin{align}
-    \Omega_r a^{-4} &= \left[\Omega_\gamma + \Omega_\mathrm{ur} + \Omega_\nu(a) - a\Omega_{\nu}(1)\right] a^{-4}.
+    \Omega_r a^{-4} &= \left[\Omega_\gamma + \Omega_\mathrm{ur} + \Omega_\nu(a)\right] a^{-4}.
 \end{align}
 The CMB density is constant and given by
 %
