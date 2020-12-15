@@ -193,7 +193,8 @@ Massive neutrinos can be included by specifying the optional parameters:
 
 When including massive neutrinos, only ``N_nu`` and ``M_nu_eV`` are necessary.
 By default, SWIFT will assume non-degenerate species and
-:math:`T_{\nu,0}=(4/11)^{1/3}T_{\rm{CMB},0}`.
+:math:`T_{\nu,0}=(4/11)^{1/3}T_{\rm{CMB},0}`. Neutrinos do not contribute to
+:math:`\Omega_m = \Omega_\rm{cdm} + \Omega_b` in our conventions.
 
 For a Planck+13 cosmological model (ignoring radiation density as is
 commonly done) and running from :math:`z=127` to :math:`z=0`, one would hence

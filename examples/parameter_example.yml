@@ -27,7 +27,7 @@ Cosmology:
   w_a:            0.            # (Optional) Dark-energy equation-of-state time evolution parameter.
   T_nu_0:         1.9514        # (Optional) Present-day neutrino temperature in internal units, used for massive neutrinos
   N_ur:           1.0196        # (Optional) Number of ultra-relativistic species (e.g. massless neutrinos). Assumes instantaneous decoupling T_ur/T_g=(4/11)^(1/3). Cannot be used together with Omega_r.
-  N_nu:           2             # (Optional) Integer number of massive neutrinos
+  N_nu:           2             # (Optional) Integer number of massive neutrinos. Note that neutrinos do NOT contribute to Omega_m = Omega_cdm + Omega_b in our conventions.
   M_nu_eV:        0.05, 0.01    # (Optional) Comma-separated list of N_nu nonzero neutrino masses in electron-volts
   deg_nu:         1.0, 1.0      # (Optional) Comma-separated list of N_nu neutrino degeneracies (default values of 1.0)
 
