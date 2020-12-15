@@ -648,18 +648,23 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose, int step) {
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
-  int count_total = 0;
-  for (int i = 0; i < nber_tasks; i++) {
-    for (int j = 0; j < MAX_NUMBER_DEP; j++) {
-      if (task_dep[i].number_link[j] != -1)
-        count_total += task_dep[i].number_link[j];
+  /* Check if we have the correct number of dependencies. */
+  if (step == 0) {
+    int count_total = 0;
+    for (int i = 0; i < nber_tasks; i++) {
+      for (int j = 0; j < MAX_NUMBER_DEP; j++) {
+        if (task_dep[i].number_link[j] != -1)
+          count_total += task_dep[i].number_link[j];
+      }
+    }
+
+    if (count_total != s->nr_unlocks) {
+      error("Not all the dependencies were found: %i != %i", count_total,
+            s->nr_unlocks);
     }
   }
-  if (count_total != s->nr_unlocks) {
-    error("Not all the dependencies were found: %i != %i", count_total,
-          s->nr_unlocks);
-  }
 #endif
+
 
   /* Be clean */
   free(task_dep);
