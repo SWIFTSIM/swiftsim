@@ -200,7 +200,7 @@ void cosmology_update(struct cosmology *c, const struct phys_const *phys_const,
 
   /* E(z) */
   const double Omega_r = c->Omega_r + c->Omega_nu;
-  const double Omega_m = c->Omega_b + c->Omega_cdm;
+  const double Omega_m = c->Omega_m;
   const double Omega_k = c->Omega_k;
   const double Omega_l = c->Omega_lambda;
   const double w0 = c->w_0;
@@ -242,7 +242,7 @@ double drift_integrand(double a, void *param) {
   const struct cosmology *c = (const struct cosmology *)param;
   const double Omega_nu = cosmology_get_neutrino_density(c, a);
   const double Omega_r = c->Omega_r + Omega_nu;
-  const double Omega_m = c->Omega_b + c->Omega_cdm;
+  const double Omega_m = c->Omega_m;
   const double Omega_k = c->Omega_k;
   const double Omega_l = c->Omega_lambda;
   const double w_0 = c->w_0;
@@ -267,7 +267,7 @@ double gravity_kick_integrand(double a, void *param) {
   const struct cosmology *c = (const struct cosmology *)param;
   const double Omega_nu = cosmology_get_neutrino_density(c, a);
   const double Omega_r = c->Omega_r + Omega_nu;
-  const double Omega_m = c->Omega_b + c->Omega_cdm;
+  const double Omega_m = c->Omega_m;
   const double Omega_k = c->Omega_k;
   const double Omega_l = c->Omega_lambda;
   const double w_0 = c->w_0;
@@ -292,7 +292,7 @@ double hydro_kick_integrand(double a, void *param) {
   const struct cosmology *c = (const struct cosmology *)param;
   const double Omega_nu = cosmology_get_neutrino_density(c, a);
   const double Omega_r = c->Omega_r + Omega_nu;
-  const double Omega_m = c->Omega_b + c->Omega_cdm;
+  const double Omega_m = c->Omega_m;
   const double Omega_k = c->Omega_k;
   const double Omega_l = c->Omega_lambda;
   const double w_0 = c->w_0;
@@ -319,7 +319,7 @@ double hydro_kick_corr_integrand(double a, void *param) {
   const struct cosmology *c = (const struct cosmology *)param;
   const double Omega_nu = cosmology_get_neutrino_density(c, a);
   const double Omega_r = c->Omega_r + Omega_nu;
-  const double Omega_m = c->Omega_b + c->Omega_cdm;
+  const double Omega_m = c->Omega_m;
   const double Omega_k = c->Omega_k;
   const double Omega_l = c->Omega_lambda;
   const double w_0 = c->w_0;
@@ -343,7 +343,7 @@ double time_integrand(double a, void *param) {
   const struct cosmology *c = (const struct cosmology *)param;
   const double Omega_nu = cosmology_get_neutrino_density(c, a);
   const double Omega_r = c->Omega_r + Omega_nu;
-  const double Omega_m = c->Omega_b + c->Omega_cdm;
+  const double Omega_m = c->Omega_m;
   const double Omega_k = c->Omega_k;
   const double Omega_l = c->Omega_lambda;
   const double w_0 = c->w_0;
