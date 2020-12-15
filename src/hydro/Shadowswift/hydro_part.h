@@ -44,7 +44,7 @@ struct xpart {
 
   /*! Gravitational acceleration at the end of the last step */
   float a_grav[3];
-  
+
   /*! Additional data used to record particle splits */
   struct particle_splitting_data split_data;
 
