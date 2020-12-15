@@ -854,9 +854,8 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
                   MPI_COMM_WORLD);
 #endif
 
-    const double Omega_cdm = e->cosmology->Omega_cdm;
+    const double Omega_m = e->cosmology->Omega_m;
     const double Omega_b = e->cosmology->Omega_b;
-    const double Omega_nu_0 = s->e->cosmology->Omega_nu_0;
     const double critical_density_0 = e->cosmology->critical_density_0;
 
     /* Linking length based on the mean DM inter-particle separation
