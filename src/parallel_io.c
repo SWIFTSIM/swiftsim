@@ -1935,9 +1935,10 @@ void write_output_parallel(struct engine* e,
           /* Select the fields to write */
           black_holes_write_particles(bparts_written, list, &num_fields,
                                       with_cosmology);
+          num_fields += particle_splitting_write_bparticles(bparts_written,
+                                                            list + num_fields);
           num_fields +=
-              particle_splitting_write_bparticles(bparts, list + num_fields);
-          num_fields += chemistry_write_bparticles(bparts, list + num_fields);
+              chemistry_write_bparticles(bparts_written, list + num_fields);
           if (with_fof) {
             num_fields += fof_write_bparts(bparts_written, list + num_fields);
           }
