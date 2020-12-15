@@ -827,26 +827,6 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
       }
     }
 
-    /* Collect the minimum and maximum extent of the hires DM gpart */
-    double min_x[3];
-    double max_x[3];
-    for (size_t i = 0; i < e->s->nr_gparts; ++i) {
-      const struct gpart *gp = &e->s->gparts[i];
-      if (gp->type == swift_type_dark_matter &&
-          gp->time_bin != time_bin_inhibited &&
-          gp->time_bin != time_bin_not_created) {
-        min_x[0] = fmin(min_x[0], gp->x[0]);
-        min_x[1] = fmin(min_x[1], gp->x[1]);
-        min_x[2] = fmin(min_x[2], gp->x[2]);
-        max_x[0] = fmax(max_x[0], gp->x[0]);
-        max_x[1] = fmax(max_x[1], gp->x[1]);
-        max_x[2] = fmax(max_x[2], gp->x[2]);
-      }
-    }
-
-    message("Extent along the dimensions (%f,%f) (%f,%f) (%f,%f)", min_x[0],
-            max_x[0], min_x[1], max_x[1], min_x[2], max_x[2]);
-
 #ifdef WITH_MPI
     /* We need to all-reduce this in case one of the nodes had 0 DM particles.
      */
