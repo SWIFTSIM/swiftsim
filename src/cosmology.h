@@ -231,10 +231,10 @@ struct cosmology {
   /*! Scale factor interpolation table */
   double *scale_factor_interp_table;
 
-  /*! Longer massive neutrino density interpolation table at early times */
+  /*! Massive neutrino density interpolation table at early times */
   double *neutrino_density_early_table;
 
-  /*! Longer massive neutrino density interpolation table at late times */
+  /*! Massive neutrino density interpolation table at late times */
   double *neutrino_density_late_table;
 
   /*! Time between Big Bang and first entry in the table */
