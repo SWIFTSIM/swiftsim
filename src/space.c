@@ -2455,12 +2455,41 @@ void space_write_cell(const struct space *s, FILE *f, struct cell *c) {
   fprintf(f, "%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ", c->hydro.count,
           c->stars.count, c->grav.count, superID, hydro_superID, c->loc[0],
           c->loc[1], c->loc[2], c->width[0], c->width[1], c->width[2]);
-  fprintf(f, "%g, %g, %i, %i\n", c->hydro.h_max, c->stars.h_max, c->depth,
+  fprintf(f, "%g, %g, %i, %i,", c->hydro.h_max, c->stars.h_max, c->depth,
           c->maxdepth);
+  fprintf(f, "%i, %i, %i, %i, %i, %i, %i, %i\n", 
+          c->rt_debugging.hydro_drifted, 
+          c->rt_debugging.stars_drifted, 
+          c->rt_debugging.hydroloop_tasks, 
+          c->rt_debugging.selfgrav_tasks, 
+          c->rt_debugging.hierarchical_tasks, 
+          c->rt_debugging.extra_hydroloop_tasks,
+          c->rt_debugging.splittask_hydro, 
+          c->rt_debugging.splittask_grav);
+
 
   /* reset values after writing */
+  /* if(c->rt_debugging.hydroloop_tasks > 1) */
+  /*   printf("Got hydroloop tasks = %i\n", c->rt_debugging.hydroloop_tasks); */
+  /* if(c->rt_debugging.selfgrav_tasks > 1) */
+  /*   printf("Got selfgrav tasks = %i\n", c->rt_debugging.selfgrav_tasks); */
+  /* if(c->rt_debugging.extgrav_tasks > 1) */
+  /*   printf("Got extgrav tasks = %i\n", c->rt_debugging.extgrav_tasks); */
+  /* if(c->rt_debugging.hierarchical_tasks > 1) */
+  /*   printf("Got hierarch tasks = %i\n", c->rt_debugging.hierarchical_tasks); */
+  /* if(c->rt_debugging.extra_hydroloop_tasks > 1) */
+  /*   printf("Got extra tasks = %i\n", c->rt_debugging.extra_hydroloop_tasks); */
+
   c->rt_debugging.hydro_drifted = 0;
   c->rt_debugging.stars_drifted = 0;
+  c->rt_debugging.hydroloop_tasks = 0;
+  c->rt_debugging.selfgrav_tasks = 0;
+  c->rt_debugging.extgrav_tasks = 0;
+  c->rt_debugging.hierarchical_tasks = 0;
+  c->rt_debugging.extra_hydroloop_tasks = 0;
+  c->rt_debugging.splittask_hydro = 0;
+  c->rt_debugging.splittask_grav = 0;
+
 
   /* Write children */
   for (int i = 0; i < 8; i++) {
@@ -2493,17 +2522,13 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
             "hydro_count,stars_count,gpart_count,super,hydro_super,"
             "loc1,loc2,loc3,width1,width2,width3,");
     fprintf(f, "hydro_h_max,stars_h_max,depth,maxdepth,");
-    fprintf(f, "GCS,GCSS,GCP,GCSP,GunskipS,GunskipSS,GunskipP,GunskipSP,GmarktasksS,GmarktasksSS,GmarktasksP,GmarktasksSP,GlinkA,GlinkW,");
-    fprintf(f, "TCS,TCSS,TCP,TCSP,TunskipS,TunskipSS,TunskipP,TunskipSP,TmarktasksS,TmarktasksSS,TmarktasksP,TmarktasksSP,TlinkA,TlinkW,");
-    fprintf(f, "HyGCS,HyGCSS,HyGCP,HyGCSP,HyGunskipS,HyGunskipSS,HyGunskipP,HyGunskipSP,HyGmarktasksS,HyGmarktasksSS,HyGmarktasksP,HyGmarktasksSP,HyGlinkA,HyGlinkW,");
-    fprintf(f, "HyTCS,HyTCSS,HyTCP,HyTCSP,HyTunskipS,HyTunskipSS,HyTunskipP,HyTunskipSP,HyTmarktasksS,HyTmarktasksSS,HyTmarktasksP,HyTmarktasksSP,HyTlinkA,HyTlinkW\n");
+    fprintf(f, "hydroloop, selfgrav, extgrav, hierarchical, extra_hydroloop, split_hydro, split_grav\n");
 
     /* Write root data */
     fprintf(f, "%i, ,-1,", root_id);
     fprintf(f, "%li,%li,%li, , , , , , , , ,", s->nr_parts, s->nr_sparts,
             s->nr_gparts);
-    fprintf(f, " , , , , , , , , , , , , , , , , , , , , , , , , , , , , , ,");
-    fprintf(f, " , , , , , , , , , , , , , , , , , , , , , , , , , \n");
+    fprintf(f, " , , , , , , , , , \n");
   }
 
   /* Write all the top level cells (and their children) */

@@ -391,6 +391,13 @@ struct cell {
   struct {
     int hydro_drifted;
     int stars_drifted;
+    int hydroloop_tasks;
+    int selfgrav_tasks;
+    int extgrav_tasks;
+    int hierarchical_tasks;
+    int extra_hydroloop_tasks;
+    int splittask_hydro;
+    int splittask_grav;
   } rt_debugging;
 
 #ifdef WITH_MPI
