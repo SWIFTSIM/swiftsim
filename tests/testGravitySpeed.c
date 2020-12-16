@@ -124,10 +124,17 @@ int main(int argc, char *argv[]) {
   struct engine e;
   e.mesh = &mesh;
   e.max_active_bin = 56;
+  e.gravity_properties = &grav_props;
 
   /* Construct a runner */
   struct runner r;
+  bzero(&r, sizeof(struct runner));
   r.e = &e;
+
+  /* Init the cache for gravity interaction */
+  gravity_cache_init(&r.ci_gravity_cache, space_splitsize);
+  gravity_cache_init(&r.cj_gravity_cache, space_splitsize);
+
 
   /* Construct two cells */
   struct cell ci;
@@ -141,10 +148,10 @@ int main(int argc, char *argv[]) {
   message("Number of runs: %d", num_M2L_runs);
 
   /* Construct arrays of multipoles to prevent too much optimization */
-  struct gravity_tensors *tensors_i = (struct gravity_tensors *)malloc(
-      num_M2L_runs * sizeof(struct gravity_tensors));
-  struct gravity_tensors *tensors_j = (struct gravity_tensors *)malloc(
-      num_M2L_runs * sizeof(struct gravity_tensors));
+  struct gravity_tensors *tensors_i = NULL;
+  posix_memalign((void **)&tensors_i, SWIFT_CACHE_ALIGNMENT, num_M2L_runs * sizeof(struct gravity_tensors));
+  struct gravity_tensors *tensors_j = NULL;
+  posix_memalign((void **)&tensors_j, SWIFT_CACHE_ALIGNMENT, num_M2L_runs * sizeof(struct gravity_tensors));
   for (int n = 0; n < num_M2L_runs; ++n) {
 
     memcpy(&tensors_i[n], ci.grav.multipole, sizeof(struct gravity_tensors));
