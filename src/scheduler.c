@@ -665,7 +665,6 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose, int step) {
   }
 #endif
 
-
   /* Be clean */
   free(task_dep);
 #ifdef WITH_MPI
