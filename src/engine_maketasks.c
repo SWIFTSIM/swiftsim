@@ -1361,6 +1361,7 @@ void engine_make_hierarchical_tasks_mapper(void *map_data, int num_elements,
 
   for (int ind = 0; ind < num_elements; ind++) {
     struct cell *c = &((struct cell *)map_data)[ind];
+atomic_inc(&c->rt_debugging.hierarchical_tasks);
     /* Make the common tasks (time integration) */
     engine_make_hierarchical_tasks_common(e, c);
     /* Add the hydro stuff */
@@ -1425,7 +1426,7 @@ void engine_make_self_gravity_tasks_mapper(void *map_data, int num_elements,
 
     /* Get the cell */
     struct cell *ci = &cells[cid];
-
+atomic_inc(&ci->rt_debugging.selfgrav_tasks);
     /* Skip cells without gravity particles */
     if (ci->grav.count == 0) continue;
 
@@ -1552,6 +1553,7 @@ void engine_make_external_gravity_tasks(struct engine *e) {
   for (int cid = 0; cid < nr_cells; ++cid) {
 
     struct cell *ci = &cells[cid];
+atomic_inc(&ci->rt_debugging.extgrav_tasks);
 
     /* Skip cells without gravity particles */
     if (ci->grav.count == 0) continue;
@@ -1946,6 +1948,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
     if (t->type == task_type_stars_resort) continue;
     if (t->type == task_type_star_formation) continue;
     if (t->type == task_type_sink_formation) continue;
+
+atomic_inc(&ci->rt_debugging.hierarchical_tasks);
+if (cj != NULL)
+atomic_inc(&cj->rt_debugging.hierarchical_tasks);
 
     /* Sort tasks depend on the drift of the cell (gas version). */
     if (t_type == task_type_sort && ci->nodeID == nodeID) {
@@ -3211,6 +3217,7 @@ void engine_make_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
     /* Get the cell */
     struct cell *ci = &cells[cid];
+atomic_inc(&ci->rt_debugging.hydroloop_tasks);
 
     /* Skip cells without hydro or star particles */
     if ((ci->hydro.count == 0) && (!with_stars || ci->stars.count == 0) &&
