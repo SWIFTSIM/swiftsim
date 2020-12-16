@@ -1057,9 +1057,6 @@ int main(int argc, char *argv[]) {
               "use\n");
         return 1;
       }
-    } else {
-      if (parser_get_opt_param_int(params, "Snapshots:invoke_fof", 0))
-        error("Error: Must run with --fof if Snapshots::invoke_fof=1\n");
     }
 #endif
 
