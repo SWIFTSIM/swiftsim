@@ -19,6 +19,8 @@
 #ifndef SWIFT_RT_IACT_NONE_H
 #define SWIFT_RT_IACT_NONE_H
 
+#include "rt_gradients.h"
+
 /**
  * @file src/rt/none/rt_iact.h
  * @brief Main header file for no radiative transfer scheme particle
