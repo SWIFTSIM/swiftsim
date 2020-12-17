@@ -659,14 +659,10 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose, int step) {
     }
 
     /* Get the number of unlocks from all the ranks */
-    int nr_unlocks = 0;
+    int nr_unlocks = s->nr_unlocks;
 #ifdef WITH_MPI
-    /* Required in order to remove the volatile */
-    const int local_nr_unlocks = s->nr_unlocks;
-    MPI_Reduce(&local_nr_unlocks, &nr_unlocks, 1, MPI_INT, MPI_SUM, 0,
-               MPI_COMM_WORLD);
-#else
-    nr_unlocks = s->nr_unlocks;
+    MPI_Allreduce(MPI_IN_PLACE, &nr_unlocks, 1, MPI_INT, MPI_SUM,
+                  MPI_COMM_WORLD);
 #endif
 
     if (s->nodeID == 0 && count_total != nr_unlocks) {
