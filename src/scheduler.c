@@ -647,7 +647,7 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose, int step) {
     fclose(f);
   }
 
-#if defined(SWIFT_DEBUG_CHECKS) && !defined(WITH_MPI)
+#if defined(SWIFT_DEBUG_CHECKS)
   /* Check if we have the correct number of dependencies. */
   if (step == 0) {
     int count_total = 0;
@@ -658,9 +658,20 @@ void scheduler_write_dependencies(struct scheduler *s, int verbose, int step) {
       }
     }
 
-    if (count_total != s->nr_unlocks) {
+    /* Get the number of unlocks from all the ranks */
+    int nr_unlocks = 0;
+#ifdef WITH_MPI
+    /* Required in order to remove the volatile */
+    const int local_nr_unlocks = s->nr_unlocks;
+    MPI_Reduce(&local_nr_unlocks, &nr_unlocks, 1, MPI_INT, MPI_SUM, 0,
+               MPI_COMM_WORLD);
+#else
+    nr_unlocks = s->nr_unlocks;
+#endif
+
+    if (s->nodeID == 0 && count_total != nr_unlocks) {
       error("Not all the dependencies were found: %i != %i", count_total,
-            s->nr_unlocks);
+            nr_unlocks);
     }
   }
 #endif
