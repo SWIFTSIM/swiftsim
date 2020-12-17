@@ -80,11 +80,10 @@ INLINE static int rt_write_particles(const struct part* parts,
 INLINE static int rt_write_stars(const struct spart* sparts,
                                  struct io_props* list) {
 
-  list[0] =
-      io_make_output_field("RTHydroIact", INT, 1, UNIT_CONV_NO_UNITS, 0, sparts,
-                           rt_data.iact_hydro_inject,
-                           "number of interactions between this hydro "
-                           "particle and any star particle");
+  list[0] = io_make_output_field("RTHydroIact", INT, 1, UNIT_CONV_NO_UNITS, 0,
+                                 sparts, rt_data.iact_hydro_inject,
+                                 "number of interactions between this hydro "
+                                 "particle and any star particle");
   list[1] = io_make_output_field("RTTotalCalls", INT, 1, UNIT_CONV_NO_UNITS, 0,
                                  sparts, rt_data.calls_tot,
                                  "total number of calls "
