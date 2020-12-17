@@ -68,6 +68,18 @@ int space_subsize_self_grav = space_subsize_self_grav_default;
 int space_subdepth_diff_grav = space_subdepth_diff_grav_default;
 int space_maxsize = space_maxsize_default;
 
+/* Recursion sizes */
+int space_recurse_size_self_hydro = space_recurse_size_self_hydro_default;
+int space_recurse_size_pair_hydro = space_recurse_size_pair_hydro_default;
+int space_recurse_size_self_stars = space_recurse_size_self_stars_default;
+int space_recurse_size_pair_stars = space_recurse_size_pair_stars_default;
+int space_recurse_size_self_black_holes =
+    space_recurse_size_self_black_holes_default;
+int space_recurse_size_pair_black_holes =
+    space_recurse_size_pair_black_holes_default;
+int space_recurse_size_self_sinks = space_recurse_size_self_sinks_default;
+int space_recurse_size_pair_sinks = space_recurse_size_pair_sinks_default;
+
 /*! Number of extra #part we allocate memory for per top-level cell */
 int space_extra_parts = space_extra_parts_default;
 
@@ -1163,6 +1175,32 @@ void space_init(struct space *s, struct swift_params *params,
   space_subdepth_diff_grav =
       parser_get_opt_param_int(params, "Scheduler:cell_subdepth_diff_grav",
                                space_subdepth_diff_grav_default);
+
+  space_recurse_size_self_hydro =
+      parser_get_opt_param_int(params, "Scheduler:cell_recurse_size_self_hydro",
+                               space_recurse_size_self_hydro_default);
+  space_recurse_size_pair_hydro =
+      parser_get_opt_param_int(params, "Scheduler:cell_recurse_size_pair_hydro",
+                               space_recurse_size_pair_hydro_default);
+  space_recurse_size_self_stars =
+      parser_get_opt_param_int(params, "Scheduler:cell_recurse_size_self_stars",
+                               space_recurse_size_self_stars_default);
+  space_recurse_size_pair_stars =
+      parser_get_opt_param_int(params, "Scheduler:cell_recurse_size_pair_stars",
+                               space_recurse_size_pair_stars_default);
+  space_recurse_size_self_black_holes = parser_get_opt_param_int(
+      params, "Scheduler:cell_recurse_size_self_black_holes",
+      space_recurse_size_self_black_holes_default);
+  space_recurse_size_pair_black_holes = parser_get_opt_param_int(
+      params, "Scheduler:cell_recurse_size_pair_black_holes",
+      space_recurse_size_pair_black_holes_default);
+  space_recurse_size_self_sinks =
+      parser_get_opt_param_int(params, "Scheduler:cell_recurse_size_self_sinks",
+                               space_recurse_size_self_sinks_default);
+  space_recurse_size_pair_sinks =
+      parser_get_opt_param_int(params, "Scheduler:cell_recurse_size_pair_sinks",
+                               space_recurse_size_pair_sinks_default);
+
   space_extra_parts = parser_get_opt_param_int(
       params, "Scheduler:cell_extra_parts", space_extra_parts_default);
   space_extra_sparts = parser_get_opt_param_int(
@@ -1943,6 +1981,23 @@ void space_check_top_multipoles_drift_point(struct space *s,
   error("Calling debugging code without debugging flag activated.");
 #endif
 }
+/**
+ * @brief #threadpool mapper function for the timestep debugging check
+ */
+void space_check_timesteps_mapper(void *map_data, int nr_cells,
+                                  void *extra_data) {
+
+  struct cell *cells_top = (struct cell *)map_data;
+  const struct space *s = (const struct space *)extra_data;
+  const timebin_t max_active_bin = s->e->max_active_bin;
+  const integertime_t ti_current = s->e->ti_current;
+
+  for (int i = 0; i < nr_cells; ++i) {
+    if (cells_top[i].nodeID == engine_rank) {
+      cell_check_timesteps(&cells_top[i], ti_current, max_active_bin);
+    }
+  }
+}
 
 /**
  * @brief Checks that all particles and local cells have a non-zero time-step.
@@ -1951,14 +2006,18 @@ void space_check_top_multipoles_drift_point(struct space *s,
  *
  * @param s The #space to check.
  */
-void space_check_timesteps(const struct space *s) {
+void space_check_timesteps(struct space *s) {
 #ifdef SWIFT_DEBUG_CHECKS
-  for (int i = 0; i < s->nr_cells; ++i) {
-    if (s->cells_top[i].nodeID == engine_rank) {
-      cell_check_timesteps(&s->cells_top[i], s->e->ti_current,
-                           s->e->max_active_bin);
-    }
-  }
+
+  const ticks tic = getticks();
+
+  threadpool_map(&s->e->threadpool, space_check_timesteps_mapper, s->cells_top,
+                 s->nr_cells, sizeof(struct cell), 0, s);
+
+  if (s->e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
+
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif
@@ -2012,8 +2071,14 @@ void space_check_limiter_mapper(void *map_data, int nr_parts,
 void space_check_limiter(struct space *s) {
 #ifdef SWIFT_DEBUG_CHECKS
 
+  const ticks tic = getticks();
+
   threadpool_map(&s->e->threadpool, space_check_limiter_mapper, s->parts,
                  s->nr_parts, sizeof(struct part), 1000, s);
+
+  if (s->e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif
@@ -2080,6 +2145,8 @@ void space_check_bpart_swallow_mapper(void *map_data, int nr_bparts,
 void space_check_swallow(struct space *s) {
 #ifdef SWIFT_DEBUG_CHECKS
 
+  const ticks tic = getticks();
+
   threadpool_map(&s->e->threadpool, space_check_part_swallow_mapper, s->parts,
                  s->nr_parts, sizeof(struct part), threadpool_auto_chunk_size,
                  /*extra_data=*/NULL);
@@ -2087,6 +2154,10 @@ void space_check_swallow(struct space *s) {
   threadpool_map(&s->e->threadpool, space_check_bpart_swallow_mapper, s->bparts,
                  s->nr_bparts, sizeof(struct bpart), threadpool_auto_chunk_size,
                  /*extra_data=*/NULL);
+
+  if (s->e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif
@@ -2119,9 +2190,16 @@ void space_check_sort_flags_mapper(void *map_data, int nr_cells,
 void space_check_sort_flags(struct space *s) {
 #ifdef SWIFT_DEBUG_CHECKS
 
+  const ticks tic = getticks();
+
   threadpool_map(&s->e->threadpool, space_check_sort_flags_mapper,
                  s->local_cells_with_tasks_top, s->nr_local_cells_with_tasks,
                  sizeof(int), 1, s);
+
+  if (s->e->verbose)
+    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
+            clocks_getunit());
+
 #else
   error("Calling debugging code without debugging flag activated.");
 #endif
@@ -2205,6 +2283,30 @@ void space_struct_dump(struct space *s, FILE *stream) {
                        "space_subsize_self_grav", "space_subsize_self_grav");
   restart_write_blocks(&space_subdepth_diff_grav, sizeof(int), 1, stream,
                        "space_subdepth_diff_grav", "space_subdepth_diff_grav");
+  restart_write_blocks(&space_recurse_size_self_hydro, sizeof(int), 1, stream,
+                       "space_recurse_size_self_hydro",
+                       "space_recurse_size_self_hydro");
+  restart_write_blocks(&space_recurse_size_pair_hydro, sizeof(int), 1, stream,
+                       "space_recurse_size_pair_hydro",
+                       "space_recurse_size_pair_hydro");
+  restart_write_blocks(&space_recurse_size_self_stars, sizeof(int), 1, stream,
+                       "space_recurse_size_self_stars",
+                       "space_recurse_size_self_stars");
+  restart_write_blocks(&space_recurse_size_pair_stars, sizeof(int), 1, stream,
+                       "space_recurse_size_pair_stars",
+                       "space_recurse_size_pair_stars");
+  restart_write_blocks(&space_recurse_size_self_black_holes, sizeof(int), 1,
+                       stream, "space_recurse_size_self_black_holes",
+                       "space_recurse_size_self_black_holes");
+  restart_write_blocks(&space_recurse_size_pair_black_holes, sizeof(int), 1,
+                       stream, "space_recurse_size_pair_black_holes",
+                       "space_recurse_size_pair_black_holes");
+  restart_write_blocks(&space_recurse_size_self_sinks, sizeof(int), 1, stream,
+                       "space_recurse_size_self_sinks",
+                       "space_recurse_size_self_sinks");
+  restart_write_blocks(&space_recurse_size_pair_sinks, sizeof(int), 1, stream,
+                       "space_recurse_size_pair_sinks",
+                       "space_recurse_size_pair_sinks");
   restart_write_blocks(&space_extra_parts, sizeof(int), 1, stream,
                        "space_extra_parts", "space_extra_parts");
   restart_write_blocks(&space_extra_gparts, sizeof(int), 1, stream,
@@ -2284,6 +2386,22 @@ void space_struct_restore(struct space *s, FILE *stream) {
                       "space_subsize_self_grav");
   restart_read_blocks(&space_subdepth_diff_grav, sizeof(int), 1, stream, NULL,
                       "space_subdepth_diff_grav");
+  restart_read_blocks(&space_recurse_size_self_hydro, sizeof(int), 1, stream,
+                      NULL, "space_recurse_size_self_hydro");
+  restart_read_blocks(&space_recurse_size_pair_hydro, sizeof(int), 1, stream,
+                      NULL, "space_recurse_size_pair_hydro");
+  restart_read_blocks(&space_recurse_size_self_stars, sizeof(int), 1, stream,
+                      NULL, "space_recurse_size_self_stars");
+  restart_read_blocks(&space_recurse_size_pair_stars, sizeof(int), 1, stream,
+                      NULL, "space_recurse_size_pair_stars");
+  restart_read_blocks(&space_recurse_size_self_black_holes, sizeof(int), 1,
+                      stream, NULL, "space_recurse_size_self_black_holes");
+  restart_read_blocks(&space_recurse_size_pair_black_holes, sizeof(int), 1,
+                      stream, NULL, "space_recurse_size_pair_black_holes");
+  restart_read_blocks(&space_recurse_size_self_sinks, sizeof(int), 1, stream,
+                      NULL, "space_recurse_size_self_sinks");
+  restart_read_blocks(&space_recurse_size_pair_sinks, sizeof(int), 1, stream,
+                      NULL, "space_recurse_size_pair_sinks");
   restart_read_blocks(&space_extra_parts, sizeof(int), 1, stream, NULL,
                       "space_extra_parts");
   restart_read_blocks(&space_extra_gparts, sizeof(int), 1, stream, NULL,

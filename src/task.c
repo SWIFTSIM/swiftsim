@@ -148,10 +148,21 @@ const char *subtaskID_names[task_subtype_count] = {
     "sink_compute_formation",
 };
 
-const char *task_category_names[task_category_count] = {
-    "drift",       "sort",    "hydro",          "gravity", "feedback",
-    "black holes", "cooling", "star formation", "limiter", "time integration",
-    "mpi",         "fof",     "others",         "sink"};
+const char *task_category_names[task_category_count] = {"drift",
+                                                        "sort",
+                                                        "hydro",
+                                                        "gravity",
+                                                        "feedback",
+                                                        "black holes",
+                                                        "cooling",
+                                                        "star formation",
+                                                        "limiter",
+                                                        "sync",
+                                                        "time integration",
+                                                        "mpi",
+                                                        "fof",
+                                                        "others",
+                                                        "sink"};
 
 #ifdef WITH_MPI
 /* MPI communicators for the subtypes. */
@@ -536,9 +547,7 @@ void task_unlock(struct task *t) {
       } else if (subtype == task_subtype_do_bh_swallow) {
         cell_bunlocktree(ci);
       } else if (subtype == task_subtype_limiter) {
-#ifdef SWIFT_TASKS_WITHOUT_ATOMICS
         cell_unlocktree(ci);
-#endif
       } else { /* hydro */
         cell_unlocktree(ci);
       }
@@ -571,10 +580,8 @@ void task_unlock(struct task *t) {
         cell_bunlocktree(ci);
         cell_bunlocktree(cj);
       } else if (subtype == task_subtype_limiter) {
-#ifdef SWIFT_TASKS_WITHOUT_ATOMICS
         cell_unlocktree(ci);
         cell_unlocktree(cj);
-#endif
       } else { /* hydro */
         cell_unlocktree(ci);
         cell_unlocktree(cj);
@@ -733,10 +740,8 @@ int task_lock(struct task *t) {
         if (ci->black_holes.hold) return 0;
         if (cell_blocktree(ci) != 0) return 0;
       } else if (subtype == task_subtype_limiter) {
-#ifdef SWIFT_TASKS_WITHOUT_ATOMICS
         if (ci->hydro.hold) return 0;
         if (cell_locktree(ci) != 0) return 0;
-#endif
       } else { /* subtype == hydro */
         if (ci->hydro.hold) return 0;
         if (cell_locktree(ci) != 0) return 0;
@@ -816,14 +821,12 @@ int task_lock(struct task *t) {
           return 0;
         }
       } else if (subtype == task_subtype_limiter) {
-#ifdef SWIFT_TASKS_WITHOUT_ATOMICS
         if (ci->hydro.hold || cj->hydro.hold) return 0;
         if (cell_locktree(ci) != 0) return 0;
         if (cell_locktree(cj) != 0) {
           cell_unlocktree(ci);
           return 0;
         }
-#endif
       } else { /* subtype == hydro */
         /* Lock the parts in both cells */
         if (ci->hydro.hold || cj->hydro.hold) return 0;
@@ -1452,8 +1455,10 @@ enum task_categories task_get_category(const struct task *t) {
       return task_category_time_integration;
 
     case task_type_timestep_limiter:
-    case task_type_timestep_sync:
       return task_category_limiter;
+
+    case task_type_timestep_sync:
+      return task_category_sync;
 
     case task_type_ghost:
     case task_type_extra_ghost:

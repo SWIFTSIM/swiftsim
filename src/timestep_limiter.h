@@ -36,6 +36,13 @@ timestep_limiter_prepare_force(struct part *restrict p,
                                struct xpart *restrict xp) {
 
   p->limiter_data.min_ngb_time_bin = num_time_bins + 1;
+
+#ifdef SWIFT_HYDRO_DENSITY_CHECKS
+  p->limiter_data.N_limiter = 1;
+  p->limiter_data.N_limiter_exact = 0;
+  p->limiter_data.n_limiter = kernel_root;
+  p->limiter_data.n_limiter_exact = 0.f;
+#endif
 }
 
 /**
@@ -69,6 +76,8 @@ __attribute__((always_inline)) INLINE static integertime_t timestep_limit_part(
   const int with_cosmology = e->policy & engine_policy_cosmology;
   const double time_base = e->time_base;
   const integertime_t ti_current = e->ti_current;
+
+  // message(" Limiting particle! %lld old bin=%d", p->id, p->time_bin);
 
   if (part_is_active(p, e)) {
 

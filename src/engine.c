@@ -53,6 +53,7 @@
 /* Local headers. */
 #include "active.h"
 #include "atomic.h"
+#include "black_holes.h"
 #include "black_holes_properties.h"
 #include "cell.h"
 #include "chemistry.h"
@@ -87,6 +88,7 @@
 #include "sort_part.h"
 #include "star_formation.h"
 #include "star_formation_logger.h"
+#include "stars.h"
 #include "stars_io.h"
 #include "statistics.h"
 #include "timers.h"
@@ -1535,10 +1537,8 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->type == task_type_stars_in || t->type == task_type_stars_out ||
         t->type == task_type_star_formation ||
         t->type == task_type_stars_resort || t->type == task_type_extra_ghost ||
-        t->type == task_type_stars_ghost ||
-        t->type == task_type_stars_ghost_in ||
-        t->type == task_type_stars_ghost_out || t->type == task_type_sink_in ||
-        t->type == task_type_sink_out || t->type == task_type_sink_formation ||
+        t->type == task_type_sink_in || t->type == task_type_sink_out ||
+        t->type == task_type_sink_formation ||
         t->type == task_type_bh_swallow_ghost1 ||
         t->type == task_type_bh_swallow_ghost2 ||
         t->type == task_type_bh_swallow_ghost3 || t->type == task_type_bh_in ||
@@ -1761,6 +1761,16 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
   engine_launch(e, "tasks");
   TIMER_TOC(timer_runners);
 
+#ifdef SWIFT_HYDRO_DENSITY_CHECKS
+  /* Run the brute-force hydro calculation for some parts */
+  if (e->policy & engine_policy_hydro)
+    hydro_exact_density_compute(e->s, e, /*check_force=*/0);
+
+  /* Check the accuracy of the hydro calculation */
+  if (e->policy & engine_policy_hydro)
+    hydro_exact_density_check(e->s, e, /*rel_tol=*/1e-3, /*check_force=*/0);
+#endif
+
   /* Apply some conversions (e.g. internal energy -> entropy) */
   if (!flag_entropy_ICs) {
 
@@ -1845,6 +1855,35 @@ void engine_init_particles(struct engine *e, int flag_entropy_ICs,
     engine_launch(e, "timesteps");
 #endif
   }
+
+#ifdef SWIFT_HYDRO_DENSITY_CHECKS
+  /* Run the brute-force hydro calculation for some parts */
+  if (e->policy & engine_policy_hydro)
+    hydro_exact_density_compute(e->s, e, /*check_force=*/1);
+
+  /* Check the accuracy of the hydro calculation */
+  if (e->policy & engine_policy_hydro)
+    hydro_exact_density_check(e->s, e, /*rel_tol=*/1e-3, /*check_force=*/1);
+#endif
+
+#ifdef SWIFT_STARS_DENSITY_CHECKS
+  /* Run the brute-force stars calculation for some parts */
+  if (e->policy & engine_policy_stars) stars_exact_density_compute(e->s, e);
+
+  /* Check the accuracy of the stars calculation */
+  if (e->policy & engine_policy_stars)
+    stars_exact_density_check(e->s, e, /*rel_tol=*/1e-2);
+#endif
+
+#ifdef SWIFT_BH_DENSITY_CHECKS
+  /* Run the brute-force BHs calculation for some parts */
+  if (e->policy & engine_policy_black_holes)
+    black_holes_exact_density_compute(e->s, e);
+
+  /* Check the accuracy of the BHs calculation */
+  if (e->policy & engine_policy_black_holes)
+    black_holes_exact_density_check(e->s, e, /*rel_tol=*/1e-2);
+#endif
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   /* Check the accuracy of the gravity calculation */
@@ -2285,6 +2324,35 @@ void engine_step(struct engine *e) {
       }
     }
   }
+#endif
+
+#ifdef SWIFT_HYDRO_DENSITY_CHECKS
+  /* Run the brute-force hydro calculation for some parts */
+  if (e->policy & engine_policy_hydro)
+    hydro_exact_density_compute(e->s, e, /*check_force=*/1);
+
+  /* Check the accuracy of the hydro calculation */
+  if (e->policy & engine_policy_hydro)
+    hydro_exact_density_check(e->s, e, /*rel_tol=*/1e-3, /*check_force=*/1);
+#endif
+
+#ifdef SWIFT_STARS_DENSITY_CHECKS
+  /* Run the brute-force stars calculation for some parts */
+  if (e->policy & engine_policy_stars) stars_exact_density_compute(e->s, e);
+
+  /* Check the accuracy of the stars calculation */
+  if (e->policy & engine_policy_stars)
+    stars_exact_density_check(e->s, e, /*rel_tol=*/1e-2);
+#endif
+
+#ifdef SWIFT_BH_DENSITY_CHECKS
+  /* Run the brute-force BH calculation for some parts */
+  if (e->policy & engine_policy_black_holes)
+    black_holes_exact_density_compute(e->s, e);
+
+  /* Check the accuracy of the BH calculation */
+  if (e->policy & engine_policy_black_holes)
+    black_holes_exact_density_check(e->s, e, /*rel_tol=*/1e-2);
 #endif
 
 #ifdef SWIFT_DEBUG_CHECKS

@@ -60,6 +60,14 @@ struct hydro_props;
 #define space_subsize_self_stars_default 32000
 #define space_subsize_pair_grav_default 256000000
 #define space_subsize_self_grav_default 32000
+#define space_recurse_size_self_hydro_default 100
+#define space_recurse_size_pair_hydro_default 100
+#define space_recurse_size_self_stars_default 100
+#define space_recurse_size_pair_stars_default 100
+#define space_recurse_size_self_black_holes_default 100
+#define space_recurse_size_pair_black_holes_default 100
+#define space_recurse_size_self_sinks_default 100
+#define space_recurse_size_pair_sinks_default 100
 #define space_subdepth_diff_grav_default 4
 #define space_max_top_level_cells_default 12
 #define space_stretch 1.10f
@@ -84,6 +92,14 @@ extern int space_extra_gparts;
 extern int space_extra_sparts;
 extern int space_extra_bparts;
 extern int space_extra_sinks;
+extern int space_recurse_size_self_hydro;
+extern int space_recurse_size_pair_hydro;
+extern int space_recurse_size_self_stars;
+extern int space_recurse_size_pair_stars;
+extern int space_recurse_size_self_black_holes;
+extern int space_recurse_size_pair_black_holes;
+extern int space_recurse_size_self_sinks;
+extern int space_recurse_size_pair_sinks;
 
 /**
  * @brief The space in which the cells and particles reside.
@@ -407,7 +423,7 @@ void space_check_drift_point(struct space *s, integertime_t ti_drift,
                              int multipole);
 void space_check_top_multipoles_drift_point(struct space *s,
                                             integertime_t ti_drift);
-void space_check_timesteps(const struct space *s);
+void space_check_timesteps(struct space *s);
 void space_check_limiter(struct space *s);
 void space_check_swallow(struct space *s);
 void space_check_sort_flags(struct space *s);

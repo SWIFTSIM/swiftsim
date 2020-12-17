@@ -186,37 +186,38 @@ void *runner_main(void *data) {
       switch (t->type) {
         case task_type_self:
           if (t->subtype == task_subtype_density)
-            runner_doself1_branch_density(r, ci);
+            runner_doself1_branch_density(r, ci, t->flags, t->flags);
 #ifdef EXTRA_HYDRO_LOOP
           else if (t->subtype == task_subtype_gradient)
-            runner_doself1_branch_gradient(r, ci);
+            runner_doself1_branch_gradient(r, ci, t->flags, t->flags);
 #endif
           else if (t->subtype == task_subtype_force)
-            runner_doself2_branch_force(r, ci);
+            runner_doself2_branch_force(r, ci, t->flags, t->flags);
           else if (t->subtype == task_subtype_limiter)
-            runner_doself1_branch_limiter(r, ci);
+            runner_doself1_branch_limiter(r, ci, t->flags, t->flags);
           else if (t->subtype == task_subtype_grav)
             runner_doself_recursive_grav(r, ci, 1);
           else if (t->subtype == task_subtype_external_grav)
             runner_do_grav_external(r, ci, 1);
           else if (t->subtype == task_subtype_stars_density)
-            runner_doself_branch_stars_density(r, ci);
+            runner_doself_branch_stars_density(r, ci, t->flags, t->flags);
           else if (t->subtype == task_subtype_stars_feedback)
-            runner_doself_branch_stars_feedback(r, ci);
+            runner_doself_branch_stars_feedback(r, ci, t->flags, t->flags);
           else if (t->subtype == task_subtype_bh_density)
-            runner_doself_branch_bh_density(r, ci);
+            runner_doself_branch_bh_density(r, ci, t->flags, t->flags);
           else if (t->subtype == task_subtype_bh_swallow)
-            runner_doself_branch_bh_swallow(r, ci);
+            runner_doself_branch_bh_swallow(r, ci, t->flags, t->flags);
           else if (t->subtype == task_subtype_do_gas_swallow)
             runner_do_gas_swallow_self(r, ci, 1);
           else if (t->subtype == task_subtype_do_bh_swallow)
             runner_do_bh_swallow_self(r, ci, 1);
           else if (t->subtype == task_subtype_bh_feedback)
-            runner_doself_branch_bh_feedback(r, ci);
+            runner_doself_branch_bh_feedback(r, ci, t->flags, t->flags);
           else if (t->subtype == task_subtype_rt_inject)
             runner_doself_branch_rt_inject(r, ci, 1);
           else if (t->subtype == task_subtype_sink_compute_formation)
-            runner_doself_branch_sinks_compute_formation(r, ci);
+            runner_doself_branch_sinks_compute_formation(r, ci, t->flags,
+                                                         t->flags);
           else
             error("Unknown/invalid task subtype (%s).",
                   subtaskID_names[t->subtype]);
@@ -224,35 +225,36 @@ void *runner_main(void *data) {
 
         case task_type_pair:
           if (t->subtype == task_subtype_density)
-            runner_dopair1_branch_density(r, ci, cj);
+            runner_dopair1_branch_density(r, ci, cj, t->flags, t->flags);
 #ifdef EXTRA_HYDRO_LOOP
           else if (t->subtype == task_subtype_gradient)
-            runner_dopair1_branch_gradient(r, ci, cj);
+            runner_dopair1_branch_gradient(r, ci, cj, t->flags, t->flags);
 #endif
           else if (t->subtype == task_subtype_force)
-            runner_dopair2_branch_force(r, ci, cj);
+            runner_dopair2_branch_force(r, ci, cj, t->flags, t->flags);
           else if (t->subtype == task_subtype_limiter)
-            runner_dopair1_branch_limiter(r, ci, cj);
+            runner_dopair1_branch_limiter(r, ci, cj, t->flags, t->flags);
           else if (t->subtype == task_subtype_grav)
             runner_dopair_recursive_grav(r, ci, cj, 1);
           else if (t->subtype == task_subtype_stars_density)
-            runner_dopair_branch_stars_density(r, ci, cj);
+            runner_dopair_branch_stars_density(r, ci, cj, t->flags, t->flags);
           else if (t->subtype == task_subtype_stars_feedback)
-            runner_dopair_branch_stars_feedback(r, ci, cj);
+            runner_dopair_branch_stars_feedback(r, ci, cj, t->flags, t->flags);
           else if (t->subtype == task_subtype_bh_density)
-            runner_dopair_branch_bh_density(r, ci, cj);
+            runner_dopair_branch_bh_density(r, ci, cj, t->flags, t->flags);
           else if (t->subtype == task_subtype_bh_swallow)
-            runner_dopair_branch_bh_swallow(r, ci, cj);
+            runner_dopair_branch_bh_swallow(r, ci, cj, t->flags, t->flags);
           else if (t->subtype == task_subtype_do_gas_swallow)
             runner_do_gas_swallow_pair(r, ci, cj, 1);
           else if (t->subtype == task_subtype_do_bh_swallow)
             runner_do_bh_swallow_pair(r, ci, cj, 1);
           else if (t->subtype == task_subtype_bh_feedback)
-            runner_dopair_branch_bh_feedback(r, ci, cj);
+            runner_dopair_branch_bh_feedback(r, ci, cj, t->flags, t->flags);
           else if (t->subtype == task_subtype_rt_inject)
             runner_dopair_branch_rt_inject(r, ci, cj, 1);
           else if (t->subtype == task_subtype_sink_compute_formation)
-            runner_dopair_branch_sinks_compute_formation(r, ci, cj);
+            runner_dopair_branch_sinks_compute_formation(r, ci, cj, t->flags,
+                                                         t->flags);
           else
             error("Unknown/invalid task subtype (%s/%s).",
                   taskID_names[t->type], subtaskID_names[t->subtype]);
@@ -260,33 +262,44 @@ void *runner_main(void *data) {
 
         case task_type_sub_self:
           if (t->subtype == task_subtype_density)
-            runner_dosub_self1_density(r, ci, 1);
+            runner_dosub_self1_density(r, ci, /*recurse_below_h_max=*/t->flags,
+                                       1);
 #ifdef EXTRA_HYDRO_LOOP
           else if (t->subtype == task_subtype_gradient)
-            runner_dosub_self1_gradient(r, ci, 1);
+            runner_dosub_self1_gradient(r, ci, /*recurse_below_h_max=*/t->flags,
+                                        1);
 #endif
           else if (t->subtype == task_subtype_force)
-            runner_dosub_self2_force(r, ci, 1);
+            runner_dosub_self2_force(r, ci, /*recurse_below_h_max=*/t->flags,
+                                     1);
           else if (t->subtype == task_subtype_limiter)
-            runner_dosub_self1_limiter(r, ci, 1);
+            runner_dosub_self1_limiter(r, ci, /*recurse_below_h_max=*/t->flags,
+                                       1);
           else if (t->subtype == task_subtype_stars_density)
-            runner_dosub_self_stars_density(r, ci, 1);
+            runner_dosub_self_stars_density(
+                r, ci, /*recurse_below_h_max=*/t->flags, 1);
           else if (t->subtype == task_subtype_stars_feedback)
-            runner_dosub_self_stars_feedback(r, ci, 1);
+            runner_dosub_self_stars_feedback(
+                r, ci, /*recurse_below_h_max=*/t->flags, 1);
           else if (t->subtype == task_subtype_bh_density)
-            runner_dosub_self_bh_density(r, ci, 1);
+            runner_dosub_self_bh_density(r, ci,
+                                         /*recurse_below_h_max=*/t->flags, 1);
           else if (t->subtype == task_subtype_bh_swallow)
-            runner_dosub_self_bh_swallow(r, ci, 1);
+            runner_dosub_self_bh_swallow(r, ci,
+                                         /*recurse_below_h_max=*/t->flags, 1);
           else if (t->subtype == task_subtype_do_gas_swallow)
             runner_do_gas_swallow_self(r, ci, 1);
           else if (t->subtype == task_subtype_do_bh_swallow)
             runner_do_bh_swallow_self(r, ci, 1);
           else if (t->subtype == task_subtype_bh_feedback)
-            runner_dosub_self_bh_feedback(r, ci, 1);
+            runner_dosub_self_bh_feedback(r, ci,
+                                          /*recurse_below_h_max=*/t->flags, 1);
           else if (t->subtype == task_subtype_rt_inject)
             runner_dosub_self_rt_inject(r, ci, 1);
           else if (t->subtype == task_subtype_sink_compute_formation)
-            runner_dosub_self_sinks_compute_formation(r, ci, 1);
+            runner_dosub_self_sinks_compute_formation(
+                r, ci, /*recurse_below_h_max=*/t->flags, 1);
+
           else
             error("Unknown/invalid task subtype (%s/%s).",
                   taskID_names[t->type], subtaskID_names[t->subtype]);
@@ -294,33 +307,45 @@ void *runner_main(void *data) {
 
         case task_type_sub_pair:
           if (t->subtype == task_subtype_density)
-            runner_dosub_pair1_density(r, ci, cj, 1);
+            runner_dosub_pair1_density(r, ci, cj,
+                                       /*recurse_below_h_max=*/t->flags, 1);
 #ifdef EXTRA_HYDRO_LOOP
           else if (t->subtype == task_subtype_gradient)
-            runner_dosub_pair1_gradient(r, ci, cj, 1);
+            runner_dosub_pair1_gradient(r, ci, cj,
+                                        /*recurse_below_h_max=*/t->flags, 1);
 #endif
           else if (t->subtype == task_subtype_force)
-            runner_dosub_pair2_force(r, ci, cj, 1);
+            runner_dosub_pair2_force(r, ci, cj,
+                                     /*recurse_below_h_max=*/t->flags, 1);
           else if (t->subtype == task_subtype_limiter)
-            runner_dosub_pair1_limiter(r, ci, cj, 1);
+            runner_dosub_pair1_limiter(r, ci, cj,
+                                       /*recurse_below_h_max=*/t->flags, 1);
           else if (t->subtype == task_subtype_stars_density)
-            runner_dosub_pair_stars_density(r, ci, cj, 1);
+            runner_dosub_pair_stars_density(r, ci, cj,
+                                            /*recurse_below_h_max=*/t->flags,
+                                            1);
           else if (t->subtype == task_subtype_stars_feedback)
-            runner_dosub_pair_stars_feedback(r, ci, cj, 1);
+            runner_dosub_pair_stars_feedback(r, ci, cj,
+                                             /*recurse_below_h_max=*/t->flags,
+                                             1);
           else if (t->subtype == task_subtype_bh_density)
-            runner_dosub_pair_bh_density(r, ci, cj, 1);
+            runner_dosub_pair_bh_density(r, ci, cj,
+                                         /*recurse_below_h_max=*/t->flags, 1);
           else if (t->subtype == task_subtype_bh_swallow)
-            runner_dosub_pair_bh_swallow(r, ci, cj, 1);
+            runner_dosub_pair_bh_swallow(r, ci, cj,
+                                         /*recurse_below_h_max=*/t->flags, 1);
           else if (t->subtype == task_subtype_do_gas_swallow)
             runner_do_gas_swallow_pair(r, ci, cj, 1);
           else if (t->subtype == task_subtype_do_bh_swallow)
             runner_do_bh_swallow_pair(r, ci, cj, 1);
           else if (t->subtype == task_subtype_bh_feedback)
-            runner_dosub_pair_bh_feedback(r, ci, cj, 1);
+            runner_dosub_pair_bh_feedback(r, ci, cj,
+                                          /*recurse_below_h_max=*/t->flags, 1);
           else if (t->subtype == task_subtype_rt_inject)
             runner_dosub_pair_rt_inject(r, ci, cj, 1);
           else if (t->subtype == task_subtype_sink_compute_formation)
-            runner_dosub_pair_sinks_compute_formation(r, ci, cj, 1);
+            runner_dosub_pair_sinks_compute_formation(
+                r, ci, cj, /*recurse_below_h_max=*/t->flags, 1);
           else
             error("Unknown/invalid task subtype (%s/%s).",
                   taskID_names[t->type], subtaskID_names[t->subtype]);

@@ -89,7 +89,8 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
   int redo = 0, scount = 0;
 
   /* Running value of the maximal smoothing length */
-  double h_max = c->stars.h_max;
+  float h_max = c->stars.h_max;
+  float h_max_active = c->stars.h_max_active;
 
   TIMER_TIC;
 
@@ -110,6 +111,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
 
         /* Update h_max */
         h_max = max(h_max, c->progeny[k]->stars.h_max);
+        h_max_active = max(h_max_active, c->progeny[k]->stars.h_max_active);
       }
     }
   } else {
@@ -132,7 +134,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
           feedback_is_active(&sparts[k], e->time, cosmo, with_cosmology)) {
         sid[scount] = k;
         h_0[scount] = sparts[k].h;
-        left[scount] = 0.f;
+        left[scount] = stars_h_min;
         right[scount] = stars_h_max;
         ++scount;
       }
@@ -173,6 +175,21 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
           /* Double h and try again */
           h_new = 2.f * h_old;
 
+          /* Improve the bisection bound as well */
+          if (num_reruns > 10) left[i] = max(left[i], h_old);
+
+          /* Be verbose about the particles that struggle to converge */
+          if (num_reruns > max_smoothing_iter - 15) {
+
+            message(
+                "Smoothing length convergence problem: iter=%d p->id=%lld "
+                "h_init=%12.8e h_old=%12.8e h_new=%12.8e f=%f f_prime=%f "
+                "n_sum=%12.8e n_target=%12.8e left=%12.8e right=%12.8e "
+                "h_min=%12.8e h_max=%12.8e",
+                num_reruns, sp->id, h_init, h_old, h_new, 0., 0., kernel_root,
+                stars_eta_dim, left[i], right[i], stars_h_min, stars_h_max);
+          }
+
         } else {
 
           /* Finish the density calculation */
@@ -186,10 +203,11 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               sp->density.wcount_dh * h_old_dim +
               hydro_dimension * sp->density.wcount * h_old_dim_minus_one;
 
-          /* Improve the bisection bounds */
-          if (n_sum < n_target)
+          /* Improve the bisection bounds if we have already tried a few steps
+           * the normal way */
+          if (num_reruns > 10 && n_sum < n_target)
             left[i] = max(left[i], h_old);
-          else if (n_sum > n_target)
+          else if (num_reruns > 10 && n_sum > n_target)
             right[i] = min(right[i], h_old);
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -266,14 +284,15 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
           h_new = h_old - f / (f_prime + FLT_MIN);
 
           /* Be verbose about the particles that struggle to converge */
-          if (num_reruns > max_smoothing_iter - 10) {
+          if (num_reruns > max_smoothing_iter - 15) {
 
             message(
                 "Smoothing length convergence problem: iter=%d p->id=%lld "
                 "h_init=%12.8e h_old=%12.8e h_new=%12.8e f=%f f_prime=%f "
-                "n_sum=%12.8e n_target=%12.8e left=%12.8e right=%12.8e",
+                "n_sum=%12.8e n_target=%12.8e left=%12.8e right=%12.8e "
+                "h_min=%12.8e h_max=%12.8e",
                 num_reruns, sp->id, h_init, h_old, h_new, f, f_prime, n_sum,
-                n_target, left[i], right[i]);
+                n_target, left[i], right[i], stars_h_min, stars_h_max);
           }
 
           /* Safety check: truncate to the range [ h_old/2 , 2h_old ]. */
@@ -349,6 +368,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
 
         /* Check if h_max has increased */
         h_max = max(h_max, sp->h);
+        h_max_active = max(h_max_active, sp->h);
 
         stars_reset_feedback(sp);
 
@@ -449,38 +469,22 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               error("Density task should have been run.");
 #endif
 
-            /* Self-interaction? */
-            if (l->t->type == task_type_self)
-              runner_doself_subset_branch_stars_density(r, finger, sparts, sid,
-                                                        scount);
-
-            /* Otherwise, pair interaction? */
-            else if (l->t->type == task_type_pair) {
-
-              /* Left or right? */
-              if (l->t->ci == finger)
-                runner_dopair_subset_branch_stars_density(
-                    r, finger, sparts, sid, scount, l->t->cj);
-              else
-                runner_dopair_subset_branch_stars_density(
-                    r, finger, sparts, sid, scount, l->t->ci);
-            }
-
-            /* Otherwise, sub-self interaction? */
-            else if (l->t->type == task_type_sub_self)
-              runner_dosub_subset_stars_density(r, finger, sparts, sid, scount,
-                                                NULL, 1);
+            /* Sub-self interaction? */
+            if (l->t->type == task_type_sub_self)
+              runner_dosub_self_subset_stars_density(r, finger, sparts, sid,
+                                                     scount,
+                                                     /*gettimer=*/1);
 
             /* Otherwise, sub-pair interaction? */
             else if (l->t->type == task_type_sub_pair) {
 
               /* Left or right? */
               if (l->t->ci == finger)
-                runner_dosub_subset_stars_density(r, finger, sparts, sid,
-                                                  scount, l->t->cj, 1);
+                runner_dosub_pair_subset_stars_density(
+                    r, finger, sparts, sid, scount, l->t->cj, /*gettimer=*/1);
               else
-                runner_dosub_subset_stars_density(r, finger, sparts, sid,
-                                                  scount, l->t->ci, 1);
+                runner_dosub_pair_subset_stars_density(
+                    r, finger, sparts, sid, scount, l->t->ci, /*gettimer=*/1);
             }
           }
         }
@@ -500,12 +504,27 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
 
   /* Update h_max */
   c->stars.h_max = h_max;
+  c->stars.h_max_active = h_max_active;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  for (int i = 0; i < c->stars.count; ++i) {
+    const struct spart *sp = &c->stars.parts[i];
+    const float h = c->stars.parts[i].h;
+    if (spart_is_inhibited(sp, e)) continue;
+
+    if (h > c->stars.h_max)
+      error("Particle has h larger than h_max (id=%lld)", sp->id);
+    if (spart_is_active(sp, e) && h > c->stars.h_max_active)
+      error("Active particle has h larger than h_max_active (id=%lld)", sp->id);
+  }
+#endif
 
   /* The ghost may not always be at the top level.
    * Therefore we need to update h_max between the super- and top-levels */
   if (c->stars.ghost) {
     for (struct cell *tmp = c->parent; tmp != NULL; tmp = tmp->parent) {
       atomic_max_f(&tmp->stars.h_max, h_max);
+      atomic_max_f(&tmp->stars.h_max_active, h_max_active);
     }
   }
 
@@ -536,6 +555,7 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
 
   /* Running value of the maximal smoothing length */
   double h_max = c->black_holes.h_max;
+  float h_max_active = c->black_holes.h_max_active;
 
   TIMER_TIC;
 
@@ -551,6 +571,8 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
 
         /* Update h_max */
         h_max = max(h_max, c->progeny[k]->black_holes.h_max);
+        h_max_active =
+            max(h_max_active, c->progeny[k]->black_holes.h_max_active);
       }
     }
   } else {
@@ -572,7 +594,7 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
       if (bpart_is_active(&bparts[k], e)) {
         sid[bcount] = k;
         h_0[bcount] = bparts[k].h;
-        left[bcount] = 0.f;
+        left[bcount] = black_holes_h_min;
         right[bcount] = black_holes_h_max;
         ++bcount;
       }
@@ -613,6 +635,22 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
           /* Double h and try again */
           h_new = 2.f * h_old;
 
+          /* Improve the bisection bound as well */
+          if (num_reruns < 10) left[i] = max(left[i], h_old);
+
+          /* Be verbose about the particles that struggle to converge */
+          if (num_reruns > max_smoothing_iter - 15) {
+
+            message(
+                "Smoothing length convergence problem: iter=%d p->id=%lld "
+                "h_init=%12.8e h_old=%12.8e h_new=%12.8e f=%f f_prime=%f "
+                "n_sum=%12.8e n_target=%12.8e left=%12.8e right=%12.8e "
+                "h_min=%12.8e h_max=%12.8e",
+                num_reruns, bp->id, h_init, h_old, h_new, 0., 0., kernel_root,
+                black_holes_eta_dim, left[i], right[i], black_holes_h_min,
+                black_holes_h_max);
+          }
+
         } else {
 
           /* Finish the density calculation */
@@ -626,10 +664,11 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
               bp->density.wcount_dh * h_old_dim +
               hydro_dimension * bp->density.wcount * h_old_dim_minus_one;
 
-          /* Improve the bisection bounds */
-          if (n_sum < n_target)
+          /* Improve the bisection bounds if we have already tried a few steps
+           * the normal way */
+          if (num_reruns > 10 && n_sum < n_target)
             left[i] = max(left[i], h_old);
-          else if (n_sum > n_target)
+          else if (num_reruns > 10 && n_sum > n_target)
             right[i] = min(right[i], h_old);
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -656,14 +695,16 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
           h_new = h_old - f / (f_prime + FLT_MIN);
 
           /* Be verbose about the particles that struggle to converge */
-          if (num_reruns > max_smoothing_iter - 10) {
+          if (num_reruns > max_smoothing_iter - 15) {
 
             message(
                 "Smoothing length convergence problem: iter=%d p->id=%lld "
                 "h_init=%12.8e h_old=%12.8e h_new=%12.8e f=%f f_prime=%f "
-                "n_sum=%12.8e n_target=%12.8e left=%12.8e right=%12.8e",
+                "n_sum=%12.8e n_target=%12.8e left=%12.8e right=%12.8e "
+                "h_min=%12.8e h_max=%12.8e",
                 num_reruns, bp->id, h_init, h_old, h_new, f, f_prime, n_sum,
-                n_target, left[i], right[i]);
+                n_target, left[i], right[i], black_holes_h_min,
+                black_holes_h_max);
           }
 
           /* Safety check: truncate to the range [ h_old/2 , 2h_old ]. */
@@ -739,6 +780,7 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
 
         /* Check if h_max has increased */
         h_max = max(h_max, bp->h);
+        h_max_active = max(h_max_active, bp->h);
       }
 
       /* We now need to treat the particles whose smoothing length had not
@@ -760,38 +802,22 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
               error("Density task should have been run.");
 #endif
 
-            /* Self-interaction? */
-            if (l->t->type == task_type_self)
-              runner_doself_subset_branch_bh_density(r, finger, bparts, sid,
-                                                     bcount);
-
-            /* Otherwise, pair interaction? */
-            else if (l->t->type == task_type_pair) {
-
-              /* Left or right? */
-              if (l->t->ci == finger)
-                runner_dopair_subset_branch_bh_density(r, finger, bparts, sid,
-                                                       bcount, l->t->cj);
-              else
-                runner_dopair_subset_branch_bh_density(r, finger, bparts, sid,
-                                                       bcount, l->t->ci);
-            }
-
-            /* Otherwise, sub-self interaction? */
-            else if (l->t->type == task_type_sub_self)
-              runner_dosub_subset_bh_density(r, finger, bparts, sid, bcount,
-                                             NULL, 1);
+            /* Sub-self interaction? */
+            if (l->t->type == task_type_sub_self)
+              runner_dosub_self_subset_bh_density(r, finger, bparts, sid,
+                                                  bcount,
+                                                  /*gettimer=*/1);
 
             /* Otherwise, sub-pair interaction? */
             else if (l->t->type == task_type_sub_pair) {
 
               /* Left or right? */
               if (l->t->ci == finger)
-                runner_dosub_subset_bh_density(r, finger, bparts, sid, bcount,
-                                               l->t->cj, 1);
+                runner_dosub_pair_subset_bh_density(
+                    r, finger, bparts, sid, bcount, l->t->cj, /*gettimer=*/1);
               else
-                runner_dosub_subset_bh_density(r, finger, bparts, sid, bcount,
-                                               l->t->ci, 1);
+                runner_dosub_pair_subset_bh_density(
+                    r, finger, bparts, sid, bcount, l->t->ci, /*gettimer=*/1);
             }
           }
         }
@@ -811,12 +837,27 @@ void runner_do_black_holes_density_ghost(struct runner *r, struct cell *c,
 
   /* Update h_max */
   c->black_holes.h_max = h_max;
+  c->black_holes.h_max_active = h_max_active;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  for (int i = 0; i < c->black_holes.count; ++i) {
+    const struct bpart *bp = &c->black_holes.parts[i];
+    const float h = c->black_holes.parts[i].h;
+    if (bpart_is_inhibited(bp, e)) continue;
+
+    if (h > c->black_holes.h_max)
+      error("Particle has h larger than h_max (id=%lld)", bp->id);
+    if (bpart_is_active(bp, e) && h > c->black_holes.h_max_active)
+      error("Active particle has h larger than h_max_active (id=%lld)", bp->id);
+  }
+#endif
 
   /* The ghost may not always be at the top level.
    * Therefore we need to update h_max between the super- and top-levels */
   if (c->black_holes.density_ghost) {
     for (struct cell *tmp = c->parent; tmp != NULL; tmp = tmp->parent) {
       atomic_max_f(&tmp->black_holes.h_max, h_max);
+      atomic_max_f(&tmp->black_holes.h_max_active, h_max_active);
     }
   }
 
@@ -1004,8 +1045,9 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
   const int max_smoothing_iter = e->hydro_properties->max_smoothing_iterations;
   int redo = 0, count = 0;
 
-  /* Running value of the maximal smoothing length */
-  double h_max = c->hydro.h_max;
+  /* Running values of the maximal smoothing lengths */
+  float h_max = c->hydro.h_max;
+  float h_max_active = c->hydro.h_max_active;
 
   TIMER_TIC;
 
@@ -1021,6 +1063,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 
         /* Update h_max */
         h_max = max(h_max, c->progeny[k]->hydro.h_max);
+        h_max_active = max(h_max_active, c->progeny[k]->hydro.h_max_active);
       }
     }
   } else {
@@ -1043,7 +1086,7 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
       if (part_is_active(&parts[k], e)) {
         pid[count] = k;
         h_0[count] = parts[k].h;
-        left[count] = 0.f;
+        left[count] = hydro_h_min;
         right[count] = hydro_h_max;
         ++count;
       }
@@ -1084,6 +1127,21 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           /* Double h and try again */
           h_new = 2.f * h_old;
 
+          /* Improve the bisection bound as well */
+          if (num_reruns > 10) left[i] = max(left[i], h_old);
+
+          /* Be verbose about the particles that struggle to converge */
+          if (num_reruns > max_smoothing_iter - 15) {
+
+            message(
+                "Smoothing length convergence problem: iter=%d p->id=%lld "
+                "h_init=%12.8e h_old=%12.8e h_new=%12.8e f=%f f_prime=%f "
+                "n_sum=%12.8e n_target=%12.8e left=%12.8e right=%12.8e "
+                "h_min=%12.8e h_max=%12.8e",
+                num_reruns, p->id, h_init, h_old, h_new, 0., 0., kernel_root,
+                hydro_eta_dim, left[i], right[i], hydro_h_min, hydro_h_max);
+          }
+
         } else {
 
           /* Finish the density calculation */
@@ -1113,10 +1171,11 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
               p->density.wcount_dh * h_old_dim +
               hydro_dimension * p->density.wcount * h_old_dim_minus_one;
 
-          /* Improve the bisection bounds */
-          if (n_sum < n_target)
+          /* Improve the bisection bounds if we have already tried a few steps
+           * the normal way */
+          if (num_reruns > 10 && n_sum < n_target)
             left[i] = max(left[i], h_old);
-          else if (n_sum > n_target)
+          else if (num_reruns > 10 && n_sum > n_target)
             right[i] = min(right[i], h_old);
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1193,14 +1252,15 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
           h_new = h_old - f / (f_prime + FLT_MIN);
 
           /* Be verbose about the particles that struggle to converge */
-          if (num_reruns > max_smoothing_iter - 10) {
+          if (num_reruns > max_smoothing_iter - 15) {
 
             message(
                 "Smoothing length convergence problem: iter=%d p->id=%lld "
                 "h_init=%12.8e h_old=%12.8e h_new=%12.8e f=%f f_prime=%f "
-                "n_sum=%12.8e n_target=%12.8e left=%12.8e right=%12.8e",
+                "n_sum=%12.8e n_target=%12.8e left=%12.8e right=%12.8e "
+                "h_min=%12.8e h_max=%12.8e",
                 num_reruns, p->id, h_init, h_old, h_new, f, f_prime, n_sum,
-                n_target, left[i], right[i]);
+                n_target, left[i], right[i], hydro_h_min, hydro_h_max);
           }
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1289,8 +1349,9 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 
         /* We now have a particle whose smoothing length has converged */
 
-        /* Check if h_max is increased */
+        /* Check if h_max has increased */
         h_max = max(h_max, p->h);
+        h_max_active = max(h_max_active, p->h);
 
 #ifdef EXTRA_HYDRO_LOOP
 
@@ -1359,37 +1420,21 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
               error("Density task should have been run.");
 #endif
 
-            /* Self-interaction? */
-            if (l->t->type == task_type_self)
-              runner_doself_subset_branch_density(r, finger, parts, pid, count);
-
-            /* Otherwise, pair interaction? */
-            else if (l->t->type == task_type_pair) {
-
-              /* Left or right? */
-              if (l->t->ci == finger)
-                runner_dopair_subset_branch_density(r, finger, parts, pid,
-                                                    count, l->t->cj);
-              else
-                runner_dopair_subset_branch_density(r, finger, parts, pid,
-                                                    count, l->t->ci);
-            }
-
-            /* Otherwise, sub-self interaction? */
-            else if (l->t->type == task_type_sub_self)
-              runner_dosub_subset_density(r, finger, parts, pid, count, NULL,
-                                          1);
+            /* Sub-self interaction? */
+            if (l->t->type == task_type_sub_self)
+              runner_dosub_self_subset_density(r, finger, parts, pid, count,
+                                               /*gettimer=*/1);
 
             /* Otherwise, sub-pair interaction? */
             else if (l->t->type == task_type_sub_pair) {
 
               /* Left or right? */
               if (l->t->ci == finger)
-                runner_dosub_subset_density(r, finger, parts, pid, count,
-                                            l->t->cj, 1);
+                runner_dosub_pair_subset_density(r, finger, parts, pid, count,
+                                                 l->t->cj, /*gettimer=*/1);
               else
-                runner_dosub_subset_density(r, finger, parts, pid, count,
-                                            l->t->ci, 1);
+                runner_dosub_pair_subset_density(r, finger, parts, pid, count,
+                                                 l->t->ci, /*gettimer=*/1);
             }
           }
         }
@@ -1409,12 +1454,27 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 
   /* Update h_max */
   c->hydro.h_max = h_max;
+  c->hydro.h_max_active = h_max_active;
+
+#ifdef SWIFT_DEBUG_CHECKS
+  for (int i = 0; i < c->hydro.count; ++i) {
+    const struct part *p = &c->hydro.parts[i];
+    const float h = c->hydro.parts[i].h;
+    if (part_is_inhibited(p, e)) continue;
+
+    if (h > c->hydro.h_max)
+      error("Particle has h larger than h_max (id=%lld)", p->id);
+    if (part_is_active(p, e) && h > c->hydro.h_max_active)
+      error("Active particle has h larger than h_max_active (id=%lld)", p->id);
+  }
+#endif
 
   /* The ghost may not always be at the top level.
    * Therefore we need to update h_max between the super- and top-levels */
   if (c->hydro.ghost) {
     for (struct cell *tmp = c->parent; tmp != NULL; tmp = tmp->parent) {
       atomic_max_f(&tmp->hydro.h_max, h_max);
+      atomic_max_f(&tmp->hydro.h_max_active, h_max_active);
     }
   }
 
