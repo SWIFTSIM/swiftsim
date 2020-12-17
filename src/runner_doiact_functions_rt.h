@@ -102,6 +102,7 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
 void DOPAIR1_NONSYM_RT(struct runner *r, struct cell *ci, struct cell *cj) {
 
   const struct engine *e = r->e;
+
   const int scount_i = ci->stars.count;
   const int count_j = cj->hydro.count;
   struct spart *restrict sparts_i = ci->stars.parts;
@@ -216,7 +217,6 @@ void DOSELF1_BRANCH_RT(struct runner *r, struct cell *c, int timer) {
  */
 void DOPAIR1_BRANCH_RT(struct runner *r, struct cell *ci, struct cell *cj,
                        int timer) {
-
   DOPAIR1_RT(r, ci, cj, timer);
 }
 
@@ -228,7 +228,6 @@ void DOPAIR1_BRANCH_RT(struct runner *r, struct cell *ci, struct cell *cj,
  * @param gettimer Do we have a timer ?
  */
 void DOSUB_SELF1_RT(struct runner *r, struct cell *c, int timer) {
-
   DOSELF1_RT(r, c, timer);
 }
 
