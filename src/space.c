@@ -2457,39 +2457,6 @@ void space_write_cell(const struct space *s, FILE *f, struct cell *c) {
           c->loc[1], c->loc[2], c->width[0], c->width[1], c->width[2]);
   fprintf(f, "%g, %g, %i, %i,", c->hydro.h_max, c->stars.h_max, c->depth,
           c->maxdepth);
-  fprintf(f, "%i, %i, %i, %i, %i, %i, %i, %i\n", 
-          c->rt_debugging.hydro_drifted, 
-          c->rt_debugging.stars_drifted, 
-          c->rt_debugging.hydroloop_tasks, 
-          c->rt_debugging.selfgrav_tasks, 
-          c->rt_debugging.hierarchical_tasks, 
-          c->rt_debugging.extra_hydroloop_tasks,
-          c->rt_debugging.splittask_hydro, 
-          c->rt_debugging.splittask_grav);
-
-
-  /* reset values after writing */
-  /* if(c->rt_debugging.hydroloop_tasks > 1) */
-  /*   printf("Got hydroloop tasks = %i\n", c->rt_debugging.hydroloop_tasks); */
-  /* if(c->rt_debugging.selfgrav_tasks > 1) */
-  /*   printf("Got selfgrav tasks = %i\n", c->rt_debugging.selfgrav_tasks); */
-  /* if(c->rt_debugging.extgrav_tasks > 1) */
-  /*   printf("Got extgrav tasks = %i\n", c->rt_debugging.extgrav_tasks); */
-  /* if(c->rt_debugging.hierarchical_tasks > 1) */
-  /*   printf("Got hierarch tasks = %i\n", c->rt_debugging.hierarchical_tasks); */
-  /* if(c->rt_debugging.extra_hydroloop_tasks > 1) */
-  /*   printf("Got extra tasks = %i\n", c->rt_debugging.extra_hydroloop_tasks); */
-
-  c->rt_debugging.hydro_drifted = 0;
-  c->rt_debugging.stars_drifted = 0;
-  c->rt_debugging.hydroloop_tasks = 0;
-  c->rt_debugging.selfgrav_tasks = 0;
-  c->rt_debugging.extgrav_tasks = 0;
-  c->rt_debugging.hierarchical_tasks = 0;
-  c->rt_debugging.extra_hydroloop_tasks = 0;
-  c->rt_debugging.splittask_hydro = 0;
-  c->rt_debugging.splittask_grav = 0;
-
 
   /* Write children */
   for (int i = 0; i < 8; i++) {
@@ -2528,7 +2495,7 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
     fprintf(f, "%i, ,-1,", root_id);
     fprintf(f, "%li,%li,%li, , , , , , , , ,", s->nr_parts, s->nr_sparts,
             s->nr_gparts);
-    fprintf(f, " , , , , , , , , , \n");
+    fprintf(f, " , , \n");
   }
 
   /* Write all the top level cells (and their children) */

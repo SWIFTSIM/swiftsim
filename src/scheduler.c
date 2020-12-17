@@ -739,7 +739,6 @@ static void scheduler_splittask_hydro(struct task *t, struct scheduler *s) {
     if (t->type == task_type_self) {
       /* Get a handle on the cell involved. */
       struct cell *ci = t->ci;
-atomic_inc(&ci->rt_debugging.splittask_hydro);
 
       /* Foreign task? */
       if (ci->nodeID != s->nodeID) {
@@ -810,9 +809,6 @@ atomic_inc(&ci->rt_debugging.splittask_hydro);
       /* Get a handle on the cells involved. */
       struct cell *ci = t->ci;
       struct cell *cj = t->cj;
-
-atomic_inc(&ci->rt_debugging.splittask_hydro);
-atomic_inc(&cj->rt_debugging.splittask_hydro);
 
       /* Foreign task? */
       if (ci->nodeID != s->nodeID && cj->nodeID != s->nodeID) {
@@ -950,7 +946,6 @@ static void scheduler_splittask_gravity(struct task *t, struct scheduler *s) {
     if (t->type == task_type_self) {
       /* Get a handle on the cell involved. */
       struct cell *ci = t->ci;
-atomic_inc(&ci->rt_debugging.splittask_grav);
 
       /* Foreign task? */
       if (ci->nodeID != s->nodeID) {
@@ -1002,9 +997,6 @@ atomic_inc(&ci->rt_debugging.splittask_grav);
       /* Get a handle on the cells involved. */
       struct cell *ci = t->ci;
       struct cell *cj = t->cj;
-
-atomic_inc(&ci->rt_debugging.splittask_grav);
-atomic_inc(&cj->rt_debugging.splittask_grav);
 
       /* Foreign task? */
       if (ci->nodeID != s->nodeID && cj->nodeID != s->nodeID) {

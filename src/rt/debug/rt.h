@@ -29,7 +29,6 @@
  */
 __attribute__((always_inline)) INLINE static void rt_init_part(
     struct part* restrict p) {
-    p->rt_data.ghost_finished = 0;
 }
 
 /**
@@ -38,54 +37,12 @@ __attribute__((always_inline)) INLINE static void rt_init_part(
 __attribute__((always_inline)) INLINE static void rt_reset_part(
     struct part* restrict p) {
 
-  // printf("RESETTING PARTID=%lld WAS=%lld\n", p->id, p->rt_data.hydro_this_cell_transport);
-
   p->rt_data.calls_per_step = 0;
   p->rt_data.iact_stars_inject = 0;
-  p->rt_data.calls_self_inject = 0;
-  p->rt_data.calls_pair_inject = 0;
   p->rt_data.calls_iact_gradient = 0;
-  p->rt_data.calls_iact_gradient_sym = 0;
-  p->rt_data.calls_iact_gradient_nonsym = 0;
   p->rt_data.calls_iact_transport = 0;
-  p->rt_data.calls_iact_transport_sym = 0;
-  p->rt_data.calls_iact_transport_nonsym = 0;
   p->rt_data.photon_number_updated = 0;
 
-  /* temp for debugging */
-  for (int i = 0; i < 400; i++){
-    p->rt_data.neigh_iact_grad[i]  = 0LL;
-    p->rt_data.neigh_cell_iact_grad[i] = 0LL;
-    p->rt_data.neigh_iact_transp[i] = 0LL;
-    p->rt_data.neigh_cell_iact_transp[i] = 0LL;
-  }
-  p->rt_data.neigh_iact_grad_free = 0;
-  p->rt_data.neigh_iact_transp_free = 0;
-  p->rt_data.this_cell_grad = 0LL;
-  p->rt_data.this_cell_transport = 0LL;
-
-  for (int i = 0; i < 400; i++){
-    p->rt_data.hydro_neigh_iact_grad[i]  = 0LL;
-    p->rt_data.hydro_neigh_cell_iact_grad[i] = 0LL;
-    p->rt_data.hydro_neigh_iact_transp[i] = 0LL;
-    p->rt_data.hydro_neigh_cell_iact_transp[i] = 0LL;
-  }
-  p->rt_data.hydro_neigh_iact_grad_free = 0;
-  p->rt_data.hydro_neigh_iact_transp_free = 0;
-  p->rt_data.hydro_this_cell_grad = 0LL;
-  p->rt_data.hydro_this_cell_transport = 0LL;
-
-  p->rt_data.calls_hydro_iact_gradient = 0;
-  p->rt_data.calls_hydro_iact_gradient_sym = 0;
-  p->rt_data.calls_hydro_iact_gradient_nonsym = 0;
-  p->rt_data.calls_hydro_iact_force = 0;
-  p->rt_data.calls_hydro_iact_force_sym = 0;
-  p->rt_data.calls_hydro_iact_force_nonsym = 0;
-
-  p->rt_data.h_grad = 0.f;
-  p->rt_data.h_transport = 0.f;
-  p->rt_data.h_hydro_grad = 0.f;
-  p->rt_data.h_force = 0.f;
 }
 
 /**
@@ -114,8 +71,6 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
   /* reset everything */
   sp->rt_data.calls_per_step = 0;
   sp->rt_data.iact_hydro_inject = 0;
-  sp->rt_data.calls_self_inject = 0;
-  sp->rt_data.calls_pair_inject = 0;
   sp->rt_data.emission_rate_set = 0;
 }
 
@@ -159,6 +114,8 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
 
   /* first reset old values */
   rt_reset_spart(sp);
+  sp->rt_data.calls_tot += 1;
+  sp->rt_data.calls_per_step += 1;
 
   if (time == 0.) {
     /* if this is the zeroth step, time is still at zero.

@@ -44,21 +44,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
   struct rt_spart_data *restrict sd = &(si->rt_data);
   struct rt_part_data *restrict pd = &(pj->rt_data);
 
+  sd->iact_hydro_inject += 1;
   sd->calls_tot += 1;
   sd->calls_per_step += 1;
-  sd->iact_hydro_inject += 1;
-
+  pd->iact_stars_inject += 1;
   pd->calls_tot += 1;
   pd->calls_per_step += 1;
-  pd->iact_stars_inject += 1;
-
-  if (r2 > 0.f) {
-    sd->calls_self_inject += 1;
-    pd->calls_self_inject += 1;
-  } else {
-    sd->calls_pair_inject += 1;
-    pd->calls_pair_inject += 1;
-  }
 }
 
 /**
@@ -79,57 +70,20 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H, int mode, long long ciID, long long cjID) {
+    struct part *restrict pj, float a, float H, int mode) {
 
   if (mode == 1) {
-    if (pi->rt_data.ghost_finished != 1) 
-      printf("--- RT transport sym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
-    if (pj->rt_data.ghost_finished != 1) 
-      printf("--- RT transport sym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
-
+    pi->rt_data.calls_tot += 1;
+    pi->rt_data.calls_per_step += 1;
     pi->rt_data.calls_iact_transport += 1;
-    pi->rt_data.calls_iact_transport_sym += 1;
-
+    pj->rt_data.calls_tot += 1;
+    pj->rt_data.calls_per_step += 1;
     pj->rt_data.calls_iact_transport += 1;
-    pj->rt_data.calls_iact_transport_sym += 1;
-
-    int f; 
-    f = pi->rt_data.neigh_iact_transp_free;
-    if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
-    pi->rt_data.neigh_iact_transp[f] = pj->id;
-    pi->rt_data.neigh_cell_iact_transp[f] = cjID;
-    pi->rt_data.neigh_iact_transp_free++;
-    if (llabs(pi->rt_data.this_cell_transport) < llabs(ciID))
-      pi->rt_data.this_cell_transport = ciID;
-    pi->rt_data.h_transport = hi;
-
-    f = pj->rt_data.neigh_iact_transp_free;
-    if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
-    pj->rt_data.neigh_iact_transp[f] = pi->id;
-    pj->rt_data.neigh_cell_iact_transp[f] = ciID;
-    pj->rt_data.neigh_iact_transp_free++;
-    if (llabs(pj->rt_data.this_cell_transport) < llabs(cjID))
-      pj->rt_data.this_cell_transport = cjID;
-    pj->rt_data.h_transport = hj;
-
-
-  } else {
+  } 
+  else {
+    pi->rt_data.calls_tot += 1;
+    pi->rt_data.calls_per_step += 1;
     pi->rt_data.calls_iact_transport += 1;
-    pi->rt_data.calls_iact_transport_nonsym += 1;
-
-    if (pi->rt_data.ghost_finished != 1) 
-      printf("--- RT transport nonsym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
-    if (pj->rt_data.ghost_finished != 1) 
-      printf("--- RT transport nonsym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
-
-    int f = pi->rt_data.neigh_iact_transp_free;
-    if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
-    pi->rt_data.neigh_iact_transp[f] = pj->id;
-    pi->rt_data.neigh_cell_iact_transp[f] = cjID;
-    pi->rt_data.neigh_iact_transp_free++;
-    if (llabs(pi->rt_data.this_cell_transport) < llabs(ciID))
-      pi->rt_data.this_cell_transport = ciID;
-    pi->rt_data.h_transport = hi;
   }
 }
 
@@ -150,9 +104,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_rt_transport(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
+    struct part *restrict pj, float a, float H) {
 
-  runner_iact_rt_flux_common(r2, dx, hi, hj, pi, pj, a, H, 1, ciID, cjID);
+  runner_iact_rt_flux_common(r2, dx, hi, hj, pi, pj, a, H, 1);
 }
 
 /**
@@ -174,9 +128,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_transport(
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_rt_transport(float r2, const float *dx, float hi, float hj,
                                 struct part *restrict pi,
-                                struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
+                                struct part *restrict pj, float a, float H) {
 
-  runner_iact_rt_flux_common(r2, dx, hi, hj, pi, pj, a, H, 0, ciID, cjID);
+  runner_iact_rt_flux_common(r2, dx, hi, hj, pi, pj, a, H, 0);
 }
 
 /**
@@ -197,9 +151,9 @@ runner_iact_nonsym_rt_transport(float r2, const float *dx, float hi, float hj,
  */
 __attribute__((always_inline)) INLINE static void runner_iact_rt_gradient(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
+    struct part *restrict pj, float a, float H) {
 
-  rt_gradients_collect(r2, dx, hi, hj, pi, pj, ciID, cjID);
+  rt_gradients_collect(r2, dx, hi, hj, pi, pj);
 }
 
 /**
@@ -222,9 +176,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_gradient(
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_rt_gradient(float r2, const float *dx, float hi, float hj,
                                struct part *restrict pi,
-                               struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
+                               struct part *restrict pj, float a, float H) {
 
-  rt_gradients_nonsym_collect(r2, dx, hi, hj, pi, pj, ciID, cjID);
+  rt_gradients_nonsym_collect(r2, dx, hi, hj, pi, pj);
 }
 
 #endif /* SWIFT_RT_IACT_DEBUG_H */
