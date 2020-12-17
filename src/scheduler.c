@@ -2536,6 +2536,7 @@ void scheduler_write_task_level(const struct scheduler *s) {
   }
 
   /* Open file */
+  char filename[200] = "task_level.txt";
   FILE *f = fopen(filename, "w");
   if (f == NULL) error("Error opening task level file.");
 

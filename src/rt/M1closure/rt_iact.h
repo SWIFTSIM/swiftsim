@@ -19,6 +19,8 @@
 #ifndef SWIFT_RT_IACT_M1CLOSURE_H
 #define SWIFT_RT_IACT_M1CLOSURE_H
 
+#include "rt_gradients.h"
+
 /**
  * @file src/rt/M1closure/rt_iact.h
  * @brief Main header file for the M1 closure radiative transfer scheme particle
