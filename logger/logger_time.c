@@ -146,15 +146,76 @@ size_t time_offset_first_record(const struct header *h) {
  *
  * @param t #time_array to initialize.
  */
-void time_array_init(struct time_array *t) {
+void time_array_init(struct time_array *t, size_t initial_size) {
   /* Allocate the arrays */
-  t->records = malloc(sizeof(struct time_record) * LOGGER_TIME_INIT_SIZE);
+  t->records = malloc(sizeof(struct time_record) * initial_size);
   if (t->records == NULL)
     error_python("Failed to initialize the time records.");
 
   /* Initialize the sizes */
   t->size = 0;
-  t->capacity = LOGGER_TIME_INIT_SIZE;
+  t->capacity = initial_size;
+}
+
+/**
+ * @brief Save the array into a file.
+ *
+ * @param t The #time_array.
+ * @param filename The file to use.
+ */
+void time_array_save(struct time_array *t, const char *filename) {
+  /* Open the file */
+  FILE *f = fopen(filename, "wb");
+  if (f == NULL) {
+    error("Failed to open the file %s", filename);
+  }
+
+  /* Dump the array */
+  uint64_t size = t->size;
+  fwrite(&size, sizeof(uint64_t), 1, f);
+  fwrite(t->records, sizeof(struct time_record), t->size, f);
+
+  /* Close the file */
+  int failed = fclose(f);
+  if (failed) {
+    error("Failed to close the file %s", filename);
+  }
+
+}
+
+/**
+ * @brief Load the array from a file
+ *
+ * @param t The #time_array.
+ * @param filename The file to use.
+ */
+void time_array_load(struct time_array *t, const char *filename) {
+  /* Open the file */
+  FILE *f = fopen(filename, "rb");
+  if (f == NULL) {
+    error("Failed to open the file %s", filename);
+  }
+
+  /* Ensure that the array is empty */
+  if (t->capacity != 0)
+    time_array_free(t);
+
+  /* Read the array */
+  uint64_t size = 0;
+  fread(&size, sizeof(uint64_t), 1, f);
+
+  /* Allocate the array */
+  time_array_init(t, size);
+  t->size = size;
+
+  /* Read the elements */
+  fread(t->records, sizeof(struct time_record), t->size, f);
+
+  /* Close the file */
+  int failed = fclose(f);
+  if (failed) {
+    error("Failed to close the file %s", filename);
+  }
 }
 
 /**
@@ -164,6 +225,20 @@ void time_array_init(struct time_array *t) {
  * @param log The #logger_logfile.
  */
 void time_array_populate(struct time_array *t, struct logger_logfile *log) {
+  int verbose = log->reader->verbose;
+
+  /* Get the filename of the saved file. */
+  char filename[STRING_SIZE + 10];
+  sprintf(filename, "%s%s", log->reader->basename, ".time");
+
+  /* Check if the file exists and read it if possible. */
+  if(access(filename, F_OK) == 0 ) {
+    if (verbose > 0) {
+      message("Restoring the time array from %s", filename);
+    }
+    time_array_load(t, filename);
+    return;
+  }
 
   /* Initialize a few variables. */
   integertime_t int_time = 0;
@@ -185,6 +260,12 @@ void time_array_populate(struct time_array *t, struct logger_logfile *log) {
                                      log->log.mmap_size);
     if (test == -1) break;
   }
+
+  /* Be nice and save everything */
+  if (verbose > 0) {
+    message("Saving the time array in %s", filename);
+  }
+  time_array_save(t, filename);
 }
 
 /**
