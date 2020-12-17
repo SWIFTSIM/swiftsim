@@ -1255,13 +1255,19 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
       /* Radiative Transfer */
       if (with_rt) {
         /* RT ghost in task */
-        c->hydro.rt_in = scheduler_addtask(s, task_type_rt_in, task_subtype_none, 0, /* implicit= */ 1, c, NULL);
+        c->hydro.rt_in =
+            scheduler_addtask(s, task_type_rt_in, task_subtype_none, 0,
+                              /* implicit= */ 1, c, NULL);
         scheduler_addunlock(s, c->super->kick2, c->hydro.rt_in);
-        if (with_star_formation && c->top->hydro.count > 0) scheduler_addunlock(s, c->top->hydro.star_formation, c->hydro.rt_in);
-        if (with_feedback) scheduler_addunlock(s, c->stars.stars_out, c->hydro.rt_in);
+        if (with_star_formation && c->top->hydro.count > 0)
+          scheduler_addunlock(s, c->top->hydro.star_formation, c->hydro.rt_in);
+        if (with_feedback)
+          scheduler_addunlock(s, c->stars.stars_out, c->hydro.rt_in);
 
         /* RT ghost out task */
-        c->hydro.rt_out = scheduler_addtask(s, task_type_rt_out, task_subtype_none, 0, /* implicit= */ 1, c, NULL);
+        c->hydro.rt_out =
+            scheduler_addtask(s, task_type_rt_out, task_subtype_none, 0,
+                              /* implicit= */ 1, c, NULL);
         scheduler_addunlock(s, c->hydro.rt_out, c->super->timestep);
 
         /* non-implicit ghost 1 */
@@ -2276,7 +2282,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       engine_addlink(e, &ci->hydro.gradient, t_gradient);
       engine_addlink(e, &cj->hydro.gradient, t_gradient);
 
-
       /* Now, build all the dependencies for the hydro for the cells */
       /* that are local and are not descendant of the same super_hydro-cells */
       if (ci->nodeID == nodeID) {
@@ -2504,7 +2509,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           }
 
           if (with_rt) {
-            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in, t_rt_inject);
+            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in,
+                                t_rt_inject);
             scheduler_addunlock(sched, t_rt_inject, cj->super->hydro.rt_ghost1);
             scheduler_addunlock(sched, cj->super->hydro.rt_ghost1,
                                 t_rt_gradient);
@@ -3118,7 +3124,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 cj->hydro.super->black_holes.black_holes_out);
           }
           if (with_rt) {
-            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in, t_rt_inject);
+            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in,
+                                t_rt_inject);
             scheduler_addunlock(sched, t_rt_inject, cj->super->hydro.rt_ghost1);
             scheduler_addunlock(sched, cj->super->hydro.rt_ghost1,
                                 t_rt_gradient);

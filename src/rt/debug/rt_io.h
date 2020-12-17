@@ -38,14 +38,14 @@ INLINE static int rt_write_particles(const struct part* parts,
                            rt_data.iact_stars_inject,
                            "number of interactions between this hydro particle"
                            " and any star particle during injection step");
-  list[1] = 
-      io_make_output_field("RTTotalCalls", INT, 1, UNIT_CONV_NO_UNITS, 0, parts, 
-                           rt_data.calls_tot, "total number of calls to this "
-                           "particle during the run");
-  list[2] = 
-      io_make_output_field("RTCallsThisStep", INT, 1, UNIT_CONV_NO_UNITS, 0, 
-                           parts, rt_data.calls_per_step, "number of calls "
-                           "to this particle during one time step");
+  list[1] = io_make_output_field("RTTotalCalls", INT, 1, UNIT_CONV_NO_UNITS, 0,
+                                 parts, rt_data.calls_tot,
+                                 "total number of calls to this "
+                                 "particle during the run");
+  list[2] = io_make_output_field("RTCallsThisStep", INT, 1, UNIT_CONV_NO_UNITS,
+                                 0, parts, rt_data.calls_per_step,
+                                 "number of calls "
+                                 "to this particle during one time step");
   list[3] =
       io_make_output_field("RTCallsSelfInjection", INT, 1, UNIT_CONV_NO_UNITS,
                            0, parts, rt_data.calls_self_inject,
@@ -80,18 +80,19 @@ INLINE static int rt_write_particles(const struct part* parts,
 INLINE static int rt_write_stars(const struct spart* sparts,
                                  struct io_props* list) {
 
-  list[0] = 
+  list[0] =
       io_make_output_field("RTHydroIact", INT, 1, UNIT_CONV_NO_UNITS, 0, sparts,
-                           rt_data.iact_hydro_inject, "number of interactions "
-                           "between this hydro particle and any star particle");
-  list[1] = 
-      io_make_output_field("RTTotalCalls", INT, 1, UNIT_CONV_NO_UNITS, 0, 
-                           sparts, rt_data.calls_tot, "total number of calls "
-                           "to this particle during the run");
-  list[2] = 
-      io_make_output_field("RTCallsThisStep", INT, 1, UNIT_CONV_NO_UNITS, 0, 
-                           sparts, rt_data.calls_per_step, "number of calls to"
-                           " this particle during one time step");
+                           rt_data.iact_hydro_inject,
+                           "number of interactions between this hydro "
+                           "particle and any star particle");
+  list[1] = io_make_output_field("RTTotalCalls", INT, 1, UNIT_CONV_NO_UNITS, 0,
+                                 sparts, rt_data.calls_tot,
+                                 "total number of calls "
+                                 "to this particle during the run");
+  list[2] = io_make_output_field("RTCallsThisStep", INT, 1, UNIT_CONV_NO_UNITS,
+                                 0, sparts, rt_data.calls_per_step,
+                                 "number of calls to "
+                                 "this particle during one time step");
   list[3] =
       io_make_output_field("RTCallsSelfInjection", INT, 1, UNIT_CONV_NO_UNITS,
                            0, sparts, rt_data.calls_self_inject,
@@ -102,9 +103,10 @@ INLINE static int rt_write_stars(const struct spart* sparts,
                            0, sparts, rt_data.calls_pair_inject,
                            "number of calls to this particle during one time "
                            "step in injection pair task");
-  list[5] = 
-      io_make_output_field("RTEmissionRateSet", INT, 1, UNIT_CONV_NO_UNITS, 0, 
-                           sparts, rt_data.emission_rate_set, "Stellar photon "
+  list[5] =
+      io_make_output_field("RTEmissionRateSet", INT, 1, UNIT_CONV_NO_UNITS, 0,
+                           sparts, rt_data.emission_rate_set,
+                           "Stellar photon "
                            "emission rates set?");
 
   return 6;

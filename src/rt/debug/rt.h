@@ -28,8 +28,7 @@
  * @brief Initialisation of the RT density loop related particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_init_part(
-    struct part* restrict p) {
-}
+    struct part* restrict p) {}
 
 /**
  * @brief Reset of the RT extra hydro particle data.
@@ -42,7 +41,6 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.calls_iact_gradient = 0;
   p->rt_data.calls_iact_transport = 0;
   p->rt_data.photon_number_updated = 0;
-
 }
 
 /**
@@ -54,7 +52,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
   p->rt_data.calls_tot = 0;
   rt_init_part(p);
   rt_reset_part(p);
- }
+}
 
 /**
  * @brief Initialisation of the RT density loop related particle data.

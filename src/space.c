@@ -2432,7 +2432,7 @@ void space_struct_restore(struct space *s, FILE *stream) {
  * @param f The file to use (already open).
  * @param c The current #cell.
  */
-void space_write_cell(const struct space *s, FILE *f, struct cell *c) {
+void space_write_cell(const struct space *s, FILE *f, const struct cell *c) {
 #ifdef SWIFT_CELL_GRAPH
 
   if (c == NULL) return;
@@ -2455,7 +2455,7 @@ void space_write_cell(const struct space *s, FILE *f, struct cell *c) {
   fprintf(f, "%i,%i,%i,%s,%s,%g,%g,%g,%g,%g,%g, ", c->hydro.count,
           c->stars.count, c->grav.count, superID, hydro_superID, c->loc[0],
           c->loc[1], c->loc[2], c->width[0], c->width[1], c->width[2]);
-  fprintf(f, "%g, %g, %i, %i,", c->hydro.h_max, c->stars.h_max, c->depth,
+  fprintf(f, "%g, %g, %i, %i\n", c->hydro.h_max, c->stars.h_max, c->depth,
           c->maxdepth);
 
   /* Write children */
@@ -2488,14 +2488,13 @@ void space_write_cell_hierarchy(const struct space *s, int j) {
     fprintf(f,
             "hydro_count,stars_count,gpart_count,super,hydro_super,"
             "loc1,loc2,loc3,width1,width2,width3,");
-    fprintf(f, "hydro_h_max,stars_h_max,depth,maxdepth,");
-    fprintf(f, "hydroloop, selfgrav, extgrav, hierarchical, extra_hydroloop, split_hydro, split_grav\n");
+    fprintf(f, "hydro_h_max,stars_h_max,depth,maxdepth\n");
 
     /* Write root data */
     fprintf(f, "%i, ,-1,", root_id);
     fprintf(f, "%li,%li,%li, , , , , , , , ,", s->nr_parts, s->nr_sparts,
             s->nr_gparts);
-    fprintf(f, " , , \n");
+    fprintf(f, " , , ,\n");
   }
 
   /* Write all the top level cells (and their children) */

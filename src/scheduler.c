@@ -945,7 +945,7 @@ static void scheduler_splittask_gravity(struct task *t, struct scheduler *s) {
     /* Self-interaction? */
     if (t->type == task_type_self) {
       /* Get a handle on the cell involved. */
-      struct cell *ci = t->ci;
+      const struct cell *ci = t->ci;
 
       /* Foreign task? */
       if (ci->nodeID != s->nodeID) {

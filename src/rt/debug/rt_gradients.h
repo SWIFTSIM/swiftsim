@@ -44,7 +44,6 @@ __attribute__((always_inline)) INLINE static void rt_gradients_collect(
   pj->rt_data.calls_tot += 1;
   pj->rt_data.calls_per_step += 1;
   pj->rt_data.calls_iact_gradient += 1;
-
 }
 
 /**
@@ -64,7 +63,6 @@ __attribute__((always_inline)) INLINE static void rt_gradients_nonsym_collect(
   pi->rt_data.calls_tot += 1;
   pi->rt_data.calls_per_step += 1;
   pi->rt_data.calls_iact_gradient += 1;
-
 }
 
 #endif /* SWIFT_RT_GRADIENT_DEBUG_H */

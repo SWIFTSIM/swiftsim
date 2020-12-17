@@ -79,8 +79,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     pj->rt_data.calls_tot += 1;
     pj->rt_data.calls_per_step += 1;
     pj->rt_data.calls_iact_transport += 1;
-  } 
-  else {
+  } else {
     pi->rt_data.calls_tot += 1;
     pi->rt_data.calls_per_step += 1;
     pi->rt_data.calls_iact_transport += 1;

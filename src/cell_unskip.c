@@ -1374,7 +1374,7 @@ void cell_activate_subcell_external_grav_tasks(struct cell *ci,
 }
 
 /**
- * @brief Traverse a sub-cell task and activate the radiative transfer drift 
+ * @brief Traverse a sub-cell task and activate the radiative transfer drift
  * tasks that are required by the RT tasks.
  *
  * @param ci The first #cell we recurse in.
@@ -1617,10 +1617,10 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
 
   /* Unskip all the other task types. */
   if (c->nodeID == nodeID && cell_is_active_hydro(c, e)) {
-    for (struct link *l = c->hydro.gradient; l != NULL; l = l->next){
+    for (struct link *l = c->hydro.gradient; l != NULL; l = l->next) {
       scheduler_activate(s, l->t);
     }
-    for (struct link *l = c->hydro.force; l != NULL; l = l->next){
+    for (struct link *l = c->hydro.force; l != NULL; l = l->next) {
       scheduler_activate(s, l->t);
     }
 
@@ -2392,7 +2392,7 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
     for (struct link *l = c->hydro.rt_inject; l != NULL; l = l->next)
       scheduler_activate(s, l->t);
 
-    for (struct link *l = c->hydro.rt_gradient; l != NULL; l = l->next){
+    for (struct link *l = c->hydro.rt_gradient; l != NULL; l = l->next) {
       scheduler_activate(s, l->t);
     }
     for (struct link *l = c->hydro.rt_transport; l != NULL; l = l->next) {
@@ -2402,8 +2402,10 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
     /* Unskip all the other task types */
     if (c->hydro.rt_in != NULL) scheduler_activate(s, c->hydro.rt_in);
     if (c->hydro.rt_ghost1 != NULL) scheduler_activate(s, c->hydro.rt_ghost1);
-    if (c->hydro.rt_gradient_out != NULL) scheduler_activate(s, c->hydro.rt_gradient_out);
-    if (c->hydro.rt_transport_out != NULL) scheduler_activate(s, c->hydro.rt_transport_out);
+    if (c->hydro.rt_gradient_out != NULL)
+      scheduler_activate(s, c->hydro.rt_gradient_out);
+    if (c->hydro.rt_transport_out != NULL)
+      scheduler_activate(s, c->hydro.rt_transport_out);
     if (c->hydro.rt_out != NULL) scheduler_activate(s, c->hydro.rt_out);
   }
 
