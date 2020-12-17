@@ -945,7 +945,7 @@ static void scheduler_splittask_gravity(struct task *t, struct scheduler *s) {
     /* Self-interaction? */
     if (t->type == task_type_self) {
       /* Get a handle on the cell involved. */
-      struct cell *ci = t->ci;
+      const struct cell *ci = t->ci;
 
       /* Foreign task? */
       if (ci->nodeID != s->nodeID) {
@@ -2506,7 +2506,6 @@ void scheduler_free_tasks(struct scheduler *s) {
 
 /**
  * @brief write down each task level
- * @param s:      pointer to the scheduler struct
  */
 void scheduler_write_task_level(const struct scheduler *s) {
   /* init */
@@ -2535,9 +2534,6 @@ void scheduler_write_task_level(const struct scheduler *s) {
       count[ind] += 1;
     }
   }
-
-  /* generate filename */
-  char filename[200];
 
   /* Open file */
   FILE *f = fopen(filename, "w");
