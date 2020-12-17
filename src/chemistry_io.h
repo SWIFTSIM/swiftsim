@@ -25,7 +25,6 @@
 /* Import the right functions */
 #if defined(CHEMISTRY_NONE)
 #include "./chemistry/none/chemistry_io.h"
-#include "./chemistry/none/chemistry_logger.h"
 #elif defined(CHEMISTRY_GEAR)
 #include "./chemistry/GEAR/chemistry_io.h"
 #elif defined(CHEMISTRY_GEAR_DIFFUSION)
