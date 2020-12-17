@@ -286,9 +286,9 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
       size_t size = 0;
       hydro_logger_compute_size_and_mask(log->mask_data_pointers.hydro, &p[i],
                                          &xp[i], log_all_fields, &size, &mask);
-          chemistry_logger_compute_size_and_mask_part(
-                                                      log->mask_data_pointers.chemistry_part, &p[i], &xp[i], log_all_fields,
-                                                      &size, &mask);
+      chemistry_logger_compute_size_and_mask_part(
+          log->mask_data_pointers.chemistry_part, &p[i], &xp[i], log_all_fields,
+          &size, &mask);
       if (flag != 0) {
         size += size_special_flag;
       }
@@ -384,9 +384,9 @@ void logger_copy_spart_fields(const struct logger_writer *log,
   buff = stars_logger_write_particle(log->mask_data_pointers.stars, sp, &mask,
                                      buff);
   buff = chemistry_logger_write_sparticle(
-                                          log->mask_data_pointers.chemistry_spart, sp, &mask, buff);
+      log->mask_data_pointers.chemistry_spart, sp, &mask, buff);
   buff = star_formation_logger_write_sparticle(
-                                               log->mask_data_pointers.star_formation, sp, &mask, buff);
+      log->mask_data_pointers.star_formation, sp, &mask, buff);
 #ifdef SWIFT_DEBUG_CHECKS
   if (mask) {
     error("Requested logging of values not present in sparts. %u", mask);
@@ -450,8 +450,8 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
           log->mask_data_pointers.chemistry_spart, &sp[i], log_all_fields,
           &size, &mask);
       star_formation_logger_compute_size_and_mask(
-                                                  log->mask_data_pointers.star_formation, &sp[i], log_all_fields, &size,
-                                                  &mask);
+          log->mask_data_pointers.star_formation, &sp[i], log_all_fields, &size,
+          &mask);
       if (flag != 0) {
         size += size_special_flag;
       }
