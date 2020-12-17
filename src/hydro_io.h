@@ -27,7 +27,6 @@
 #include "./hydro/Minimal/hydro_io.h"
 #elif defined(GADGET2_SPH)
 #include "./hydro/Gadget2/hydro_io.h"
-#include "./hydro/Gadget2/hydro_logger.h"
 #elif defined(HOPKINS_PE_SPH)
 #include "./hydro/PressureEntropy/hydro_io.h"
 #elif defined(HOPKINS_PU_SPH)
@@ -44,7 +43,6 @@
 #include "./hydro/Planetary/hydro_io.h"
 #elif defined(SPHENIX_SPH)
 #include "./hydro/SPHENIX/hydro_io.h"
-#include "./hydro/SPHENIX/hydro_logger.h"
 #elif defined(ANARCHY_PU_SPH)
 #include "./hydro/AnarchyPU/hydro_io.h"
 #else

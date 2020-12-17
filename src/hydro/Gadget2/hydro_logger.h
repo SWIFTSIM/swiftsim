@@ -19,6 +19,7 @@
 #ifndef SWIFT_GADGET2_HYDRO_LOGGER_H
 #define SWIFT_GADGET2_HYDRO_LOGGER_H
 
+#include "hydro.h"
 #include "logger_io.h"
 
 #ifdef WITH_LOGGER

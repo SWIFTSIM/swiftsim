@@ -44,8 +44,8 @@
 #include "engine.h"
 #include "error.h"
 #include "gravity_logger.h"
-#include "hydro_io.h"
-#include "stars_io.h"
+#include "hydro_logger.h"
+#include "stars_logger.h"
 #include "units.h"
 
 /*
