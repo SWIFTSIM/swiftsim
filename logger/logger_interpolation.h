@@ -25,6 +25,10 @@
 
 /**
  * @brief Compute the quintic hermite spline interpolation.
+ * See https://en.wikipedia.org/wiki/Hermite_interpolation for more information.
+ * @f$ p(x) = f(x_0) + f'(x_0) (x - x_0) + \frac{1}{2}f''(x_0) (x - x_0)^2 + \frac{f(x_1) - f(x_0) - f'(x_0) (x_1 - x_0) - \frac{1}{2} f''(x_0) (x_1 - x_0)^2}{(x_1 - x_0)^3} (x - x_0)^3
+  + \frac{3 f(x_0) - 3 f(x_1) + \left( 2 f'(x_0) + f'(x_1) \right) (x_1 - x_0) + \frac{1}{2} f''(x_0) (x_1 - x_0)^2}{(x_1 - x_0)^4} (x - x_0)^3 (x - x_1)
+  + \frac{6 f(x_1) - 6 f(x_0) - 3 \left( f'(x_0) + f'(x_1) \right) (x_1 - x_0) + \frac{1}{2}\left( f''(x_1) - f''(x_0) \right) (x_1 - x_0)^2}{(x_1 - x_0)^5} (x - x_0)^3 (x - x_1)^2 @f$
  *
  * @param t0 The time at the left of the interval.
  * @param x0 The function at the left of the interval.
@@ -81,6 +85,9 @@ __attribute__((always_inline)) INLINE static double interpolate_quintic_hermite_
 
 /**
  * @brief Compute the cubic hermite spline interpolation.
+ * See https://en.wikipedia.org/wiki/Hermite_interpolation for more information.
+ * @f$ p(x) = f(x_0) + f'(x_0) (x - x_0) + \frac{f(x_1) - f(x_0) - f'(x_0) (x_1 - x_0)}{(x_1 - x_0)^2} (x - x_0)^2
+  + \frac{2 f(x_0) - 2 f(x_1) + f'(x_0) (x_1 - x_0) + f'(x_1) (x_1 - x_0)}{(x_1 - x_0)^3} (x - x_0)^2 (x - x_1) @f$
  *
  * @param t0 The time at the left of the interval.
  * @param v0 The first derivative at the left of the interval.
