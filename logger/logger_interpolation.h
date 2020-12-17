@@ -22,13 +22,17 @@
 
 #include "logger_tools.h"
 
-
 /**
  * @brief Compute the quintic hermite spline interpolation.
  * See https://en.wikipedia.org/wiki/Hermite_interpolation for more information.
- * @f$ p(x) = f(x_0) + f'(x_0) (x - x_0) + \frac{1}{2}f''(x_0) (x - x_0)^2 + \frac{f(x_1) - f(x_0) - f'(x_0) (x_1 - x_0) - \frac{1}{2} f''(x_0) (x_1 - x_0)^2}{(x_1 - x_0)^3} (x - x_0)^3
-  + \frac{3 f(x_0) - 3 f(x_1) + \left( 2 f'(x_0) + f'(x_1) \right) (x_1 - x_0) + \frac{1}{2} f''(x_0) (x_1 - x_0)^2}{(x_1 - x_0)^4} (x - x_0)^3 (x - x_1)
-  + \frac{6 f(x_1) - 6 f(x_0) - 3 \left( f'(x_0) + f'(x_1) \right) (x_1 - x_0) + \frac{1}{2}\left( f''(x_1) - f''(x_0) \right) (x_1 - x_0)^2}{(x_1 - x_0)^5} (x - x_0)^3 (x - x_1)^2 @f$
+ * @f$ p(x) = f(x_0) + f'(x_0) (x - x_0) + \frac{1}{2}f''(x_0) (x - x_0)^2 +
+ \frac{f(x_1) - f(x_0) - f'(x_0) (x_1 - x_0) - \frac{1}{2} f''(x_0) (x_1 -
+ x_0)^2}{(x_1 - x_0)^3} (x - x_0)^3
+  + \frac{3 f(x_0) - 3 f(x_1) + \left( 2 f'(x_0) + f'(x_1) \right) (x_1 - x_0) +
+ \frac{1}{2} f''(x_0) (x_1 - x_0)^2}{(x_1 - x_0)^4} (x - x_0)^3 (x - x_1)
+  + \frac{6 f(x_1) - 6 f(x_0) - 3 \left( f'(x_0) + f'(x_1) \right) (x_1 - x_0) +
+ \frac{1}{2}\left( f''(x_1) - f''(x_0) \right) (x_1 - x_0)^2}{(x_1 - x_0)^5} (x
+ - x_0)^3 (x - x_1)^2 @f$
  *
  * @param t0 The time at the left of the interval.
  * @param x0 The function at the left of the interval.
@@ -42,10 +46,12 @@
  *
  * @return The function evaluated at t.
  */
-__attribute__((always_inline)) INLINE static double interpolate_quintic_hermite_spline(
-    const double t0, const double x0, const float v0,
-    const float a0, const double t1, const double x1,
-    const float v1, const float a1, const double t) {
+__attribute__((always_inline)) INLINE static double
+interpolate_quintic_hermite_spline(const double t0, const double x0,
+                                   const float v0, const float a0,
+                                   const double t1, const double x1,
+                                   const float v1, const float a1,
+                                   const double t) {
 
   /* Generates recurring variables  */
   /* Time differences */
@@ -86,8 +92,10 @@ __attribute__((always_inline)) INLINE static double interpolate_quintic_hermite_
 /**
  * @brief Compute the cubic hermite spline interpolation.
  * See https://en.wikipedia.org/wiki/Hermite_interpolation for more information.
- * @f$ p(x) = f(x_0) + f'(x_0) (x - x_0) + \frac{f(x_1) - f(x_0) - f'(x_0) (x_1 - x_0)}{(x_1 - x_0)^2} (x - x_0)^2
-  + \frac{2 f(x_0) - 2 f(x_1) + f'(x_0) (x_1 - x_0) + f'(x_1) (x_1 - x_0)}{(x_1 - x_0)^3} (x - x_0)^2 (x - x_1) @f$
+ * @f$ p(x) = f(x_0) + f'(x_0) (x - x_0) + \frac{f(x_1) - f(x_0) - f'(x_0) (x_1
+ - x_0)}{(x_1 - x_0)^2} (x - x_0)^2
+  + \frac{2 f(x_0) - 2 f(x_1) + f'(x_0) (x_1 - x_0) + f'(x_1) (x_1 - x_0)}{(x_1
+ - x_0)^3} (x - x_0)^2 (x - x_1) @f$
  *
  * @param t0 The time at the left of the interval.
  * @param v0 The first derivative at the left of the interval.
@@ -99,10 +107,11 @@ __attribute__((always_inline)) INLINE static double interpolate_quintic_hermite_
  *
  * @return The function evaluated at t.
  */
-__attribute__((always_inline)) INLINE static float interpolate_cubic_hermite_spline(
-    const double t0, const float v0, const float a0,
-    const double t1, const float v1, const float a1,
-    const double t) {
+__attribute__((always_inline)) INLINE static float
+interpolate_cubic_hermite_spline(const double t0, const float v0,
+                                 const float a0, const double t1,
+                                 const float v1, const float a1,
+                                 const double t) {
 
   /* Generates recurring variables  */
   /* Time differences */
@@ -131,7 +140,8 @@ __attribute__((always_inline)) INLINE static float interpolate_cubic_hermite_spl
 }
 
 /**
- * @brief Interpolates a field in N dimension using the first and second derivatives if possible.
+ * @brief Interpolates a field in N dimension using the first and second
+ * derivatives if possible.
  *
  * The field is in double and both derivatives in float.
  *
@@ -142,10 +152,13 @@ __attribute__((always_inline)) INLINE static float interpolate_cubic_hermite_spl
  * @param t_after Time of field_after (> t).
  * @param t Requested time.
  */
-__attribute__((always_inline)) INLINE static void interpolate_quintic_double_float_ND(
-    const double t_before, const struct logger_field *restrict before,
-    const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t, const int dimension) {
+__attribute__((always_inline)) INLINE static void
+interpolate_quintic_double_float_ND(const double t_before,
+                                    const struct logger_field *restrict before,
+                                    const double t_after,
+                                    const struct logger_field *restrict after,
+                                    void *restrict output, const double t,
+                                    const int dimension) {
   /* Compute the interpolation scaling. */
   const double wa = (t - t_before) / (t_after - t_before);
   const double wb = 1. - wa;
@@ -162,14 +175,14 @@ __attribute__((always_inline)) INLINE static void interpolate_quintic_double_flo
 
     /* Use quintic hermite spline. */
     if (v_bef && v_aft && a_bef && a_aft) {
-      x[i] = interpolate_quintic_hermite_spline(
-                                                t_before, x_bef[i], v_bef[i], a_bef[i], t_after, x_aft[i],
+      x[i] = interpolate_quintic_hermite_spline(t_before, x_bef[i], v_bef[i],
+                                                a_bef[i], t_after, x_aft[i],
                                                 v_aft[i], a_aft[i], t);
     }
     /* Use cubic hermite spline. */
     else if (v_bef && v_aft) {
-      x[i] = interpolate_cubic_hermite_spline(
-                                              t_before, x_bef[i], v_bef[i], t_after, x_aft[i], v_aft[i], t);
+      x[i] = interpolate_cubic_hermite_spline(t_before, x_bef[i], v_bef[i],
+                                              t_after, x_aft[i], v_aft[i], t);
     }
     /* Use linear interpolation. */
     else {
@@ -179,7 +192,8 @@ __attribute__((always_inline)) INLINE static void interpolate_quintic_double_flo
 }
 
 /**
- * @brief Interpolates a field in N dimension using the first derivative if possible.
+ * @brief Interpolates a field in N dimension using the first derivative if
+ * possible.
  *
  * The field and the first derivatives are floats.
  *
@@ -209,8 +223,8 @@ __attribute__((always_inline)) INLINE static void interpolate_cubic_float_ND(
 
     /* Use a cubic hermite spline. */
     if (a_bef && a_aft) {
-      v[i] = interpolate_cubic_hermite_spline(
-          t_before, v_bef[i], a_bef[i], t_after, v_aft[i], a_aft[i], t);
+      v[i] = interpolate_cubic_hermite_spline(t_before, v_bef[i], a_bef[i],
+                                              t_after, v_aft[i], a_aft[i], t);
     }
     /* Use linear interpolation. */
     else {
@@ -268,8 +282,7 @@ __attribute__((always_inline)) INLINE static void interpolate_linear_float(
   const float wa = (t - t_before) / (t_after - t_before);
   const float wb = 1. - wa;
   ((float *)output)[0] =
-    wa * ((float *)after->field)[0] + wb * ((float *)before->field)[0];
-
+      wa * ((float *)after->field)[0] + wb * ((float *)before->field)[0];
 }
 
 /**
@@ -293,6 +306,5 @@ __attribute__((always_inline)) INLINE static void interpolate_ids(
     error("Interpolating different particles");
   }
   *(long long *)output = *(long long *)after->field;
-
 }
-#endif // LOGGER_LOGGER_INTERPOLATION_H
+#endif  // LOGGER_LOGGER_INTERPOLATION_H
