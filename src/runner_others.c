@@ -919,7 +919,7 @@ void runner_do_rt_thermochemistry(struct runner *r, struct cell *c, int timer) {
 
         /* Finish the force loop */
         rt_finalise_transport(p);
-        rt_do_thermochemistry(p);
+        rt_thermochemistry(p);
       }
     }
   }

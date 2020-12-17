@@ -21,8 +21,8 @@
 
 /**
  * @file src/rt/debug/rt_thermochemistry.h
- * @brief Main header file for the debug radiative transfer scheme thermochemistry
- *        related functions.
+ * @brief Main header file for the debug radiative transfer scheme
+ * thermochemistry related functions.
  */
 
 /**
@@ -31,13 +31,15 @@
  * @param p Particle to work on.
  */
 
-__attribute__((always_inline)) INLINE static void rt_compute_thermochemistry(struct part *restrict p){
+__attribute__((always_inline)) INLINE static void rt_do_thermochemistry(
+    struct part *restrict p) {
 
-  if (! p->rt_data.transport_done)
+  if (!p->rt_data.gradients_done)
+    error("Trying to do thermochemistry when gradient step hasn't been done");
+  if (!p->rt_data.transport_done)
     error("Trying to do thermochemistry when transport step hasn't been done");
 
   p->rt_data.thermochem_done += 1;
-
 }
 
 #endif /* SWIFT_RT_THERMOCHEMISTRY_DEBUG_H */

@@ -21,8 +21,8 @@
 
 /**
  * @file src/rt/none/rt_thermochemistry.h
- * @brief Main header file for the debug radiative transfer scheme thermochemistry
- *        related functions.
+ * @brief Main header file for the debug radiative transfer scheme
+ * thermochemistry related functions.
  */
 
 /**
@@ -31,6 +31,7 @@
  * @param p Particle to work on.
  */
 
-__attribute__((always_inline)) INLINE static void rt_compute_thermochemistry(struct part *restrict p){}
+__attribute__((always_inline)) INLINE static void rt_do_thermochemistry(
+    struct part *restrict p) {}
 
 #endif /* SWIFT_RT_THERMOCHEMISTRY_NONE_H */
