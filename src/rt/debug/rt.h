@@ -47,6 +47,10 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.calls_iact_transport_sym = 0;
   p->rt_data.calls_iact_transport_nonsym = 0;
   p->rt_data.photon_number_updated = 0;
+
+  p->rt_data.gradients_done = 0;
+  p->rt_data.transport_done = 0;
+  p->rt_data.thermochem_done = 0;
 }
 
 /**
@@ -96,7 +100,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
 __attribute__((always_inline)) INLINE static void
 rt_injection_update_photon_density(struct part* restrict p) {
 
-  p->rt_data.photon_number_updated = 1;
+  p->rt_data.photon_number_updated += 1;
   p->rt_data.calls_tot += 1;
   p->rt_data.calls_per_step += 1;
 }
@@ -145,7 +149,12 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
 __attribute__((always_inline)) INLINE static void rt_finalise_gradient(
     struct part* restrict p) {
 
-  p->rt_data.gradients_finished += 1;
+  if (p->rt_data.calls_iact_gradient == 0)
+    error(
+        "Called finalise gradient on particle "
+        "with iact gradient count = 0");
+
+  p->rt_data.gradients_done += 1;
 }
 
 /**
@@ -156,23 +165,31 @@ __attribute__((always_inline)) INLINE static void rt_finalise_gradient(
 __attribute__((always_inline)) INLINE static void rt_finalise_transport(
     struct part* restrict p) {
 
-  if (!p->rt_data.gradients_finished)
+  if (p->rt_data.calls_iact_gradient == 0)
     error(
-        "Trying to do finalise_transport when rt_finalise_gradient hasn't been "
-        "done");
+        "Called finalise transport on particle "
+        "with iact gradient count = 0");
+  if (p->rt_data.calls_iact_transport == 0)
+    error(
+        "Called finalise transport on particle "
+        "with iact transport count = 0");
+  if (!p->rt_data.gradients_done)
+    error(
+        "Trying to do finalise_transport when "
+        "rt_finalise_gradient hasn't been done");
 
   p->rt_data.transport_done += 1;
 }
 
 /**
- * @brief Wraps around rt_compute_thermochemistry function
+ * @brief Wraps around rt_do_thermochemistry function
  *
  * @param p particle to work on
  */
-__attribute__((always_inline)) INLINE static void rt_do_thermochemistry(
+__attribute__((always_inline)) INLINE static void rt_thermochemistry(
     struct part* restrict p) {
 
-  rt_compute_thermochemistry(p);
+  rt_do_thermochemistry(p);
 }
 
 #endif /* SWIFT_RT_DEBUG_H */

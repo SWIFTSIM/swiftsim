@@ -19,6 +19,8 @@
 #ifndef SWIFT_RT_NONE_H
 #define SWIFT_RT_NONE_H
 
+#include "rt_thermochemistry.h"
+
 /**
  * @file src/rt/none/rt.h
  * @brief Main header file for no radiative transfer scheme.
@@ -99,14 +101,14 @@ __attribute__((always_inline)) INLINE static void rt_finalise_transport(
     struct part* restrict p) {}
 
 /**
- * @brief Wraps around rt_compute_thermochemistry function
+ * @brief Wraps around rt_do_thermochemistry function
  *
  * @param p particle to work on
  */
-__attribute__((always_inline)) INLINE static void rt_do_thermochemistry(
+__attribute__((always_inline)) INLINE static void rt_thermochemistry(
     struct part* restrict p) {
 
-  rt_compute_thermochemistry(p);
+  rt_do_thermochemistry(p);
 }
 
 #endif /* SWIFT_RT_NONE_H */
