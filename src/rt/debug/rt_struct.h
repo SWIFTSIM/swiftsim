@@ -36,49 +36,8 @@ struct rt_part_data {
   int calls_self_inject;     /* calls from self inject tasks */
   int calls_pair_inject;     /* calls from pair inject tasks */
   int calls_iact_gradient;   /* calls from gradient interaction loop */
-  int calls_iact_gradient_sym;   /* calls from gradient interaction loop */
-  int calls_iact_gradient_nonsym;  /* calls from gradient interaction loop */
   int calls_iact_transport;  /* calls from transport interaction loop */
-  int calls_iact_transport_sym;  /* calls from transport interaction loop */
-  int calls_iact_transport_nonsym; /* calls from transport interaction loop */
   int photon_number_updated; /* calls from ghost1 tasks */
-
-  /* temp for debugging */
-  long long neigh_iact_grad[400];
-  long long neigh_cell_iact_grad[400];
-  int neigh_iact_grad_free;
-  long long neigh_iact_transp[400];
-  long long neigh_cell_iact_transp[400];
-  int neigh_iact_transp_free;
-  long long this_cell_grad;
-  long long this_cell_transport;
-
-
-  /* temp for debugging */
-  long long hydro_neigh_iact_grad[400];
-  long long hydro_neigh_cell_iact_grad[400];
-  int hydro_neigh_iact_grad_free;
-  long long hydro_neigh_iact_transp[400];
-  long long hydro_neigh_cell_iact_transp[400];
-  int hydro_neigh_iact_transp_free;
-  long long hydro_this_cell_grad;
-  long long hydro_this_cell_transport;
-
-  /* temp for debugging */
-  int calls_hydro_iact_gradient;
-  int calls_hydro_iact_gradient_sym;
-  int calls_hydro_iact_gradient_nonsym;
-  int calls_hydro_iact_force;
-  int calls_hydro_iact_force_sym;
-  int calls_hydro_iact_force_nonsym;
-
-
-  float h_grad;
-  float h_transport;
-  float h_hydro_grad;
-  float h_force;
-
-  int ghost_finished;
 
 };
 

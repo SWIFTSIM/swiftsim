@@ -27,8 +27,6 @@
 
 #include "hydro_getters.h"
 #include "hydro_setters.h"
-/* TODO: remove!!!!! */
-#include "atomic.h"
 
 __attribute__((always_inline)) INLINE static void hydro_gradients_init(
     struct part *p) {
@@ -50,36 +48,7 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_init(
  */
 __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, long long ciID, long long cjID) {
-
-  atomic_inc(&pi->rt_data.calls_hydro_iact_gradient);
-  atomic_inc(&pi->rt_data.calls_hydro_iact_gradient_sym);
-
-  atomic_inc(&pj->rt_data.calls_hydro_iact_gradient);
-  atomic_inc(&pj->rt_data.calls_hydro_iact_gradient_sym);
-  if (pi->rt_data.ghost_finished != 1) 
-    printf("--- Hydro Grad sym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
-  if (pj->rt_data.ghost_finished != 1) 
-    printf("--- Hydro Grad sym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
-
-  int f;
-  f = pi->rt_data.hydro_neigh_iact_grad_free;
-  if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");
-  pi->rt_data.hydro_neigh_iact_grad[f] = pj->id;
-  pi->rt_data.hydro_neigh_cell_iact_grad[f] = cjID;
-  pi->rt_data.hydro_neigh_iact_grad_free++;
-  if (llabs(pi->rt_data.hydro_this_cell_grad) < llabs(ciID))
-    pi->rt_data.hydro_this_cell_grad = ciID;
-  pi->rt_data.h_hydro_grad = hi;
-
-  f = pj->rt_data.hydro_neigh_iact_grad_free;
-  if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");
-  pj->rt_data.hydro_neigh_iact_grad[f] = pi->id;
-  pj->rt_data.hydro_neigh_cell_iact_grad[f] = ciID;
-  pj->rt_data.hydro_neigh_iact_grad_free++;
-  if (llabs(pj->rt_data.hydro_this_cell_grad) < llabs(cjID))
-    pj->rt_data.hydro_this_cell_grad = cjID;
-  pj->rt_data.h_hydro_grad = hj;
+    struct part *restrict pj) {
 
   const float r_inv = 1.0f / sqrtf(r2);
   const float r = r2 * r_inv;
@@ -207,23 +176,7 @@ __attribute__((always_inline)) INLINE static void hydro_gradients_collect(
 __attribute__((always_inline)) INLINE static void
 hydro_gradients_nonsym_collect(float r2, const float *dx, float hi, float hj,
                                struct part *restrict pi,
-                               struct part *restrict pj, long long ciID, long long cjID) {
-
-  atomic_inc(&pi->rt_data.calls_hydro_iact_gradient);
-  atomic_inc(&pi->rt_data.calls_hydro_iact_gradient_nonsym);
-  if (pi->rt_data.ghost_finished != 1) 
-    printf("--- Hydro Grad nonsym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
-  if (pj->rt_data.ghost_finished != 1) 
-    printf("--- Hydro Grad nonsym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
-
-  int f = pi->rt_data.hydro_neigh_iact_grad_free;
-  if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");
-  pi->rt_data.hydro_neigh_iact_grad[f] = pj->id;
-  pi->rt_data.hydro_neigh_cell_iact_grad[f] = cjID;
-  pi->rt_data.hydro_neigh_iact_grad_free++;
-  if (llabs(pi->rt_data.hydro_this_cell_grad) < llabs(ciID))
-    pi->rt_data.hydro_this_cell_grad = ciID;
-  pi->rt_data.h_hydro_grad = hi;
+                               struct part *restrict pj) {
 
   const float r_inv = 1.0f / sqrtf(r2);
   const float r = r2 * r_inv;
