@@ -19,8 +19,6 @@
 #ifndef SWIFT_RT_GRADIENTS_DEBUG_H
 #define SWIFT_RT_GRADIENTS_DEBUG_H
 
-#include "atomic.h"
-
 /**
  * @file src/rt/debug/rt_gradients.h
  * @brief Main header file for the debug radiative transfer scheme gradients
@@ -38,37 +36,15 @@
  */
 __attribute__((always_inline)) INLINE static void rt_gradients_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, long long ciID, long long cjID) {
+    struct part *restrict pj) {
 
-  if (pi->rt_data.ghost_finished != 1) 
-    printf("--- RT grad sym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
-  if (pj->rt_data.ghost_finished != 1) 
-    printf("--- RT grad sym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
+  pi->rt_data.calls_tot += 1;
+  pi->rt_data.calls_per_step += 1;
+  pi->rt_data.calls_iact_gradient += 1;
+  pj->rt_data.calls_tot += 1;
+  pj->rt_data.calls_per_step += 1;
+  pj->rt_data.calls_iact_gradient += 1;
 
-  atomic_inc(&pi->rt_data.calls_iact_gradient);
-  atomic_inc(&pi->rt_data.calls_iact_gradient_sym);
-
-  atomic_inc(&pj->rt_data.calls_iact_gradient);
-  atomic_inc(&pj->rt_data.calls_iact_gradient_sym);
-
-  int f;
-  f = pi->rt_data.neigh_iact_grad_free;
-  if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");
-  pi->rt_data.neigh_iact_grad[f] = pj->id;
-  pi->rt_data.neigh_cell_iact_grad[f] = cjID;
-  pi->rt_data.neigh_iact_grad_free++;
-  if (llabs(pi->rt_data.this_cell_grad) < llabs(ciID))
-    pi->rt_data.this_cell_grad = ciID;
-  pi->rt_data.h_grad = hi;
-
-  f = pj->rt_data.neigh_iact_grad_free;
-  if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");
-  pj->rt_data.neigh_iact_grad[f] = pi->id;
-  pj->rt_data.neigh_cell_iact_grad[f] = ciID;
-  pj->rt_data.neigh_iact_grad_free++;
-  if (llabs(pj->rt_data.this_cell_grad) < llabs(cjID))
-    pj->rt_data.this_cell_grad = cjID;
-  pj->rt_data.h_grad = hj;
 }
 
 /**
@@ -83,24 +59,11 @@ __attribute__((always_inline)) INLINE static void rt_gradients_collect(
  */
 __attribute__((always_inline)) INLINE static void rt_gradients_nonsym_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, long long ciID, long long cjID) {
+    struct part *restrict pj) {
 
-  if (pi->rt_data.ghost_finished != 1) 
-    printf("--- RT grad nonsym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
-  if (pj->rt_data.ghost_finished != 1) 
-    printf("--- RT grad nonsym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
-
-  atomic_inc(&pi->rt_data.calls_iact_gradient);
-  atomic_inc(&pi->rt_data.calls_iact_gradient_nonsym);
-
-  int f = pi->rt_data.neigh_iact_grad_free;
-  if (f == 400) error("Reached 400 neighbours for grad particle debugging. Raise limit");
-  pi->rt_data.neigh_iact_grad[f] = pj->id;
-  pi->rt_data.neigh_cell_iact_grad[f] = cjID;
-  pi->rt_data.neigh_iact_grad_free++;
-  if (llabs(pi->rt_data.this_cell_grad) < llabs(ciID))
-    pi->rt_data.this_cell_grad = ciID;
-  pi->rt_data.h_grad = hi;
+  pi->rt_data.calls_tot += 1;
+  pi->rt_data.calls_per_step += 1;
+  pi->rt_data.calls_iact_gradient += 1;
 
 }
 

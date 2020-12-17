@@ -48,7 +48,7 @@
  */
 __attribute__((always_inline)) INLINE static void runner_iact_density(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H){
+    struct part *restrict pj, float a, float H) {
 
   float wi, wj, wi_dx, wj_dx;
 
@@ -152,9 +152,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_gradient(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
+    struct part *restrict pj, float a, float H) {
 
-  hydro_gradients_collect(r2, dx, hi, hj, pi, pj, ciID,  cjID);
+  hydro_gradients_collect(r2, dx, hi, hj, pi, pj);
 }
 
 /**
@@ -176,9 +176,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
+    struct part *restrict pj, float a, float H) {
 
-  hydro_gradients_nonsym_collect(r2, dx, hi, hj, pi, pj, ciID, cjID);
+  hydro_gradients_nonsym_collect(r2, dx, hi, hj, pi, pj);
 }
 
 /**
@@ -211,74 +211,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, int mode, float a, float H, long long ciID, long long cjID) {
-
-
-  if (mode == 1) {
-
-    pi->rt_data.calls_hydro_iact_force += 1;
-    pi->rt_data.calls_hydro_iact_force_sym += 1;
-
-    pj->rt_data.calls_hydro_iact_force += 1;
-    pj->rt_data.calls_hydro_iact_force_sym += 1;
-
-    if (pi->rt_data.ghost_finished != 1) 
-      printf("--- Hydro force sym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
-    if (pj->rt_data.ghost_finished != 1) 
-      printf("--- Hydro force sym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
-
-    int f; 
-    f = pi->rt_data.hydro_neigh_iact_transp_free;
-    if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
-    pi->rt_data.hydro_neigh_iact_transp[f] = pj->id;
-    pi->rt_data.hydro_neigh_cell_iact_transp[f] = cjID;
-    pi->rt_data.hydro_neigh_iact_transp_free++;
-    if (llabs(pi->rt_data.hydro_this_cell_transport) < llabs(ciID)){
-      // long long was = pi->rt_data.hydro_this_cell_transport;
-      pi->rt_data.hydro_this_cell_transport = ciID;
-      // printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pi->id, ciID, was);
-      // fflush(stdout);
-    }
-    pi->rt_data.h_force = hi;
-
-    f = pj->rt_data.hydro_neigh_iact_transp_free;
-    if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
-    pj->rt_data.hydro_neigh_iact_transp[f] = pi->id;
-    pj->rt_data.hydro_neigh_cell_iact_transp[f] = ciID;
-    pj->rt_data.hydro_neigh_iact_transp_free++;
-    if (llabs(pj->rt_data.hydro_this_cell_transport) < llabs(cjID)){
-      // long long was = pj->rt_data.hydro_this_cell_transport;
-      pj->rt_data.hydro_this_cell_transport = cjID;
-      // printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pj->id, cjID, was);
-      // fflush(stdout);
-    }
-    pj->rt_data.h_force = hj;
-
-
-  } else {
-
-    if (pi->rt_data.ghost_finished != 1) 
-      printf("--- Hydro force nonsym: Particle %6lld has ghost_finished = %i\n", pi->id, pi->rt_data.ghost_finished);
-    if (pj->rt_data.ghost_finished != 1) 
-      printf("--- Hydro force nonsym: Particle %6lld has ghost_finished = %i\n", pj->id, pj->rt_data.ghost_finished);
-
-    pi->rt_data.calls_hydro_iact_force += 1;
-    pi->rt_data.calls_hydro_iact_force_nonsym += 1;
-
-    int f = pi->rt_data.hydro_neigh_iact_transp_free;
-    if (f == 400) error("Reached 400 neighbours for transport particle debugging. Raise limit");
-    pi->rt_data.hydro_neigh_iact_transp[f] = pj->id;
-    pi->rt_data.hydro_neigh_cell_iact_transp[f] = cjID;
-    pi->rt_data.hydro_neigh_iact_transp_free++;
-    if (llabs(pi->rt_data.hydro_this_cell_transport) < llabs(ciID)){
-      // long long was = pi->rt_data.hydro_this_cell_transport;
-      pi->rt_data.hydro_this_cell_transport = ciID;
-      // printf("CHANGING FORCE PARTID=%lld CELLID=%lld WAS=%lld\n", pi->id, ciID, was);
-      // fflush(stdout);
-    }
-    pi->rt_data.h_force = hi;
-  }
-
+    struct part *restrict pj, int mode, float a, float H) {
 
   const float r_inv = 1.0f / sqrtf(r2);
   const float r = r2 * r_inv;
@@ -494,9 +427,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_force(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
+    struct part *restrict pj, float a, float H) {
 
-  runner_iact_fluxes_common(r2, dx, hi, hj, pi, pj, 1, a, H, ciID, cjID);
+  runner_iact_fluxes_common(r2, dx, hi, hj, pi, pj, 1, a, H);
 }
 
 /**
@@ -517,9 +450,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, float a, float H, long long ciID, long long cjID) {
+    struct part *restrict pj, float a, float H) {
 
-  runner_iact_fluxes_common(r2, dx, hi, hj, pi, pj, 0, a, H, ciID, cjID);
+  runner_iact_fluxes_common(r2, dx, hi, hj, pi, pj, 0, a, H);
 }
 
 #endif /* SWIFT_GIZMO_HYDRO_IACT_H */

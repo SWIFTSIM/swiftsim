@@ -211,16 +211,6 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->mpi.recv = NULL;
     c->mpi.send = NULL;
 #endif
-    /* TODO: temp for debugging */
-    c->rt_debugging.hydro_drifted = 0;
-    c->rt_debugging.stars_drifted = 0;
-    c->rt_debugging.hydroloop_tasks = 0;
-    c->rt_debugging.selfgrav_tasks = 0;
-    c->rt_debugging.extgrav_tasks = 0;
-    c->rt_debugging.hierarchical_tasks = 0;
-    c->rt_debugging.extra_hydroloop_tasks = 0;
-    c->rt_debugging.splittask_hydro = 0;
-    c->rt_debugging.splittask_grav = 0;
   }
 }
 
