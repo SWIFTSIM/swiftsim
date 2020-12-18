@@ -280,6 +280,75 @@ void header_read(struct header *h, struct logger_logfile *log) {
     }
   }
   stars_logger_reader_link_derivatives(h);
+
+  /* Chemistry (part) */
+  /* Set the link between local and global */
+  for (int j = 0; j < chemistry_logger_field_part_count; j++) {
+    chemistry_logger_local_to_global_part[j] = -1;
+    for (int i = 0; i < h->masks_count; i++) {
+      if (strcmp(h->masks[i].name, chemistry_logger_field_names_part[j]) == 0) {
+        chemistry_logger_local_to_global_part[j] = i;
+        break;
+      }
+    }
+
+    /* Check if everything is fine. */
+    const int index = chemistry_logger_local_to_global_part[j];
+    if (index == -1) {
+      error("Field %s in chemistry (part) is not set", chemistry_logger_field_names_part[j]);
+    }
+    if (h->masks[index].size != chemistry_logger_field_size_part[j]) {
+      error("Field %s in chemistry (part) does not have the correct size.",
+            chemistry_logger_field_names_part[j]);
+    }
+  }
+  chemistry_logger_reader_link_derivatives_part(h);
+
+  /* Chemistry (spart) */
+  /* Set the link between local and global */
+  for (int j = 0; j < chemistry_logger_field_spart_count; j++) {
+    chemistry_logger_local_to_global_spart[j] = -1;
+    for (int i = 0; i < h->masks_count; i++) {
+      if (strcmp(h->masks[i].name, chemistry_logger_field_names_spart[j]) == 0) {
+        chemistry_logger_local_to_global_spart[j] = i;
+        break;
+      }
+    }
+
+    /* Check if everything is fine. */
+    const int index = chemistry_logger_local_to_global_spart[j];
+    if (index == -1) {
+      error("Field %s in chemistry (spart) is not set", chemistry_logger_field_names_spart[j]);
+    }
+    if (h->masks[index].size != chemistry_logger_field_size_spart[j]) {
+      error("Field %s in chemistry (spart) does not have the correct size.",
+            chemistry_logger_field_names_spart[j]);
+    }
+  }
+  chemistry_logger_reader_link_derivatives_spart(h);
+
+  /* Star formation */
+  /* Set the link between local and global */
+  for (int j = 0; j < star_formation_logger_field_count; j++) {
+    star_formation_logger_local_to_global[j] = -1;
+    for (int i = 0; i < h->masks_count; i++) {
+      if (strcmp(h->masks[i].name, star_formation_logger_field_names[j]) == 0) {
+        star_formation_logger_local_to_global[j] = i;
+        break;
+      }
+    }
+
+    /* Check if everything is fine. */
+    const int index = star_formation_logger_local_to_global[j];
+    if (index == -1) {
+      error("Field %s in star formation is not set", star_formation_logger_field_names[j]);
+    }
+    if (h->masks[index].size != star_formation_logger_field_size[j]) {
+      error("Field %s in star formation does not have the correct size.",
+            star_formation_logger_field_names[j]);
+    }
+  }
+  star_formation_logger_reader_link_derivatives(h);
 };
 
 /**

@@ -16,22 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_LOGGER_STARS_H
-#define SWIFT_LOGGER_STARS_H
+#ifndef SWIFT_LOGGER_STARA_FORMATION_H
+#define SWIFT_LOGGER_STAR_FORMATION_H
 
 /* Config parameters. */
 #include "../config.h"
 
-/* Select the correct star model */
-#if defined(STARS_NONE)
-#include "./stars/Default/logger_stars.h"
-#elif defined(STARS_EAGLE)
+/* Import the right functions */
+#if defined(STAR_FORMATION_NONE)
+#include "./star_formation/none/logger_star_formation.h"
+#elif defined(STAR_FORMATION_QLA)
 #error TODO
-#include "./stars/EAGLE/logger_stars.h"
-#elif defined(STARS_GEAR)
-#include "./stars/GEAR/logger_stars.h"
+#elif defined(STAR_FORMATION_EAGLE)
+#error TODO
+#elif defined(STAR_FORMATION_GEAR)
+#include "./star_formation/GEAR/logger_star_formation.h"
 #else
-#error "Invalid choice of star model"
+#error "Invalid choice of star formation law"
 #endif
 
-#endif /* SWIFT_STARS_H */
+#endif /* SWIFT_STAR_FORMATION_H */

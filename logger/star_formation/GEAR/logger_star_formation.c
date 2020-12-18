@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2020 Loic Hausammann (loic.hausammann@epfl.ch)
+ * Copyright (c) 2020 Loic Hausammann (loic.hausammann@epfl.ch)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,22 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_LOGGER_STARS_H
-#define SWIFT_LOGGER_STARS_H
 
-/* Config parameters. */
-#include "../config.h"
+#include "logger_star_formation.h"
 
-/* Select the correct star model */
-#if defined(STARS_NONE)
-#include "./stars/Default/logger_stars.h"
-#elif defined(STARS_EAGLE)
-#error TODO
-#include "./stars/EAGLE/logger_stars.h"
-#elif defined(STARS_GEAR)
-#include "./stars/GEAR/logger_stars.h"
-#else
-#error "Invalid choice of star model"
-#endif
+/* Define the size of all the fields. */
+#define member_size(type, member) sizeof(((type *)0)->member)
 
-#endif /* SWIFT_STARS_H */
+const int star_formation_logger_field_size[star_formation_logger_field_count] = {};
+
+int star_formation_logger_local_to_global[star_formation_logger_field_count];

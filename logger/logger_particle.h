@@ -23,10 +23,12 @@
 #include "logger_tools.h"
 
 /* Include the other local files. */
+#include "logger_chemistry.h"
 #include "logger_gravity.h"
 #include "logger_header.h"
 #include "logger_hydro.h"
 #include "logger_stars.h"
+#include "logger_star_formation.h"
 #include "logger_time.h"
 
 #include <stdio.h>
