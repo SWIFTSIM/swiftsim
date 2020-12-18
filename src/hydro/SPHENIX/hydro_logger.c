@@ -21,6 +21,11 @@
 
 #ifdef WITH_LOGGER
 
+/* Include the particles */
+#include "align.h"
+#include "hydro_part.h"
+
+/* Include the header */
 #include "hydro_logger.h"
 
 const char *hydro_logger_field_names[hydro_logger_field_count] = {
