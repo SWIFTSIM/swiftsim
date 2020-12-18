@@ -2,7 +2,7 @@ Logger Output
 =============
 
 The logger is a particle based output (e.g. snapshot) that takes into account the large difference of timescale.
-If you have any question, a slack channel is available for it in SWIFT's slack.
+If you have any questions, a slack channel is available for it in SWIFT's slack.
 
 To run it, you will need to use the configuration option ``--enable-logger`` and the run time argument ``--logger``.
 Currently the logger is implemented only for GEAR, Gadget2 and the default modules, but can be easily extended to the other schemes by adding the logger structure to the particles and implementing the IO functions (see ``src/hydro/Gadget2/hydro_part.h``, ``src/hydro/Gadget2/hydro_logger.c`` and ``src/hydro/Gadget2/hydro_logger.h``).
