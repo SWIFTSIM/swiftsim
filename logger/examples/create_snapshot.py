@@ -7,7 +7,6 @@ import sys
 import h5py
 import numpy as np
 from glob import glob
-from mpl_toolkits.mplot3d import Axes3D
 import argparse
 sys.path.append("../.libs/")
 
