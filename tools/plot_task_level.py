@@ -107,7 +107,7 @@ def read_data(files):
             alldata = data
         else:
             concat = pd.concat([alldata, data])
-            alldata = concat.groupby(['type', 'subtype', 'depth'], as_index=False).sum()
+            alldata = concat.groupby(["type", "subtype", "depth"], as_index=False).sum()
 
     return data
 
