@@ -19,6 +19,10 @@
 #ifndef SWIFT_SPHENIX_HYDRO_LOGGER_H
 #define SWIFT_SPHENIX_HYDRO_LOGGER_H
 
+/* Include the parts */
+#include "part.h"
+
+/* Other Includes */
 #include "hydro.h"
 #include "logger_io.h"
 

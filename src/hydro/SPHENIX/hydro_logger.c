@@ -22,7 +22,6 @@
 #ifdef WITH_LOGGER
 
 #include "hydro_logger.h"
-#include "part.h"
 
 const char *hydro_logger_field_names[hydro_logger_field_count] = {
     "Coordinates", "Velocities",         "Accelerations",
