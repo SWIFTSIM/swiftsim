@@ -28,4 +28,4 @@ const char *stars_logger_field_names[stars_logger_field_count] = {
     "Masses",      "SmoothingLengths", "ParticleIDs",
 };
 
-#endif // WITH_LOGGER
+#endif  // WITH_LOGGER

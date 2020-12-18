@@ -23,7 +23,9 @@
 
 #include "chemistry_logger.h"
 
-const char *chemistry_logger_field_names_part[chemistry_logger_field_part_count] = {};
-const char *chemistry_logger_field_names_spart[chemistry_logger_field_spart_count] = {};
+const char
+    *chemistry_logger_field_names_part[chemistry_logger_field_part_count] = {};
+const char *
+    chemistry_logger_field_names_spart[chemistry_logger_field_spart_count] = {};
 
 #endif  // WITH_LOGGER

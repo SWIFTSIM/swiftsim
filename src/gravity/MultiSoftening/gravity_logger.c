@@ -19,15 +19,12 @@
 
 #include "../config.h"
 
-
 #ifdef WITH_LOGGER
 
 #include "gravity_logger.h"
-
 
 const char *gravity_logger_field_names[gravity_logger_field_count] = {
     "Coordinates", "Velocities", "Accelerations", "Masses", "ParticleIDs",
 };
 
-
-#endif // WITH_LOGGER
+#endif  // WITH_LOGGER

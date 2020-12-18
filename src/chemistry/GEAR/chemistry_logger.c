@@ -24,14 +24,12 @@
 #include "chemistry_logger.h"
 
 const char
-*chemistry_logger_field_names_part[chemistry_logger_field_part_count] = {
-    "ChemistryHydro",
+    *chemistry_logger_field_names_part[chemistry_logger_field_part_count] = {
+        "ChemistryHydro",
 };
 const char
-*chemistry_logger_field_names_spart[chemistry_logger_field_spart_count] = {
-    "MetalMassFractions",
+    *chemistry_logger_field_names_spart[chemistry_logger_field_spart_count] = {
+        "MetalMassFractions",
 };
 
-
-
-#endif // WITH_LOGGER
+#endif  // WITH_LOGGER

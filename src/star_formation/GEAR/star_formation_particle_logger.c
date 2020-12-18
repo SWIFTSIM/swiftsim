@@ -25,8 +25,8 @@
 
 /* Name of each possible mask. */
 const char
-*star_formation_logger_field_names[star_formation_logger_field_count] = {
-    "StarFormation",
+    *star_formation_logger_field_names[star_formation_logger_field_count] = {
+        "StarFormation",
 };
 
-#endif // WITH_LOGGER
+#endif  // WITH_LOGGER

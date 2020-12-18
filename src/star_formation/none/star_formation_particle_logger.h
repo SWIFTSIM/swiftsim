@@ -33,7 +33,7 @@ enum star_formation_logger_fields_spart {
 
 /* Name of each possible mask. */
 extern const char
-*star_formation_logger_field_names[star_formation_logger_field_count];
+    *star_formation_logger_field_names[star_formation_logger_field_count];
 
 /**
  * @brief Initialize the logger for the #spart.
