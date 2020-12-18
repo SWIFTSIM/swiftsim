@@ -2392,7 +2392,7 @@ AM_CONDITIONAL([HAVE_GADGET2], [test "$with_hydro" = "gadget2"])
 AM_CONDITIONAL([HAVE_CHEMISTRY_NONE], [test "$with_chemistry" = "none"])
 
 # check if using GEAR chemistry
-AM_CONDITIONAL([HAVE_CHEMISTRY_GEAR], [test "$with_chemistry" = "GEAR_*"])
+AM_CONDITIONAL([HAVE_CHEMISTRY_GEAR], [test "${with_chemistry:0:5}" = "GEAR_"])
 
 # check if using default stars
 AM_CONDITIONAL([HAVE_STARS_DEFAULT], [test "$with_stars" = "none"])
