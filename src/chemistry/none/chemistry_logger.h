@@ -35,10 +35,8 @@ enum chemistry_logger_fields_spart {
 };
 
 /* Name of each possible mask. */
-// static const char
-// *chemistry_logger_field_names_part[chemistry_logger_field_part_count] = {};
-// static const char
-// *chemistry_logger_field_names_spart[chemistry_logger_field_spart_count] = {};
+extern const char *chemistry_logger_field_names_part[chemistry_logger_field_part_count];
+extern const char *chemistry_logger_field_names_spart[chemistry_logger_field_spart_count];
 
 /**
  * @brief Initialize the logger for the #part.

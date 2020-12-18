@@ -38,10 +38,7 @@ enum stars_logger_fields {
 };
 
 /* Name of each possible mask. */
-static const char *stars_logger_field_names[stars_logger_field_count] = {
-    "Coordinates", "Velocities",       "Accelerations",
-    "Masses",      "SmoothingLengths", "ParticleIDs",
-};
+extern const char *stars_logger_field_names[stars_logger_field_count];
 
 /**
  * @brief Initialize the logger.
