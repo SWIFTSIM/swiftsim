@@ -2901,8 +2901,6 @@ void engine_init(struct engine *e, struct space *s, struct swift_params *params,
   if (e->policy & engine_policy_star_formation) {
     star_formation_logger_accumulator_init(&e->sfh);
   }
-
-  engine_init_output_lists(e, params);
 }
 
 /**

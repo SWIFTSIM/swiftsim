@@ -427,6 +427,7 @@ void engine_config(int restart, int fof, struct engine *e,
     if (e->policy & engine_policy_self_gravity)
       if (e->nodeID == 0) gravity_props_print(e->gravity_properties);
 
+    /* Print information about the stellar scheme */
     if (e->policy & engine_policy_stars)
       if (e->nodeID == 0) stars_props_print(e->stars_properties);
 
@@ -474,7 +475,10 @@ void engine_config(int restart, int fof, struct engine *e,
         error("Maximal time-step size larger than the simulation run time t=%e",
               e->time_end - e->time_begin);
 
-    /* Deal with outputs */
+    /* Read (or re-read the list of outputs */
+    engine_init_output_lists(e, params);
+
+    /* Check whether output quantities make sense */
     if (e->policy & engine_policy_cosmology) {
 
       if (e->delta_time_snapshot <= 1.)
