@@ -35,12 +35,20 @@
 #include "version.h"
 
 /* I/O functions of each sub-module */
+#include "black_holes_io.h"
 #include "chemistry_io.h"
 #include "cooling_io.h"
 #include "feedback.h"
+#include "fof_io.h"
+#include "gravity_io.h"
 #include "hydro_io.h"
+#include "particle_splitting.h"
+#include "rt_io.h"
+#include "sink_io.h"
+#include "star_formation_io.h"
 #include "stars_io.h"
 #include "tracers_io.h"
+#include "velociraptor_io.h"
 
 /* Some standard headers. */
 #include <math.h>
@@ -1425,4 +1433,159 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
  */
 void io_set_ids_to_one(struct gpart* gparts, const size_t Ngparts) {
   for (size_t i = 0; i < Ngparts; i++) gparts[i].id_or_neg_offset = 1;
+}
+
+/**
+ * @brief Select the fields to write to snapshots for the gas particles.
+ *
+ * @param parts The #part's
+ * @param xparts The #xpart's
+ * @param with_cosmology Are we running with cosmology switched on?
+ * @param with_cooling Are we running with cooling switched on?
+ * @param with_temperature Are we running with temperature switched on?
+ * @param with_fof Are we running FoF?
+ * @param with_stf Are we running with structure finding?
+ * @param with_rt Are we running with radiative transfer?
+ * @param e The #engine (to access scheme properties).
+ * @param num_fields (return) The number of fields to write.
+ * @param list (return) The list of fields to write.
+ */
+void io_select_hydro_fields(const struct part* const parts,
+                            const struct xpart* const xparts,
+                            const int with_cosmology, const int with_cooling,
+                            const int with_temperature, const int with_fof,
+                            const int with_stf, const int with_rt,
+                            const struct engine* const e, int* const num_fields,
+                            struct io_props* const list) {
+
+  hydro_write_particles(parts, xparts, list, num_fields);
+
+  *num_fields += particle_splitting_write_particles(
+      parts, xparts, list + *num_fields, with_cosmology);
+  *num_fields += chemistry_write_particles(parts, xparts, list + *num_fields,
+                                           with_cosmology);
+  if (with_cooling || with_temperature) {
+    *num_fields += cooling_write_particles(parts, xparts, list + *num_fields,
+                                           e->cooling_func);
+  }
+  if (with_fof) {
+    *num_fields += fof_write_parts(parts, xparts, list + *num_fields);
+  }
+  if (with_stf) {
+    *num_fields += velociraptor_write_parts(parts, xparts, list + *num_fields);
+  }
+  *num_fields += tracers_write_particles(parts, xparts, list + *num_fields,
+                                         with_cosmology);
+  *num_fields +=
+      star_formation_write_particles(parts, xparts, list + *num_fields);
+  if (with_rt) {
+    *num_fields += rt_write_particles(parts, list + *num_fields);
+  }
+}
+
+/**
+ * @brief Select the fields to write to snapshots for the DM particles.
+ *
+ * @param gparts The #gpart's
+ * @param with_fof Are we running FoF?
+ * @param with_stf Are we running with structure finding?
+ * @param e The #engine (to access scheme properties).
+ * @param num_fields (return) The number of fields to write.
+ * @param list (return) The list of fields to write.
+ */
+void io_select_dm_fields(const struct gpart* const gparts, const int with_fof,
+                         const int with_stf, const struct engine* const e,
+                         int* const num_fields, struct io_props* const list) {
+
+  darkmatter_write_particles(gparts, list, num_fields);
+  if (with_fof) {
+    *num_fields += fof_write_gparts(gparts, list + *num_fields);
+  }
+  if (with_stf) {
+    *num_fields +=
+        velociraptor_write_gparts(e->s->gpart_group_data, list + *num_fields);
+  }
+}
+
+/**
+ * @brief Select the fields to write to snapshots for the sink particles.
+ *
+ * @param sinks The #sink's
+ * @param with_cosmology Are we running with cosmology switched on?
+ * @param with_fof Are we running FoF?
+ * @param with_stf Are we running with structure finding?
+ * @param e The #engine (to access scheme properties).
+ * @param num_fields (return) The number of fields to write.
+ * @param list (return) The list of fields to write.
+ */
+void io_select_sink_fields(const struct sink* const sinks,
+                           const int with_cosmology, const int with_fof,
+                           const int with_stf, const struct engine* const e,
+                           int* const num_fields, struct io_props* const list) {
+
+  sink_write_particles(sinks, list, num_fields, with_cosmology);
+}
+
+/**
+ * @brief Select the fields to write to snapshots for the star particles.
+ *
+ * @param sparts The #spart's
+ * @param with_cosmology Are we running with cosmology switched on?
+ * @param with_fof Are we running FoF?
+ * @param with_stf Are we running with structure finding?
+ * @param with_rt Are we running with radiative transfer?
+ * @param e The #engine (to access scheme properties).
+ * @param num_fields (return) The number of fields to write.
+ * @param list (return) The list of fields to write.
+ */
+void io_select_star_fields(const struct spart* const sparts,
+                           const int with_cosmology, const int with_fof,
+                           const int with_stf, const int with_rt,
+                           const struct engine* const e, int* const num_fields,
+                           struct io_props* const list) {
+
+  stars_write_particles(sparts, list, num_fields, with_cosmology);
+  *num_fields +=
+      particle_splitting_write_sparticles(sparts, list + *num_fields);
+  *num_fields += chemistry_write_sparticles(sparts, list + *num_fields);
+  *num_fields +=
+      tracers_write_sparticles(sparts, list + *num_fields, with_cosmology);
+  *num_fields += star_formation_write_sparticles(sparts, list + *num_fields);
+  if (with_fof) {
+    *num_fields += fof_write_sparts(sparts, list + *num_fields);
+  }
+  if (with_stf) {
+    *num_fields += velociraptor_write_sparts(sparts, list + *num_fields);
+  }
+  if (with_rt) {
+    *num_fields += rt_write_stars(sparts, list + *num_fields);
+  }
+}
+
+/**
+ * @brief Select the fields to write to snapshots for the BH particles.
+ *
+ * @param bparts The #bpart's
+ * @param with_cosmology Are we running with cosmology switched on?
+ * @param with_fof Are we running FoF?
+ * @param with_stf Are we running with structure finding?
+ * @param e The #engine (to access scheme properties).
+ * @param num_fields (return) The number of fields to write.
+ * @param list (return) The list of fields to write.
+ */
+void io_select_bh_fields(const struct bpart* const bparts,
+                         const int with_cosmology, const int with_fof,
+                         const int with_stf, const struct engine* const e,
+                         int* const num_fields, struct io_props* const list) {
+
+  black_holes_write_particles(bparts, list, num_fields, with_cosmology);
+  *num_fields +=
+      particle_splitting_write_bparticles(bparts, list + *num_fields);
+  *num_fields += chemistry_write_bparticles(bparts, list + *num_fields);
+  if (with_fof) {
+    *num_fields += fof_write_bparts(bparts, list + *num_fields);
+  }
+  if (with_stf) {
+    *num_fields += velociraptor_write_bparts(bparts, list + *num_fields);
+  }
 }

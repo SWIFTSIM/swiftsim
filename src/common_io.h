@@ -196,4 +196,32 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
 
 void io_set_ids_to_one(struct gpart* gparts, const size_t Ngparts);
 
+void io_select_hydro_fields(const struct part* const parts,
+                            const struct xpart* const xparts,
+                            const int with_cosmology, const int with_cooling,
+                            const int with_temperature, const int with_fof,
+                            const int with_stf, const int with_rt,
+                            const struct engine* const e, int* const num_fields,
+                            struct io_props* const list);
+
+void io_select_dm_fields(const struct gpart* const gparts, const int with_fof,
+                         const int with_stf, const struct engine* const e,
+                         int* const num_fields, struct io_props* const list);
+
+void io_select_sink_fields(const struct sink* const sinks,
+                           const int with_cosmology, const int with_fof,
+                           const int with_stf, const struct engine* const e,
+                           int* const num_fields, struct io_props* const list);
+
+void io_select_star_fields(const struct spart* const sparts,
+                           const int with_cosmology, const int with_fof,
+                           const int with_stf, const int with_rt,
+                           const struct engine* const e, int* const num_fields,
+                           struct io_props* const list);
+
+void io_select_bh_fields(const struct bpart* const bparts,
+                         const int with_cosmology, const int with_fof,
+                         const int with_stf, const struct engine* const e,
+                         int* const num_fields, struct io_props* const list);
+
 #endif /* SWIFT_COMMON_IO_H */
