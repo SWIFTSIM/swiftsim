@@ -1119,7 +1119,7 @@ void write_output_single(struct engine* e,
           N = Nsinks;
 
           /* Select the fields to write */
-          io_select_sink_fields(sinks_written, with_cosmology, with_fof,
+          io_select_sink_fields(sinks, with_cosmology, with_fof,
                                 with_stf, e, &num_fields, list);
         } else {
 
