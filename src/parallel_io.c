@@ -256,8 +256,16 @@ void read_array_parallel(hid_t grp, struct io_props props, size_t N,
     if (props.importance == COMPULSORY) {
       error("Compulsory data set '%s' not present in the file.", props.name);
     } else {
+
+      /* Create a single instance of the default value */
+      float* temp = (float*)malloc(copySize);
+      for (int i = 0; i < props.dimension; ++i) temp[i] = props.default_value;
+
+      /* Copy it everywhere in the particle array */
       for (size_t i = 0; i < N; ++i)
-        memset(props.field + i * props.partSize, 0, copySize);
+        memcpy(props.field + i * props.partSize, temp, copySize);
+
+      free(temp);
       return;
     }
   }
