@@ -46,8 +46,8 @@
 #include "gravity_properties.h"
 #include "hydro_io.h"
 #include "hydro_properties.h"
-#include "io_properties.h"
 #include "io_compression.h"
+#include "io_properties.h"
 #include "memuse.h"
 #include "output_list.h"
 #include "output_options.h"
@@ -56,6 +56,7 @@
 #include "sink_io.h"
 #include "star_formation_io.h"
 #include "stars_io.h"
+#include "tools.h"
 #include "units.h"
 #include "xmf.h"
 
