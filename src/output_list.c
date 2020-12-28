@@ -305,16 +305,14 @@ void output_list_get_current_select_output(struct output_list *t,
 /**
  * @brief initialize an output list
  *
- * @param list The output list to initialize
- * @param e The #engine
- * @param name The name of the section in params
- * @param delta_time updated to the initial delta time
- * @param time_first updated to the time of first output (scale factor or
- * cosmic time)
+ * @param list The output list to initialize.
+ * @param e The #engine.
+ * @param name The name of the section in the param file.
+ * @param delta_time (return) The delta between the first two outputs
  */
 void output_list_init(struct output_list **list, const struct engine *e,
-                      const char *name, double *delta_time,
-                      double *time_first) {
+                      const char *name, double *const delta_time) {
+
   struct swift_params *params = e->parameter_file;
 
   /* get cosmo */
@@ -324,7 +322,7 @@ void output_list_init(struct output_list **list, const struct engine *e,
   /* Read output on/off */
   char param_name[PARSER_MAX_LINE_SIZE];
   sprintf(param_name, "%s:output_list_on", name);
-  int output_list_on = parser_get_opt_param_int(params, param_name, 0);
+  const int output_list_on = parser_get_opt_param_int(params, param_name, 0);
 
   /* Check if read output_list */
   if (!output_list_on) return;
@@ -348,10 +346,8 @@ void output_list_init(struct output_list **list, const struct engine *e,
   /* Set data for later checks */
   if (cosmo) {
     *delta_time = (*list)->times[1] / (*list)->times[0];
-    *time_first = (*list)->times[0];
   } else {
     *delta_time = (*list)->times[1] - (*list)->times[0];
-    *time_first = (*list)->times[0];
   }
 }
 
