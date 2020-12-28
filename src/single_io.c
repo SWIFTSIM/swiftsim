@@ -906,6 +906,7 @@ void write_output_single(struct engine* e,
   io_write_attribute_s(h_grp, "Snapshot date", snapshot_date);
 
   /* GADGET-2 legacy values: number of particles of each type */
+  long long numParticlesThisFile[swift_type_count] = {0};
   unsigned int numParticles[swift_type_count] = {0};
   unsigned int numParticlesHighWord[swift_type_count] = {0};
 
@@ -918,9 +919,15 @@ void write_output_single(struct engine* e,
 
     numFields[ptype] = output_options_get_num_fields_to_write(
         output_options, current_selection_name, ptype);
+
+    if (numFields[ptype] == 0) {
+      numParticlesThisFile[ptype] = 0;
+    } else {
+      numParticlesThisFile[ptype] = N_total[ptype];
+    }
   }
 
-  io_write_attribute(h_grp, "NumPart_ThisFile", LONGLONG, N_total,
+  io_write_attribute(h_grp, "NumPart_ThisFile", LONGLONG, numParticlesThisFile,
                      swift_type_count);
   io_write_attribute(h_grp, "NumPart_Total", UINT, numParticles,
                      swift_type_count);

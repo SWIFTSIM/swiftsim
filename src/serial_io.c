@@ -1074,15 +1074,23 @@ void write_output_serial(struct engine* e,
     io_write_attribute_s(h_grp, "Snapshot date", snapshot_date);
 
     /* GADGET-2 legacy values: Number of particles of each type */
+    long long numParticlesThisFile[swift_type_count] = {0};
     unsigned int numParticles[swift_type_count] = {0};
     unsigned int numParticlesHighWord[swift_type_count] = {0};
+
     for (int ptype = 0; ptype < swift_type_count; ++ptype) {
       numParticles[ptype] = (unsigned int)N_total[ptype];
       numParticlesHighWord[ptype] = (unsigned int)(N_total[ptype] >> 32);
+
+      if (numFields[ptype] == 0) {
+        numParticlesThisFile[ptype] = 0;
+      } else {
+        numParticlesThisFile[ptype] = N_total[ptype];
+      }
     }
 
-    io_write_attribute(h_grp, "NumPart_ThisFile", LONGLONG, N_total,
-                       swift_type_count);
+    io_write_attribute(h_grp, "NumPart_ThisFile", LONGLONG,
+                       numParticlesThisFile, swift_type_count);
     io_write_attribute(h_grp, "NumPart_Total", UINT, numParticles,
                        swift_type_count);
     io_write_attribute(h_grp, "NumPart_Total_HighWord", UINT,
