@@ -93,8 +93,6 @@ void read_array_single(hid_t h_grp, const struct io_props props, size_t N,
     if (props.importance == COMPULSORY) {
       error("Compulsory data set '%s' not present in the file.", props.name);
     } else {
-      /* message("Optional data set '%s' not present. Zeroing this particle
-       * props...", name);	   */
 
       /* Create a single instance of the default value */
       float* temp = (float*)malloc(copySize);
@@ -105,7 +103,6 @@ void read_array_single(hid_t h_grp, const struct io_props props, size_t N,
         memcpy(props.field + i * props.partSize, temp, copySize);
 
       free(temp);
-
       return;
     }
   }
