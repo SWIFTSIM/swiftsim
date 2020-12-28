@@ -1253,42 +1253,32 @@ void prepare_file(struct engine* e, const char* fileName,
     switch (ptype) {
 
       case swift_type_gas:
-
         io_select_hydro_fields(NULL, NULL, with_cosmology, with_cooling,
                                with_temperature, with_fof, with_stf, with_rt, e,
                                &num_fields, list);
         break;
 
       case swift_type_dark_matter:
-
         io_select_dm_fields(NULL, with_fof, with_stf, e, &num_fields, list);
-
         break;
 
       case swift_type_dark_matter_background:
-
         io_select_dm_fields(NULL, with_fof, with_stf, e, &num_fields, list);
-
         break;
 
       case swift_type_sink:
-
         io_select_sink_fields(NULL, with_cosmology, with_fof, with_stf, e,
                               &num_fields, list);
         break;
 
       case swift_type_stars:
-
         io_select_star_fields(NULL, with_cosmology, with_fof, with_stf, with_rt,
                               e, &num_fields, list);
-
         break;
 
       case swift_type_black_hole:
-
         io_select_bh_fields(NULL, with_cosmology, with_fof, with_stf, e,
                             &num_fields, list);
-
         break;
 
       default:
