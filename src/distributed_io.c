@@ -47,6 +47,7 @@
 #include "hydro_io.h"
 #include "hydro_properties.h"
 #include "io_properties.h"
+#include "io_compression.h"
 #include "memuse.h"
 #include "output_list.h"
 #include "output_options.h"
