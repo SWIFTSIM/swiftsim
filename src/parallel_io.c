@@ -40,11 +40,9 @@
 #include "black_holes_io.h"
 #include "chemistry_io.h"
 #include "common_io.h"
-#include "cooling_io.h"
 #include "dimension.h"
 #include "engine.h"
 #include "error.h"
-#include "fof_io.h"
 #include "gravity_io.h"
 #include "gravity_properties.h"
 #include "hydro_io.h"
@@ -56,13 +54,10 @@
 #include "part.h"
 #include "part_type.h"
 #include "particle_splitting.h"
-#include "rt_io.h"
 #include "sink_io.h"
 #include "star_formation_io.h"
 #include "stars_io.h"
-#include "tracers_io.h"
 #include "units.h"
-#include "velociraptor_io.h"
 #include "xmf.h"
 
 /* The current limit of ROMIO (the underlying MPI-IO layer) is 2GB */
@@ -1113,13 +1108,6 @@ void prepare_file(struct engine* e, const char* fileName,
                   const struct unit_system* internal_units,
                   const struct unit_system* snapshot_units) {
 
-  const struct part* parts = e->s->parts;
-  const struct xpart* xparts = e->s->xparts;
-  const struct gpart* gparts = e->s->gparts;
-  const struct spart* sparts = e->s->sparts;
-  const struct bpart* bparts = e->s->bparts;
-  const struct sink* sinks = e->s->sinks;
-
   struct output_options* output_options = e->output_options;
   const int with_cosmology = e->policy & engine_policy_cosmology;
   const int with_cooling = e->policy & engine_policy_cooling;
@@ -1265,88 +1253,42 @@ void prepare_file(struct engine* e, const char* fileName,
     switch (ptype) {
 
       case swift_type_gas:
-        hydro_write_particles(parts, xparts, list, &num_fields);
-        num_fields += particle_splitting_write_particles(
-            parts, xparts, list + num_fields, with_cosmology);
-        num_fields += chemistry_write_particles(
-            parts, xparts, list + num_fields, with_cosmology);
-        if (with_cooling || with_temperature) {
-          num_fields += cooling_write_particles(
-              parts, xparts, list + num_fields, e->cooling_func);
-        }
-        num_fields += tracers_write_particles(parts, xparts, list + num_fields,
-                                              with_cosmology);
-        num_fields +=
-            star_formation_write_particles(parts, xparts, list + num_fields);
-        if (with_fof) {
-          num_fields += fof_write_parts(parts, xparts, list + num_fields);
-        }
-        if (with_stf) {
-          num_fields +=
-              velociraptor_write_parts(parts, xparts, list + num_fields);
-        }
-        if (with_rt) {
-          num_fields += rt_write_particles(parts, list + num_fields);
-        }
+
+        io_select_hydro_fields(NULL, NULL, with_cosmology, with_cooling,
+                               with_temperature, with_fof, with_stf, with_rt, e,
+                               &num_fields, list);
         break;
 
       case swift_type_dark_matter:
-        darkmatter_write_particles(gparts, list, &num_fields);
-        if (with_fof) {
-          num_fields += fof_write_gparts(gparts, list + num_fields);
-        }
-        if (with_stf) {
-          num_fields += velociraptor_write_gparts(e->s->gpart_group_data,
-                                                  list + num_fields);
-        }
+
+        io_select_dm_fields(NULL, with_fof, with_stf, e, &num_fields, list);
+
         break;
 
       case swift_type_dark_matter_background:
-        darkmatter_write_particles(gparts, list, &num_fields);
-        if (with_fof) {
-          num_fields += fof_write_gparts(gparts, list + num_fields);
-        }
-        if (with_stf) {
-          num_fields += velociraptor_write_gparts(e->s->gpart_group_data,
-                                                  list + num_fields);
-        }
+
+        io_select_dm_fields(NULL, with_fof, with_stf, e, &num_fields, list);
+
         break;
 
       case swift_type_sink:
-        sink_write_particles(sinks, list, &num_fields, with_cosmology);
+
+        io_select_sink_fields(NULL, with_cosmology, with_fof, with_stf, e,
+                              &num_fields, list);
         break;
 
       case swift_type_stars:
-        stars_write_particles(sparts, list, &num_fields, with_cosmology);
-        num_fields +=
-            particle_splitting_write_sparticles(sparts, list + num_fields);
-        num_fields += chemistry_write_sparticles(sparts, list + num_fields);
-        num_fields +=
-            tracers_write_sparticles(sparts, list + num_fields, with_cosmology);
-        num_fields +=
-            star_formation_write_sparticles(sparts, list + num_fields);
-        if (with_fof) {
-          num_fields += fof_write_sparts(sparts, list + num_fields);
-        }
-        if (with_stf) {
-          num_fields += velociraptor_write_sparts(sparts, list + num_fields);
-        }
-        if (with_rt) {
-          num_fields += rt_write_stars(sparts, list + num_fields);
-        }
+
+        io_select_star_fields(NULL, with_cosmology, with_fof, with_stf, with_rt,
+                              e, &num_fields, list);
+
         break;
 
       case swift_type_black_hole:
-        black_holes_write_particles(bparts, list, &num_fields, with_cosmology);
-        num_fields +=
-            particle_splitting_write_bparticles(bparts, list + num_fields);
-        num_fields += chemistry_write_bparticles(bparts, list + num_fields);
-        if (with_fof) {
-          num_fields += fof_write_bparts(bparts, list + num_fields);
-        }
-        if (with_stf) {
-          num_fields += velociraptor_write_bparts(bparts, list + num_fields);
-        }
+
+        io_select_bh_fields(NULL, with_cosmology, with_fof, with_stf, e,
+                            &num_fields, list);
+
         break;
 
       default:
@@ -1652,29 +1594,11 @@ void write_output_parallel(struct engine* e,
 
           /* No inhibted particles: easy case */
           Nparticles = Ngas;
-          hydro_write_particles(parts, xparts, list, &num_fields);
-          num_fields += particle_splitting_write_particles(
-              parts, xparts, list + num_fields, with_cosmology);
-          num_fields += chemistry_write_particles(
-              parts, xparts, list + num_fields, with_cosmology);
-          if (with_cooling || with_temperature) {
-            num_fields += cooling_write_particles(
-                parts, xparts, list + num_fields, e->cooling_func);
-          }
-          if (with_fof) {
-            num_fields += fof_write_parts(parts, xparts, list + num_fields);
-          }
-          if (with_stf) {
-            num_fields +=
-                velociraptor_write_parts(parts, xparts, list + num_fields);
-          }
-          num_fields += tracers_write_particles(
-              parts, xparts, list + num_fields, with_cosmology);
-          num_fields +=
-              star_formation_write_particles(parts, xparts, list + num_fields);
-          if (with_rt) {
-            num_fields += rt_write_particles(parts, list + num_fields);
-          }
+
+          /* Select the fields to write */
+          io_select_hydro_fields(parts, xparts, with_cosmology, with_cooling,
+                                 with_temperature, with_fof, with_stf, with_rt,
+                                 e, &num_fields, list);
 
         } else {
 
@@ -1696,32 +1620,9 @@ void write_output_parallel(struct engine* e,
                                     xparts_written, Ngas, Ngas_written);
 
           /* Select the fields to write */
-          hydro_write_particles(parts_written, xparts_written, list,
-                                &num_fields);
-          num_fields += particle_splitting_write_particles(
-              parts_written, xparts_written, list + num_fields, with_cosmology);
-          num_fields += chemistry_write_particles(
-              parts_written, xparts_written, list + num_fields, with_cosmology);
-          if (with_cooling || with_temperature) {
-            num_fields +=
-                cooling_write_particles(parts_written, xparts_written,
-                                        list + num_fields, e->cooling_func);
-          }
-          if (with_fof) {
-            num_fields += fof_write_parts(parts_written, xparts_written,
-                                          list + num_fields);
-          }
-          if (with_stf) {
-            num_fields += velociraptor_write_parts(
-                parts_written, xparts_written, list + num_fields);
-          }
-          num_fields += tracers_write_particles(
-              parts_written, xparts_written, list + num_fields, with_cosmology);
-          num_fields += star_formation_write_particles(
-              parts_written, xparts_written, list + num_fields);
-          if (with_rt) {
-            num_fields += rt_write_particles(parts_written, list + num_fields);
-          }
+          io_select_hydro_fields(parts_written, xparts_written, with_cosmology,
+                                 with_cooling, with_temperature, with_fof,
+                                 with_stf, with_rt, e, &num_fields, list);
         }
       } break;
 
@@ -1730,14 +1631,10 @@ void write_output_parallel(struct engine* e,
 
           /* This is a DM-only run without inhibited particles */
           Nparticles = Ntot;
-          darkmatter_write_particles(gparts, list, &num_fields);
-          if (with_fof) {
-            num_fields += fof_write_gparts(gparts, list + num_fields);
-          }
-          if (with_stf) {
-            num_fields += velociraptor_write_gparts(e->s->gpart_group_data,
-                                                    list + num_fields);
-          }
+
+          /* Select the fields to write */
+          io_select_dm_fields(gparts, with_fof, with_stf, e, &num_fields, list);
+
         } else {
 
           /* Ok, we need to fish out the particles we want */
@@ -1765,14 +1662,8 @@ void write_output_parallel(struct engine* e,
                                      Ntot, Ndm_written, with_stf);
 
           /* Select the fields to write */
-          darkmatter_write_particles(gparts_written, list, &num_fields);
-          if (with_fof) {
-            num_fields += fof_write_gparts(gparts_written, list + num_fields);
-          }
-          if (with_stf) {
-            num_fields += velociraptor_write_gparts(gpart_group_data_written,
-                                                    list + num_fields);
-          }
+          io_select_dm_fields(gparts_written, with_fof, with_stf, e,
+                              &num_fields, list);
         }
       } break;
 
@@ -1803,14 +1694,8 @@ void write_output_parallel(struct engine* e,
             gpart_group_data_written, Ntot, Ndm_background, with_stf);
 
         /* Select the fields to write */
-        darkmatter_write_particles(gparts_written, list, &num_fields);
-        if (with_stf) {
-#ifdef HAVE_VELOCIRAPTOR
-          num_fields += velociraptor_write_gparts(gpart_group_data_written,
-                                                  list + num_fields);
-#endif
-        }
-
+        io_select_dm_fields(gparts_written, with_fof, with_stf, e, &num_fields,
+                            list);
       } break;
 
       case swift_type_sink: {
@@ -1818,7 +1703,11 @@ void write_output_parallel(struct engine* e,
 
           /* No inhibted particles: easy case */
           Nparticles = Nsinks;
-          sink_write_particles(sinks, list, &num_fields, with_cosmology);
+
+          /* Select the fields to write */
+          io_select_sink_fields(sinks, with_cosmology, with_fof, with_stf, e,
+                                &num_fields, list);
+
         } else {
 
           /* Ok, we need to fish out the particles we want */
@@ -1835,8 +1724,8 @@ void write_output_parallel(struct engine* e,
                                     Nsinks_written);
 
           /* Select the fields to write */
-          sink_write_particles(sinks_written, list, &num_fields,
-                               with_cosmology);
+          io_select_sink_fields(sinks_written, with_cosmology, with_fof,
+                                with_stf, e, &num_fields, list);
         }
       } break;
 
@@ -1845,23 +1734,10 @@ void write_output_parallel(struct engine* e,
 
           /* No inhibted particles: easy case */
           Nparticles = Nstars;
-          stars_write_particles(sparts, list, &num_fields, with_cosmology);
-          num_fields +=
-              particle_splitting_write_sparticles(sparts, list + num_fields);
-          num_fields += chemistry_write_sparticles(sparts, list + num_fields);
-          num_fields += tracers_write_sparticles(sparts, list + num_fields,
-                                                 with_cosmology);
-          num_fields +=
-              star_formation_write_sparticles(sparts, list + num_fields);
-          if (with_fof) {
-            num_fields += fof_write_sparts(sparts, list + num_fields);
-          }
-          if (with_stf) {
-            num_fields += velociraptor_write_sparts(sparts, list + num_fields);
-          }
-          if (with_rt) {
-            num_fields += rt_write_stars(sparts, list + num_fields);
-          }
+
+          /* Select the fields to write */
+          io_select_star_fields(sparts, with_cosmology, with_fof, with_stf,
+                                with_rt, e, &num_fields, list);
 
         } else {
 
@@ -1879,26 +1755,8 @@ void write_output_parallel(struct engine* e,
                                      Nstars_written);
 
           /* Select the fields to write */
-          stars_write_particles(sparts_written, list, &num_fields,
-                                with_cosmology);
-          num_fields += particle_splitting_write_sparticles(sparts_written,
-                                                            list + num_fields);
-          num_fields +=
-              chemistry_write_sparticles(sparts_written, list + num_fields);
-          num_fields += tracers_write_sparticles(
-              sparts_written, list + num_fields, with_cosmology);
-          num_fields += star_formation_write_sparticles(sparts_written,
-                                                        list + num_fields);
-          if (with_fof) {
-            num_fields += fof_write_sparts(sparts_written, list + num_fields);
-          }
-          if (with_stf) {
-            num_fields +=
-                velociraptor_write_sparts(sparts_written, list + num_fields);
-          }
-          if (with_rt) {
-            num_fields += rt_write_stars(sparts_written, list + num_fields);
-          }
+          io_select_star_fields(sparts_written, with_cosmology, with_fof,
+                                with_stf, with_rt, e, &num_fields, list);
         }
       } break;
 
@@ -1907,17 +1765,11 @@ void write_output_parallel(struct engine* e,
 
           /* No inhibted particles: easy case */
           Nparticles = Nblackholes;
-          black_holes_write_particles(bparts, list, &num_fields,
-                                      with_cosmology);
-          num_fields +=
-              particle_splitting_write_bparticles(bparts, list + num_fields);
-          num_fields += chemistry_write_bparticles(bparts, list + num_fields);
-          if (with_fof) {
-            num_fields += fof_write_bparts(bparts, list + num_fields);
-          }
-          if (with_stf) {
-            num_fields += velociraptor_write_bparts(bparts, list + num_fields);
-          }
+
+          /* Select the fields to write */
+          io_select_bh_fields(bparts, with_cosmology, with_fof, with_stf, e,
+                              &num_fields, list);
+
         } else {
 
           /* Ok, we need to fish out the particles we want */
@@ -1934,19 +1786,8 @@ void write_output_parallel(struct engine* e,
                                      Nblackholes_written);
 
           /* Select the fields to write */
-          black_holes_write_particles(bparts_written, list, &num_fields,
-                                      with_cosmology);
-          num_fields += particle_splitting_write_bparticles(bparts_written,
-                                                            list + num_fields);
-          num_fields +=
-              chemistry_write_bparticles(bparts_written, list + num_fields);
-          if (with_fof) {
-            num_fields += fof_write_bparts(bparts_written, list + num_fields);
-          }
-          if (with_stf) {
-            num_fields +=
-                velociraptor_write_bparts(bparts_written, list + num_fields);
-          }
+          io_select_bh_fields(bparts_written, with_cosmology, with_fof,
+                              with_stf, e, &num_fields, list);
         }
       } break;
 
