@@ -315,7 +315,9 @@ void output_list_init(struct output_list **list, const struct engine *e,
 
   struct swift_params *params = e->parameter_file;
 
-  /* get cosmo */
+  if (*list != NULL) error("Output list already allocated!");
+
+  /* Get cosmo */
   struct cosmology *cosmo = NULL;
   if (e->policy & engine_policy_cosmology) cosmo = e->cosmology;
 
