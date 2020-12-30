@@ -1006,6 +1006,9 @@ void write_output_serial(struct engine* e,
                            snapshot_subdir_name, e->snapshot_base_name,
                            snapshot_base_name);
 
+  /* Create the directory */
+  if (mpi_rank == 0) safe_checkdir(snapshot_subdir_name, /*create=*/1);
+
   /* Total number of fields to write per ptype */
   int numFields[swift_type_count] = {0};
   for (int ptype = 0; ptype < swift_type_count; ++ptype) {

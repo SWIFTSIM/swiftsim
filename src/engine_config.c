@@ -564,9 +564,6 @@ void engine_config(int restart, int fof, struct engine *e,
       }
     }
 
-    /* Try to ensure the snapshot directory exists */
-    if (e->nodeID == 0) io_make_snapshot_subdir(e->snapshot_subdir);
-
     /* Get the total mass */
     e->total_mass = 0.;
     for (size_t i = 0; i < e->s->nr_gparts; ++i)
