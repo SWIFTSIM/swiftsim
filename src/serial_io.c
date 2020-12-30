@@ -56,6 +56,7 @@
 #include "sink_io.h"
 #include "star_formation_io.h"
 #include "stars_io.h"
+#include "tools.h"
 #include "units.h"
 #include "xmf.h"
 

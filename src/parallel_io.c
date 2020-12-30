@@ -57,6 +57,7 @@
 #include "sink_io.h"
 #include "star_formation_io.h"
 #include "stars_io.h"
+#include "tools.h"
 #include "units.h"
 #include "xmf.h"
 
@@ -1468,6 +1469,9 @@ void write_output_parallel(struct engine* e,
                            e->snapshot_output_count, e->snapshot_subdir,
                            snapshot_subdir_name, e->snapshot_base_name,
                            snapshot_base_name);
+
+  /* Create the directory */
+  if (mpi_rank == 0) safe_checkdir(snapshot_subdir_name, /*create=*/1);
 
   /* Total number of fields to write per ptype */
   int numFields[swift_type_count] = {0};

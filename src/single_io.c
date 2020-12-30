@@ -56,6 +56,7 @@
 #include "sink_io.h"
 #include "star_formation_io.h"
 #include "stars_io.h"
+#include "tools.h"
 #include "units.h"
 #include "xmf.h"
 
@@ -861,7 +862,7 @@ void write_output_single(struct engine* e,
                            snapshot_base_name);
 
   /* Create the directory */
-  if (mpi_rank == 0) safe_checkdir(snapshot_subdir_name, /*create=*/1);
+  safe_checkdir(snapshot_subdir_name, /*create=*/1);
 
   /* First time, we need to create the XMF file */
   if (e->snapshot_output_count == 0) xmf_create_file(xmfFileName);
