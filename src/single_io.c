@@ -834,13 +834,28 @@ void write_output_single(struct engine* e,
       (long long)Ndm_background, (long long)Nsinks_written,
       (long long)Nstars_written, (long long)Nblackholes_written};
 
+  /* Determine if we are writing a reduced snapshot, and if so which
+   * output selection type to use */
+  char current_selection_name[FIELD_BUFFER_SIZE] =
+      select_output_header_default_name;
+  if (output_list) {
+    /* Users could have specified a different Select Output scheme for each
+     * snapshot. */
+    output_list_get_current_select_output(output_list, current_selection_name);
+  }
+
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
   char xmfFileName[FILENAME_BUFFER_SIZE];
+  char snapshot_base_name[FILENAME_BUFFER_SIZE];
+
+  output_options_get_basename(output_options, current_selection_name,
+                              e->snapshot_base_name, snapshot_base_name);
+
   io_get_snapshot_filename(fileName, xmfFileName, e->snapshot_int_time_label_on,
                            e->snapshot_invoke_stf, e->time, e->stf_output_count,
                            e->snapshot_output_count, e->snapshot_subdir,
-                           e->snapshot_base_name);
+                           e->snapshot_base_name, snapshot_base_name);
 
   /* First time, we need to create the XMF file */
   if (e->snapshot_output_count == 0) xmf_create_file(xmfFileName);
@@ -871,16 +886,6 @@ void write_output_single(struct engine* e,
   const double dim[3] = {e->s->dim[0] * factor_length,
                          e->s->dim[1] * factor_length,
                          e->s->dim[2] * factor_length};
-
-  /* Determine if we are writing a reduced snapshot, and if so which
-   * output selection type to use */
-  char current_selection_name[FIELD_BUFFER_SIZE] =
-      select_output_header_default_name;
-  if (output_list) {
-    /* Users could have specified a different Select Output scheme for each
-     * snapshot. */
-    output_list_get_current_select_output(output_list, current_selection_name);
-  }
 
   /* Print the relevant information and print status */
   io_write_attribute(h_grp, "BoxSize", DOUBLE, dim, 3);

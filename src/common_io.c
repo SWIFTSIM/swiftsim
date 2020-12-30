@@ -1380,6 +1380,8 @@ void io_make_snapshot_subdir(const char* dirname) {
  * @brief Construct the file names for a single-file hdf5 snapshots and
  * corresponding XMF descriptor file.
  *
+ * The XMF file always uses the default basename.
+ *
  * @param filename (return) The file name of the hdf5 snapshot.
  * @param xmf_filename (return) The file name of the associated XMF file.
  * @param use_time_label Are we using time labels for the snapshot indices?
@@ -1388,13 +1390,15 @@ void io_make_snapshot_subdir(const char* dirname) {
  * @param stf_count The counter of STF outputs.
  * @param snap_count The counter of snapshot outputs.
  * @param subdir The sub-directory in which the snapshots are written.
+ * @param default_basename The common part of the default snapshot names.
  * @param basename The common part of the snapshot names.
  */
 void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
                               const int use_time_label,
                               const int snapshots_invoke_stf, const double time,
                               const int stf_count, const int snap_count,
-                              const char* subdir, const char* basename) {
+                              const char* subdir, const char* default_basename,
+                              const char* basename) {
 
   int snap_number = -1;
   if (use_time_label)
@@ -1414,10 +1418,10 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
   if (strlen(subdir) > 0) {
     sprintf(filename, "%s/%s_%0*d.hdf5", subdir, basename, number_digits,
             snap_number);
-    sprintf(xmf_filename, "%s/%s.xmf", subdir, basename);
+    sprintf(xmf_filename, "%s/%s.xmf", subdir, default_basename);
   } else {
     sprintf(filename, "%s_%0*d.hdf5", basename, number_digits, snap_number);
-    sprintf(xmf_filename, "%s.xmf", basename);
+    sprintf(xmf_filename, "%s.xmf", default_basename);
   }
 }
 /**

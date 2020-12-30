@@ -281,3 +281,16 @@ int output_options_get_num_fields_to_write(
 
   return output_options->num_fields_to_write[selection_id][ptype];
 }
+
+void output_options_get_basename(const struct output_options* output_options,
+                                 const char* selection_name,
+                                 const char* default_basename,
+                                 char basename[FILENAME_BUFFER_SIZE]) {
+
+  /* Full name for the default path */
+  char field[PARSER_MAX_LINE_SIZE];
+  sprintf(field, "%.*s:basename", FIELD_BUFFER_SIZE, selection_name);
+
+  parser_get_opt_param_string(output_options->select_output, field, basename,
+                              default_basename);
+}

@@ -985,7 +985,7 @@ void write_output_serial(struct engine* e,
   io_get_snapshot_filename(fileName, xmfFileName, e->snapshot_int_time_label_on,
                            e->snapshot_invoke_stf, e->time, e->stf_output_count,
                            e->snapshot_output_count, e->snapshot_subdir,
-                           e->snapshot_base_name);
+                           e->snapshot_base_name, "");
 
   /* Determine if we are writing a reduced snapshot, and if so which
    * output selection type to use. Can just create a copy of this on
