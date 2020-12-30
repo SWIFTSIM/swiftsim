@@ -303,6 +303,16 @@ void write_output_distributed(struct engine* e,
   const size_t Ndm_written =
       Ntot_written > 0 ? Ntot_written - Nbaryons_written - Ndm_background : 0;
 
+  /* Determine if we are writing a reduced snapshot, and if so which
+   * output selection type to use */
+  char current_selection_name[FIELD_BUFFER_SIZE] =
+      select_output_header_default_name;
+  if (output_list) {
+    /* Users could have specified a different Select Output scheme for each
+     * snapshot. */
+    output_list_get_current_select_output(output_list, current_selection_name);
+  }
+
   int snap_count = -1;
   if (e->snapshot_int_time_label_on)
     snap_count = (int)round(e->time);
@@ -320,25 +330,32 @@ void write_output_distributed(struct engine* e,
   /* Directory and file name */
   char dirName[1024];
   char fileName[1024];
+  char snapshot_subdir_name[FILENAME_BUFFER_SIZE];
+  char snapshot_base_name[FILENAME_BUFFER_SIZE];
 
+  output_options_get_basename(output_options, current_selection_name,
+                              e->snapshot_subdir, e->snapshot_base_name,
+                              snapshot_subdir_name, snapshot_base_name);
+
+  /* Are we using a sub-dir? */
   if (strnlen(e->snapshot_subdir, PARSER_MAX_LINE_SIZE) > 0) {
-    sprintf(dirName, "%s/%s_%0*d", e->snapshot_subdir, e->snapshot_base_name,
+    sprintf(dirName, "%s/%s_%0*d", snapshot_subdir_name, snapshot_base_name,
             number_digits, snap_count);
 
-    sprintf(fileName, "%s/%s_%0*d/%s_%0*d.%d.hdf5", e->snapshot_subdir,
-            e->snapshot_base_name, number_digits, snap_count,
-            e->snapshot_base_name, number_digits, snap_count, mpi_rank);
+    sprintf(fileName, "%s/%s_%0*d/%s_%0*d.%d.hdf5", snapshot_subdir_name,
+            snapshot_base_name, number_digits, snap_count, snapshot_base_name,
+            number_digits, snap_count, mpi_rank);
 
   } else {
-    sprintf(dirName, "%s_%0*d", e->snapshot_base_name, number_digits,
-            snap_count);
+    sprintf(dirName, "%s_%0*d", snapshot_base_name, number_digits, snap_count);
 
-    sprintf(fileName, "%s_%0*d/%s_%0*d.%d.hdf5", e->snapshot_base_name,
-            number_digits, snap_count, e->snapshot_base_name, number_digits,
+    sprintf(fileName, "%s_%0*d/%s_%0*d.%d.hdf5", snapshot_base_name,
+            number_digits, snap_count, snapshot_base_name, number_digits,
             snap_count, mpi_rank);
   }
 
   /* Create the directory */
+  if (mpi_rank == 0) safe_checkdir(snapshot_subdir_name, /*create=*/1);
   if (mpi_rank == 0) safe_checkdir(dirName, /*create=*/1);
   MPI_Barrier(comm);
 
@@ -370,16 +387,6 @@ void write_output_distributed(struct engine* e,
   const double dim[3] = {e->s->dim[0] * factor_length,
                          e->s->dim[1] * factor_length,
                          e->s->dim[2] * factor_length};
-
-  /* Determine if we are writing a reduced snapshot, and if so which
-   * output selection type to use */
-  char current_selection_name[FIELD_BUFFER_SIZE] =
-      select_output_header_default_name;
-  if (output_list) {
-    /* Users could have specified a different Select Output scheme for each
-     * snapshot. */
-    output_list_get_current_select_output(output_list, current_selection_name);
-  }
 
   /* Print the relevant information and print status */
   io_write_attribute(h_grp, "BoxSize", DOUBLE, dim, 3);
