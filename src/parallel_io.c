@@ -1456,15 +1456,18 @@ void write_output_parallel(struct engine* e,
   /* File names */
   char fileName[FILENAME_BUFFER_SIZE];
   char xmfFileName[FILENAME_BUFFER_SIZE];
+  char snapshot_subdir_name[FILENAME_BUFFER_SIZE];
   char snapshot_base_name[FILENAME_BUFFER_SIZE];
 
   output_options_get_basename(output_options, current_selection_name,
-                              e->snapshot_base_name, snapshot_base_name);
+                              e->snapshot_subdir, e->snapshot_base_name,
+                              snapshot_subdir_name, snapshot_base_name);
 
   io_get_snapshot_filename(fileName, xmfFileName, e->snapshot_int_time_label_on,
                            e->snapshot_invoke_stf, e->time, e->stf_output_count,
                            e->snapshot_output_count, e->snapshot_subdir,
-                           e->snapshot_base_name, snapshot_base_name);
+                           snapshot_subdir_name, e->snapshot_base_name,
+                           snapshot_base_name);
 
   /* Total number of fields to write per ptype */
   int numFields[swift_type_count] = {0};

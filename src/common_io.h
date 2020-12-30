@@ -192,7 +192,8 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
                               const int use_time_label,
                               const int snapshots_invoke_stf, const double time,
                               const int stf_count, const int snap_count,
-                              const char* subdir, const char* default_basename,
+                              const char* default_subdir, const char* subdir,
+                              const char* default_basename,
                               const char* basename);
 
 void io_set_ids_to_one(struct gpart* gparts, const size_t Ngparts);

@@ -204,6 +204,7 @@ void io_prepare_output_fields(struct output_options* output_options,
       if (strstr(param_name, section_name) == NULL) continue;
       if (strstr(param_name, ":Standard_") != NULL) continue;
       if (strstr(param_name, ":basename") != NULL) continue;
+      if (strstr(param_name, ":subdir") != NULL) continue;
 
       /* Get the particle type for current parameter
        * (raises an error if it could not determine it) */

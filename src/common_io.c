@@ -1389,6 +1389,7 @@ void io_make_snapshot_subdir(const char* dirname) {
  * @param time The current simulation time.
  * @param stf_count The counter of STF outputs.
  * @param snap_count The counter of snapshot outputs.
+ * @param default_subdir The common part of the default sub-directory names.
  * @param subdir The sub-directory in which the snapshots are written.
  * @param default_basename The common part of the default snapshot names.
  * @param basename The common part of the snapshot names.
@@ -1397,7 +1398,8 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
                               const int use_time_label,
                               const int snapshots_invoke_stf, const double time,
                               const int stf_count, const int snap_count,
-                              const char* subdir, const char* default_basename,
+                              const char* default_subdir, const char* subdir,
+                              const char* default_basename,
                               const char* basename) {
 
   int snap_number = -1;
@@ -1418,7 +1420,7 @@ void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
   if (strlen(subdir) > 0) {
     sprintf(filename, "%s/%s_%0*d.hdf5", subdir, basename, number_digits,
             snap_number);
-    sprintf(xmf_filename, "%s/%s.xmf", subdir, default_basename);
+    sprintf(xmf_filename, "%s/%s.xmf", default_subdir, default_basename);
   } else {
     sprintf(filename, "%s_%0*d.hdf5", basename, number_digits, snap_number);
     sprintf(xmf_filename, "%s.xmf", default_basename);
