@@ -574,7 +574,7 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
  * @brief Convert the fields from global indexes to local.
  *
  * @param reader The #logger_reader.
- * @param global_fields_wanted The fields to sort.
+ * @param global_fields_wanted The fields to convert.
  * @param local_fields_wanted (out) fields_wanted in local indexes (need to be
  * allocated).
  * @param local_first_deriv (out) Fields (local indexes) corresponding to the
@@ -674,21 +674,18 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
   const struct header *h = &reader->log.header;
 
   /* Allocate temporary memory. */
-  /* fields_wanted sorted according to the fields order (local index). */
   int *local_fields_wanted = (int *)malloc(sizeof(int) * n_fields_wanted);
   if (local_fields_wanted == NULL) {
-    error_python("Failed to allocate the array of sorted fields.");
+    error_python("Failed to allocate the array of local fields.");
   }
 
-  /* Fields corresponding to the first derivative of fields_wanted (sorted and
-   * local index). */
+  /* Fields corresponding to the first derivative of fields_wanted (local index). */
   int *local_first_deriv = malloc(sizeof(int) * n_fields_wanted);
   if (local_first_deriv == NULL) {
     error_python("Failed to allocate the list of first derivative.");
   }
 
-  /* Fields corresponding to the second derivative of fields_wanted (sorted and
-   * local index). */
+  /* Fields corresponding to the second derivative of fields_wanted (local index). */
   int *local_second_deriv = malloc(sizeof(int) * n_fields_wanted);
   if (local_second_deriv == NULL) {
     error_python("Failed to allocate the list of second derivative.");
@@ -701,7 +698,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     struct index_data *data_created = logger_index_get_created_history(
         &reader->index.index_next, swift_type_gas);
 
-    /* Sort the fields in order to read the correct bits. */
+    /* Convert fields into the local array. */
     logger_reader_global_to_local(
         reader, global_fields_wanted, local_fields_wanted, local_first_deriv,
         local_second_deriv, n_fields_wanted, swift_type_gas);
@@ -732,7 +729,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
         size_t offset = reading_history ? data_created[current_in_index].offset
                                         : data[current_in_index].offset;
 
-        /* Sort the output into output_single. */
+        /* Loop over each field. */
         for (int field = 0; field < n_fields_wanted; field++) {
           const int global = global_fields_wanted[field];
           const int local = local_fields_wanted[field];
@@ -762,7 +759,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     struct index_data *data_created = logger_index_get_created_history(
         &reader->index.index_next, swift_type_dark_matter);
 
-    /* Sort the fields in order to read the correct bits. */
+    /* Convert the fields into the local array. */
     logger_reader_global_to_local(
         reader, global_fields_wanted, local_fields_wanted, local_first_deriv,
         local_second_deriv, n_fields_wanted, swift_type_dark_matter);
@@ -794,7 +791,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
         size_t offset = reading_history ? data_created[current_in_index].offset
                                         : data[current_in_index].offset;
 
-        /* Sort the output into output_single. */
+        /* Loop over all the fields. */
         for (int field = 0; field < n_fields_wanted; field++) {
           const int global = global_fields_wanted[field];
           const int local = local_fields_wanted[field];
@@ -824,7 +821,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     struct index_data *data_created = logger_index_get_created_history(
         &reader->index.index_next, swift_type_dark_matter_background);
 
-    /* Sort the fields in order to read the correct bits. */
+    /* Convert the fields into the local array. */
     logger_reader_global_to_local(
         reader, global_fields_wanted, local_fields_wanted, local_first_deriv,
         local_second_deriv, n_fields_wanted, swift_type_dark_matter_background);
@@ -856,7 +853,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
         size_t offset = reading_history ? data_created[current_in_index].offset
                                         : data[current_in_index].offset;
 
-        /* Sort the output into output_single. */
+        /* Loop over all the fields. */
         for (int field = 0; field < n_fields_wanted; field++) {
           const int global = global_fields_wanted[field];
           const int local = local_fields_wanted[field];
@@ -887,7 +884,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
     struct index_data *data_created = logger_index_get_created_history(
         &reader->index.index_next, swift_type_stars);
 
-    /* Sort the fields in order to read the correct bits. */
+    /* Convert the fields into the local array. */
     logger_reader_global_to_local(
         reader, global_fields_wanted, local_fields_wanted, local_first_deriv,
         local_second_deriv, n_fields_wanted, swift_type_stars);
@@ -918,7 +915,7 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
         size_t offset = reading_history ? data_created[current_in_index].offset
                                         : data[current_in_index].offset;
 
-        /* Sort the output into output_single. */
+        /* Loop over all the fields. */
         for (int field = 0; field < n_fields_wanted; field++) {
           const int global = global_fields_wanted[field];
           const int local = local_fields_wanted[field];

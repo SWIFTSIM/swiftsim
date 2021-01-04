@@ -166,6 +166,15 @@ logger_loader_create_output(void **output, const int *field_indices,
   /* Get the stars fields */
   stars_logger_generate_python(python_fields + total_number_fields);
   total_number_fields += stars_logger_field_count;
+  /* Get the chemistry (part) fields */
+  chemistry_logger_generate_python_part(python_fields + total_number_fields);
+  total_number_fields += chemistry_logger_field_part_count;
+  /* Get the chemistry (spart) fields */
+  chemistry_logger_generate_python_spart(python_fields + total_number_fields);
+  total_number_fields += chemistry_logger_field_spart_count;
+  /* Get the star formation fields */
+  star_formation_logger_generate_python(python_fields + total_number_fields);
+  total_number_fields += star_formation_logger_field_count;
 
   /* Get all the requested fields */
   for (int i = 0; i < n_fields; i++) {
@@ -227,6 +236,76 @@ logger_loader_create_output(void **output, const int *field_indices,
       }
     }
     total_number_fields += stars_logger_field_count;
+
+    /* Find in the chemistry (part) the field. */
+    for (int local = 0; local < chemistry_logger_field_part_count; local++) {
+      const int global = chemistry_logger_local_to_global_part[local];
+      const int local_shifted = local + total_number_fields;
+      if (field_indices[i] == global) {
+        /* Check if we have the same fields for gravity + hydro + stars. */
+        if (current_field != NULL) {
+          if (current_field->dimension !=
+              python_fields[local_shifted].dimension ||
+              current_field->typenum != python_fields[local_shifted].typenum) {
+            error_python(
+                         "The python definition of the field %s does not correspond "
+                         "between"
+                         " the modules.",
+                         chemistry_logger_field_names_part[local]);
+          }
+        }
+        current_field = &python_fields[local_shifted];
+        break;
+      }
+    }
+    total_number_fields += chemistry_logger_field_part_count;
+
+    /* Find in the chemistry (spart) the field. */
+    for (int local = 0; local < chemistry_logger_field_spart_count; local++) {
+      const int global = chemistry_logger_local_to_global_spart[local];
+      const int local_shifted = local + total_number_fields;
+      if (field_indices[i] == global) {
+        /* Check if we have the same fields for gravity + hydro + stars. */
+        if (current_field != NULL) {
+          if (current_field->dimension !=
+              python_fields[local_shifted].dimension ||
+              current_field->typenum != python_fields[local_shifted].typenum) {
+            error_python(
+                         "The python definition of the field %s does not correspond "
+                         "between"
+                         " the modules.",
+                         chemistry_logger_field_names_spart[local]);
+          }
+        }
+        current_field = &python_fields[local_shifted];
+        break;
+      }
+    }
+    total_number_fields += chemistry_logger_field_spart_count;
+
+
+    /* Find in the star formation the field. */
+    for (int local = 0; local < star_formation_logger_field_count; local++) {
+      const int global = star_formation_logger_local_to_global[local];
+      const int local_shifted = local + total_number_fields;
+      if (field_indices[i] == global) {
+        /* Check if we have the same fields for gravity + hydro + stars. */
+        if (current_field != NULL) {
+          if (current_field->dimension !=
+              python_fields[local_shifted].dimension ||
+              current_field->typenum != python_fields[local_shifted].typenum) {
+            error_python(
+                         "The python definition of the field %s does not correspond "
+                         "between"
+                         " the modules.",
+                         star_formation_logger_field_names[local]);
+          }
+        }
+        current_field = &python_fields[local_shifted];
+        break;
+      }
+    }
+    total_number_fields += star_formation_logger_field_count;
 
     /* Check if we got a field */
     if (current_field == NULL) {
@@ -337,30 +416,15 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
     /* Skip the types that are not required */
     if (read_types[i] == 0) continue;
 
-    /* Get the list of fields for each particle types. */
-    const char **field_names = NULL;
-    int number_fields = -1;
-    switch (i) {
-      case swift_type_gas:
-        number_fields = hydro_logger_field_count;
-        field_names = hydro_logger_field_names;
-        break;
+    /* Get the number of fields for the current particle type. */
+    int number_fields = tools_get_number_fields(i);
 
-      case swift_type_dark_matter:
-      case swift_type_dark_matter_background:
-        number_fields = gravity_logger_field_count;
-        field_names = gravity_logger_field_names;
-        break;
-
-      case swift_type_stars:
-        number_fields = stars_logger_field_count;
-        field_names = stars_logger_field_names;
-        break;
-
-      default:
-        message("Particle type %i not implemented, skipping it", i);
-        continue;
-    }
+    /* Get the list of fields for the current particle type. */
+    struct field_information *fields =
+      (struct field_information *) malloc(number_fields * sizeof(struct field_information));
+    if (fields == NULL)
+      error("Failed to initialize the field information");
+    tools_get_list_fields(fields, i, h);
 
     for (int j = 0; j < h->masks_count; j++) {
       /* Skip the fields not found in previous type. */
@@ -369,7 +433,7 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
       /* Check if the field is present */
       int found = 0;
       for (int k = 0; k < number_fields; k++) {
-        if (strcmp(h->masks[j].name, field_names[k]) == 0) {
+        if (strcmp(h->masks[j].name, fields[k].name) == 0) {
           found = 1;
           break;
         }
@@ -378,6 +442,9 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
       /* Set the field as not found */
       if (!found) field_present[j] = 0;
     }
+
+    /* Free the memory */
+    free(fields);
   }
 
   /* Count the number of fields found */

@@ -26,6 +26,102 @@
 #include <stdio.h>
 
 /**
+ * @brief Compute the number of fields for a given particle type.
+ *
+ * @param type The type of particles.
+ *
+ * @return The number of fields.
+ */
+int tools_get_number_fields(enum part_type type) {
+  int number_fields = 0;
+  switch (type) {
+    case swift_type_gas:
+      number_fields = hydro_logger_field_count;
+      number_fields += chemistry_logger_field_part_count;
+      return number_fields;
+
+    case swift_type_dark_matter:
+    case swift_type_dark_matter_background:
+      number_fields = gravity_logger_field_count;
+      return number_fields;
+
+    case swift_type_stars:
+      number_fields = stars_logger_field_count;
+      number_fields += chemistry_logger_field_spart_count;
+      number_fields += star_formation_logger_field_count;
+      return number_fields;
+
+    default:
+      message("Particle type %i not implemented, skipping it", type);
+      return 0;
+  }
+}
+
+
+#define copy_field_to_struct(MODULE, PART, TYPE)                        \
+  for(int j = 0; j < MODULE##_logger_field##PART##_count; j++) {        \
+    const int global = MODULE##_logger_local_to_global##PART[j];        \
+    int first = h->masks[global].reader.first_deriv;                    \
+    int second = h->masks[global].reader.second_deriv;                  \
+    /* Convert the derivatives into local index */                      \
+    if (first != -1) {                                                  \
+      for(int k = 0; k < MODULE##_logger_field##PART##_count; k++) {    \
+        if (MODULE##_logger_local_to_global##PART[k] == first) {        \
+          first = k;                                                    \
+          break;                                                        \
+        }                                                               \
+      }                                                                 \
+    }                                                                   \
+    if (second != -1) {                                                 \
+      for(int k = 0; k < MODULE##_logger_field##PART##_count; k++) {    \
+        if (MODULE##_logger_local_to_global##PART[k] == second) {       \
+          second = k;                                                   \
+          break;                                                        \
+        }                                                               \
+      }                                                                 \
+    }                                                                   \
+    /* Initialize the structure */                                      \
+    fields[i].module = TYPE;                                            \
+    fields[i].name = MODULE##_logger_field_names##PART[j];              \
+    fields[i].local_index = j;                                          \
+    fields[i].local_index_first = first;                                \
+    fields[i].local_index_second = second;                              \
+    i++;                                                                \
+  }
+
+/**
+ * @brief Construct the list of fields for a given particle type.
+ *
+ * @param fields (output) The list of fields (need to be already allocated).
+ * @param type The type of particle.
+ * @param h The #header
+ */
+void tools_get_list_fields(struct field_information *fields, enum part_type type,
+                           const struct header *h) {
+  int i = 0;
+  switch(type) {
+    case swift_type_gas:
+      copy_field_to_struct(hydro, , field_module_default);
+      copy_field_to_struct(chemistry, _part, field_module_chemistry);
+      break;
+
+    case swift_type_dark_matter:
+    case swift_type_dark_matter_background:
+      copy_field_to_struct(gravity, , field_module_default);
+      break;
+
+  case swift_type_stars:
+    copy_field_to_struct(stars, , field_module_default);
+    copy_field_to_struct(chemistry, _spart, field_module_chemistry);
+    copy_field_to_struct(star_formation, , field_module_star_formation);
+    break;
+
+    default:
+      error("Particle type %i not implemented", type);
+  }
+}
+
+/**
  * @brief get the offset of the next corresponding record.
  *
  * @param h #header structure of the file
