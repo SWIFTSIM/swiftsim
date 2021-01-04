@@ -62,11 +62,42 @@ star_formation_logger_interpolate_field(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
     void *restrict output, const double t,
-    const int field) {}
+    const int field) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Check the times */
+  if (t_before > t || t_after < t) {
+    error(
+          "The times for the interpolation are not correct"
+          " %g < %g < %g.",
+          t_before, t, t_after);
+  }
+#endif
+
+  switch (field) {
+    case star_formation_logger_field_all:
+      interpolate_linear_float_ND(t_before, before, t_after, after, output, t,
+                                  /* Dimension */ 2);
+
+      /* Deal with the progenitor id */
+      long long *proj_id = (long long *)((void *) before->field + 2 * sizeof(float));
+      output += 2 * sizeof(float);
+      *(long long *) output = *proj_id;
+    default:
+      error("Not implemented");
+  }
+
+
+}
 
 #ifdef HAVE_PYTHON
 __attribute__((always_inline)) INLINE static void
-star_formation_logger_generate_python(struct logger_python_field *fields) {}
+star_formation_logger_generate_python(struct logger_python_field *fields) {
+  // TODO split fields
+  fields[star_formation_logger_field_all] =
+    logger_loader_python_field(/* Dimension */ 2, NPY_FLOAT);
+
+}
 
 #endif  // HAVE_PYTHON
 #endif  // SWIFT_GEAR_LOGGER_STAR_FORMATION_H

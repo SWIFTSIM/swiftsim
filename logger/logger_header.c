@@ -275,8 +275,8 @@ void header_read(struct header *h, struct logger_logfile *log) {
       error("Field %s in stars is not set", stars_logger_field_names[j]);
     }
     if (h->masks[index].size != stars_logger_field_size[j]) {
-      error("Field %s in stars does not have the correct size.",
-            stars_logger_field_names[j]);
+      error("Field %s in stars does not have the correct size. %i %i",
+            stars_logger_field_names[j], h->masks[index].size, stars_logger_field_size[j]);
     }
   }
   stars_logger_reader_link_derivatives(h);

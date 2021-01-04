@@ -106,6 +106,7 @@ stars_logger_interpolate_field(const double t_before,
       break;
     case stars_logger_field_smoothing_lengths:
     case stars_logger_field_masses:
+    case stars_logger_field_birth_scale_factors:
       interpolate_linear_float(t_before, before, t_after, after, output, t);
       break;
     case stars_logger_field_particle_ids:
@@ -132,6 +133,8 @@ __attribute__((always_inline)) INLINE static void stars_logger_generate_python(
       logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
   fields[stars_logger_field_particle_ids] =
       logger_loader_python_field(/* Dimension */ 1, NPY_LONGLONG);
+  fields[stars_logger_field_birth_scale_factors] =
+    logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
 }
 
 #endif  // HAVE_PYTHON

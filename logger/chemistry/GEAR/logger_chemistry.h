@@ -71,7 +71,26 @@ __attribute__((always_inline)) INLINE static void
 chemistry_logger_interpolate_field_part(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t, const int field) {}
+    void *restrict output, const double t, const int field) {
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Check the times */
+  if (t_before > t || t_after < t) {
+    error(
+        "The times for the interpolation are not correct"
+        " %g < %g < %g.",
+        t_before, t, t_after);
+  }
+#endif
+
+  switch (field) {
+    case chemistry_logger_field_part_all:
+      interpolate_linear_double_ND(t_before, before, t_after, after, output, t,
+                                  2 * GEAR_CHEMISTRY_ELEMENT_COUNT);
+
+    default:
+      error("Not implemented");
+  }
+}
 
 /**
  * @brief Interpolate a field of the #spart at the given time.
@@ -93,20 +112,49 @@ __attribute__((always_inline)) INLINE static void
 chemistry_logger_interpolate_field_spart(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t, const int field) {}
+    void *restrict output, const double t, const int field) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Check the times */
+  if (t_before > t || t_after < t) {
+    error(
+          "The times for the interpolation are not correct"
+          " %g < %g < %g.",
+          t_before, t, t_after);
+  }
+#endif
+
+  switch (field) {
+    case chemistry_logger_field_spart_metal_mass_fractions:
+      interpolate_linear_double_ND(t_before, before, t_after, after, output, t,
+                                   GEAR_CHEMISTRY_ELEMENT_COUNT);
+
+    default:
+      error("Not implemented");
+  }
+
+}
 
 #ifdef HAVE_PYTHON
 /**
  * @brief Defines the different arrays for python.
  */
 __attribute__((always_inline)) INLINE static void
-chemistry_logger_generate_python_part(struct logger_python_field *fields) {}
+chemistry_logger_generate_python_part(struct logger_python_field *fields) {
+  fields[chemistry_logger_field_part_all] =
+    logger_loader_python_field(2 * GEAR_CHEMISTRY_ELEMENT_COUNT, NPY_DOUBLE);
+
+}
 
 /**
  * @brief Defines the different arrays for python.
  */
 __attribute__((always_inline)) INLINE static void
-chemistry_logger_generate_python_spart(struct logger_python_field *fields) {}
+chemistry_logger_generate_python_spart(struct logger_python_field *fields) {
+  fields[chemistry_logger_field_spart_metal_mass_fractions] =
+    logger_loader_python_field(GEAR_CHEMISTRY_ELEMENT_COUNT, NPY_DOUBLE);
+
+}
 
 #endif  // HAVE_PYTHON
 #endif  // SWIFT_GEAR_LOGGER_CHEMISTRY_H
