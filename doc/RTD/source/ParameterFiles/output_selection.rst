@@ -130,6 +130,26 @@ field for each particle type:
      Standard_BH: on  # Not strictly necessary, on is already the default
 
 
+Additionally, users can use the different sections to specify an alternative
+base name and sub-directory for the snapshots corresponding to a given
+selection:
+
+.. code:: YAML
+
+   BlackHolesOnly:
+     basename: bh
+     subdir: snip
+
+This will put the outputs corresponding to the ``BlackHolesOnly`` selection into
+a sub-directory called ``snip`` and have the files themselves called
+``bh_0000.hdf5`` where the number corresponds to the global number of
+snapshots. The counter is global and not reset for each type of selection.
+If the basename or sub-directory keywords are omitted then the code will use the
+default values specified in the ``Snapshots`` section of the main parameter file.
+The sub-directories are created when writing the first snapshot of a given
+category; the onus is hence on the user to ensure correct writing permissions
+ahead of that time.
+
 Combining Output Lists and Output Selection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
