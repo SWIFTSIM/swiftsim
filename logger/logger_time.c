@@ -161,11 +161,11 @@ void time_array_init(struct time_array *t, size_t initial_size) {
  * @brief Save the array into a file.
  *
  * @param t The #time_array.
- * @param filename The file to use.
+ * @param filename The filename of the index file.
  */
 void time_array_save(struct time_array *t, const char *filename) {
   /* Open the file */
-  FILE *f = fopen(filename, "wb");
+  FILE *f = fopen(filename, "ab");
   if (f == NULL) {
     error("Failed to open the file %s", filename);
   }
@@ -180,42 +180,32 @@ void time_array_save(struct time_array *t, const char *filename) {
   if (failed) {
     error("Failed to close the file %s", filename);
   }
-
 }
 
 /**
  * @brief Load the array from a file
  *
  * @param t The #time_array.
- * @param filename The file to use.
+ * @param index The #logger_index that contains the time array.
  */
-void time_array_load(struct time_array *t, const char *filename) {
-  /* Open the file */
-  FILE *f = fopen(filename, "rb");
-  if (f == NULL) {
-    error("Failed to open the file %s", filename);
-  }
-
+void time_array_load(struct time_array *t, struct logger_index *index) {
   /* Ensure that the array is empty */
-  if (t->capacity != 0)
-    time_array_free(t);
+  if (t->capacity != 0) time_array_free(t);
+
+  /* Get the position of the time array. */
+  char *map = (char *)logger_index_get_removed_history(index, swift_type_count);
 
   /* Read the array */
   uint64_t size = 0;
-  fread(&size, sizeof(uint64_t), 1, f);
+  map = logger_loader_io_read_data(map, sizeof(uint64_t), &size);
 
   /* Allocate the array */
   time_array_init(t, size);
   t->size = size;
 
   /* Read the elements */
-  fread(t->records, sizeof(struct time_record), t->size, f);
-
-  /* Close the file */
-  int failed = fclose(f);
-  if (failed) {
-    error("Failed to close the file %s", filename);
-  }
+  logger_loader_io_read_data(map, t->size * sizeof(struct time_record),
+                             t->records);
 }
 
 /**
@@ -226,19 +216,35 @@ void time_array_load(struct time_array *t, const char *filename) {
  */
 void time_array_populate(struct time_array *t, struct logger_logfile *log) {
   int verbose = log->reader->verbose;
+  struct logger_reader *reader = log->reader;
 
   /* Get the filename of the saved file. */
-  char filename[STRING_SIZE + 10];
-  sprintf(filename, "%s%s", log->reader->basename, ".time");
+  char filename[STRING_SIZE + 50];
+  sprintf(filename, "%s_0000.index", reader->basename);
 
-  /* Check if the file exists and read it if possible. */
-  if(access(filename, F_OK) == 0 ) {
+  /* Check if the file exists. */
+  if (access(filename, F_OK) != 0) error("Cannot find the first index file");
+
+  /* Initialize the index file that might contain the time array */
+  struct logger_index index;
+  logger_index_init(&index, reader);
+  logger_index_read_header(&index, filename);
+  logger_index_map_file(&index, filename, /* sorted */ 1);
+
+  /* Check if the index file contains the time array */
+  if (logger_index_contains_time_array(&index)) {
     if (verbose > 0) {
       message("Restoring the time array from %s", filename);
     }
-    time_array_load(t, filename);
+
+    /* Load the time array */
+    time_array_load(t, &index);
+    logger_index_free(&index);
     return;
   }
+
+  /* Free the memory. */
+  logger_index_free(&index);
 
   /* Initialize a few variables. */
   integertime_t int_time = 0;
