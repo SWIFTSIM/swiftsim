@@ -1395,26 +1395,25 @@ void io_make_snapshot_subdir(const char* dirname) {
  * @param basename The common part of the snapshot names.
  */
 void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
-                              const int use_time_label,
-                              const int snapshots_invoke_stf, const double time,
+                              const struct output_list* output_list,
+                              const int snapshots_invoke_stf,
                               const int stf_count, const int snap_count,
                               const char* default_subdir, const char* subdir,
                               const char* default_basename,
                               const char* basename) {
 
   int snap_number = -1;
-  if (use_time_label)
-    snap_number = (int)round(time);
-  else if (snapshots_invoke_stf)
-    snap_number = stf_count;
-  else
-    snap_number = snap_count;
-
   int number_digits = -1;
-  if (use_time_label)
-    number_digits = 6;
-  else
+  if (output_list && output_list->alternative_labels_on) {
+    snap_number = output_list->snapshot_labels[snap_count];
+    number_digits = 0;
+  } else if (snapshots_invoke_stf) {
+    snap_number = stf_count;
     number_digits = 4;
+  } else {
+    snap_number = snap_count;
+    number_digits = 4;
+  }
 
   /* Are we using a sub-dir? */
   if (strlen(subdir) > 0) {

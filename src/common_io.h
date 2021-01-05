@@ -44,6 +44,7 @@ struct sink;
 struct io_props;
 struct engine;
 struct threadpool;
+struct output_list;
 struct output_options;
 struct unit_system;
 
@@ -189,8 +190,8 @@ void io_write_output_field_parameter(const char* filename, int with_cosmology);
 void io_make_snapshot_subdir(const char* dirname);
 
 void io_get_snapshot_filename(char filename[1024], char xmf_filename[1024],
-                              const int use_time_label,
-                              const int snapshots_invoke_stf, const double time,
+                              const struct output_list* output_list,
+                              const int snapshots_invoke_stf,
                               const int stf_count, const int snap_count,
                               const char* default_subdir, const char* subdir,
                               const char* default_basename,

@@ -438,10 +438,6 @@ void engine_config(int restart, int fof, struct engine *e,
           "time (t_beg = %e)",
           e->time_end, e->time_begin);
 
-    /* Check we don't have inappropriate time labels */
-    if ((e->snapshot_int_time_label_on == 1) && (e->time_end <= 1.f))
-      error("Snapshot integer time labels enabled but end time <= 1");
-
     /* Check we have sensible time-step values */
     if (e->dt_min > e->dt_max)
       error(
@@ -603,12 +599,6 @@ void engine_config(int restart, int fof, struct engine *e,
         e->fof_properties->seed_black_holes_enabled) {
       engine_compute_next_fof_time(e);
     }
-
-    /* Check that the snapshot naming policy is valid */
-    if (e->snapshot_invoke_stf && e->snapshot_int_time_label_on)
-      error(
-          "Cannot use snapshot time labels and VELOCIraptor invocations "
-          "together!");
 
     /* Check that we are invoking VELOCIraptor only if we have it */
     if (e->snapshot_invoke_stf &&

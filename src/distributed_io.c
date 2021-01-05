@@ -314,18 +314,17 @@ void write_output_distributed(struct engine* e,
   }
 
   int snap_count = -1;
-  if (e->snapshot_int_time_label_on)
-    snap_count = (int)round(e->time);
-  else if (e->snapshot_invoke_stf)
-    snap_count = e->stf_output_count;
-  else
-    snap_count = e->snapshot_output_count;
-
   int number_digits = -1;
-  if (e->snapshot_int_time_label_on)
-    number_digits = 6;
-  else
+  if (output_list && output_list->alternative_labels_on) {
+    snap_count = output_list->snapshot_labels[snap_count];
+    number_digits = 0;
+  } else if (e->snapshot_invoke_stf) {
+    snap_count = e->stf_output_count;
     number_digits = 4;
+  } else {
+    snap_count = e->snapshot_output_count;
+    number_digits = 4;
+  }
 
   /* Directory and file name */
   char dirName[1024];
