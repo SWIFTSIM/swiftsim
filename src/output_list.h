@@ -62,6 +62,9 @@ struct output_list {
    * pointers because of restarts. */
   int *select_output_indices;
 
+  /* List of snapshot labels if not using the defaults */
+  int *snapshot_labels;
+
   /* Total number of currently used select output names */
   int select_output_number_of_names;
 
@@ -73,6 +76,9 @@ struct output_list {
 
   /* Was the Select Output option used? */
   int select_output_on;
+
+  /* Are we using individual labels for the runs? */
+  int alternative_labels_on;
 
   /* Is this output list activated? */
   int output_list_on;

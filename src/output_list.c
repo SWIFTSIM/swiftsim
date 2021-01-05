@@ -58,6 +58,8 @@ void output_list_read_file(struct output_list *output_list,
   /* Return to start of file and initialize time array */
   fseek(file, 0, SEEK_SET);
   output_list->times = (double *)malloc(sizeof(double) * output_list->size);
+  output_list->snapshot_labels =
+      (int *)malloc(sizeof(double) * output_list->size);
   output_list->select_output_indices =
       (int *)malloc(sizeof(int) * output_list->size);
 
@@ -79,6 +81,7 @@ void output_list_read_file(struct output_list *output_list,
   int type = -1;
   output_list->select_output_on = 0;
   output_list->select_output_number_of_names = 0;
+  output_list->alternative_labels_on = 0;
 
   trim_trailing(line);
 
@@ -97,6 +100,18 @@ void output_list_read_file(struct output_list *output_list,
   } else if (strcasecmp(line, "# Scale Factor, Select Output") == 0) {
     type = OUTPUT_LIST_SCALE_FACTOR;
     output_list->select_output_on = 1;
+  } else if (strcasecmp(line, "# Redshift, Select Output, Labels") == 0) {
+    type = OUTPUT_LIST_REDSHIFT;
+    output_list->select_output_on = 1;
+    output_list->alternative_labels_on = 1;
+  } else if (strcasecmp(line, "# Time, Select Output, Labels") == 0) {
+    type = OUTPUT_LIST_AGE;
+    output_list->select_output_on = 1;
+    output_list->alternative_labels_on = 1;
+  } else if (strcasecmp(line, "# Scale Factor, Select Output, Labels") == 0) {
+    type = OUTPUT_LIST_SCALE_FACTOR;
+    output_list->select_output_on = 1;
+    output_list->alternative_labels_on = 1;
   } else {
     error("Unable to interpret the header (%s) in file '%s'", line, filename);
   }
@@ -108,6 +123,11 @@ void output_list_read_file(struct output_list *output_list,
         "Please change the header in '%s'",
         filename);
 
+  if (!output_list->select_output_on && output_list->alternative_labels_on)
+    error(
+        "Found an output list with alternative labels but not individual "
+        "output selections");
+
   /* Read file */
   size_t ind = 0;
   int read_successfully = 0;
@@ -115,9 +135,15 @@ void output_list_read_file(struct output_list *output_list,
   char select_output_buffer[FIELD_BUFFER_SIZE] =
       select_output_header_default_name;
   while (getline(&line, &len, file) != -1) {
+
     double *time = &output_list->times[ind];
+    int *label = &output_list->snapshot_labels[ind];
+
     /* Write data to output_list */
-    if (output_list->select_output_on) {
+    if (output_list->select_output_on && output_list->alternative_labels_on) {
+      read_successfully =
+          sscanf(line, "%lf, %s, %d", time, select_output_buffer, label) == 3;
+    } else if (output_list->select_output_on) {
       read_successfully =
           sscanf(line, "%lf, %s", time, select_output_buffer) == 2;
     } else {
@@ -141,16 +167,15 @@ void output_list_read_file(struct output_list *output_list,
      * in the select_output_names array that corresponds to this select output
      * name. */
     found_select_output = 0;
-    for (int select_output_index = 0;
-         select_output_index < output_list->select_output_number_of_names;
-         select_output_index++) {
-      if (!strcmp(select_output_buffer,
-                  output_list->select_output_names[select_output_index])) {
+    for (int i = 0; i < output_list->select_output_number_of_names; i++) {
+
+      if (!strcmp(select_output_buffer, output_list->select_output_names[i])) {
         /* We already have this select output list string in the buffer! */
-        output_list->select_output_indices[ind] = select_output_index;
+        output_list->select_output_indices[ind] = i;
         found_select_output = 1;
       }
     }
+
     /* If we did not assign it above, we haven't encountered this name before
      * and we need to create this name in the array */
     if (!found_select_output) {
@@ -386,6 +411,7 @@ void output_list_print(const struct output_list *output_list) {
 void output_list_clean(struct output_list **output_list) {
   if (*output_list) {
     free((*output_list)->times);
+    free((*output_list)->snapshot_labels);
     free((*output_list)->select_output_indices);
     free(*output_list);
     *output_list = NULL;
