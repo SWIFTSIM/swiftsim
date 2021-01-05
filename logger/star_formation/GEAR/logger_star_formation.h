@@ -83,6 +83,8 @@ star_formation_logger_interpolate_field(
       long long *proj_id = (long long *)((void *) before->field + 2 * sizeof(float));
       output += 2 * sizeof(float);
       *(long long *) output = *proj_id;
+      break;
+      
     default:
       error("Not implemented");
   }

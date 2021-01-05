@@ -418,6 +418,9 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
 
     /* Get the number of fields for the current particle type. */
     int number_fields = tools_get_number_fields(i);
+    if (number_fields == 0) {
+      continue;
+    }
 
     /* Get the list of fields for the current particle type. */
     struct field_information *fields =

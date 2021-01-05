@@ -60,10 +60,22 @@ int tools_get_number_fields(enum part_type type) {
 
 #define copy_field_to_struct(MODULE, PART, TYPE)                        \
   for(int j = 0; j < MODULE##_logger_field##PART##_count; j++) {        \
+                                                                        \
+    /* Save the main properties */                                      \
+    fields[i].module = TYPE;                                            \
+    fields[i].name = MODULE##_logger_field_names##PART[j];              \
+                                                                        \
+    /* Get the indexes */                                               \
     const int global = MODULE##_logger_local_to_global##PART[j];        \
     int first = h->masks[global].reader.first_deriv;                    \
     int second = h->masks[global].reader.second_deriv;                  \
-    /* Convert the derivatives into local index */                      \
+                                                                        \
+    /* Save the global indexes */                                       \
+    fields[i].global_index = global;                                    \
+    fields[i].global_index_first = first;                               \
+    fields[i].global_index_second = second;                             \
+                                                                        \
+    /* Convert the first derivatives into local index */                \
     if (first != -1) {                                                  \
       for(int k = 0; k < MODULE##_logger_field##PART##_count; k++) {    \
         if (MODULE##_logger_local_to_global##PART[k] == first) {        \
@@ -72,6 +84,8 @@ int tools_get_number_fields(enum part_type type) {
         }                                                               \
       }                                                                 \
     }                                                                   \
+                                                                        \
+    /* Convert the second derivatives into local index */               \
     if (second != -1) {                                                 \
       for(int k = 0; k < MODULE##_logger_field##PART##_count; k++) {    \
         if (MODULE##_logger_local_to_global##PART[k] == second) {       \
@@ -80,14 +94,14 @@ int tools_get_number_fields(enum part_type type) {
         }                                                               \
       }                                                                 \
     }                                                                   \
+                                                                        \
     /* Initialize the structure */                                      \
-    fields[i].module = TYPE;                                            \
-    fields[i].name = MODULE##_logger_field_names##PART[j];              \
     fields[i].local_index = j;                                          \
     fields[i].local_index_first = first;                                \
     fields[i].local_index_second = second;                              \
     i++;                                                                \
   }
+
 
 /**
  * @brief Construct the list of fields for a given particle type.

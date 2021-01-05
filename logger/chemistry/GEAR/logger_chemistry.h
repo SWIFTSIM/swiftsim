@@ -86,6 +86,7 @@ chemistry_logger_interpolate_field_part(
     case chemistry_logger_field_part_all:
       interpolate_linear_double_ND(t_before, before, t_after, after, output, t,
                                   2 * GEAR_CHEMISTRY_ELEMENT_COUNT);
+      break;
 
     default:
       error("Not implemented");
@@ -128,6 +129,7 @@ chemistry_logger_interpolate_field_spart(
     case chemistry_logger_field_spart_metal_mass_fractions:
       interpolate_linear_double_ND(t_before, before, t_after, after, output, t,
                                    GEAR_CHEMISTRY_ELEMENT_COUNT);
+      break;
 
     default:
       error("Not implemented");

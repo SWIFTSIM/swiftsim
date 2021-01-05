@@ -87,17 +87,25 @@ struct field_information {
   /* Index of the field in the local array. */
   int local_index;
 
+  /* Index of the field in the global array. */
+  int global_index;
+
   /* Index of the first derivative in the local array. */
   int local_index_first;
 
+  /* Index of the first derivative in the global array. */
+  int global_index_first;
+
   /* Index of the second derivative in the local array. */
   int local_index_second;
+
+  /* Index of the second derivative in the global array. */
+  int global_index_second;
 };
 
 int tools_get_number_fields(enum part_type type);
 void tools_get_list_fields(struct field_information *fields, enum part_type type,
                            const struct header *h);
-
 
 int tools_get_next_record(const struct header *h, void *map, size_t *offset,
                           size_t file_size);
