@@ -27,8 +27,8 @@
 #include "logger_gravity.h"
 #include "logger_header.h"
 #include "logger_hydro.h"
-#include "logger_stars.h"
 #include "logger_star_formation.h"
+#include "logger_stars.h"
 #include "logger_time.h"
 
 #include <stdio.h>
@@ -46,15 +46,14 @@ size_t logger_particle_read_field(const struct logger_reader *reader,
                                   size_t offset, void *output,
                                   const struct field_information *all_fields,
                                   const int all_fields_count,
-                                  const int global_index,
-                                  size_t *mask, size_t *h_offset);
+                                  const int global_index, size_t *mask,
+                                  size_t *h_offset);
 
-void logger_particle_interpolate_field(const double t_before,
-                                       const struct logger_field *restrict before,
-                                       const double t_after,
-                                       const struct logger_field *restrict after,
-                                       void *restrict output, const double t,
-                                       const struct field_information *field, enum part_type type);
+void logger_particle_interpolate_field(
+    const double t_before, const struct logger_field *restrict before,
+    const double t_after, const struct logger_field *restrict after,
+    void *restrict output, const double t,
+    const struct field_information *field, enum part_type type);
 
 enum logger_special_flags logger_particle_read_special_flag(
     const struct logger_reader *reader, size_t offset, size_t *mask,

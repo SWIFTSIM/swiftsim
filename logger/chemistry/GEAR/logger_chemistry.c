@@ -23,16 +23,18 @@
 #define member_size(type, member) sizeof(((type *)0)->member)
 
 /* Hydro part */
-const int chemistry_logger_field_size_part[chemistry_logger_field_part_count] = {
-    member_size(struct part, chemistry_data.smoothed_metal_mass_fraction) +
-    member_size(struct part, chemistry_data.metal_mass),
+const int chemistry_logger_field_size_part[chemistry_logger_field_part_count] =
+    {
+        member_size(struct part, chemistry_data.smoothed_metal_mass_fraction) +
+            member_size(struct part, chemistry_data.metal_mass),
 };
 
 int chemistry_logger_local_to_global_part[chemistry_logger_field_part_count];
 
 /* Stellar part */
-const int chemistry_logger_field_size_spart[chemistry_logger_field_spart_count] = {
-    member_size(struct spart, chemistry_data.metal_mass_fraction),
+const int
+    chemistry_logger_field_size_spart[chemistry_logger_field_spart_count] = {
+        member_size(struct spart, chemistry_data.metal_mass_fraction),
 };
 
 int chemistry_logger_local_to_global_spart[chemistry_logger_field_spart_count];

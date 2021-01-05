@@ -61,15 +61,14 @@ struct logger_field {
   void *second_deriv;
 };
 
-
 /**
  * @brief Defines a type of modules (e.g. gravity, stars,
  * chemistry, star_formation, ...)
  */
 enum module_field {
-    field_module_default = 0,
-    field_module_chemistry,
-    field_module_star_formation,
+  field_module_default = 0,
+  field_module_chemistry,
+  field_module_star_formation,
 };
 
 /**
@@ -104,8 +103,8 @@ struct field_information {
 };
 
 int tools_get_number_fields(enum part_type type);
-void tools_get_list_fields(struct field_information *fields, enum part_type type,
-                           const struct header *h);
+void tools_get_list_fields(struct field_information *fields,
+                           enum part_type type, const struct header *h);
 
 int tools_get_next_record(const struct header *h, void *map, size_t *offset,
                           size_t file_size);

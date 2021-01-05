@@ -137,7 +137,6 @@ logger_particle_read_special_flag(const struct logger_reader *reader,
   return logger_unpack_flags_and_data(packed_data, data);
 }
 
-
 /**
  * @brief Interpolate a field of the particle at the given time.
  *
@@ -167,8 +166,9 @@ void logger_particle_interpolate_field(
           break;
 
         case field_module_chemistry:
-          chemistry_logger_interpolate_field_part(time_before, before, time_after, after,
-                                                  output, time, field->local_index);
+          chemistry_logger_interpolate_field_part(time_before, before,
+                                                  time_after, after, output,
+                                                  time, field->local_index);
           break;
 
         default:
@@ -181,8 +181,8 @@ void logger_particle_interpolate_field(
     case swift_type_dark_matter_background:
       if (field->module != field_module_default)
         error("Module not implemented");
-      gravity_logger_interpolate_field(time_before, before, time_after,
-                                       after, output, time, field->local_index);
+      gravity_logger_interpolate_field(time_before, before, time_after, after,
+                                       output, time, field->local_index);
       break;
 
     /* Stars */
@@ -194,13 +194,15 @@ void logger_particle_interpolate_field(
           break;
 
         case field_module_chemistry:
-          chemistry_logger_interpolate_field_spart(time_before, before, time_after, after,
-                                                   output, time, field->local_index);
+          chemistry_logger_interpolate_field_spart(time_before, before,
+                                                   time_after, after, output,
+                                                   time, field->local_index);
           break;
 
         case field_module_star_formation:
-          star_formation_logger_interpolate_field(time_before, before, time_after, after,
-                                                  output, time, field->local_index);
+          star_formation_logger_interpolate_field(time_before, before,
+                                                  time_after, after, output,
+                                                  time, field->local_index);
           break;
 
         default:

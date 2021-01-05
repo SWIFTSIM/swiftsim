@@ -329,7 +329,6 @@ void logger_reader_get_number_particles(struct logger_reader *reader,
   }
 }
 
-
 /**
  * @brief Read a single field for a single part from the logger and interpolate
  it if needed.
@@ -362,8 +361,8 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
                              const size_t offset_last_full_record,
                              const struct field_information *field_wanted,
                              const struct field_information *all_fields,
-                             const int all_fields_count,
-                             void *output, enum part_type type) {
+                             const int all_fields_count, void *output,
+                             enum part_type type) {
 
   const struct header *h = &reader->log.header;
   size_t offset = offset_last_full_record;
@@ -440,8 +439,8 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
   int first_found = mask_first != NULL && mask & mask_first->mask;
   if (first_found) {
     /* Read the first derivative */
-    logger_particle_read_field(reader, offset_before, first_deriv,
-                               all_fields, all_fields_count, global_first, &mask,
+    logger_particle_read_field(reader, offset_before, first_deriv, all_fields,
+                               all_fields_count, global_first, &mask,
                                &h_offset);
   }
 
@@ -452,8 +451,8 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
   int second_found = mask_second != NULL && mask & mask_second->mask;
   if (second_found) {
     /* Read the first derivative */
-    logger_particle_read_field(reader, offset_before, second_deriv,
-                               all_fields, all_fields_count, global_second, &mask,
+    logger_particle_read_field(reader, offset_before, second_deriv, all_fields,
+                               all_fields_count, global_second, &mask,
                                &h_offset);
   }
 
@@ -501,8 +500,8 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
     first_found = mask_first != NULL && first_found && mask & mask_first->mask;
     if (first_found) {
       /* Read the first derivative */
-      logger_particle_read_field(reader, offset, first_deriv_after,
-                                 all_fields, all_fields_count, global_first, &mask,
+      logger_particle_read_field(reader, offset, first_deriv_after, all_fields,
+                                 all_fields_count, global_first, &mask,
                                  &h_offset);
     }
 
@@ -514,8 +513,8 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
         mask_second != NULL && second_found && mask & mask_second->mask;
     if (second_found) {
       /* Read the second derivative */
-      logger_particle_read_field(reader, offset, second_deriv_after,
-                                 all_fields, all_fields_count, global_second, &mask,
+      logger_particle_read_field(reader, offset, second_deriv_after, all_fields,
+                                 all_fields_count, global_second, &mask,
                                  &h_offset);
     }
 
@@ -552,10 +551,13 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
  * @param all_fields_count The number of elements in all_fields.
  * @param type The type of the particle.
  */
-void logger_reader_get_fields_wanted(
-    const struct logger_reader *reader, const int *global_fields_wanted,
-    struct field_information *fields_wanted, const int n_fields_wanted,
-    struct field_information *all_fields, int all_fields_count, enum part_type type) {
+void logger_reader_get_fields_wanted(const struct logger_reader *reader,
+                                     const int *global_fields_wanted,
+                                     struct field_information *fields_wanted,
+                                     const int n_fields_wanted,
+                                     struct field_information *all_fields,
+                                     int all_fields_count,
+                                     enum part_type type) {
 
   const struct header *h = &reader->log.header;
 
@@ -589,6 +591,108 @@ void logger_reader_get_fields_wanted(
 }
 
 /**
+ * @brief Read all the particles of a given type from the index file.
+ *
+ * @param reader The #logger_reader.
+ * @param time The requested time for the particle.
+ * @param interp_type The type of interpolation.
+ * @param global_fields_wanted The fields requested (global index).
+ * @param n_fields_wanted Number of field requested.
+ * @param output Pointer to the output array. Size: (n_fields_wanted,
+ * sum(n_part)).
+ * @param n_part Number of particles of each type.
+ * @param type The particle type
+ */
+void logger_reader_read_all_particles_single_type(
+    struct logger_reader *reader, double time,
+    enum logger_reader_type interp_type, const int *global_fields_wanted,
+    const int n_fields_wanted, void **output, const uint64_t *n_part,
+    enum part_type type) {
+
+  const struct header *h = &reader->log.header;
+
+  /* Count the number of previous parts for the shift in output */
+  uint64_t prev_npart = 0;
+  for (int i = 0; i < type; i++) {
+    prev_npart += n_part[i];
+  }
+
+  /* Allocate temporary memory. */
+  struct field_information *fields_wanted = (struct field_information *)malloc(
+      sizeof(struct field_information) * n_fields_wanted);
+  if (fields_wanted == NULL) {
+    error_python("Failed to allocate the field information.");
+  }
+
+  struct index_data *data =
+      logger_index_get_data(&reader->index.index_prev, type);
+  struct index_data *data_created =
+      logger_index_get_created_history(&reader->index.index_next, type);
+
+  /* Get the list of fields. */
+  const int all_fields_count = tools_get_number_fields(type);
+  struct field_information *all_fields = (struct field_information *)malloc(
+      all_fields_count * sizeof(struct field_information));
+  tools_get_list_fields(all_fields, type, h);
+
+  /* Convert fields into the local array. */
+  logger_reader_get_fields_wanted(reader, global_fields_wanted, fields_wanted,
+                                  n_fields_wanted, all_fields, all_fields_count,
+                                  type);
+
+  size_t current_in_index = 0;
+  int reading_history = 0;
+  const size_t size_index = reader->index.index_prev.nparts[type];
+  const size_t size_history =
+      logger_reader_count_number_new_particles(reader, type);
+
+  /* Read the particles */
+  for (size_t i = 0; i < n_part[type]; i++) {
+    int particle_removed = 1;
+    /* Do it until finding a particle not removed. */
+    while (particle_removed) {
+      /* Should we start to read the history? */
+      if (!reading_history && current_in_index == size_index) {
+        current_in_index = 0;
+        reading_history = 1;
+      }
+
+      /* Check if we still have some particles available. */
+      if (reading_history && current_in_index == size_history) {
+        error_python("The logger was not able to find enough particles.");
+      }
+
+      /* Get the offset */
+      size_t offset = reading_history ? data_created[current_in_index].offset
+                                      : data[current_in_index].offset;
+
+      /* Loop over each field. */
+      for (int field = 0; field < n_fields_wanted; field++) {
+        const int global = fields_wanted[field].global_index;
+        void *output_single =
+            output[field] + (i + prev_npart) * h->masks[global].size;
+
+        /* Read the field. */
+        particle_removed = logger_reader_read_field(
+            reader, time, reader->time.time_offset, interp_type, offset,
+            &fields_wanted[field], all_fields, all_fields_count, output_single,
+            type);
+
+        /* Should we continue to read the fields of this particle? */
+        if (particle_removed) {
+          break;
+        }
+      }
+      current_in_index++;
+    }
+  }
+
+  /* Free the memory */
+  free(all_fields);
+  free(fields_wanted);
+}
+
+/**
  * @brief Read all the particles from the index file.
  *
  * @param reader The #logger_reader.
@@ -606,89 +710,31 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
                                       const int n_fields_wanted, void **output,
                                       const uint64_t *n_part) {
 
-  const struct header *h = &reader->log.header;
-
-  /* Allocate temporary memory. */
-  struct field_information *fields_wanted = (struct field_information *)
-    malloc(sizeof(struct field_information) * n_fields_wanted);
-  if (fields_wanted == NULL) {
-    error_python("Failed to allocate the field information.");
-  }
-
-  /* Do the hydro. */
+  /* Read the gas */
   if (n_part[swift_type_gas] != 0) {
-    struct index_data *data =
-        logger_index_get_data(&reader->index.index_prev, swift_type_gas);
-    struct index_data *data_created = logger_index_get_created_history(
-        &reader->index.index_next, swift_type_gas);
-
-    /* Get the list of fields. */
-    const int all_fields_count = tools_get_number_fields(swift_type_gas);
-    struct field_information *all_fields = (struct field_information *)
-      malloc(all_fields_count * sizeof(struct field_information));
-    tools_get_list_fields(all_fields, swift_type_gas, h);
-
-    /* Convert fields into the local array. */
-    logger_reader_get_fields_wanted(reader, global_fields_wanted,
-                                    fields_wanted, n_fields_wanted,
-                                    all_fields, all_fields_count, swift_type_gas);
-
-    size_t current_in_index = 0;
-    int reading_history = 0;
-    const size_t size_index = reader->index.index_prev.nparts[swift_type_gas];
-    const size_t size_history =
-        logger_reader_count_number_new_particles(reader, swift_type_gas);
-
-    /* Read the particles */
-    for (size_t i = 0; i < n_part[swift_type_gas]; i++) {
-      int particle_removed = 1;
-      /* Do it until finding a particle not removed. */
-      while (particle_removed) {
-        /* Should we start to read the history? */
-        if (!reading_history && current_in_index == size_index) {
-          current_in_index = 0;
-          reading_history = 1;
-        }
-
-        /* Check if we still have some particles available. */
-        if (reading_history && current_in_index == size_history) {
-          error_python("The logger was not able to find enough particles.");
-        }
-
-        /* Get the offset */
-        size_t offset = reading_history ? data_created[current_in_index].offset
-                                        : data[current_in_index].offset;
-
-        /* Loop over each field. */
-        for (int field = 0; field < n_fields_wanted; field++) {
-          const int global = fields_wanted[field].global_index;
-          void *output_single = output[field] + i * h->masks[global].size;
-
-          /* Read the field. */
-          particle_removed = logger_reader_read_field(
-              reader, time, reader->time.time_offset, interp_type, offset,
-              &fields_wanted[field], all_fields, all_fields_count,
-              output_single, swift_type_gas);
-
-          /* Should we continue to read the fields of this particle? */
-          if (particle_removed) {
-            break;
-          }
-        }
-        current_in_index++;
-      }
-    }
-
-    /* Free the memory */
-    free(all_fields);
+    logger_reader_read_all_particles_single_type(
+        reader, time, interp_type, global_fields_wanted, n_fields_wanted,
+        output, n_part, swift_type_gas);
   }
 
-  /* Do the dark matter. */
-  /* Do the dark matter background. */
-  /* Do the stars. */
-
-  /* Free the memory. */
-  free(fields_wanted);
+  /* Read the dark matter. */
+  if (n_part[swift_type_dark_matter] != 0) {
+    logger_reader_read_all_particles_single_type(
+        reader, time, interp_type, global_fields_wanted, n_fields_wanted,
+        output, n_part, swift_type_dark_matter);
+  }
+  /* Read the dark matter background. */
+  if (n_part[swift_type_dark_matter_background] != 0) {
+    logger_reader_read_all_particles_single_type(
+        reader, time, interp_type, global_fields_wanted, n_fields_wanted,
+        output, n_part, swift_type_dark_matter_background);
+  }
+  /* Read the stars. */
+  if (n_part[swift_type_stars] != 0) {
+    logger_reader_read_all_particles_single_type(
+        reader, time, interp_type, global_fields_wanted, n_fields_wanted,
+        output, n_part, swift_type_stars);
+  }
 }
 
 /**
@@ -766,16 +812,15 @@ size_t logger_reader_read_record(struct logger_reader *reader, void **output,
   if (*is_particle) {
     /* Get the list of fields. */
     const int all_fields_count = tools_get_number_fields(swift_type_gas);
-    struct field_information *all_fields = (struct field_information *)
-      malloc(all_fields_count * sizeof(struct field_information));
+    struct field_information *all_fields = (struct field_information *)malloc(
+        all_fields_count * sizeof(struct field_information));
     tools_get_list_fields(all_fields, swift_type_gas, h);
 
     size_t offset_tmp = offset;
     for (int i = 0; i < all_fields_count; i++) {
       offset = logger_particle_read_field(
-          reader, offset_tmp, output[i], all_fields,
-          all_fields_count, all_fields[i].global_index,
-          &mask, &h_offset);
+          reader, offset_tmp, output[i], all_fields, all_fields_count,
+          all_fields[i].global_index, &mask, &h_offset);
     }
 
   }

@@ -22,16 +22,18 @@
 #include "../config.h"
 
 /* local includes */
-#include "star_formation_particle_logger.h"
 #include "logger_interpolation.h"
 #include "logger_loader_io.h"
 #include "logger_python_tools.h"
+#include "star_formation_particle_logger.h"
 
 /* Index of the mask in the header mask array */
-extern int star_formation_logger_local_to_global[star_formation_logger_field_count];
+extern int
+    star_formation_logger_local_to_global[star_formation_logger_field_count];
 
 /* Size for each mask */
-extern const int star_formation_logger_field_size[star_formation_logger_field_count];
+extern const int
+    star_formation_logger_field_size[star_formation_logger_field_count];
 
 /**
  * @brief Create the link between the fields and their derivatives.
@@ -61,16 +63,15 @@ __attribute__((always_inline)) INLINE static void
 star_formation_logger_interpolate_field(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t,
-    const int field) {
+    void *restrict output, const double t, const int field) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check the times */
   if (t_before > t || t_after < t) {
     error(
-          "The times for the interpolation are not correct"
-          " %g < %g < %g.",
-          t_before, t, t_after);
+        "The times for the interpolation are not correct"
+        " %g < %g < %g.",
+        t_before, t, t_after);
   }
 #endif
 
@@ -80,16 +81,15 @@ star_formation_logger_interpolate_field(
                                   /* Dimension */ 2);
 
       /* Deal with the progenitor id */
-      long long *proj_id = (long long *)((void *) before->field + 2 * sizeof(float));
+      long long *proj_id =
+          (long long *)((void *)before->field + 2 * sizeof(float));
       output += 2 * sizeof(float);
-      *(long long *) output = *proj_id;
+      *(long long *)output = *proj_id;
       break;
-      
+
     default:
       error("Not implemented");
   }
-
-
 }
 
 #ifdef HAVE_PYTHON
@@ -97,8 +97,7 @@ __attribute__((always_inline)) INLINE static void
 star_formation_logger_generate_python(struct logger_python_field *fields) {
   // TODO split fields
   fields[star_formation_logger_field_all] =
-    logger_loader_python_field(/* Dimension */ 2, NPY_FLOAT);
-
+      logger_loader_python_field(/* Dimension */ 2, NPY_FLOAT);
 }
 
 #endif  // HAVE_PYTHON

@@ -23,11 +23,13 @@
 #define member_size(type, member) sizeof(((type *)0)->member)
 
 /* Hydro part */
-const int chemistry_logger_field_size_part[chemistry_logger_field_part_count] = {};
+const int chemistry_logger_field_size_part[chemistry_logger_field_part_count] =
+    {};
 
 int chemistry_logger_local_to_global_part[chemistry_logger_field_part_count];
 
 /* Stellar part */
-const int chemistry_logger_field_size_spart[chemistry_logger_field_spart_count] = {};
+const int
+    chemistry_logger_field_size_spart[chemistry_logger_field_spart_count] = {};
 
 int chemistry_logger_local_to_global_spart[chemistry_logger_field_spart_count];

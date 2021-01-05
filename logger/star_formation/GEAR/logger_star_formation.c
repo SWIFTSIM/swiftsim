@@ -22,8 +22,9 @@
 /* Define the size of all the fields. */
 #define member_size(type, member) sizeof(((type *)0)->member)
 
-const int star_formation_logger_field_size[star_formation_logger_field_count] = {
-    2 * sizeof(float) + sizeof(long long),
+const int star_formation_logger_field_size[star_formation_logger_field_count] =
+    {
+        2 * sizeof(float) + sizeof(long long),
 };
 
 int star_formation_logger_local_to_global[star_formation_logger_field_count];

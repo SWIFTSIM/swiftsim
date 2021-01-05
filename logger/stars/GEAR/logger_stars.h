@@ -134,7 +134,7 @@ __attribute__((always_inline)) INLINE static void stars_logger_generate_python(
   fields[stars_logger_field_particle_ids] =
       logger_loader_python_field(/* Dimension */ 1, NPY_LONGLONG);
   fields[stars_logger_field_birth_scale_factors] =
-    logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
+      logger_loader_python_field(/* Dimension */ 1, NPY_FLOAT32);
 }
 
 #endif  // HAVE_PYTHON

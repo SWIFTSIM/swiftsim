@@ -22,16 +22,18 @@
 #include "../config.h"
 
 /* local includes */
-#include "star_formation_particle_logger.h"
 #include "logger_interpolation.h"
 #include "logger_loader_io.h"
 #include "logger_python_tools.h"
+#include "star_formation_particle_logger.h"
 
 /* Index of the mask in the header mask array */
-extern int star_formation_logger_local_to_global[star_formation_logger_field_count];
+extern int
+    star_formation_logger_local_to_global[star_formation_logger_field_count];
 
 /* Size for each mask */
-extern const int star_formation_logger_field_size[star_formation_logger_field_count];
+extern const int
+    star_formation_logger_field_size[star_formation_logger_field_count];
 
 /**
  * @brief Create the link between the fields and their derivatives.
@@ -61,8 +63,7 @@ __attribute__((always_inline)) INLINE static void
 star_formation_logger_interpolate_field(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t,
-    const int field) {}
+    void *restrict output, const double t, const int field) {}
 
 #ifdef HAVE_PYTHON
 __attribute__((always_inline)) INLINE static void

@@ -28,12 +28,16 @@
 #include "logger_python_tools.h"
 
 /* Index of the mask in the header mask array */
-extern int chemistry_logger_local_to_global_part[chemistry_logger_field_part_count];
-extern int chemistry_logger_local_to_global_spart[chemistry_logger_field_spart_count];
+extern int
+    chemistry_logger_local_to_global_part[chemistry_logger_field_part_count];
+extern int
+    chemistry_logger_local_to_global_spart[chemistry_logger_field_spart_count];
 
 /* Size for each mask */
-extern const int chemistry_logger_field_size_part[chemistry_logger_field_part_count];
-extern const int chemistry_logger_field_size_spart[chemistry_logger_field_spart_count];
+extern const int
+    chemistry_logger_field_size_part[chemistry_logger_field_part_count];
+extern const int
+    chemistry_logger_field_size_spart[chemistry_logger_field_spart_count];
 
 /**
  * @brief Create the link between the fields and their derivatives for #part.

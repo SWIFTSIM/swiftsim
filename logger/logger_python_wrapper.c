@@ -245,13 +245,13 @@ logger_loader_create_output(void **output, const int *field_indices,
         /* Check if we have the same fields for gravity + hydro + stars. */
         if (current_field != NULL) {
           if (current_field->dimension !=
-              python_fields[local_shifted].dimension ||
+                  python_fields[local_shifted].dimension ||
               current_field->typenum != python_fields[local_shifted].typenum) {
             error_python(
-                         "The python definition of the field %s does not correspond "
-                         "between"
-                         " the modules.",
-                         chemistry_logger_field_names_part[local]);
+                "The python definition of the field %s does not correspond "
+                "between"
+                " the modules.",
+                chemistry_logger_field_names_part[local]);
           }
         }
         current_field = &python_fields[local_shifted];
@@ -268,13 +268,13 @@ logger_loader_create_output(void **output, const int *field_indices,
         /* Check if we have the same fields for gravity + hydro + stars. */
         if (current_field != NULL) {
           if (current_field->dimension !=
-              python_fields[local_shifted].dimension ||
+                  python_fields[local_shifted].dimension ||
               current_field->typenum != python_fields[local_shifted].typenum) {
             error_python(
-                         "The python definition of the field %s does not correspond "
-                         "between"
-                         " the modules.",
-                         chemistry_logger_field_names_spart[local]);
+                "The python definition of the field %s does not correspond "
+                "between"
+                " the modules.",
+                chemistry_logger_field_names_spart[local]);
           }
         }
         current_field = &python_fields[local_shifted];
@@ -282,7 +282,6 @@ logger_loader_create_output(void **output, const int *field_indices,
       }
     }
     total_number_fields += chemistry_logger_field_spart_count;
-
 
     /* Find in the star formation the field. */
     for (int local = 0; local < star_formation_logger_field_count; local++) {
@@ -292,13 +291,13 @@ logger_loader_create_output(void **output, const int *field_indices,
         /* Check if we have the same fields for gravity + hydro + stars. */
         if (current_field != NULL) {
           if (current_field->dimension !=
-              python_fields[local_shifted].dimension ||
+                  python_fields[local_shifted].dimension ||
               current_field->typenum != python_fields[local_shifted].typenum) {
             error_python(
-                         "The python definition of the field %s does not correspond "
-                         "between"
-                         " the modules.",
-                         star_formation_logger_field_names[local]);
+                "The python definition of the field %s does not correspond "
+                "between"
+                " the modules.",
+                star_formation_logger_field_names[local]);
           }
         }
         current_field = &python_fields[local_shifted];
@@ -423,10 +422,9 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
     }
 
     /* Get the list of fields for the current particle type. */
-    struct field_information *fields =
-      (struct field_information *) malloc(number_fields * sizeof(struct field_information));
-    if (fields == NULL)
-      error("Failed to initialize the field information");
+    struct field_information *fields = (struct field_information *)malloc(
+        number_fields * sizeof(struct field_information));
+    if (fields == NULL) error("Failed to initialize the field information");
     tools_get_list_fields(fields, i, h);
 
     for (int j = 0; j < h->masks_count; j++) {

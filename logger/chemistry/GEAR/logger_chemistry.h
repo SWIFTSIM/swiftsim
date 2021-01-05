@@ -28,12 +28,16 @@
 #include "logger_python_tools.h"
 
 /* Index of the mask in the header mask array */
-extern int chemistry_logger_local_to_global_part[chemistry_logger_field_part_count];
-extern int chemistry_logger_local_to_global_spart[chemistry_logger_field_spart_count];
+extern int
+    chemistry_logger_local_to_global_part[chemistry_logger_field_part_count];
+extern int
+    chemistry_logger_local_to_global_spart[chemistry_logger_field_spart_count];
 
 /* Size for each mask */
-extern const int chemistry_logger_field_size_part[chemistry_logger_field_part_count];
-extern const int chemistry_logger_field_size_spart[chemistry_logger_field_spart_count];
+extern const int
+    chemistry_logger_field_size_part[chemistry_logger_field_part_count];
+extern const int
+    chemistry_logger_field_size_spart[chemistry_logger_field_spart_count];
 
 /**
  * @brief Create the link between the fields and their derivatives for #part.
@@ -85,7 +89,7 @@ chemistry_logger_interpolate_field_part(
   switch (field) {
     case chemistry_logger_field_part_all:
       interpolate_linear_double_ND(t_before, before, t_after, after, output, t,
-                                  2 * GEAR_CHEMISTRY_ELEMENT_COUNT);
+                                   2 * GEAR_CHEMISTRY_ELEMENT_COUNT);
       break;
 
     default:
@@ -119,9 +123,9 @@ chemistry_logger_interpolate_field_spart(
   /* Check the times */
   if (t_before > t || t_after < t) {
     error(
-          "The times for the interpolation are not correct"
-          " %g < %g < %g.",
-          t_before, t, t_after);
+        "The times for the interpolation are not correct"
+        " %g < %g < %g.",
+        t_before, t, t_after);
   }
 #endif
 
@@ -134,7 +138,6 @@ chemistry_logger_interpolate_field_spart(
     default:
       error("Not implemented");
   }
-
 }
 
 #ifdef HAVE_PYTHON
@@ -144,8 +147,7 @@ chemistry_logger_interpolate_field_spart(
 __attribute__((always_inline)) INLINE static void
 chemistry_logger_generate_python_part(struct logger_python_field *fields) {
   fields[chemistry_logger_field_part_all] =
-    logger_loader_python_field(2 * GEAR_CHEMISTRY_ELEMENT_COUNT, NPY_DOUBLE);
-
+      logger_loader_python_field(2 * GEAR_CHEMISTRY_ELEMENT_COUNT, NPY_DOUBLE);
 }
 
 /**
@@ -154,8 +156,7 @@ chemistry_logger_generate_python_part(struct logger_python_field *fields) {
 __attribute__((always_inline)) INLINE static void
 chemistry_logger_generate_python_spart(struct logger_python_field *fields) {
   fields[chemistry_logger_field_spart_metal_mass_fractions] =
-    logger_loader_python_field(GEAR_CHEMISTRY_ELEMENT_COUNT, NPY_DOUBLE);
-
+      logger_loader_python_field(GEAR_CHEMISTRY_ELEMENT_COUNT, NPY_DOUBLE);
 }
 
 #endif  // HAVE_PYTHON
