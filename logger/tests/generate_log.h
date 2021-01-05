@@ -123,7 +123,7 @@ void write_particles(struct logger_writer *log, struct engine *e) {
       // TODO write only a few masks at the time
 
       logger_log_part(log, &parts[j], &xparts[j], e, /* log_all */ 0,
-                      /* flag */ 0, /* flag_data */0);
+                      /* flag */ 0, /* flag_data */ 0);
     }
   }
 }
@@ -132,9 +132,10 @@ void generate_log(struct swift_params *params, struct part *parts,
                   struct xpart *xparts, size_t nparts) {
 
 #ifdef HAVE_PYTHON
-  message("WARNING: error messages might crash as python is enabled but not "
-          "initialized. If you obtain a segmentation fault, please recompile "
-          "without python");
+  message(
+      "WARNING: error messages might crash as python is enabled but not "
+      "initialized. If you obtain a segmentation fault, please recompile "
+      "without python");
 #endif
   /* Initialize the particles */
   generate_particles(parts, xparts, nparts);

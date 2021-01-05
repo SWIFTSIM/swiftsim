@@ -78,14 +78,14 @@ int main(int argc, char *argv[]) {
 
   /* Create the variables for the number of particles */
   const int n_type = swift_type_count;
-  uint64_t *n_parts = (uint64_t *) malloc(n_type * sizeof(uint64_t));
-  int *read_types = (int *) malloc(n_type * sizeof(int));
+  uint64_t *n_parts = (uint64_t *)malloc(n_type * sizeof(uint64_t));
+  int *read_types = (int *)malloc(n_type * sizeof(int));
   if (read_types == NULL || n_parts == NULL) {
     error("Failed to allocate arrays.");
   }
 
   /* Set the flags in order to read everything */
-  for(int i = 0; i < n_type; i++) {
+  for (int i = 0; i < n_type; i++) {
     read_types[i] = 1;
   }
 
