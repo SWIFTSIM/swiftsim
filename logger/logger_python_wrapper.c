@@ -135,6 +135,28 @@ static PyObject *getTimeLimits(PyObject *self, PyObject *Py_UNUSED(ignored)) {
   return (PyObject *)out;
 }
 
+#define find_field_in_module(MODULE, PART)                                    \
+  for (int local = 0; local < MODULE##_logger_field##PART##_count; local++) { \
+    const int global = MODULE##_logger_local_to_global##PART[local];          \
+    const int local_shifted = local + total_number_fields;                    \
+    if (field_indices[i] == global) {                                         \
+      /* Check if we have the same fields for the different modules */        \
+      if (current_field != NULL) {                                            \
+        if (current_field->dimension !=                                       \
+                python_fields[local_shifted].dimension ||                     \
+            current_field->typenum != python_fields[local_shifted].typenum) { \
+          error_python(                                                       \
+              "The python definition of the field %s does not correspond "    \
+              "between the modules.",                                         \
+              MODULE##_logger_field_names##PART[local]);                      \
+        }                                                                     \
+      }                                                                       \
+      current_field = &python_fields[local_shifted];                          \
+      break;                                                                  \
+    }                                                                         \
+  }                                                                           \
+  total_number_fields += MODULE##_logger_field##PART##_count;
+
 /**
  * @brief Create a list of numpy array containing the fields.
  *
@@ -182,129 +204,13 @@ logger_loader_create_output(void **output, const int *field_indices,
     current_field = NULL;
     total_number_fields = 0;
 
-    /* Find in the hydro the field. */
-    for (int local = 0; local < hydro_logger_field_count; local++) {
-      const int global = hydro_logger_local_to_global[local];
-      if (field_indices[i] == global) {
-        current_field = &python_fields[local];
-      }
-    }
-    total_number_fields += hydro_logger_field_count;
-
-    /* Find in the gravity the field. */
-    for (int local = 0; local < gravity_logger_field_count; local++) {
-      const int global = gravity_logger_local_to_global[local];
-      const int local_shifted = local + total_number_fields;
-      if (field_indices[i] == global) {
-        /* Check if we have the same fields for gravity + hydro */
-        if (current_field != NULL) {
-          if (current_field->dimension !=
-                  python_fields[local_shifted].dimension ||
-              current_field->typenum != python_fields[local_shifted].typenum) {
-            error_python(
-                "The python definition of the field %s does not correspond "
-                "between"
-                " the modules.",
-                gravity_logger_field_names[local]);
-          }
-        }
-        current_field = &python_fields[local_shifted];
-        break;
-      }
-    }
-    total_number_fields += gravity_logger_field_count;
-
-    /* Find in the stars the field. */
-    for (int local = 0; local < stars_logger_field_count; local++) {
-      const int global = stars_logger_local_to_global[local];
-      const int local_shifted = local + total_number_fields;
-      if (field_indices[i] == global) {
-        /* Check if we have the same fields for gravity + hydro + stars. */
-        if (current_field != NULL) {
-          if (current_field->dimension !=
-                  python_fields[local_shifted].dimension ||
-              current_field->typenum != python_fields[local_shifted].typenum) {
-            error_python(
-                "The python definition of the field %s does not correspond "
-                "between"
-                " the modules.",
-                stars_logger_field_names[local]);
-          }
-        }
-        current_field = &python_fields[local_shifted];
-        break;
-      }
-    }
-    total_number_fields += stars_logger_field_count;
-
-    /* Find in the chemistry (part) the field. */
-    for (int local = 0; local < chemistry_logger_field_part_count; local++) {
-      const int global = chemistry_logger_local_to_global_part[local];
-      const int local_shifted = local + total_number_fields;
-      if (field_indices[i] == global) {
-        /* Check if we have the same fields for gravity + hydro + stars. */
-        if (current_field != NULL) {
-          if (current_field->dimension !=
-                  python_fields[local_shifted].dimension ||
-              current_field->typenum != python_fields[local_shifted].typenum) {
-            error_python(
-                "The python definition of the field %s does not correspond "
-                "between"
-                " the modules.",
-                chemistry_logger_field_names_part[local]);
-          }
-        }
-        current_field = &python_fields[local_shifted];
-        break;
-      }
-    }
-    total_number_fields += chemistry_logger_field_part_count;
-
-    /* Find in the chemistry (spart) the field. */
-    for (int local = 0; local < chemistry_logger_field_spart_count; local++) {
-      const int global = chemistry_logger_local_to_global_spart[local];
-      const int local_shifted = local + total_number_fields;
-      if (field_indices[i] == global) {
-        /* Check if we have the same fields for gravity + hydro + stars. */
-        if (current_field != NULL) {
-          if (current_field->dimension !=
-                  python_fields[local_shifted].dimension ||
-              current_field->typenum != python_fields[local_shifted].typenum) {
-            error_python(
-                "The python definition of the field %s does not correspond "
-                "between"
-                " the modules.",
-                chemistry_logger_field_names_spart[local]);
-          }
-        }
-        current_field = &python_fields[local_shifted];
-        break;
-      }
-    }
-    total_number_fields += chemistry_logger_field_spart_count;
-
-    /* Find in the star formation the field. */
-    for (int local = 0; local < star_formation_logger_field_count; local++) {
-      const int global = star_formation_logger_local_to_global[local];
-      const int local_shifted = local + total_number_fields;
-      if (field_indices[i] == global) {
-        /* Check if we have the same fields for gravity + hydro + stars. */
-        if (current_field != NULL) {
-          if (current_field->dimension !=
-                  python_fields[local_shifted].dimension ||
-              current_field->typenum != python_fields[local_shifted].typenum) {
-            error_python(
-                "The python definition of the field %s does not correspond "
-                "between"
-                " the modules.",
-                star_formation_logger_field_names[local]);
-          }
-        }
-        current_field = &python_fields[local_shifted];
-        break;
-      }
-    }
-    total_number_fields += star_formation_logger_field_count;
+    /* Find the fields in the different modules. */
+    find_field_in_module(hydro, );
+    find_field_in_module(gravity, );
+    find_field_in_module(stars, );
+    find_field_in_module(chemistry, _part);
+    find_field_in_module(chemistry, _spart);
+    find_field_in_module(star_formation, );
 
     /* Check if we got a field */
     if (current_field == NULL) {
