@@ -59,7 +59,7 @@ void output_list_read_file(struct output_list *output_list,
   fseek(file, 0, SEEK_SET);
   output_list->times = (double *)malloc(sizeof(double) * output_list->size);
   output_list->snapshot_labels =
-      (int *)malloc(sizeof(double) * output_list->size);
+      (int *)malloc(sizeof(int) * output_list->size);
   output_list->select_output_indices =
       (int *)malloc(sizeof(int) * output_list->size);
 
@@ -142,7 +142,7 @@ void output_list_read_file(struct output_list *output_list,
     /* Write data to output_list */
     if (output_list->select_output_on && output_list->alternative_labels_on) {
       read_successfully =
-          sscanf(line, "%lf, %s, %d", time, select_output_buffer, label) == 3;
+          sscanf(line, "%lf, %[^,], %d", time, select_output_buffer, label) == 3;
     } else if (output_list->select_output_on) {
       read_successfully =
           sscanf(line, "%lf, %s", time, select_output_buffer) == 2;
