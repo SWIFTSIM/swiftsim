@@ -54,7 +54,7 @@ available for a given configuration of SWIFT by running
 output.yml``. The file generated contains the list of fields that a
 simulation running with this config would output in each snapshot. It
 also lists the description string of each field and the unit
-conversion string to go from internal comoving units to physical
+conversion string to go from internal co-moving units to physical
 CGS. Entries in the file look like:
 
 .. code:: YAML
@@ -199,3 +199,38 @@ This will enable your simulation to perform partial dumps only at the outputs
 labelled as ``Snipshot``. The name of the output selection that corresponds
 to your choice in the output list will be written to the snapshot header as
 ``Header/SelectOutput``.
+
+Note that if a the name used in the ``Select Output`` column does not
+exist as a section in the output selection YAML file, SWIFT will write
+all the available fields. 
+
+Using non-regular snapshot numbers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In some cases it may be interesting to have snapshot numbers that are
+not just increasing by one. This could be used to encode the
+simulation time in the filename for instance. To achieve this, a third
+column can be added to the output list giving the snapshot labels to
+use for each output::
+
+   # Redshift, Select Output, Labels
+   100.0, Snapshot, 100
+   90.0, Snapshot, 90
+   1.0, Snapshot, 1
+   ...
+
+The label has to be an integer. This will lead to the following
+snapshots being produced:
+
+..code:: bash
+
+   snap_100.hdf5
+   snap_90.hdf5
+   snap_1.hdf5
+
+Assuming the snapshot basename (either global or set for the
+``Snapshot`` output selection) was set to ``snap``.
+
+Note that to specify labels, the ``Select Output`` column needs to be
+specified (but can simply default to dumping everything).
+
