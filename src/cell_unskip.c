@@ -2387,17 +2387,18 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
     for (struct link *l = c->hydro.rt_transport; l != NULL; l = l->next) {
       scheduler_activate(s, l->t);
     }
+
+    /* Unskip all the other task types */
+    if (c->hydro.rt_in != NULL) scheduler_activate(s, c->hydro.rt_in);
+    if (c->hydro.rt_ghost1 != NULL) scheduler_activate(s, c->hydro.rt_ghost1);
+    if (c->hydro.rt_ghost2 != NULL) scheduler_activate(s, c->hydro.rt_ghost2);
+    if (c->hydro.rt_transport_out != NULL)
+      scheduler_activate(s, c->hydro.rt_transport_out);
+    if (c->hydro.rt_thermochemistry != NULL)
+      scheduler_activate(s, c->hydro.rt_thermochemistry);
+    if (c->hydro.rt_out != NULL) scheduler_activate(s, c->hydro.rt_out);
   }
 
-  /* Unskip all the other task types */
-  if (c->hydro.rt_in != NULL) scheduler_activate(s, c->hydro.rt_in);
-  if (c->hydro.rt_ghost1 != NULL) scheduler_activate(s, c->hydro.rt_ghost1);
-  if (c->hydro.rt_ghost2 != NULL) scheduler_activate(s, c->hydro.rt_ghost2);
-  if (c->hydro.rt_transport_out != NULL)
-    scheduler_activate(s, c->hydro.rt_transport_out);
-  if (c->hydro.rt_thermochemistry != NULL)
-    scheduler_activate(s, c->hydro.rt_thermochemistry);
-  if (c->hydro.rt_out != NULL) scheduler_activate(s, c->hydro.rt_out);
 
   return rebuild;
 }

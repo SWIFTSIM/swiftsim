@@ -31,15 +31,11 @@ struct rt_part_data {
   int calls_tot; /* total number of calls to this particle during entire run */
 
   /* data to store during one time step */
-  int calls_per_step;        /* calls per time step to this particle */
-  int iact_stars_inject;     /* how many stars this particle interacted with */
-  int calls_iact_gradient;   /* calls from gradient interaction loop */
-  int calls_iact_gradient_sym;   /* calls from gradient interaction loop */
-  int calls_iact_gradient_nonsym;  /* calls from gradient interaction loop */
-  int calls_iact_transport;  /* calls from transport interaction loop */
-  int calls_iact_transport_sym;  /* calls from transport interaction loop */
-  int calls_iact_transport_nonsym; /* calls from transport interaction loop */
-  int photon_number_updated; /* calls from ghost1 tasks */
+  int calls_per_step;      /* calls per time step to this particle */
+  int iact_stars_inject;   /* how many stars this particle interacted with */
+  int calls_iact_gradient; /* calls from gradient interaction loop */
+  int calls_iact_transport;        /* calls from transport interaction loop */
+  int photon_number_updated;       /* calls from ghost1 tasks */
 
   int gradients_done;  /* finalised computing gradients? */
   int transport_done;  /* transport step done? */
