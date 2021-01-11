@@ -1374,17 +1374,6 @@ void cell_activate_subcell_external_grav_tasks(struct cell *ci,
 }
 
 /**
- * @brief Traverse a sub-cell task and activate the radiative transfer drift
- * tasks that are required by the RT tasks.
- *
- * @param ci The first #cell we recurse in.
- * @param cj The second #cell we recurse in.
- * @param s The task #scheduler.
- */
-void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
-                                    struct scheduler *s) {}
-
-/**
  * @brief Un-skips all the hydro tasks associated with a given cell and checks
  * if the space needs to be rebuilt.
  *
