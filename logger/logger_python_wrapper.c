@@ -412,8 +412,8 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   static char *kwlist[] = {"fields", "time", "part_type", NULL};
 
   /* parse the arguments. */
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od|O", kwlist,
-                                   &fields, &time, &types))
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od|O", kwlist, &fields, &time,
+                                   &types))
     return NULL;
 
   /* Check the inputs. */
@@ -529,7 +529,8 @@ static PyMethodDef libloggerReaderMethods[] = {
      "-------\n\n"
      "times: tuple\n"
      "  time min, time max\n"},
-    {"get_particle_data", (PyCFunction) pyGetParticleData, METH_VARARGS | METH_KEYWORDS,
+    {"get_particle_data", (PyCFunction)pyGetParticleData,
+     METH_VARARGS | METH_KEYWORDS,
      "Read some fields from the logfile at a given time.\n\n"
      "Parameters\n"
      "----------\n\n"
@@ -541,7 +542,8 @@ static PyMethodDef libloggerReaderMethods[] = {
      "-------\n\n"
      "list_of_fields: list\n"
      "  Each element is a numpy array containing the corresponding field.\n"},
-    {"get_list_fields", (PyCFunction) pyGetListFields, METH_VARARGS | METH_KEYWORDS,
+    {"get_list_fields", (PyCFunction)pyGetListFields,
+     METH_VARARGS | METH_KEYWORDS,
      "Read the list of available fields in the logfile.\n\n"
      "Parameters\n"
      "----------\n\n"
