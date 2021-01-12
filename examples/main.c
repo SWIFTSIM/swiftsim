@@ -890,6 +890,22 @@ int main(int argc, char *argv[]) {
     /* Now read it. */
     restart_read(&e, restart_file);
 
+#ifdef WITH_MPI
+    integertime_t min_ti_current = e.ti_current;
+    integertime_t max_ti_current = e.ti_current;
+
+    /* Verify that everyone agrees on the current time */
+    MPI_Reduce(&e.ti_current, &min_ti_current, 1, MPI_LONG_LONG_INT, MPI_MIN, 0,
+               MPI_COMM_WORLD);
+    MPI_Reduce(&e.ti_current, &max_ti_current, 1, MPI_LONG_LONG_INT, MPI_MAX, 0,
+               MPI_COMM_WORLD);
+
+    if (myrank == 0 && min_ti_current != max_ti_current)
+      error(
+          "The different restart files don't correspond to the same "
+          "ti_current!");
+#endif
+
     /* And initialize the engine with the space and policies. */
     if (myrank == 0) clocks_gettime(&tic);
     engine_config(/*restart=*/1, /*fof=*/0, &e, params, nr_nodes, myrank,
