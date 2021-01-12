@@ -903,6 +903,9 @@ void write_output_single(struct engine* e,
   io_write_attribute_s(h_grp, "Code", "SWIFT");
   io_write_attribute_s(h_grp, "RunName", e->run_name);
 
+  /* Write out the particle types */
+  io_write_part_type_names(h_grp);
+
   /* Write out the time-base */
   if (with_cosmology) {
     io_write_attribute_d(h_grp, "TimeBase_dloga", e->time_base);

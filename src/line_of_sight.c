@@ -484,6 +484,9 @@ void write_hdf5_header(hid_t h_file, const struct engine *e,
   io_write_attribute_s(h_grp, "Code", "SWIFT");
   io_write_attribute_s(h_grp, "RunName", e->run_name);
 
+  /* Write out the particle types */
+  io_write_part_type_names(h_grp);
+
   /* Store the time at which the snapshot was written */
   time_t tm = time(NULL);
   struct tm *timeinfo = localtime(&tm);
