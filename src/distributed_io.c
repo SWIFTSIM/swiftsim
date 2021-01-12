@@ -771,6 +771,9 @@ void write_output_distributed(struct engine* e,
   /* Close file */
   H5Fclose(h_file);
 
+  /* Make sure nobody is allowed to progress until everyone is done. */
+  MPI_Barrier(Comm);
+
   e->snapshot_output_count++;
   if (e->snapshot_invoke_stf) e->stf_output_count++;
 }
