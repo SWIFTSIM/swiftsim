@@ -762,6 +762,28 @@ void io_write_engine_policy(hid_t h_file, const struct engine* e) {
   H5Gclose(h_grp);
 }
 
+void io_write_part_type_names(hid_t h_grp) {
+
+  io_write_attribute_i(h_grp, "NumPartTypes", swift_type_count);
+
+  /* Create an array of partcle type names */
+  const int name_length = 128;
+  char names[swift_type_count][name_length];
+  for (int i = 0; i < swift_type_count; ++i)
+    strcpy(names[i], part_type_names[i]);
+
+  hsize_t dims[1] = {swift_type_count};
+  hid_t type = H5Tcopy(H5T_C_S1);
+  H5Tset_size(type, name_length);
+  hid_t space = H5Screate_simple(1, dims, NULL);
+  hid_t dset = H5Dcreate(h_grp, "PartTypeNames", type, space, H5P_DEFAULT,
+                         H5P_DEFAULT, H5P_DEFAULT);
+  H5Dwrite(dset, type, H5S_ALL, H5S_ALL, H5P_DEFAULT, names[0]);
+  H5Dclose(dset);
+  H5Tclose(type);
+  H5Sclose(space);
+}
+
 #endif /* HAVE_HDF5 */
 
 /**
