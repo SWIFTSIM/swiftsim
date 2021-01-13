@@ -207,8 +207,8 @@ all the available fields.
 Using non-regular snapshot numbers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In some cases it may be interesting to have snapshot numbers that are
-not just increasing by one. This could be used to encode the
+In some cases it may be helpful to have snapshot numbers that do not
+simply increase by one each time. This could be used to encode the
 simulation time in the filename for instance. To achieve this, a third
 column can be added to the output list giving the snapshot labels to
 use for each output::
