@@ -222,7 +222,7 @@ use for each output::
 The label has to be an integer. This will lead to the following
 snapshots being produced:
 
-..code:: bash
+.. code:: bash
 
    snap_100.hdf5
    snap_90.hdf5
