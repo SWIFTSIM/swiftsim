@@ -78,6 +78,7 @@ void stats_add(struct statistics *a, const struct statistics *b) {
   a->sink_mass += b->sink_mass;
   a->star_mass += b->star_mass;
   a->bh_mass += b->bh_mass;
+  a->bh_subgrid_mass += b->bh_subgrid_mass;
   a->gas_Z_mass += b->gas_Z_mass;
   a->star_Z_mass += b->star_Z_mass;
   a->bh_Z_mass += b->bh_Z_mass;
@@ -806,14 +807,15 @@ void stats_write_to_file(FILE *file, const struct statistics *stats,
       file,
       " %14d %14e %14.7f %14.7f %14e %14e %14e %14e %14e %14e %14e %14e %14e "
       "%14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e %14e "
-      "%14e %14e\n",
+      "%14e %14e %14e\n",
       step, time, a, z, stats->total_mass, stats->gas_mass, stats->dm_mass,
       stats->sink_mass, stats->star_mass, stats->bh_mass, stats->gas_Z_mass,
       stats->star_Z_mass, stats->bh_Z_mass, stats->E_kin, stats->E_int,
       stats->E_pot, stats->E_rad, stats->entropy, stats->centre_of_mass[0],
       stats->centre_of_mass[1], stats->centre_of_mass[2], stats->mom[0],
       stats->mom[1], stats->mom[2], stats->ang_mom[0], stats->ang_mom[1],
-      stats->ang_mom[2], stats->bh_accretion_rate, stats->bh_accreted_mass);
+      stats->ang_mom[2], stats->bh_accretion_rate, stats->bh_accreted_mass,
+      stats->bh_subgrid_mass);
 
   fflush(file);
 }
