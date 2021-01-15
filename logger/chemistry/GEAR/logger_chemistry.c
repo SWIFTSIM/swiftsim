@@ -17,10 +17,14 @@
  *
  ******************************************************************************/
 
+/* Config parameters. */
+#include "config.h"
+
+/* Include this object's header */
 #include "logger_chemistry.h"
 
-/* Define the size of all the fields. */
-#define member_size(type, member) sizeof(((type *)0)->member)
+/* Local headers  */
+#include "logger_tools.h"
 
 /* Hydro part */
 const int chemistry_logger_field_size_part[chemistry_logger_field_part_count] =

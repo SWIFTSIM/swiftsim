@@ -17,10 +17,14 @@
  *
  ******************************************************************************/
 
+/* Config parameters. */
+#include "config.h"
+
+/* Include this object's header */
 #include "logger_star_formation.h"
 
-/* Define the size of all the fields. */
-#define member_size(type, member) sizeof(((type *)0)->member)
+/* Local headers  */
+#include "logger_tools.h"
 
 const int star_formation_logger_field_size[star_formation_logger_field_count] =
     {};

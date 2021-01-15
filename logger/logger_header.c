@@ -126,6 +126,12 @@ void header_change_offset_direction(struct header *h,
   MODULE##_logger_reader_link_derivatives##PART(h);
 
 /**
+ * Same function as set_links_local_global before but with a single argument.
+ */
+#define set_links_local_global_single_particle_type(MODULE) \
+  set_links_local_global(MODULE, )
+
+/**
  * @brief read the logger header.
  *
  * @param h out: The #header.
@@ -239,12 +245,12 @@ void header_read(struct header *h, struct logger_logfile *log) {
   }
 
   /* Set the link between local and global */
-  set_links_local_global(hydro, );
-  set_links_local_global(gravity, );
-  set_links_local_global(stars, );
+  set_links_local_global_single_particle_type(hydro);
+  set_links_local_global_single_particle_type(gravity);
+  set_links_local_global_single_particle_type(stars);
   set_links_local_global(chemistry, _part);
   set_links_local_global(chemistry, _spart);
-  set_links_local_global(star_formation, );
+  set_links_local_global_single_particle_type(star_formation);
 };
 
 /**

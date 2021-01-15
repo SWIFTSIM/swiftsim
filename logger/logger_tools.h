@@ -44,6 +44,9 @@
 
 #define STRING_SIZE 200
 
+/* Define the size of all the fields. */
+#define member_size(type, member) sizeof(((type *)0)->member)
+
 struct header;
 struct logger_reader;
 

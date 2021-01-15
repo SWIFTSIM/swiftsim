@@ -102,6 +102,12 @@ int tools_get_number_fields(enum part_type type) {
   }
 
 /**
+ * Same function as set_links_local_global before but with only two arguments.
+ */
+#define copy_field_to_struct_single_particle_type(MODULE, TYPE) \
+  copy_field_to_struct(MODULE, , TYPE)
+
+/**
  * @brief Construct the list of fields for a given particle type.
  *
  * @param fields (output) The list of fields (need to be already allocated).
@@ -113,19 +119,20 @@ void tools_get_list_fields(struct field_information *fields,
   int i = 0;
   switch (type) {
     case swift_type_gas:
-      copy_field_to_struct(hydro, , field_module_default);
+      copy_field_to_struct_single_particle_type(hydro, field_module_default);
       copy_field_to_struct(chemistry, _part, field_module_chemistry);
       break;
 
     case swift_type_dark_matter:
     case swift_type_dark_matter_background:
-      copy_field_to_struct(gravity, , field_module_default);
+      copy_field_to_struct_single_particle_type(gravity, field_module_default);
       break;
 
     case swift_type_stars:
-      copy_field_to_struct(stars, , field_module_default);
+      copy_field_to_struct_single_particle_type(stars, field_module_default);
       copy_field_to_struct(chemistry, _spart, field_module_chemistry);
-      copy_field_to_struct(star_formation, , field_module_star_formation);
+      copy_field_to_struct_single_particle_type(star_formation,
+                                                field_module_star_formation);
       break;
 
     default:

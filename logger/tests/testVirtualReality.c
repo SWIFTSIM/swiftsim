@@ -34,14 +34,14 @@
 #define number_parts 100
 
 /**
- * This function test the logger in the VR mode.
+ * This function test the logger in the Virtual Reality mode.
  * The idea is to simply read a snapshot at a given time and
  * then simply advance in time the particles.
  */
 int main(int argc, char *argv[]) {
   /* Create required structures. */
   struct swift_params params;
-  char filename[200] = "testVR.yml";
+  char filename[200] = "testVirtualReality.yml";
 
   /* Read parameters. */
   parser_read_file(filename, &params);
