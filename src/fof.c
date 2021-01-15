@@ -2677,8 +2677,7 @@ void fof_search_tree(struct fof_props *props,
 
       message(
           "fof_search_foreign_cells() + calc_group_size took (FOF SCALING): "
-          "%.3f "
-          "%s.",
+          "%.3f %s.",
           clocks_from_ticks(getticks() - tic_total), clocks_getunit());
     }
   }
