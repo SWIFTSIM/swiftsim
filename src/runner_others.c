@@ -889,7 +889,7 @@ void runner_do_fof_pair(struct runner *r, struct cell *ci, struct cell *cj,
  * @param c The #cell.
  * @param timer Are we timing this ?
  */
-void runner_do_rt_thermochemistry(struct runner *r, struct cell *c, int timer) {
+void runner_do_rt_tchem(struct runner *r, struct cell *c, int timer) {
 
   const struct engine *e = r->e;
 
@@ -902,7 +902,7 @@ void runner_do_rt_thermochemistry(struct runner *r, struct cell *c, int timer) {
   if (c->split) {
     for (int k = 0; k < 8; k++)
       if (c->progeny[k] != NULL)
-        runner_do_rt_thermochemistry(r, c->progeny[k], 0);
+        runner_do_rt_tchem(r, c->progeny[k], 0);
   } else {
 
     /* const struct cosmology *cosmo = e->cosmology; */
@@ -919,10 +919,10 @@ void runner_do_rt_thermochemistry(struct runner *r, struct cell *c, int timer) {
 
         /* Finish the force loop */
         rt_finalise_transport(p);
-        rt_thermochemistry(p);
+        rt_tchem(p);
       }
     }
   }
 
-  if (timer) TIMER_TOC(timer_end_rt_thermochemistry);
+  if (timer) TIMER_TOC(timer_end_rt_tchem);
 }

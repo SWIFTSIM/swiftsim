@@ -182,7 +182,7 @@ __attribute__((always_inline)) INLINE static void rt_finalise_transport(
  *
  * @param p particle to work on
  */
-__attribute__((always_inline)) INLINE static void rt_thermochemistry(
+__attribute__((always_inline)) INLINE static void rt_tchem(
     struct part* restrict p) {
 
   rt_do_thermochemistry(p);

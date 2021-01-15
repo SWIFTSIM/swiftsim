@@ -1788,7 +1788,7 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
       case task_type_rt_ghost2:
         cost = wscale * count_i;
         break;
-      case task_type_rt_thermochemistry:
+      case task_type_rt_tchem:
         cost = wscale * count_i;
         break;
       case task_type_kick1:

@@ -119,7 +119,7 @@ struct cell_hydro {
   struct task *rt_transport_out;
 
   /*! Radiative transfer thermochemistry task */
-  struct task *rt_thermochemistry;
+  struct task *rt_tchem;
 
   /*! Radiative transfer ghost out task */
   struct task *rt_out;

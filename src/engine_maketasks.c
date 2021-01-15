@@ -1284,12 +1284,12 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
                               0, /*implicit= */ 1, c, NULL);
 
         /* non-implicit ghost 2 */
-        c->hydro.rt_thermochemistry = scheduler_addtask(
-            s, task_type_rt_thermochemistry, task_subtype_none, 0, 0, c, NULL);
+        c->hydro.rt_tchem = scheduler_addtask(
+            s, task_type_rt_tchem, task_subtype_none, 0, 0, c, NULL);
 
         scheduler_addunlock(s, c->hydro.rt_transport_out,
-                            c->hydro.rt_thermochemistry);
-        scheduler_addunlock(s, c->hydro.rt_thermochemistry, c->hydro.rt_out);
+                            c->hydro.rt_tchem);
+        scheduler_addunlock(s, c->hydro.rt_tchem, c->hydro.rt_out);
       }
 
       /* Subgrid tasks: sink */

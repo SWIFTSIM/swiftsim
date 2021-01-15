@@ -1130,7 +1130,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
 
     /* Radiative transfer ghosts and thermochemistry*/
     else if (t->type == task_type_rt_ghost1 || t->type == task_type_rt_ghost2 ||
-             t->type == task_type_rt_thermochemistry) {
+             t->type == task_type_rt_tchem) {
       if (cell_is_active_hydro(t->ci, e)) scheduler_activate(s, t);
     }
 

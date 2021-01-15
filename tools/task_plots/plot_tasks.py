@@ -207,7 +207,7 @@ TASKTYPES = [
     "rt_ghost1",
     "rt_ghost2",
     "rt_transport_out", 
-    "rt_thermochemistry"
+    "rt_tchem"
     "count",
 ]
 

@@ -139,7 +139,7 @@ enum {
   timer_dopair_rt_transport,
   timer_dosub_self_rt_transport,
   timer_dosub_pair_rt_transport,
-  timer_do_rt_thermochemistry,
+  timer_do_rt_tchem,
   timer_count,
 };
 

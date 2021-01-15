@@ -68,7 +68,7 @@ INLINE static int rt_write_particles(const struct part* parts,
       rt_data.transport_done, "How many times finalise_transport was called");
   list[8] = io_make_output_field(
       "RTThermochemistryDone", INT, 1, UNIT_CONV_NO_UNITS, 0, parts,
-      rt_data.thermochem_done, "How many times rt_thermochemistry was called");
+      rt_data.thermochem_done, "How many times rt_tchem was called");
 
   return 9;
 }
