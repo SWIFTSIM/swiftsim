@@ -2973,7 +2973,7 @@ void fof_search_tree(struct fof_props *props,
 #endif
 
   if (verbose)
-    message("Black hole seeding took: %.3f %s.",
+    message("Computing group properties took: %.3f %s.",
             clocks_from_ticks(getticks() - tic_seeding), clocks_getunit());
 
   /* Dump group data. */
