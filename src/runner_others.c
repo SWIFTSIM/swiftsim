@@ -901,8 +901,7 @@ void runner_do_rt_tchem(struct runner *r, struct cell *c, int timer) {
   /* Recurse? */
   if (c->split) {
     for (int k = 0; k < 8; k++)
-      if (c->progeny[k] != NULL)
-        runner_do_rt_tchem(r, c->progeny[k], 0);
+      if (c->progeny[k] != NULL) runner_do_rt_tchem(r, c->progeny[k], 0);
   } else {
 
     /* const struct cosmology *cosmo = e->cosmology; */
