@@ -99,15 +99,15 @@ void output_list_read_file(struct output_list *output_list,
   } else if (strcasecmp(line, "# Scale Factor, Select Output") == 0) {
     type = OUTPUT_LIST_SCALE_FACTOR;
     output_list->select_output_on = 1;
-  } else if (strcasecmp(line, "# Redshift, Select Output, Labels") == 0) {
+  } else if (strcasecmp(line, "# Redshift, Select Output, Label") == 0) {
     type = OUTPUT_LIST_REDSHIFT;
     output_list->select_output_on = 1;
     output_list->alternative_labels_on = 1;
-  } else if (strcasecmp(line, "# Time, Select Output, Labels") == 0) {
+  } else if (strcasecmp(line, "# Time, Select Output, Label") == 0) {
     type = OUTPUT_LIST_AGE;
     output_list->select_output_on = 1;
     output_list->alternative_labels_on = 1;
-  } else if (strcasecmp(line, "# Scale Factor, Select Output, Labels") == 0) {
+  } else if (strcasecmp(line, "# Scale Factor, Select Output, Label") == 0) {
     type = OUTPUT_LIST_SCALE_FACTOR;
     output_list->select_output_on = 1;
     output_list->alternative_labels_on = 1;

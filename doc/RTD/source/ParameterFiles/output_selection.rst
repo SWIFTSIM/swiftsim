@@ -213,7 +213,7 @@ simulation time in the filename for instance. To achieve this, a third
 column can be added to the output list giving the snapshot labels to
 use for each output::
 
-   # Redshift, Select Output, Labels
+   # Redshift, Select Output, Label
    100.0, Snapshot, 100
    90.0, Snapshot, 90
    1.0, Snapshot, 1
