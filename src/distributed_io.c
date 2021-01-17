@@ -60,6 +60,9 @@
 #include "units.h"
 #include "xmf.h"
 
+/* Are we timing the i/o? */
+//#define IO_SPEED_MEASUREMENT
+
 /**
  * @brief Writes a data array in given HDF5 group.
  *
@@ -84,6 +87,10 @@ void write_distributed_array(
     const struct unit_system* internal_units,
     const struct unit_system* snapshot_units) {
 
+#ifdef IO_SPEED_MEASUREMENT
+  const ticks tic_total = getticks();
+#endif
+
   const size_t typeSize = io_sizeof_type(props.type);
   const size_t num_elements = N * props.dimension;
 
@@ -95,8 +102,18 @@ void write_distributed_array(
                      num_elements * typeSize) != 0)
     error("Unable to allocate temporary i/o buffer");
 
+#ifdef IO_SPEED_MEASUREMENT
+  ticks tic = getticks();
+#endif
+
   /* Copy the particle data to the temporary buffer */
   io_copy_temp_buffer(temp, e, props, N, internal_units, snapshot_units);
+
+#ifdef IO_SPEED_MEASUREMENT
+  if (engine_rank == IO_SPEED_MEASUREMENT || IO_SPEED_MEASUREMENT == -1)
+    message("Copying for '%s' took %.3f %s.", props.name,
+            clocks_from_ticks(getticks() - tic), clocks_getunit());
+#endif
 
   /* Create data space */
   hid_t h_space;
@@ -181,10 +198,25 @@ void write_distributed_array(
                                  h_prop, H5P_DEFAULT);
   if (h_data < 0) error("Error while creating dataspace '%s'.", props.name);
 
+#ifdef IO_SPEED_MEASUREMENT
+  tic = getticks();
+#endif
+
   /* Write temporary buffer to HDF5 dataspace */
   h_err = H5Dwrite(h_data, io_hdf5_type(props.type), h_space, H5S_ALL,
                    H5P_DEFAULT, temp);
   if (h_err < 0) error("Error while writing data array '%s'.", props.name);
+
+#ifdef IO_SPEED_MEASUREMENT
+  ticks toc = getticks();
+  float ms = clocks_from_ticks(toc - tic);
+  int megaBytes = N * props.dimension * typeSize / (1024 * 1024);
+  if (engine_rank == IO_SPEED_MEASUREMENT || IO_SPEED_MEASUREMENT == -1)
+    message(
+        "H5Dwrite for '%s' (%d MB) on rank %d took %.3f %s (speed = %f MB/s).",
+        props.name, megaBytes, engine_rank, ms, clocks_getunit(),
+        megaBytes / (ms / 1000.));
+#endif
 
   /* Write unit conversion factors for this data set */
   char buffer[FIELD_BUFFER_SIZE] = {0};
@@ -227,6 +259,12 @@ void write_distributed_array(
   H5Pclose(h_prop);
   H5Dclose(h_data);
   H5Sclose(h_space);
+
+#ifdef IO_SPEED_MEASUREMENT
+  if (engine_rank == IO_SPEED_MEASUREMENT || IO_SPEED_MEASUREMENT == -1)
+    message("'%s' took %.3f %s.", props.name,
+            clocks_from_ticks(getticks() - tic), clocks_getunit());
+#endif
 }
 
 /**
