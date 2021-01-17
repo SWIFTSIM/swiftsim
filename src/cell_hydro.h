@@ -143,14 +143,17 @@ struct cell_hydro {
   /*! Max smoothing length in this cell. */
   float h_max;
 
+  /*! Max smoothing length of active particles in this cell. */
+  float h_max_active;
+
+  /*! Values of h_max before the drifts, used for sub-cell tasks. */
+  float h_max_old;
+
   /*! Maximum part movement in this cell since last construction. */
   float dx_max_part;
 
   /*! Maximum particle movement in this cell since the last sort. */
   float dx_max_sort;
-
-  /*! Values of h_max before the drifts, used for sub-cell tasks. */
-  float h_max_old;
 
   /*! Values of dx_max before the drifts, used for sub-cell tasks. */
   float dx_max_part_old;
