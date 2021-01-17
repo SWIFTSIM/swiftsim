@@ -34,6 +34,12 @@
  */
 struct cell_stars {
 
+  /* If we are not using stars, compact as much of the unecessary variables
+     into an anonymous union to save memory in the cell structure. */
+#ifdef STARS_NONE
+  union {
+#endif
+  
   /*! Pointer to the #spart data. */
   struct spart *parts;
 
@@ -68,36 +74,14 @@ struct cell_stars {
   /*! Last (integer) time the cell's spart were drifted forward in time. */
   integertime_t ti_old_part;
 
-  /*! Minimum end of (integer) time step in this cell for star tasks. */
-  integertime_t ti_end_min;
-
   /*! Maximum end of (integer) time step in this cell for star tasks. */
   integertime_t ti_end_max;
-
-  /*! Maximum beginning of (integer) time step in this cell for star tasks.
-   */
-  integertime_t ti_beg_max;
-
-  /*! Spin lock for various uses (#spart case). */
-  swift_lock_type lock;
 
   /*! Spin lock for star formation use. */
   swift_lock_type star_formation_lock;
 
-  /*! Nr of #spart in this cell. */
-  int count;
-
   /*! Nr of #spart this cell can hold after addition of new #spart. */
   int count_total;
-
-  /*! Number of #spart updated in this cell. */
-  int updated;
-
-  /*! Is the #spart data of this cell being used in a sub-cell? */
-  int hold;
-
-  /*! Max smoothing length in this cell. */
-  float h_max;
 
   /*! Max smoothing length of active particles in this cell. */
   float h_max_active;
@@ -136,6 +120,33 @@ struct cell_stars {
   /*! Last (integer) time the cell's sort arrays were updated. */
   integertime_t ti_sort;
 #endif
+
+#ifdef STARS_NONE
+  };
+#endif
+
+  /*! Maximum end of (integer) time step in this cell for star tasks. */
+  integertime_t ti_end_min;
+
+  /*! Maximum beginning of (integer) time step in this cell for star tasks.
+   */
+  integertime_t ti_beg_max;
+
+  /*! Spin lock for various uses (#spart case). */
+  swift_lock_type lock;
+  
+  /*! Max smoothing length in this cell. */
+  float h_max;
+
+  /*! Number of #spart updated in this cell. */
+  int updated;
+
+  /*! Nr of #spart in this cell. */
+  int count;
+
+  /*! Is the #spart data of this cell being used in a sub-cell? */
+  int hold;
+  
 };
 
 #endif /* SWIFT_CELL_STARS_H */

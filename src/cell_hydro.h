@@ -33,6 +33,12 @@
  */
 struct cell_hydro {
 
+  /* If we are not using hydro, compact as much of the unecessary variables
+     into an anonymous union to save memory in the cell structure. */
+#ifdef NONE_SPH
+  union {
+#endif
+  
   /*! Pointer to the #part data. */
   struct part *parts;
 
@@ -127,21 +133,8 @@ struct cell_hydro {
   /*! Last (integer) time the cell's part were drifted forward in time. */
   integertime_t ti_old_part;
 
-  /*! Minimum end of (integer) time step in this cell for hydro tasks. */
-  integertime_t ti_end_min;
-
   /*! Maximum end of (integer) time step in this cell for hydro tasks. */
   integertime_t ti_end_max;
-
-  /*! Maximum beginning of (integer) time step in this cell for hydro tasks.
-   */
-  integertime_t ti_beg_max;
-
-  /*! Spin lock for various uses (#part case). */
-  swift_lock_type lock;
-
-  /*! Max smoothing length in this cell. */
-  float h_max;
 
   /*! Max smoothing length of active particles in this cell. */
   float h_max_active;
@@ -161,17 +154,8 @@ struct cell_hydro {
   /*! Values of dx_max_sort before the drifts, used for sub-cell tasks. */
   float dx_max_sort_old;
 
-  /*! Nr of #part in this cell. */
-  int count;
-
   /*! Nr of #part this cell can hold after addition of new #part. */
   int count_total;
-
-  /*! Number of #part updated in this cell. */
-  int updated;
-
-  /*! Is the #part data of this cell being used in a sub-cell? */
-  int hold;
 
   /*! Bit mask of sort directions that will be needed in the next timestep. */
   uint16_t requires_sorts;
@@ -191,6 +175,32 @@ struct cell_hydro {
   integertime_t ti_sort;
 
 #endif
+
+#ifdef NONE_SPH
+  };
+#endif
+
+  /*! Minimum end of (integer) time step in this cell for hydro tasks. */
+  integertime_t ti_end_min;
+
+  /*! Maximum beginning of (integer) time step in this cell for hydro tasks.
+   */
+  integertime_t ti_beg_max;
+
+  /*! Spin lock for various uses (#part case). */
+  swift_lock_type lock;
+
+  /*! Max smoothing length in this cell. */
+  float h_max;
+
+  /*! Number of #part updated in this cell. */
+  int updated;
+
+  /*! Is the #part data of this cell being used in a sub-cell? */
+  int hold;
+
+  /*! Nr of #part in this cell. */
+  int count;
 };
 
 #endif /* SWIFT_CELL_HYDRO_H */

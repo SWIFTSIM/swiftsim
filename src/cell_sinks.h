@@ -33,6 +33,12 @@
  */
 struct cell_sinks {
 
+  /* If we are not using sinks, compact as much of the unecessary variables
+     into an anonymous union to save memory in the cell structure. */
+#ifdef SINK_NONE
+  union {
+#endif
+  
   /*! Pointer to the #sink data. */
   struct sink *parts;
 
@@ -51,36 +57,14 @@ struct cell_sinks {
   /*! Last (integer) time the cell's sink were drifted forward in time. */
   integertime_t ti_old_part;
 
-  /*! Minimum end of (integer) time step in this cell for sink tasks. */
-  integertime_t ti_end_min;
-
   /*! Maximum end of (integer) time step in this cell for sink tasks. */
   integertime_t ti_end_max;
-
-  /*! Maximum beginning of (integer) time step in this cell for sink
-   * tasks. */
-  integertime_t ti_beg_max;
-
-  /*! Spin lock for various uses (#sink case). */
-  swift_lock_type lock;
 
   /*! Spin lock for sink formation use. */
   swift_lock_type sink_formation_lock;
 
-  /*! Nr of #sink in this cell. */
-  int count;
-
   /*! Nr of #sink this cell can hold after addition of new one. */
   int count_total;
-
-  /*! Number of #sink updated in this cell. */
-  int updated;
-
-  /*! Is the #sink data of this cell being used in a sub-cell? */
-  int hold;
-
-  /*! Max cut off radius in this cell. */
-  float r_cut_max;
 
   /*! Max cut off radius of active particles in this cell. */
   float r_cut_max_active;
@@ -93,6 +77,33 @@ struct cell_sinks {
 
   /*! Values of dx_max before the drifts, used for sub-cell tasks. */
   float dx_max_part_old;
+
+#ifdef SINK_NONE
+  };
+#endif
+
+  /*! Minimum end of (integer) time step in this cell for sink tasks. */
+  integertime_t ti_end_min;
+
+  /*! Maximum beginning of (integer) time step in this cell for sink
+   * tasks. */
+  integertime_t ti_beg_max;
+
+  /*! Spin lock for various uses (#sink case). */
+  swift_lock_type lock;
+  
+  /*! Max cut off radius in this cell. */
+  float r_cut_max;
+
+  /*! Number of #sink updated in this cell. */
+  int updated;
+
+  /*! Is the #sink data of this cell being used in a sub-cell? */
+  int hold;
+
+  /*! Nr of #sink in this cell. */
+  int count;
+  
 };
 
 #endif /* SWIFT_CELL_SINKS_H */
