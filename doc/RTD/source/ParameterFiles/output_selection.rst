@@ -43,6 +43,12 @@ straight after having read the ICs. Similarly, SWIFT will also *not*
 write a snapshot at the end of a simulation unless a snapshot at the
 final time is specified in the list.
 
+Note that if a simulation is restarted using check-point files, the
+list of outputs will be re-read. This means that it must be found on
+the disk at the same place as it was when the simulation was first
+started. It also implies that the content of the file can be altered
+if the need for additional snapshots suddenly arises.
+
 .. _Output_selection_label:
 
 Output Selection
