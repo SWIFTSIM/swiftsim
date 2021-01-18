@@ -1806,11 +1806,12 @@ int cell_unskip_gravity_tasks(struct cell *c, struct scheduler *s) {
  * @param c the #cell.
  * @param s the #scheduler.
  * @param with_star_formation Are we running with star formation switched on?
+ * @param with_rt Are we running with radiative transfer switched on?
  *
  * @return 1 If the space needs rebuilding. 0 otherwise.
  */
 int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
-                            const int with_star_formation) {
+                            const int with_star_formation, const int with_rt) {
 
   struct engine *e = s->space->e;
   const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
@@ -1819,7 +1820,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 
   if (c->stars.drift != NULL) {
     if (cell_is_active_stars(c, e) ||
-        (with_star_formation && cell_is_active_hydro(c, e))) {
+        (with_star_formation && cell_is_active_hydro(c, e)) || 
+        (with_rt && cell_is_active_hydro(c, e))) {
 
       cell_activate_drift_spart(c, s);
     }
@@ -1839,11 +1841,13 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 #endif
 
     const int ci_active = cell_is_active_stars(ci, e) ||
-                          (with_star_formation && cell_is_active_hydro(ci, e));
+                          (with_star_formation && cell_is_active_hydro(ci, e)) ||
+                          (with_rt && cell_is_active_hydro(ci, e));
 
     const int cj_active =
         (cj != NULL) && (cell_is_active_stars(cj, e) ||
-                         (with_star_formation && cell_is_active_hydro(cj, e)));
+                        (with_star_formation && cell_is_active_hydro(cj, e)) || 
+                        (with_rt && cell_is_active_hydro(cj, e)));
 
     /* Activate the drifts */
     if (t->type == task_type_self && ci_active) {
@@ -2090,11 +2094,13 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 #endif
 
     const int ci_active = cell_is_active_stars(ci, e) ||
-                          (with_star_formation && cell_is_active_hydro(ci, e));
+                          (with_star_formation && cell_is_active_hydro(ci, e)) ||
+                          (with_rt && cell_is_active_hydro(ci, e));
 
     const int cj_active =
         (cj != NULL) && (cell_is_active_stars(cj, e) ||
-                         (with_star_formation && cell_is_active_hydro(cj, e)));
+                        (with_star_formation && cell_is_active_hydro(cj, e)) || 
+                        (with_rt && cell_is_active_hydro(cj, e)));
 
     if (t->type == task_type_self && ci_active) {
       scheduler_activate(s, t);
@@ -2125,7 +2131,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
   /* Unskip all the other task types. */
   if (c->nodeID == nodeID) {
     if (cell_is_active_stars(c, e) ||
-        (with_star_formation && cell_is_active_hydro(c, e))) {
+        (with_star_formation && cell_is_active_hydro(c, e)) ||
+        (with_rt && cell_is_active_hydro(c, e))) {
 
       if (c->stars.density_ghost != NULL)
         scheduler_activate(s, c->stars.density_ghost);
