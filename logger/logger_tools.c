@@ -102,13 +102,15 @@ int tools_get_number_fields(enum part_type type) {
   }
 
 /**
- * Same function as set_links_local_global_internal before but with only two arguments.
+ * Same function as set_links_local_global_internal before but with only two
+ * arguments.
  */
 #define copy_field_to_struct_single_particle_type(MODULE, TYPE) \
   copy_field_to_struct_internal(MODULE, , TYPE)
 
 /**
- * Same function as set_links_local_global_internal before but with a cleaner argument.
+ * Same function as set_links_local_global_internal before but with a cleaner
+ * argument.
  */
 #define copy_field_to_struct(MODULE, PART, TYPE) \
   copy_field_to_struct_internal(MODULE, _##PART, TYPE)

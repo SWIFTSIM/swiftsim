@@ -100,7 +100,7 @@ void header_change_offset_direction(struct header *h,
 /**
  * @brief Set the links between the local (module) and global (header) indexes.
  */
-#define set_links_local_global_internal(MODULE, PART)                   \
+#define set_links_local_global_internal(MODULE, PART)                       \
   for (int j = 0; j < MODULE##_logger_field##PART##_count; j++) {           \
     MODULE##_logger_local_to_global##PART[j] = -1;                          \
     for (int i = 0; i < h->masks_count; i++) {                              \
@@ -126,15 +126,17 @@ void header_change_offset_direction(struct header *h,
   MODULE##_logger_reader_link_derivatives##PART(h);
 
 /**
- * Same function as set_links_local_global_internal before but with a single argument.
+ * Same function as set_links_local_global_internal before but with a single
+ * argument.
  */
 #define set_links_local_global_single_particle_type(MODULE) \
   set_links_local_global_internal(MODULE, )
 
 /**
- * Same function as set_links_local_global_internal before but with a cleaner argument.
+ * Same function as set_links_local_global_internal before but with a cleaner
+ * argument.
  */
-#define set_links_local_global(MODULE, PART)  \
+#define set_links_local_global(MODULE, PART) \
   set_links_local_global_internal(MODULE, _##PART)
 
 /**
