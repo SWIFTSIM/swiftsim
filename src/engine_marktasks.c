@@ -73,6 +73,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
   const int with_timestep_sync = e->policy & engine_policy_timestep_sync;
   const int with_star_formation = e->policy & engine_policy_star_formation;
   const int with_feedback = e->policy & engine_policy_feedback;
+  const int with_rt = e->policy & engine_policy_rt;
 
   for (int ind = 0; ind < num_elements; ind++) {
 
@@ -94,7 +95,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       const int ci_active_gravity = cell_is_active_gravity(ci, e);
       const int ci_active_black_holes = cell_is_active_black_holes(ci, e);
       const int ci_active_stars = cell_is_active_stars(ci, e) ||
-                                  (with_star_formation && ci_active_hydro);
+                                  (with_star_formation && ci_active_hydro) 
+                                  || (with_rt && ci_active_hydro);
       const int ci_active_sinks =
           cell_is_active_sinks(ci, e) || ci_active_hydro;
 
@@ -162,7 +164,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if (ci_active_stars) {
           scheduler_activate(s, t);
           cell_activate_subcell_stars_tasks(ci, NULL, s, with_star_formation,
-                                            with_timestep_sync);
+                                            with_timestep_sync, with_rt);
         }
       }
 
@@ -433,7 +435,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         else if (t_type == task_type_sub_pair &&
                  t_subtype == task_subtype_stars_density) {
           cell_activate_subcell_stars_tasks(ci, cj, s, with_star_formation,
-                                            with_timestep_sync);
+                                            with_timestep_sync, with_rt);
         }
       }
 

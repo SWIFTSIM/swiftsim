@@ -768,7 +768,8 @@ void cell_activate_subcell_hydro_tasks(struct cell *ci, struct cell *cj,
 void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
                                        struct scheduler *s,
                                        const int with_star_formation,
-                                       const int with_timestep_sync) {
+                                       const int with_timestep_sync, 
+                                       const int with_rt) {
   const struct engine *e = s->space->e;
 
   /* Store the current dx_max and h_max values. */
@@ -788,7 +789,8 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
   if (cj == NULL) {
 
     const int ci_active = cell_is_active_stars(ci, e) ||
-                          (with_star_formation && cell_is_active_hydro(ci, e));
+                          (with_star_formation && cell_is_active_hydro(ci, e))
+                          || (with_rt && cell_is_active_hydro(ci, e));
 
     /* Do anything? */
     if (!ci_active || ci->hydro.count == 0 ||
@@ -801,12 +803,12 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
       for (int j = 0; j < 8; j++) {
         if (ci->progeny[j] != NULL) {
           cell_activate_subcell_stars_tasks(
-              ci->progeny[j], NULL, s, with_star_formation, with_timestep_sync);
+              ci->progeny[j], NULL, s, with_star_formation, with_timestep_sync, with_rt);
           for (int k = j + 1; k < 8; k++)
             if (ci->progeny[k] != NULL)
               cell_activate_subcell_stars_tasks(ci->progeny[j], ci->progeny[k],
                                                 s, with_star_formation,
-                                                with_timestep_sync);
+                                                with_timestep_sync, with_rt);
         }
       }
     } else {
@@ -825,9 +827,11 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
     const int sid = space_getsid(s->space, &ci, &cj, shift);
 
     const int ci_active = cell_is_active_stars(ci, e) ||
-                          (with_star_formation && cell_is_active_hydro(ci, e));
+                          (with_star_formation && cell_is_active_hydro(ci, e))
+                          || (with_rt && cell_is_active_hydro(ci, e));
     const int cj_active = cell_is_active_stars(cj, e) ||
-                          (with_star_formation && cell_is_active_hydro(cj, e));
+                          (with_star_formation && cell_is_active_hydro(cj, e))
+                          || (with_rt && cell_is_active_hydro(cj, e));
 
     /* Should we even bother? */
     if (!ci_active && !cj_active) return;
@@ -843,7 +847,7 @@ void cell_activate_subcell_stars_tasks(struct cell *ci, struct cell *cj,
         if (ci->progeny[pid] != NULL && cj->progeny[pjd] != NULL)
           cell_activate_subcell_stars_tasks(ci->progeny[pid], cj->progeny[pjd],
                                             s, with_star_formation,
-                                            with_timestep_sync);
+                                            with_timestep_sync, with_rt);
       }
     }
 
@@ -1899,12 +1903,12 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 
       else if (t->type == task_type_sub_self) {
         cell_activate_subcell_stars_tasks(ci, NULL, s, with_star_formation,
-                                          with_timestep_sync);
+                                          with_timestep_sync, with_rt);
       }
 
       else if (t->type == task_type_sub_pair) {
         cell_activate_subcell_stars_tasks(ci, cj, s, with_star_formation,
-                                          with_timestep_sync);
+                                          with_timestep_sync, with_rt);
       }
     }
 
