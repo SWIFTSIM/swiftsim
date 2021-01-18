@@ -135,7 +135,7 @@ static PyObject *getTimeLimits(PyObject *self, PyObject *Py_UNUSED(ignored)) {
   return (PyObject *)out;
 }
 
-#define find_field_in_module(MODULE, PART)                                    \
+#define find_field_in_module_internal(MODULE, PART)                     \
   for (int local = 0; local < MODULE##_logger_field##PART##_count; local++) { \
     const int global = MODULE##_logger_local_to_global##PART[local];          \
     const int local_shifted = local + total_number_fields;                    \
@@ -158,10 +158,16 @@ static PyObject *getTimeLimits(PyObject *self, PyObject *Py_UNUSED(ignored)) {
   total_number_fields += MODULE##_logger_field##PART##_count;
 
 /**
- * Same function as find_field_in_module before but with a single argument.
+ * Same function as find_field_in_module_internal before but with a single argument.
  */
 #define find_field_in_module_single_particle_type(MODULE) \
-  find_field_in_module(MODULE, )
+  find_field_in_module_internal(MODULE, )
+
+/**
+ * Same function as find_field_in_module_internal but with a cleaner argument.
+ */
+#define find_field_in_module(MODULE, PART)  \
+  find_field_in_module_internal(MODULE, _##PART)
 
 /**
  * @brief Create a list of numpy array containing the fields.
@@ -214,8 +220,8 @@ logger_loader_create_output(void **output, const int *field_indices,
     find_field_in_module_single_particle_type(hydro);
     find_field_in_module_single_particle_type(gravity);
     find_field_in_module_single_particle_type(stars);
-    find_field_in_module(chemistry, _part);
-    find_field_in_module(chemistry, _spart);
+    find_field_in_module(chemistry, part);
+    find_field_in_module(chemistry, spart);
     find_field_in_module_single_particle_type(star_formation);
 
     /* Check if we got a field */
