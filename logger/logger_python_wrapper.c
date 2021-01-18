@@ -158,6 +158,12 @@ static PyObject *getTimeLimits(PyObject *self, PyObject *Py_UNUSED(ignored)) {
   total_number_fields += MODULE##_logger_field##PART##_count;
 
 /**
+ * Same function as find_field_in_module before but with a single argument.
+ */
+#define find_field_in_module_single_particle_type(MODULE) \
+  find_field_in_module(MODULE, )
+
+/**
  * @brief Create a list of numpy array containing the fields.
  *
  * @param output A list of array of fields.
@@ -205,12 +211,12 @@ logger_loader_create_output(void **output, const int *field_indices,
     total_number_fields = 0;
 
     /* Find the fields in the different modules. */
-    find_field_in_module(hydro, );
-    find_field_in_module(gravity, );
-    find_field_in_module(stars, );
+    find_field_in_module_single_particle_type(hydro);
+    find_field_in_module_single_particle_type(gravity);
+    find_field_in_module_single_particle_type(stars);
     find_field_in_module(chemistry, _part);
     find_field_in_module(chemistry, _spart);
-    find_field_in_module(star_formation, );
+    find_field_in_module_single_particle_type(star_formation);
 
     /* Check if we got a field */
     if (current_field == NULL) {

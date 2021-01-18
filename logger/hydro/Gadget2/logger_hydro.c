@@ -17,9 +17,6 @@
  *
  ******************************************************************************/
 
-/* Config parameters. */
-#include "config.h"
-
 /* Include this object's header */
 #include "logger_hydro.h"
 
