@@ -1259,6 +1259,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
             scheduler_addtask(s, task_type_rt_in, task_subtype_none, 0,
                               /* implicit= */ 1, c, NULL);
         scheduler_addunlock(s, c->super->kick2, c->hydro.rt_in);
+        scheduler_addunlock(s, c->super->hydro.drift, c->hydro.rt_in);
         if (with_star_formation && c->top->hydro.count > 0)
           scheduler_addunlock(s, c->top->hydro.star_formation, c->hydro.rt_in);
         if (with_feedback)

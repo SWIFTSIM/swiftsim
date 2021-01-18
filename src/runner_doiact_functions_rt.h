@@ -42,9 +42,8 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
   if (c->hydro.count == 0 || c->stars.count == 0) return;
 
   const struct engine *e = r->e;
-  /* TODO: will be looked into in next MR */
   if (!cell_are_part_drifted(c, e) || !cell_are_spart_drifted(c, e))
-    error("Cell should be drifted!");
+    error("Cell should be drifted: %lld", c->cellID);
 
   struct spart *restrict sparts = c->stars.parts;
   struct part *restrict parts = c->hydro.parts;
@@ -168,27 +167,25 @@ void DOPAIR1_NONSYM_RT(struct runner *r, struct cell *ci, struct cell *cj) {
 void DOPAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj, int timer) {
 
   TIMER_TIC;
-  /* const struct engine *restrict e = r->e; */
+  const struct engine *restrict e = r->e;
 
   const int do_stars_in_ci = (cj->nodeID == r->e->nodeID) &&
                              (ci->stars.count != 0) && (cj->hydro.count != 0);
   if (do_stars_in_ci) {
-    /* TODO: will be looked into in next MR */
-    /* if (!cell_are_spart_drifted(ci, e)) */
-    /*   message("Cell spart should be drifted! Timer: %d", timer); */
-    /* if (!cell_are_part_drifted(cj, e)) */
-    /*   message("Cell part should be drifted! Timer: %d", timer); */
+    if (!cell_are_spart_drifted(ci, e))
+      error("Cell spart should be drifted! Timer: %d", timer);
+    if (!cell_are_part_drifted(cj, e))
+      error("Cell part should be drifted! Timer: %d", timer);
     DOPAIR1_NONSYM_RT(r, ci, cj);
   }
 
   const int do_stars_in_cj = (ci->nodeID == r->e->nodeID) &&
                              (cj->stars.count != 0) && (ci->hydro.count != 0);
   if (do_stars_in_cj) {
-    /* TODO: will be looked into in next MR */
-    /* if (!cell_are_spart_drifted(cj, e)) */
-    /*   message("Cell spart should be drifted! Timer: %d", timer); */
-    /* if (!cell_are_part_drifted(ci, e)) */
-    /*   message("Cell part should be drifted! Timer: %d", timer); */
+    if (!cell_are_spart_drifted(cj, e))
+      error("Cell spart should be drifted! Timer: %d", timer);
+    if (!cell_are_part_drifted(ci, e))
+      error("Cell part should be drifted! Timer: %d", timer);
     DOPAIR1_NONSYM_RT(r, cj, ci);
   }
 
@@ -256,9 +253,9 @@ void DOSUB_SELF1_RT(struct runner *r, struct cell *c, int timer) {
 
     /* Drift the cell to the current timestep if needed. */
     if (!cell_are_spart_drifted(c, r->e)) 
-      error("Interacting undrifted cell (spart).");
+      error("Interacting undrifted cell (spart): %lld", c->cellID);
     if (!cell_are_part_drifted(c, r->e)) 
-      error("Interacting undrifted cell (part).");
+      error("Interacting undrifted cell (part): %lld", c->cellID);
 
     DOSELF1_BRANCH_RT(r, c, 0);
   }
@@ -320,45 +317,41 @@ void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
       /* Make sure both cells are drifted to the current timestep. */
       if (!cell_are_spart_drifted(ci, e))
-        error("Interacting undrifted cells (sparts).");
+        error("Interacting undrifted cells (sparts)");
 
       if (!cell_are_part_drifted(cj, e))
-        error("Interacting undrifted cells (parts).");
+        error("Interacting undrifted cells (parts)");
 
       /* Do any of the cells need to be sorted first? */
-      if (!(ci->stars.sorted & (1 << sid)) ||
-          ci->stars.dx_max_sort_old > ci->dmin * space_maxreldx) {
-        error("Interacting unsorted cell (sparts).");
+      if (!(ci->stars.sorted & (1 << sid))) {
+        error("Interacting unsorted cell (sparts)");
       }
 
-      if (!(cj->hydro.sorted & (1 << sid)) ||
-          cj->hydro.dx_max_sort_old > cj->dmin * space_maxreldx)
-        error("Interacting unsorted cell (parts). %i", cj->nodeID);
+      if (!(cj->hydro.sorted & (1 << sid))) {
+        error("Interacting unsorted cell (parts) %i", cj->nodeID);
+      }
     }
 
     if (do_cj) {
 
       /* Make sure both cells are drifted to the current timestep. */
       if (!cell_are_part_drifted(ci, e))
-        error("Interacting undrifted cells (parts).");
+        error("Interacting undrifted cells (parts)");
 
       if (!cell_are_spart_drifted(cj, e))
-        error("Interacting undrifted cells (sparts).");
+        error("Interacting undrifted cells (sparts)");
 
       /* Do any of the cells need to be sorted first? */
-      if (!(ci->hydro.sorted & (1 << sid)) ||
-          ci->hydro.dx_max_sort_old > ci->dmin * space_maxreldx) {
-        error("Interacting unsorted cell (parts).");
+      if (!(ci->hydro.sorted & (1 << sid))) {
+        error("Interacting unsorted cell (parts)");
       }
 
-      if (!(cj->stars.sorted & (1 << sid)) ||
-          cj->stars.dx_max_sort_old > cj->dmin * space_maxreldx) {
-        error("Interacting unsorted cell (sparts).");
+      if (!(cj->stars.sorted & (1 << sid))){
+        error("Interacting unsorted cell (sparts)");
       }
     }
 
-    /* TODO: remove timer = -1 later */
-    if (do_ci || do_cj) DOPAIR1_BRANCH_RT(r, ci, cj, -1);
+    if (do_ci || do_cj) DOPAIR1_BRANCH_RT(r, ci, cj, 0);
   }
 
   if (timer) TIMER_TOC(TIMER_DOSUB_PAIR_RT);
