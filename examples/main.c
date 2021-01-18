@@ -579,6 +579,11 @@ int main(int argc, char *argv[]) {
         "Error: Cannot use radiative transfer without stars, --stars must be "
         "chosen\n");
   }
+  if (with_rt && !with_feedback) {
+    message(
+        "WARNING: Activating --feedback to be able to run with RT.");
+    with_feedback = 1;
+  }
 
 #ifndef STARS_GEAR
   /* Temporary, this dependency will be removed later */
