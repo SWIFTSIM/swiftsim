@@ -579,8 +579,7 @@ int main(int argc, char *argv[]) {
         "chosen\n");
   }
   if (with_rt && !with_feedback) {
-    message(
-        "WARNING: Activating --feedback to be able to run with RT.");
+    message("WARNING: Activating --feedback to be able to run with RT.");
     with_feedback = 1;
   }
 
