@@ -1382,7 +1382,7 @@ void cell_activate_subcell_external_grav_tasks(struct cell *ci,
  * @param s The task #scheduler.
  */
 void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
-                                       struct scheduler *s) {
+                                    struct scheduler *s) {
   const struct engine *e = s->space->e;
 
   /* Store the current dx_max and h_max values. */
@@ -1948,7 +1948,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 #endif
 
     const int ci_active = cell_is_active_stars(ci, e) ||
-                           (with_star_formation && cell_is_active_hydro(ci, e));
+                          (with_star_formation && cell_is_active_hydro(ci, e));
 
     const int cj_active =
         (cj != NULL) && (cell_is_active_stars(cj, e) ||
@@ -2113,7 +2113,7 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 
     const int cj_active =
         (cj != NULL) && (cell_is_active_stars(cj, e) ||
-                        (with_star_formation && cell_is_active_hydro(cj, e)));
+                         (with_star_formation && cell_is_active_hydro(cj, e)));
 
     if (t->type == task_type_self && ci_active) {
       scheduler_activate(s, t);
@@ -2143,7 +2143,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 
   /* Unskip all the other task types. */
   if (c->nodeID == nodeID) {
-    if (cell_is_active_stars(c, e) || (with_star_formation && cell_is_active_hydro(c, e))) {
+    if (cell_is_active_stars(c, e) ||
+        (with_star_formation && cell_is_active_hydro(c, e))) {
 
       if (c->stars.ghost != NULL) scheduler_activate(s, c->stars.ghost);
       if (c->stars.stars_in != NULL) scheduler_activate(s, c->stars.stars_in);
@@ -2522,10 +2523,10 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
     }
 
     int ci_active, cj_active;
-    if (cj == NULL){
+    if (cj == NULL) {
       /* self type task, check ci is active hydro */
       ci_active = (cell_is_active_hydro(ci, e) || ci->stars.count > 0);
-      cj_active = 0;  
+      cj_active = 0;
     } else {
       ci_active = (cell_is_active_hydro(cj, e) || ci->stars.count > 0);
       cj_active = cell_is_active_hydro(ci, e) || cj->stars.count > 0;
@@ -2598,13 +2599,15 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
 
     if (cell_is_active_hydro(c, e)) {
       for (struct link *l = c->hydro.rt_gradient; l != NULL; l = l->next) {
-        /* TODO: all the MPI checks c->nodeID == nodeID once MPI is implemented */
+        /* TODO: all the MPI checks c->nodeID == nodeID once MPI is implemented
+         */
         /* I assume that everything necessary here is being done
          * in the hydro part of this function */
         scheduler_activate(s, l->t);
       }
       for (struct link *l = c->hydro.rt_transport; l != NULL; l = l->next) {
-        /* TODO: all the MPI checks c->nodeID == nodeID once MPI is implemented */
+        /* TODO: all the MPI checks c->nodeID == nodeID once MPI is implemented
+         */
         /* I assume that everything necessary here is being done
          * in the hydro part of this function */
         scheduler_activate(s, l->t);
@@ -2619,8 +2622,7 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
       if (c->hydro.rt_tchem != NULL) scheduler_activate(s, c->hydro.rt_tchem);
       if (c->hydro.rt_out != NULL) scheduler_activate(s, c->hydro.rt_out);
     }
-  }
-  else {
+  } else {
     /* RT doesn't run with MPI as of yet */
     error("Unskipping RT tasks for non-local cells?");
   }
