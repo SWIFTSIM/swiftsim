@@ -109,10 +109,9 @@ static void engine_do_unskip_hydro(struct cell *c, struct engine *e) {
  * @param c The cell.
  * @param e The engine.
  * @param with_star_formation Are we running with star formation switched on?
- * @param with_rt Are we running with radiative transfer switched on?
  */
 static void engine_do_unskip_stars(struct cell *c, struct engine *e,
-                                   const int with_star_formation, const int with_rt) {
+                                   const int with_star_formation) {
 
   /* Early abort (are we below the level where tasks are)? */
   if (!cell_get_flag(c, cell_flag_has_tasks)) return;
@@ -124,8 +123,7 @@ static void engine_do_unskip_stars(struct cell *c, struct engine *e,
   if (!non_empty) return;
 
   const int ci_active = cell_is_active_stars(c, e) ||
-                        (with_star_formation && cell_is_active_hydro(c, e)) ||
-                        (with_rt && cell_is_active_hydro(c, e));
+                        (with_star_formation && cell_is_active_hydro(c, e));
 
   /* Skip inactive cells. */
   if (!ci_active) return;
@@ -135,14 +133,14 @@ static void engine_do_unskip_stars(struct cell *c, struct engine *e,
     for (int k = 0; k < 8; k++) {
       if (c->progeny[k] != NULL) {
         struct cell *cp = c->progeny[k];
-        engine_do_unskip_stars(cp, e, with_star_formation, with_rt);
+        engine_do_unskip_stars(cp, e, with_star_formation);
       }
     }
   }
 
   /* Unskip any active tasks. */
   const int forcerebuild =
-      cell_unskip_stars_tasks(c, &e->sched, with_star_formation, with_rt);
+      cell_unskip_stars_tasks(c, &e->sched, with_star_formation);
   if (forcerebuild) atomic_inc(&e->forcerebuild);
 }
 
@@ -248,6 +246,7 @@ static void engine_do_unskip_gravity(struct cell *c, struct engine *e) {
  * @param e The engine.
  */
 static void engine_do_unskip_rt(struct cell *c, struct engine *e) {
+  /* Note: we only get this far if engine_policy_rt is flagged. */
 
   /* Early abort (are we below the level where tasks are)? */
   if (!cell_get_flag(c, cell_flag_has_tasks)) return;
@@ -293,7 +292,6 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
 
   /* What policies are we running? */
   const int with_star_formation = e->policy & engine_policy_star_formation;
-  const int with_rt = e->policy & engine_policy_rt;
 
   /* The current chunk of active cells */
   const int *const local_cells = (int *)map_data;
@@ -336,7 +334,7 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
         if (!(e->policy & engine_policy_stars))
           error("Trying to unskip star tasks in a non-stars run!");
 #endif
-        engine_do_unskip_stars(c, e, with_star_formation, with_rt);
+        engine_do_unskip_stars(c, e, with_star_formation);
         break;
       case task_broad_types_sinks:
 #ifdef SWIFT_DEBUG_CHECKS

@@ -1259,7 +1259,6 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
             scheduler_addtask(s, task_type_rt_in, task_subtype_none, 0,
                               /* implicit= */ 1, c, NULL);
         scheduler_addunlock(s, c->super->kick2, c->hydro.rt_in);
-        scheduler_addunlock(s, c->super->hydro.drift, c->hydro.rt_in);
         if (with_star_formation && c->top->hydro.count > 0)
           scheduler_addunlock(s, c->top->hydro.star_formation, c->hydro.rt_in);
         if (with_feedback)
@@ -2156,6 +2155,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       if (with_rt) {
+        scheduler_addunlock(sched, ci->hydro.super->stars.drift, t_rt_inject);
+        scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t_rt_inject);
         scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
         scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
         scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
@@ -2331,6 +2332,14 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               t_sink_formation);
         }
       }
+      if (with_rt){
+        scheduler_addunlock(sched, ci->hydro.super->hydro.sorts, t_rt_inject);
+
+        if (ci->hydro.super != cj->hydro.super) {
+          scheduler_addunlock(sched, cj->hydro.super->hydro.sorts, t_rt_inject);
+        }
+      }
+
       if (ci->nodeID == nodeID) {
         scheduler_addunlock(sched, t_force, ci->hydro.super->hydro.end_force);
 
@@ -2415,6 +2424,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
 
         if (with_rt) {
+          scheduler_addunlock(sched, ci->hydro.super->stars.sorts, t_rt_inject);
+          scheduler_addunlock(sched, ci->hydro.super->stars.drift, t_rt_inject);
+          scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t_rt_inject);
           scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
           scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
           scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
@@ -2434,6 +2446,11 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
           scheduler_addunlock(sched, t_bh_swallow,
                               ci->hydro.super->black_holes.swallow_ghost_0);
+        }
+
+        if (with_rt) {
+          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
+                              t_rt_inject);
         }
       }
 
@@ -2511,8 +2528,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           }
 
           if (with_rt) {
-            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in,
-                                t_rt_inject);
+            scheduler_addunlock(sched, cj->hydro.super->stars.sorts, t_rt_inject);
+            scheduler_addunlock(sched, cj->hydro.super->stars.drift, t_rt_inject);
+            scheduler_addunlock(sched, cj->hydro.super->hydro.drift, t_rt_inject);
+            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in, t_rt_inject);
             scheduler_addunlock(sched, t_rt_inject, cj->super->hydro.rt_ghost1);
             scheduler_addunlock(sched, cj->super->hydro.rt_ghost1,
                                 t_rt_gradient);
@@ -2761,6 +2780,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       if (with_rt) {
+        scheduler_addunlock(sched, ci->hydro.super->stars.drift, t_rt_inject);
+        scheduler_addunlock(sched, ci->hydro.super->stars.sorts, t_rt_inject);
+        scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t_rt_inject);
+        scheduler_addunlock(sched, ci->hydro.super->hydro.sorts, t_rt_inject);
         scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
         scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
         scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
@@ -2942,6 +2965,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
       }
 
+      if (with_rt) {
+        scheduler_addunlock(sched, ci->hydro.super->hydro.sorts, t_rt_inject);
+        if (ci->hydro.super != cj->hydro.super)
+          scheduler_addunlock(sched, cj->hydro.super->hydro.sorts, t_rt_inject);
+      }
+
       if (ci->nodeID == nodeID) {
         scheduler_addunlock(sched, t_force, ci->hydro.super->hydro.end_force);
 
@@ -3026,6 +3055,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
 
         if (with_rt) {
+          scheduler_addunlock(sched, ci->hydro.super->stars.sorts, t_rt_inject);
+          scheduler_addunlock(sched, ci->hydro.super->stars.drift, t_rt_inject);
+          scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t_rt_inject);
           scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
           scheduler_addunlock(sched, t_rt_inject, ci->super->hydro.rt_ghost1);
           scheduler_addunlock(sched, ci->super->hydro.rt_ghost1, t_rt_gradient);
@@ -3120,8 +3152,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 cj->hydro.super->black_holes.black_holes_out);
           }
           if (with_rt) {
-            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in,
-                                t_rt_inject);
+            scheduler_addunlock(sched, cj->hydro.super->stars.sorts, t_rt_inject);
+            scheduler_addunlock(sched, cj->hydro.super->stars.drift, t_rt_inject);
+            scheduler_addunlock(sched, cj->hydro.super->hydro.drift, t_rt_inject);
+            scheduler_addunlock(sched, cj->hydro.super->hydro.rt_in, t_rt_inject);
             scheduler_addunlock(sched, t_rt_inject, cj->super->hydro.rt_ghost1);
             scheduler_addunlock(sched, cj->super->hydro.rt_ghost1,
                                 t_rt_gradient);
