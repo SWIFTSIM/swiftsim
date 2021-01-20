@@ -38,12 +38,14 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
 
   TIMER_TIC;
 
+  const struct engine *e = r->e;
+
   /* Anything to do here? */
   if (c->hydro.count == 0 || c->stars.count == 0) return;
+  if (!cell_is_active_hydro(c, e)) return;
 
-  const struct engine *e = r->e;
   if (!cell_are_part_drifted(c, e) || !cell_are_spart_drifted(c, e))
-    error("Cell should be drifted: %lld", c->cellID);
+    message("RTERROR:Cell should be drifted: %lld", c->cellID);
 
   struct spart *restrict sparts = c->stars.parts;
   struct part *restrict parts = c->hydro.parts;
@@ -54,25 +56,27 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
   /* Loop over the sparts in cell */
   for (int sid = 0; sid < scount; sid++) {
 
+    /* Get a hold of the ith spart in c. */
     struct spart *restrict si = &sparts[sid];
 
     /* Skip inhibited particles. */
     if (spart_is_inhibited(si, e)) continue;
 
     const float hi = si->h;
+    const float hig2 = hi * hi * kernel_gamma2;
     const float six[3] = {(float)(si->x[0] - c->loc[0]),
                           (float)(si->x[1] - c->loc[1]),
                           (float)(si->x[2] - c->loc[2])};
 
     /* Loop over the parts in cell */
     for (int pid = 0; pid < count; pid++) {
+
+      /* Get a pointer to the jth particle. */
       struct part *restrict pj = &parts[pid];
+      const float hj = pj->h;
 
       /* Skip inhibited particles. */
       if (part_is_inhibited(pj, e)) continue;
-
-      const float hj = pj->h;
-      const float hjg2 = hj * hj * kernel_gamma2;
 
       /* Compute the pairwise distance. */
       const float pjx[3] = {(float)(pj->x[0] - c->loc[0]),
@@ -81,7 +85,13 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
       float dx[3] = {six[0] - pjx[0], six[1] - pjx[1], six[2] - pjx[2]};
       const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
 
-      if (r2 < hjg2) IACT_RT(r2, dx, hi, hj, si, pj);
+#ifdef SWIFT_DEBUG_CHECKS
+      /* Check that particles have been drifted to the current time */
+      if (pj->ti_drift != e->ti_current)
+        error("Particle pj not drifted to current time");
+#endif
+
+      if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj);
     }
   }
 
@@ -126,6 +136,7 @@ void DOPAIR1_NONSYM_RT(struct runner *r, struct cell *ci, struct cell *cj) {
     if (spart_is_inhibited(si, e)) continue;
 
     const float hi = si->h;
+    const float hig2 = hi * hi * kernel_gamma2;
     const float six[3] = {(float)(si->x[0] - (cj->loc[0] + shift[0])),
                           (float)(si->x[1] - (cj->loc[1] + shift[1])),
                           (float)(si->x[2] - (cj->loc[2] + shift[2]))};
@@ -136,7 +147,6 @@ void DOPAIR1_NONSYM_RT(struct runner *r, struct cell *ci, struct cell *cj) {
       /* Get a pointer to the jth particle. */
       struct part *restrict pj = &parts_j[pjd];
       const float hj = pj->h;
-      const float hjg2 = hj * hj * kernel_gamma2;
 
       /* Skip inhibited particles. */
       if (part_is_inhibited(pj, e)) continue;
@@ -148,7 +158,7 @@ void DOPAIR1_NONSYM_RT(struct runner *r, struct cell *ci, struct cell *cj) {
       float dx[3] = {six[0] - pjx[0], six[1] - pjx[1], six[2] - pjx[2]};
       const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
 
-      if (r2 < hjg2) IACT_RT(r2, dx, hi, hj, si, pj);
+      if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj);
 
     } /* loop over the parts in cj. */
   }   /* loop over the parts in ci. */
@@ -170,27 +180,54 @@ void DOPAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj, int timer) {
   const struct engine *restrict e = r->e;
 
   const int do_stars_in_ci = (cj->nodeID == r->e->nodeID) &&
-                             (ci->stars.count != 0) && (cj->hydro.count != 0);
+                             (ci->stars.count != 0) && (cj->hydro.count != 0) && cell_is_active_hydro(cj, e);
   if (do_stars_in_ci) {
     if (!cell_are_spart_drifted(ci, e))
-      error("Cell spart should be drifted! Timer: %d", timer);
+      message("RTERROR:Cell spart should be drifted! %lld", ci->cellID);
     if (!cell_are_part_drifted(cj, e))
-      error("Cell part should be drifted! Timer: %d", timer);
+      message("RTERROR:Cell part should be drifted! %lld", cj->cellID );
     DOPAIR1_NONSYM_RT(r, ci, cj);
   }
 
   const int do_stars_in_cj = (ci->nodeID == r->e->nodeID) &&
-                             (cj->stars.count != 0) && (ci->hydro.count != 0);
+                             (cj->stars.count != 0) && (ci->hydro.count != 0) && cell_is_active_hydro(ci, e);
   if (do_stars_in_cj) {
     if (!cell_are_spart_drifted(cj, e))
-      error("Cell spart should be drifted! Timer: %d", timer);
+      message("RTERROR:Cell spart should be drifted! %lld", cj->cellID );
     if (!cell_are_part_drifted(ci, e))
-      error("Cell part should be drifted! Timer: %d", timer);
+      message("RTERROR:Cell part should be drifted! %lld", ci->cellID );
     DOPAIR1_NONSYM_RT(r, cj, ci);
   }
 
   if (timer) TIMER_TOC(TIMER_DOPAIR_RT);
 }
+
+/**
+ * @brief Function for pair-type interaction between stars
+ *        and hydro particles. Will interact hydro particles of cell i
+ *        with star particles of cell j.
+ *
+ * @param r #runner task
+ * @param ci the first #cell
+ * @param cj the second #cell
+ * @param timer 1 if the time is to be recorded.
+ */
+void DOPAIR1_RT_NAIVE(struct runner *r, struct cell *ci, struct cell *cj, int timer) {
+
+  TIMER_TIC;
+  const struct engine *restrict e = r->e;
+
+  const int do_stars_in_ci = (cj->nodeID == r->e->nodeID) &&
+                             (ci->stars.count != 0) && (cj->hydro.count != 0) && cell_is_active_hydro(cj, e);
+  if (do_stars_in_ci) DOPAIR1_NONSYM_RT(r, ci, cj);
+
+  const int do_stars_in_cj = (ci->nodeID == r->e->nodeID) &&
+                             (cj->stars.count != 0) && (ci->hydro.count != 0) && cell_is_active_hydro(ci, e);
+  if (do_stars_in_cj) DOPAIR1_NONSYM_RT(r, cj, ci);
+
+  if (timer) TIMER_TOC(TIMER_DOPAIR_RT);
+}
+
 
 /**
  * @brief Determine which version of DOSELF1_RT needs to be called
@@ -213,7 +250,11 @@ void DOSELF1_BRANCH_RT(struct runner *r, struct cell *c, int timer) {
  */
 void DOPAIR1_BRANCH_RT(struct runner *r, struct cell *ci, struct cell *cj,
                        int timer) {
-  DOPAIR1_RT(r, ci, cj, timer);
+#ifdef SWIFT_USE_NAIVE_INTERACTIONS_STARS
+  DOPAIR1_RT_NAIVE(r, ci, cj, 1);
+#else
+  DOPAIR1_RT(r, ci, cj, 1);
+#endif
 }
 
 /**
@@ -253,9 +294,9 @@ void DOSUB_SELF1_RT(struct runner *r, struct cell *c, int timer) {
 
     /* Drift the cell to the current timestep if needed. */
     if (!cell_are_spart_drifted(c, r->e)) 
-      error("Interacting undrifted cell (spart): %lld", c->cellID);
+      message("RTERROR:Interacting undrifted cell (spart): %lld", c->cellID);
     if (!cell_are_part_drifted(c, r->e)) 
-      error("Interacting undrifted cell (part): %lld", c->cellID);
+      message("RTERROR:Interacting undrifted cell (part): %lld", c->cellID);
 
     DOSELF1_BRANCH_RT(r, c, 0);
   }
@@ -281,9 +322,9 @@ void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
   /* Should we even bother? */
   const int should_do_ci = ci->stars.count != 0 && cj->hydro.count != 0 &&
-                           cell_is_active_stars(ci, e);
+                           cell_is_active_hydro(ci, e);
   const int should_do_cj = cj->stars.count != 0 && ci->hydro.count != 0 &&
-                           cell_is_active_stars(cj, e);
+                           cell_is_active_hydro(cj, e);
   if (!should_do_ci && !should_do_cj) return;
 
   /* Get the type of pair and flip ci/cj if needed. */
@@ -309,26 +350,26 @@ void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
     const int do_ci_stars = cj->nodeID == e->nodeID;
     const int do_cj_stars = ci->nodeID == e->nodeID;
     const int do_ci = ci->stars.count != 0 && cj->hydro.count != 0 &&
-                      cell_is_active_stars(ci, e) && do_ci_stars;
+                      cell_is_active_hydro(ci, e) && do_ci_stars;
     const int do_cj = cj->stars.count != 0 && ci->hydro.count != 0 &&
-                      cell_is_active_stars(cj, e) && do_cj_stars;
+                      cell_is_active_hydro(cj, e) && do_cj_stars;
 
     if (do_ci) {
 
       /* Make sure both cells are drifted to the current timestep. */
       if (!cell_are_spart_drifted(ci, e))
-        error("Interacting undrifted cells (sparts)");
+        message("RTERROR:Interacting undrifted cells (sparts) %lld", ci->cellID);
 
       if (!cell_are_part_drifted(cj, e))
-        error("Interacting undrifted cells (parts)");
+        message("RTERROR:Interacting undrifted cells (parts) %lld", cj->cellID);
 
       /* Do any of the cells need to be sorted first? */
       if (!(ci->stars.sorted & (1 << sid))) {
-        error("Interacting unsorted cell (sparts)");
+        message("RTERROR:Interacting unsorted cell (sparts) %lld", ci->cellID);
       }
 
       if (!(cj->hydro.sorted & (1 << sid))) {
-        error("Interacting unsorted cell (parts) %i", cj->nodeID);
+        message("RTERROR:Interacting unsorted cell (parts) %i %lld", cj->nodeID, cj->cellID);
       }
     }
 
@@ -336,18 +377,18 @@ void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
       /* Make sure both cells are drifted to the current timestep. */
       if (!cell_are_part_drifted(ci, e))
-        error("Interacting undrifted cells (parts)");
+        message("RTERROR:Interacting undrifted cells (parts) %lld", ci->cellID);
 
       if (!cell_are_spart_drifted(cj, e))
-        error("Interacting undrifted cells (sparts)");
+        message("RTERROR:Interacting undrifted cells (sparts) %lld", cj->cellID);
 
       /* Do any of the cells need to be sorted first? */
       if (!(ci->hydro.sorted & (1 << sid))) {
-        error("Interacting unsorted cell (parts)");
+        message("RTERROR:Interacting unsorted cell (parts) %lld", ci->cellID);
       }
 
       if (!(cj->stars.sorted & (1 << sid))){
-        error("Interacting unsorted cell (sparts)");
+        message("RTERROR:Interacting unsorted cell (sparts) %lld", cj->cellID);
       }
     }
 
