@@ -134,6 +134,7 @@ void compute_time(struct spart* sp, const int with_cosmology,
   /* Get the length of the enrichment time-step */
   *dt_enrichment = feedback_get_enrichment_timestep(sp, with_cosmology, cosmo,
                                                     time, dt_star);
+
   *star_age_beg_of_step = star_age_end_of_step - *dt_enrichment;
 }
 
@@ -172,14 +173,12 @@ void feedback_will_do_feedback(
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
-
-  if (star_age_beg_step < -1e-6) {
+  if (star_age_beg_step + dt_enrichment < 0) {
     error("Negative age for a star");
   }
 #endif
-  /* Has this star been around for a while ? */
-  if (star_age_beg_step + dt_enrichment <= 0.) return;
 
+  /* Ensure that the age is positive (rounding errors) */
   const double star_age_beg_step_safe =
       star_age_beg_step < 0 ? 0 : star_age_beg_step;
 

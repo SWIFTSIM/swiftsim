@@ -17,10 +17,11 @@
  *
  ******************************************************************************/
 
+/* Include this object's header */
 #include "logger_stars.h"
 
-/* Define the size of all the fields. */
-#define member_size(type, member) sizeof(((type *)0)->member)
+/* Local headers  */
+#include "logger_tools.h"
 
 const int stars_logger_field_size[stars_logger_field_count] = {
     member_size(struct spart, x),       // coordinates

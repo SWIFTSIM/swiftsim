@@ -130,10 +130,8 @@ if test "$enable_ipo" = "yes"; then
                           ], [:] )
       AC_MSG_RESULT([added GCC interprocedural optimization support])
    elif test "$ax_cv_c_compiler_vendor" = "clang"; then
-      CFLAGS="$CFLAGS -flto -fuse-ld=gold"
-      LDFLAGS="$LDFLAGS -XCClinker -fuse-ld=gold"
-      : ${AR="llvm-ar"}
-      : ${LD="ld.gold"}
+      CFLAGS="$CFLAGS -flto=thin"
+      LDFLAGS="$LDFLAGS -flto=thin"
       : ${RANLIB="llvm-ranlib"}
       AC_MSG_RESULT([added LLVM interprocedural optimization support])
    else
@@ -1664,6 +1662,9 @@ AC_ARG_WITH([hydro],
 )
 
 case "$with_hydro" in
+   none)
+      AC_DEFINE([NONE_SPH], [1], [No hydro])
+   ;;
    gadget2)
       AC_DEFINE([GADGET2_SPH], [1], [Gadget-2 SPH])
    ;;
@@ -2050,14 +2051,14 @@ esac
 # Stellar model.
 AC_ARG_WITH([stars],
    [AS_HELP_STRING([--with-stars=<model>],
-      [Stellar model to use @<:@none, EAGLE, GEAR, debug default: none@:>@]
+      [Stellar model to use @<:@none, basic, EAGLE, GEAR, default: basic@:>@]
    )],
    [with_stars="$withval"],
-   [with_stars="none"]
+   [with_stars="basic"]
 )
 
 if test "$with_subgrid" != "none"; then
-   if test "$with_stars" != "none"; then
+   if test "$with_stars" != "basic"; then
       AC_MSG_ERROR([Cannot provide with-subgrid and with-stars together])
    else
       with_stars="$with_subgrid_stars"
@@ -2071,10 +2072,12 @@ case "$with_stars" in
    GEAR)
       AC_DEFINE([STARS_GEAR], [1], [GEAR stellar model])
    ;;
-   none)
-      AC_DEFINE([STARS_NONE], [1], [Basic stellar model])
+   basic)
+      AC_DEFINE([STARS_BASIC], [1], [Basic stellar model])
    ;;
-
+   none)
+      AC_DEFINE([STARS_NONE], [1], [No stellar model])
+   ;;
    *)
       AC_MSG_ERROR([Unknown stellar model: $with_stars])
    ;;
@@ -2395,7 +2398,7 @@ AM_CONDITIONAL([HAVE_CHEMISTRY_NONE], [test "$with_chemistry" = "none"])
 AM_CONDITIONAL([HAVE_CHEMISTRY_GEAR], [test "${with_chemistry:0:5}" = "GEAR_"])
 
 # check if using default stars
-AM_CONDITIONAL([HAVE_STARS_DEFAULT], [test "$with_stars" = "none"])
+AM_CONDITIONAL([HAVE_STARS_BASIC], [test "$with_stars" = "basic"])
 
 # check if using GEAR stars
 AM_CONDITIONAL([HAVE_STARS_GEAR], [test "$with_stars" = "GEAR"])

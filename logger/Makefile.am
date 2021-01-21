@@ -44,13 +44,36 @@ lib_LTLIBRARIES = liblogger.la
 # endif
 
 GRAVITY_SRC = gravity/MultiSoftening/logger_gravity.c
-STARS_SRC = stars/Default/logger_stars.c
+# Include the stars modules
+if HAVE_STARS_BASIC
+STARS_SRC = stars/Basic/logger_stars.c
+endif
+if HAVE_STARS_GEAR
+STARS_SRC = stars/GEAR/logger_stars.c
+endif
 
+# Include the hydro modules
 if HAVE_SPHENIX
 HYDRO_SRC = hydro/SPHENIX/logger_hydro.c
 endif
 if HAVE_GADGET2
 HYDRO_SRC = hydro/Gadget2/logger_hydro.c
+endif
+
+# Include the chemistry modules
+if HAVE_CHEMISTRY_NONE
+CHEMISTRY_SRC = chemistry/none/logger_chemistry.c
+endif
+if HAVE_CHEMISTRY_GEAR
+CHEMISTRY_SRC = chemistry/GEAR/logger_chemistry.c
+endif
+
+# Include the star formation modules
+if HAVE_STAR_FORMATION_DEFAULT
+STAR_FORMATION_SRC = star_formation/none/logger_star_formation.c
+endif
+if HAVE_STAR_FORMATION_GEAR
+STAR_FORMATION_SRC = star_formation/GEAR/logger_star_formation.c
 endif
 
 # subdirectories
@@ -61,8 +84,10 @@ include_HEADERS = logger_header.h logger_loader_io.h logger_particle.h logger_ti
 	logger_logfile.h logger_index.h quick_sort.h logger_python_tools.h logger_interpolation.h
 
 # Common source files
-AM_SOURCES = logger_header.c logger_loader_io.c logger_particle.c logger_time.c logger_tools.c logger_reader.c \
-	logger_logfile.c logger_index.c quick_sort.c $(GRAVITY_SRC) $(STARS_SRC) $(HYDRO_SRC)
+AM_SOURCES = logger_header.c logger_loader_io.c logger_particle.c logger_time.c logger_tools.c logger_reader.c
+AM_SOURCES += logger_logfile.c logger_index.c quick_sort.c
+AM_SOURCES += $(GRAVITY_SRC) $(STARS_SRC) $(HYDRO_SRC) $(CHEMISTRY_SRC) $(STAR_FORMATION_SRC)
+
 if HAVEPYTHON
 AM_SOURCES += logger_python_wrapper.c
 endif
@@ -74,10 +99,13 @@ PYTHON_EXTRA_COMPILER_FLAG = -Wno-missing-field-initializers
 endif
 
 # Include files for distribution, not installation.
-nobase_noinst_HEADERS = logger_hydro.h hydro/Gadget2/logger_hydro.h \
-	logger_stars.h stars/Default/logger_stars.h \
-	logger_gravity.h gravity/MultiSoftening/logger_gravity.h \
-  hydro/SPHENIX/logger_hydro.h
+nobase_noinst_HEADERS = logger_hydro.h hydro/Gadget2/logger_hydro.h hydro/SPHENIX/logger_hydro.h
+nobase_noinst_HEADERS += logger_stars.h  stars/Basic/logger_stars.h stars/GEAR/logger_stars.h
+nobase_noinst_HEADERS += logger_gravity.h gravity/MultiSoftening/logger_gravity.h
+nobase_noinst_HEADERS += logger_chemistry.h chemistry/none/logger_chemistry.h chemistry/GEAR/logger_chemistry.h
+nobase_noinst_HEADERS += logger_star_formation.h star_formation/none/logger_star_formation.h
+nobase_noinst_HEADERS += star_formation/GEAR/logger_star_formation.h
+
 
 # Sources and flags for regular library
 liblogger_la_SOURCES = $(AM_SOURCES)

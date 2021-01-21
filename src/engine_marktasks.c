@@ -283,8 +283,10 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         }
       }
 
-      /* Activate RT injection */
-      else if (t_subtype == task_subtype_rt_inject) {
+      /* Activate RT tasks */
+      else if (t_subtype == task_subtype_rt_inject ||
+               t_subtype == task_subtype_rt_gradient ||
+               t_subtype == task_subtype_rt_transport) {
         if (ci_active_hydro) {
           scheduler_activate(s, t);
         }
@@ -564,13 +566,16 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
             (ci_active_hydro || cj_active_hydro)) {
           scheduler_activate(s, t);
+        }
+      }
 
-        } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) &&
-                   (cj_active_hydro)) {
-          scheduler_activate(s, t);
-
-        } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) &&
-                   (ci_active_hydro)) {
+      /* RT gradient and transport tasks */
+      else if (t_subtype == task_subtype_rt_gradient ||
+               t_subtype == task_subtype_rt_transport) {
+        /* We only want to activate the task if the cell is active and is
+           going to update some gas on the *local* node */
+        if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
+            (ci_active_hydro || cj_active_hydro)) {
           scheduler_activate(s, t);
         }
       }
@@ -825,8 +830,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if (cell_need_rebuild_for_black_holes_pair(ci, cj)) *rebuild_space = 1;
         if (cell_need_rebuild_for_black_holes_pair(cj, ci)) *rebuild_space = 1;
 
-        scheduler_activate(s, ci->hydro.super->black_holes.swallow_ghost[0]);
-        scheduler_activate(s, cj->hydro.super->black_holes.swallow_ghost[0]);
+        scheduler_activate(s, ci->hydro.super->black_holes.swallow_ghost_0);
+        scheduler_activate(s, cj->hydro.super->black_holes.swallow_ghost_0);
 
 #ifdef WITH_MPI
         /* Activate the send/recv tasks. */
@@ -976,11 +981,13 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         }
 #endif
       } /* Only interested in RT tasks as of here. */
-      else if (t_subtype == task_subtype_rt_inject) {
 #ifdef WITH_MPI
+      else if (t_subtype == task_subtype_rt_inject ||
+               t_subtype == task_subtype_rt_gradient ||
+               t_subtype == task_subtype_rt_transport) {
         error("RT doesn't work with MPI yet.");
-#endif
       }
+#endif
     }
 
     /* End force for hydro ? */
@@ -1114,16 +1121,17 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       }
     }
 
-    /* Radiative transfer ghost in */
-    else if (t->type == task_type_rt_in && with_feedback) {
-      if (cell_is_active_hydro(t->ci, e) || cell_is_active_stars(t->ci, e))
-        scheduler_activate(s, t);
+    /* Radiative transfer implicit tasks */
+    else if (t->type == task_type_rt_in ||
+             t->type == task_type_rt_transport_out ||
+             t->type == task_type_rt_out) {
+      if (cell_is_active_hydro(t->ci, e)) scheduler_activate(s, t);
     }
 
-    /* Radiative transfer ghost out and others*/
-    else if (t->type == task_type_rt_out || t->type == task_type_rt_ghost1) {
-      if (cell_is_active_hydro(t->ci, e) || cell_is_active_stars(t->ci, e))
-        scheduler_activate(s, t);
+    /* Radiative transfer ghosts and thermochemistry*/
+    else if (t->type == task_type_rt_ghost1 || t->type == task_type_rt_ghost2 ||
+             t->type == task_type_rt_tchem) {
+      if (cell_is_active_hydro(t->ci, e)) scheduler_activate(s, t);
     }
 
     /* Subgrid tasks: sink formation */

@@ -23,13 +23,14 @@
 #include "../config.h"
 
 /* Select the correct star model */
-#if defined(STARS_NONE)
-#include "./stars/Default/logger_stars.h"
+#if defined(STARS_NOME)
+#error TODO
+#elif defined(STARS_BASIC)
+#include "./stars/Basic/logger_stars.h"
 #elif defined(STARS_EAGLE)
 #error TODO
 #include "./stars/EAGLE/logger_stars.h"
 #elif defined(STARS_GEAR)
-#error TODO
 #include "./stars/GEAR/logger_stars.h"
 #else
 #error "Invalid choice of star model"

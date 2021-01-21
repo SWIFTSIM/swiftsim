@@ -124,10 +124,15 @@ TASKTYPES = [
     "bh_swallow_ghost3",
     "fof_self",
     "fof_pair",
+    "sink_in",
+    "sink_out",
     "rt_in",
     "rt_out",
     "sink_formation",
     "rt_ghost1",
+    "rt_ghost2",
+    "rt_transport_out", 
+    "rt_tchem", 
     "count",
 ]
 
@@ -165,6 +170,8 @@ SUBTYPES = [
     "sink",
     "rt_inject",
     "sink_compute_formation",
+    "rt_gradient",
+    "rt_transport", 
     "count",
 ]
 

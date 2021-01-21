@@ -579,10 +579,6 @@ int main(int argc, char *argv[]) {
         "chosen\n");
   }
 
-#ifndef GADGET2_SPH
-  /* Temporary, this dependency will be removed later */
-  error("Error: Cannot use radiative transfer without gadget2-sph for now\n");
-#endif
 #ifndef STARS_GEAR
   /* Temporary, this dependency will be removed later */
   error(
@@ -973,6 +969,24 @@ int main(int argc, char *argv[]) {
     else
       cosmology_init_no_cosmo(&cosmo);
     if (myrank == 0 && with_cosmology) cosmology_print(&cosmo);
+
+    if (with_hydro) {
+#ifdef NONE_SPH
+      error("Can't run with hydro when compiled without a hydro model!");
+#endif
+    }
+    if (with_stars) {
+#ifdef STARS_NONE
+      error("Can't run with stars when compiled without a stellar model!");
+#endif
+    }
+    if (with_black_holes) {
+#ifdef BLACK_HOLES_NONE
+      error(
+          "Can't run with black holes when compiled without a black hole "
+          "model!");
+#endif
+    }
 
     /* Initialise the hydro properties */
     if (with_hydro)

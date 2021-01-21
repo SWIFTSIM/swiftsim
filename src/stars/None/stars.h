@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2016 Matthieu Schaller (matthieu.schaller@durham.ac.uk)
+ * Coypright (c) 2020 Matthieu Schaller (schaller@strw.leidenuniv.nl)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,12 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DEFAULT_STARS_H
-#define SWIFT_DEFAULT_STARS_H
-
-#include "minmax.h"
-
-#include <float.h>
+#ifndef SWIFT_NONE_STARS_H
+#define SWIFT_NONE_STARS_H
 
 /**
  * @brief Computes the time-step length of a given star particle from star
@@ -43,6 +39,20 @@ __attribute__((always_inline)) INLINE static float stars_compute_timestep(
 }
 
 /**
+ * @brief Returns the age of a star in internal units
+ *
+ * @param sp The star particle.
+ * @param cosmo The cosmological model.
+ * @param time The current time (in internal units).
+ * @param with_cosmology Are we running with cosmological integration?
+ */
+__attribute__((always_inline)) INLINE static float stars_compute_age(
+    const struct spart* sp, const struct cosmology* cosmo, double time,
+    const int with_cosmology) {
+  return 0.;
+}
+
+/**
  * @brief Initialises the s-particles for the first time
  *
  * This function is called only once just after the ICs have been
@@ -57,10 +67,7 @@ __attribute__((always_inline)) INLINE static float stars_compute_timestep(
  */
 __attribute__((always_inline)) INLINE static void stars_first_init_spart(
     struct spart* sp, const struct stars_props* stars_properties,
-    const int with_cosmology, const double scale_factor, const double time) {
-
-  sp->time_bin = 0;
-}
+    const int with_cosmology, const double scale_factor, const double time) {}
 
 /**
  * @brief Prepares a s-particle for its interactions
@@ -68,17 +75,7 @@ __attribute__((always_inline)) INLINE static void stars_first_init_spart(
  * @param sp The particle to act upon
  */
 __attribute__((always_inline)) INLINE static void stars_init_spart(
-    struct spart* sp) {
-
-#ifdef DEBUG_INTERACTIONS_STARS
-  for (int i = 0; i < MAX_NUM_OF_NEIGHBOURS_STARS; ++i)
-    sp->ids_ngbs_density[i] = -1;
-  sp->num_ngb_density = 0;
-#endif
-
-  sp->density.wcount = 0.f;
-  sp->density.wcount_dh = 0.f;
-}
+    struct spart* sp) {}
 
 /**
  * @brief Predict additional particle fields forward in time when drifting
@@ -122,18 +119,7 @@ __attribute__((always_inline)) INLINE static void stars_kick_extra(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void stars_end_density(
-    struct spart* sp, const struct cosmology* cosmo) {
-
-  /* Some smoothing length multiples. */
-  const float h = sp->h;
-  const float h_inv = 1.0f / h;                       /* 1/h */
-  const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
-  const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
-
-  /* Finish the calculation by inserting the missing h-factors */
-  sp->density.wcount *= h_inv_dim;
-  sp->density.wcount_dh *= h_inv_dim_plus_one;
-}
+    struct spart* sp, const struct cosmology* cosmo) {}
 
 /**
  * @brief Sets all particle fields to sensible values when the #spart has 0
@@ -143,17 +129,7 @@ __attribute__((always_inline)) INLINE static void stars_end_density(
  * @param cosmo The current cosmological model.
  */
 __attribute__((always_inline)) INLINE static void stars_spart_has_no_neighbours(
-    struct spart* restrict sp, const struct cosmology* cosmo) {
-
-  /* Some smoothing length multiples. */
-  const float h = sp->h;
-  const float h_inv = 1.0f / h;                 /* 1/h */
-  const float h_inv_dim = pow_dimension(h_inv); /* 1/h^d */
-
-  /* Re-set problematic values */
-  sp->density.wcount = kernel_root * h_inv_dim;
-  sp->density.wcount_dh = 0.f;
-}
+    struct spart* restrict sp, const struct cosmology* cosmo) {}
 
 /**
  * @brief Reset acceleration fields of a particle
@@ -164,14 +140,7 @@ __attribute__((always_inline)) INLINE static void stars_spart_has_no_neighbours(
  * @param p The particle to act upon
  */
 __attribute__((always_inline)) INLINE static void stars_reset_feedback(
-    struct spart* restrict p) {
-
-#ifdef DEBUG_INTERACTIONS_STARS
-  for (int i = 0; i < MAX_NUM_OF_NEIGHBOURS_STARS; ++i)
-    p->ids_ngbs_force[i] = -1;
-  p->num_ngb_force = 0;
-#endif
-}
+    struct spart* restrict p) {}
 
 /**
  * @brief Initializes constants related to stellar evolution, initializes imf,
@@ -183,4 +152,4 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
 inline static void stars_evolve_init(struct swift_params* params,
                                      struct stars_props* restrict stars) {}
 
-#endif /* SWIFT_DEFAULT_STARS_H */
+#endif /* SWIFT_NONE_STARS_H */

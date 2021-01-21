@@ -584,8 +584,6 @@ void cell_activate_subcell_black_holes_tasks(struct cell *ci, struct cell *cj,
                                              const int with_timestep_sync);
 void cell_activate_subcell_external_grav_tasks(struct cell *ci,
                                                struct scheduler *s);
-void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
-                                    struct scheduler *s);
 void cell_activate_super_spart_drifts(struct cell *c, struct scheduler *s);
 void cell_activate_super_sink_drifts(struct cell *c, struct scheduler *s);
 void cell_activate_drift_part(struct cell *c, struct scheduler *s);
@@ -1103,11 +1101,15 @@ __attribute__((always_inline)) INLINE static void cell_malloc_hydro_sorts(
 __attribute__((always_inline)) INLINE static void cell_free_hydro_sorts(
     struct cell *c) {
 
+#ifdef NONE_SPH
+  /* Nothing to do as we have no particles and hence no sorts */
+#else
   if (c->hydro.sort != NULL) {
     swift_free("hydro.sort", c->hydro.sort);
     c->hydro.sort = NULL;
     c->hydro.sort_allocated = 0;
   }
+#endif
 }
 
 /**
@@ -1216,11 +1218,15 @@ __attribute__((always_inline)) INLINE static void cell_malloc_stars_sorts(
 __attribute__((always_inline)) INLINE static void cell_free_stars_sorts(
     struct cell *c) {
 
+#ifdef STARS_NONE
+  /* Nothing to do as we have no particles and hence no sorts */
+#else
   if (c->stars.sort != NULL) {
     swift_free("stars.sort", c->stars.sort);
     c->stars.sort = NULL;
     c->stars.sort_allocated = 0;
   }
+#endif
 }
 
 /**
@@ -1313,7 +1319,7 @@ __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
       /* print warning only once */
       if (last_cell_id == 1) {
         message(
-            "Warning: Got %d x %d x %d top level cells."
+            "Warning: Got %d x %d x %d top level cells. "
             "Cell IDs are only guaranteed to be unique if count is < 32^3",
             cdim[0], cdim[1], cdim[2]);
       }

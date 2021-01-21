@@ -38,10 +38,13 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
 
   TIMER_TIC;
 
-  const struct engine *e = r->e;
-
   /* Anything to do here? */
   if (c->hydro.count == 0 || c->stars.count == 0) return;
+
+  const struct engine *e = r->e;
+  /* TODO: will be looked into in next MR */
+  /* if (!cell_are_part_drifted(c, e) || !cell_are_spart_drifted(c, e)) */
+  /*   error("Cell should be drifted!"); */
 
   struct spart *restrict sparts = c->stars.parts;
   struct part *restrict parts = c->hydro.parts;
@@ -146,13 +149,7 @@ void DOPAIR1_NONSYM_RT(struct runner *r, struct cell *ci, struct cell *cj) {
       float dx[3] = {six[0] - pjx[0], six[1] - pjx[1], six[2] - pjx[2]};
       const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
 
-#ifdef RT_DEBUG
-      /* temporary debugging checks: pass -r2 to differentiate pair/self calls
-       */
-      if (r2 < hjg2) IACT_RT(-r2, dx, hi, hj, si, pj);
-#else
       if (r2 < hjg2) IACT_RT(r2, dx, hi, hj, si, pj);
-#endif
 
     } /* loop over the parts in cj. */
   }   /* loop over the parts in ci. */
@@ -171,14 +168,25 @@ void DOPAIR1_NONSYM_RT(struct runner *r, struct cell *ci, struct cell *cj) {
 void DOPAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj, int timer) {
 
   TIMER_TIC;
+  /* const struct engine *restrict e = r->e; */
 
   const int do_stars_in_ci = (cj->nodeID == r->e->nodeID) &&
                              (ci->stars.count != 0) && (cj->hydro.count != 0);
-  if (do_stars_in_ci) DOPAIR1_NONSYM_RT(r, ci, cj);
+  if (do_stars_in_ci) {
+    /* TODO: will be looked into in next MR */
+    /* if (!cell_are_spart_drifted(ci, e) || !cell_are_part_drifted(cj, e)) */
+    /*   error("Cell should be drifted!"); */
+    DOPAIR1_NONSYM_RT(r, ci, cj);
+  }
 
   const int do_stars_in_cj = (ci->nodeID == r->e->nodeID) &&
                              (cj->stars.count != 0) && (ci->hydro.count != 0);
-  if (do_stars_in_cj) DOPAIR1_NONSYM_RT(r, cj, ci);
+  if (do_stars_in_cj) {
+    /* TODO: will be looked into in next MR */
+    /* if (!cell_are_spart_drifted(cj, e) || !cell_are_part_drifted(ci, e)) */
+    /*   error("Cell should be drifted!"); */
+    DOPAIR1_NONSYM_RT(r, cj, ci);
+  }
 
   if (timer) TIMER_TOC(TIMER_DOPAIR_RT);
 }

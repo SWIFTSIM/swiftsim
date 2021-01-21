@@ -1089,9 +1089,12 @@ int engine_estimate_nr_tasks(const struct engine *e) {
   }
 #endif
   if (e->policy & engine_policy_rt) {
-    /* inject: 1 self + (3^3-1)/2 = 26/2 = 13 pairs  |  14
-     * ghosts: in + out, ghost1,                     | + 3 */
-    n1 += 17;
+    /* inject: 1 self + (3^3-1)/2 = 26/2 = 13 pairs  |   14
+     * gradient: 1 self + 13 pairs                   | + 14
+     * transport: 1 self + 13 pairs                  | + 14
+     * implicits: in + out, transport_out            | +  3
+     * others: ghost1, ghost2, thermochemistry       | +  3 */
+    n1 += 48;
   }
 
 #ifdef WITH_MPI
@@ -1253,9 +1256,11 @@ void engine_rebuild(struct engine *e, const int repartitioned,
   if (clean_smoothing_length_values) space_sanitize(e->s);
 
 /* If in parallel, exchange the cell structure, top-level and neighbouring
- * multipoles. */
+ * multipoles. To achieve this, free the foreign particle buffers first. */
 #ifdef WITH_MPI
   if (e->policy & engine_policy_self_gravity) engine_exchange_top_multipoles(e);
+
+  space_free_foreign_parts(e->s, /*clear_cell_pointers=*/1);
 
   engine_exchange_cells(e);
 #endif
@@ -1547,6 +1552,7 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->type == task_type_bh_swallow_ghost2 ||
         t->type == task_type_bh_swallow_ghost3 || t->type == task_type_bh_in ||
         t->type == task_type_bh_out || t->type == task_type_rt_ghost1 ||
+        t->type == task_type_rt_ghost2 || t->type == task_type_rt_tchem ||
         t->subtype == task_subtype_force ||
         t->subtype == task_subtype_limiter ||
         t->subtype == task_subtype_gradient ||
@@ -1567,7 +1573,9 @@ void engine_skip_force_and_kick(struct engine *e) {
         t->subtype == task_subtype_tend_bpart ||
         t->subtype == task_subtype_rho ||
         t->subtype == task_subtype_sf_counts ||
-        t->subtype == task_subtype_rt_inject)
+        t->subtype == task_subtype_rt_inject ||
+        t->subtype == task_subtype_rt_gradient ||
+        t->subtype == task_subtype_rt_transport)
       t->skip = 1;
   }
 

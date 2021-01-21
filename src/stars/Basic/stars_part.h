@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DEFAULT_STAR_PART_H
-#define SWIFT_DEFAULT_STAR_PART_H
+#ifndef SWIFT_BASIC_STAR_PART_H
+#define SWIFT_BASIC_STAR_PART_H
 
 /* Some standard headers. */
 #include <stdlib.h>
@@ -26,6 +26,7 @@
 #include "chemistry_struct.h"
 #include "feedback_struct.h"
 #include "particle_splitting_struct.h"
+#include "rt_struct.h"
 #include "star_formation_struct.h"
 #include "tracers_struct.h"
 
@@ -95,6 +96,9 @@ struct spart {
   /*! Splitting structure */
   struct particle_splitting_data split_data;
 
+  /*! Radiative Transfer data */
+  struct rt_spart_data rt_data;
+
 #ifdef WITH_LOGGER
   /* Additional data for the particle logger */
   struct logger_part_data logger_data;
@@ -150,4 +154,4 @@ struct stars_props {
   float log_max_h_change;
 };
 
-#endif /* SWIFT_DEFAULT_STAR_PART_H */
+#endif /* SWIFT_BASIC_STAR_PART_H */
