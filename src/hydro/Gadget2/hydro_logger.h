@@ -19,6 +19,11 @@
 #ifndef SWIFT_GADGET2_HYDRO_LOGGER_H
 #define SWIFT_GADGET2_HYDRO_LOGGER_H
 
+/* Include configuration */
+#include "config.h"
+
+#ifdef WITH_LOGGER
+
 /* Include the particles */
 #include "align.h"
 #include "hydro_part.h"
@@ -28,8 +33,6 @@
 
 /* Include the logger functions */
 #include "logger_io.h"
-
-#ifdef WITH_LOGGER
 
 /*
  * List of all possible mask.
