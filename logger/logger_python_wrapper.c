@@ -396,46 +396,67 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
 }
 
 /**
- * @brief Read some fields at a given time.
+ * @brief Check the input data for #pyGetParticleData.
  *
- * @param basename The basename of the logger files.
- * @param fields Python list containing the name of the fields (e.g.
- * Coordinates).
- * @param time The time of the fields.
- * @param verbose (Optional) The verbose level of the reader.
- *
- * @return List of numpy array containing the fields requested (in the same
- * order).
+ * @param fields The list of fields to read.
+ * @param types The type of particles to read.
+ * @param part_ids The list of particle ids to read.
+ * @param read_types (output) The list of particles' type to
+ *   read (needs to be already allocated).
  */
-static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
-                                   PyObject *args, PyObject *kwds) {
-  PyObjectReader *self_reader = (PyObjectReader *)self;
-  if (!self_reader->ready) {
-    error_python(
-        "The logger is not ready yet."
-        "Did you forget to open it with \"with\"?");
-  }
-
-  /* input variables. */
-  PyObject *fields = NULL;
-  double time = 0;
-  PyObject *types = Py_None;
-
-  /* List of keyword arguments. */
-  static char *kwlist[] = {"fields", "time", "part_type", NULL};
-
-  /* parse the arguments. */
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od|O", kwlist, &fields, &time,
-                                   &types))
-    return NULL;
+void pyGetParticleData_CheckInput(PyObject *fields, PyObject *types,
+                                  PyObject *part_ids, int *read_types) {
 
   /* Check the inputs. */
   if (!PyList_Check(fields)) {
     error_python("Expecting a list of fields");
   }
 
+  /* Ensure that only the type or the ids are provided. */
+  if (types != Py_None && part_ids != Py_None) {
+    error_python(
+        "Cannot request for both a type of particles and "
+        "a list of ids.");
+  }
+
+  /* Ensure that a list of ids are provided. */
+  if (part_ids != Py_None) {
+    if (!PyList_Check(part_ids)) {
+      error_python(
+          "Expecting a list of numpy arrays containing the ids of the "
+          "particles");
+    }
+
+    /* Check each element */
+    const size_t size = PyList_Size(part_ids);
+    if (size != swift_type_count) {
+      error_python(
+          "The list of ids should contain an array for each particle type");
+    }
+    for (size_t i = 0; i < size; i++) {
+      PyArrayObject *el = (PyArrayObject *)PyList_GetItem(part_ids, i);
+
+      /* Early abort */
+      if ((PyObject *)el == Py_None) continue;
+
+      /* Check object type */
+      if (!PyArray_Check(el))
+        error_python(
+            "Expecting either None or a numpy arrayfor each element in "
+            "the particle ids");
+      /* Check data type */
+      if (PyArray_TYPE(el) != NPY_LONGLONG) {
+        error_python("Expecting an array of long long integer for the ids.");
+      }
+
+      /* Check if data are contiguous */
+      if (!PyArray_IS_C_CONTIGUOUS(el) && !PyArray_IS_F_CONTIGUOUS(el)) {
+        error_python("The particles ids should be in a contiguous array");
+      }
+    }
+  }
+
   /* Get the type of particles to read. */
-  int read_types[swift_type_count] = {0};
   /* By default, we read everything */
   if (types == Py_None) {
     for (int i = 0; i < swift_type_count; i++) {
@@ -462,6 +483,46 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
       read_types[type] = 1;
     }
   }
+}
+
+/**
+ * @brief Read some fields at a given time.
+ *
+ * @param basename The basename of the logger files.
+ * @param fields Python list containing the name of the fields (e.g.
+ * Coordinates).
+ * @param time The time of the fields.
+ * @param verbose (Optional) The verbose level of the reader.
+ *
+ * @return List of numpy array containing the fields requested (in the same
+ * order).
+ */
+static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
+                                   PyObject *args, PyObject *kwds) {
+
+  PyObjectReader *self_reader = (PyObjectReader *)self;
+  if (!self_reader->ready) {
+    error_python(
+        "The logger is not ready yet."
+        "Did you forget to open it with \"with\"?");
+  }
+
+  /* input variables. */
+  PyObject *fields = NULL;
+  double time = 0;
+  PyObject *types = Py_None;
+  PyObject *part_ids = Py_None;
+
+  /* List of keyword arguments. */
+  static char *kwlist[] = {"fields", "time", "part_ids", "part_type", NULL};
+
+  /* parse the arguments. */
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od|OO", kwlist, &fields, &time,
+                                   &part_ids, &types))
+    return NULL;
+
+  int read_types[swift_type_count] = {0};
+  pyGetParticleData_CheckInput(fields, types, part_ids, read_types);
 
   /* initialize the reader. */
   struct logger_reader *reader = &self_reader->reader;
@@ -502,7 +563,19 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
 
   /* Get the number of particles. */
   uint64_t n_part[swift_type_count];
-  logger_reader_get_number_particles(reader, n_part, read_types);
+  if (part_ids == Py_None) {
+    /* If no ids provided, read everything from the index files */
+    logger_reader_get_number_particles(reader, n_part, read_types);
+  }
+  /* If the ids are provided, use them to get the number of particles */
+  else {
+    for (int i = 0; i < swift_type_count; i++) {
+      PyObject *el = PyList_GetItem(part_ids, i);
+      n_part[i] = el == Py_None ? 0 : PyArray_Size(el);
+    }
+  }
+
+  /* Count the total number of particles. */
   uint64_t n_tot = 0;
   for (int i = 0; i < swift_type_count; i++) {
     n_tot += n_part[i];
@@ -515,8 +588,26 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   }
 
   /* Read the particles. */
-  logger_reader_read_all_particles(reader, time, logger_reader_lin,
-                                   field_indices, n_fields, output, n_part);
+  if (part_ids == Py_None) {
+    logger_reader_read_all_particles(reader, time, logger_reader_lin,
+                                     field_indices, n_fields, output, n_part);
+  } else {
+    /* Get the arrays in a C compatible way */
+    const long long *c_part_ids[swift_type_count];
+    for (int i = 0; i < swift_type_count; i++) {
+      PyObject *el = PyList_GetItem(part_ids, i);
+      /* Check if a list is provided */
+      if (el == Py_None) {
+        c_part_ids[i] = NULL;
+        continue;
+      }
+
+      c_part_ids[i] = (long long *)PyArray_DATA((PyArrayObject *)el);
+    }
+    logger_reader_read_particles_from_ids(reader, time, logger_reader_lin,
+                                          field_indices, n_fields, output,
+                                          n_part, c_part_ids);
+  }
 
   /* Create the python output. */
   PyObject *array = logger_loader_create_output(output, field_indices, n_fields,

@@ -64,14 +64,27 @@ for f in args.files:
     else:
         raise Exception("It seems that you are not providing a logfile (.dump)")
     with logger.Reader(filename, verbose=0) as reader:
+        if ("Coordinates" not in fields or
+            "Entropies" not in fields):
+            raise Exception("Field not found in the logfile")
+
+        # Read all the particles
         t = reader.get_time_limits()
         out = reader.get_particle_data(
             fields=["Coordinates", "Entropies"], time=args.time)
 
         fields = reader.get_list_fields(part_type=gas_type)
-        if ("Coordinates" not in fields or
-            "Entropies" not in fields):
-            raise Exception("Field not found in the logfile")
+
+        # Get the particle ids
+        gas_ids = out[2]
+        gas_ids = gas_ids[:len(gas_ids)//2]
+        ids = [None] * 6
+        ids[gas_type] = gas_ids
+
+        # Read from the ids
+        out = reader.get_particle_data(
+            fields=["Coordinates", "Entropies"], time=args.time,
+            part_ids=ids)
 
         # add the data to the list
         positions = np.append(positions, out[0], axis=0)
