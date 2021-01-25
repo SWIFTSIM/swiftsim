@@ -328,3 +328,65 @@ void logger_index_init(struct logger_index *index,
   /* Set the time to its default value */
   index->time = -1;
 }
+
+/**
+ * @brief Give the offset of a particle given its id.
+ *
+ * @param index The #logger_index.
+ * @param id The ID of the particle.
+ * @param type The type of particles.
+ *
+ * @return The offset of the particle.
+ */
+uint64_t logger_index_get_offset(struct logger_index *index, int64_t id,
+                                 int type) {
+
+  /* Ensure that the file is sorted according to the ids. */
+  if (!index->is_sorted) {
+    error_python("The index file should be already sorted.");
+  }
+
+  /* Get the data structure. */
+  struct index_data *data = logger_index_get_data(index, type);
+
+  /* Perform a binary search. */
+  int64_t left = data[0].id;
+  int64_t right = data[index->nparts[type] - 1].id;
+
+  /* Find the id through a bisection method. */
+  // TODO use interpolation search (same for the other binary searches)
+  while (left <= right) {
+    int64_t center = (left + right) >> 1;
+
+    if (id > center) {
+      left = center + 1;
+    } else if (id < center) {
+      right = center - 1;
+    } else {
+      left = right = center;
+      break;
+    }
+  }
+
+  /* Ensure that we got the correct id */
+  if (left == right && left != id) {
+    error("Failed to obtain the correct id");
+  }
+
+  /* Return the correct value if found. */
+  if (left == right) {
+    return data[left].offset;
+  }
+
+  /* Try to find it in the history */
+  // TODO Improve this with a sort?
+  data = logger_index_get_created_history(index, type);
+  for (uint64_t i = 0; i < index->nparts_created[type]; i++) {
+    if (data[i].id == id) {
+      return data[i].offset;
+    }
+  }
+
+  // TODO deal properly with the particles not found
+  error("Particle id=%li not found. TODO improve this", id);
+}
