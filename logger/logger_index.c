@@ -335,11 +335,12 @@ void logger_index_init(struct logger_index *index,
  * @param index The #logger_index.
  * @param id The ID of the particle.
  * @param type The type of particles.
+ * @param offset (output) The offset of the particle.
  *
- * @return The offset of the particle.
+ * @return Did we find the particle?
  */
-uint64_t logger_index_get_offset(struct logger_index *index, int64_t id,
-                                 int type) {
+int logger_index_get_offset(struct logger_index *index, int64_t id,
+                                 int type, uint64_t *offset) {
 
   /* Ensure that the file is sorted according to the ids. */
   if (!index->is_sorted) {
@@ -375,7 +376,8 @@ uint64_t logger_index_get_offset(struct logger_index *index, int64_t id,
 
   /* Return the correct value if found. */
   if (left == right) {
-    return data[left].offset;
+    *offset = data[left].offset;
+    return 1;
   }
 
   /* Try to find it in the history */
@@ -383,10 +385,11 @@ uint64_t logger_index_get_offset(struct logger_index *index, int64_t id,
   data = logger_index_get_created_history(index, type);
   for (uint64_t i = 0; i < index->nparts_created[type]; i++) {
     if (data[i].id == id) {
-      return data[i].offset;
+      *offset = data[i].offset;
+      return 1;
     }
   }
 
-  // TODO deal properly with the particles not found
-  error("Particle id=%li not found. TODO improve this", id);
+  /* The particle was not found */
+  return 0;
 }

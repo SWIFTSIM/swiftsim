@@ -91,9 +91,6 @@ for f in args.files:
             fields=["Coordinates", "Entropies", "ParticleIDs"], time=args.time,
             filter_by_ids=ids)
 
-        print(gas_ids)
-        print(out[2])
-
         # Print the missing ids
         gas_ids, ids_found = set(gas_ids), set(out[2])
         print("The following ids were not found: ", gas_ids.difference(ids_found))

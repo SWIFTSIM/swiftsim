@@ -753,14 +753,16 @@ void logger_reader_read_all_particles(struct logger_reader *reader, double time,
  * @param output Pointer to the output array. Size: (n_fields_wanted,
  * sum(n_part)).
  * @param n_part Number of particles of each type.
+ * Updated with the number of particles found.
  * @param type The particle type
  * @param ids The particles' ids.
+ * The ids not found are removed from this array.
  */
 void logger_reader_read_particles_from_ids_single_type(
     struct logger_reader *reader, double time,
     enum logger_reader_type interp_type, const int *global_fields_wanted,
-    const int n_fields_wanted, void **output, const uint64_t *n_part,
-    enum part_type type, const long long *ids) {
+    const int n_fields_wanted, void **output, uint64_t *n_part,
+    enum part_type type, long long *ids) {
 
   const struct header *h = &reader->log.header;
 
@@ -792,8 +794,18 @@ void logger_reader_read_particles_from_ids_single_type(
   for (size_t i = 0; i < n_part[type]; i++) {
 
     /* Get the offset */
-    size_t offset =
-        logger_index_get_offset(&reader->index.index_prev, ids[i], type);
+    size_t offset = 0;
+    int found = logger_index_get_offset(&reader->index.index_prev, ids[i],
+                                        type, &offset);
+
+    /* Deal with the particles not found */
+    if (!found) {
+      if (i != n_part[type] - 1)
+        ids[i] = ids[i+1];
+      n_part[type] -= 1;
+      i -= 1;
+      continue;
+    }
 
     /* Loop over each field. */
     for (int field = 0; field < n_fields_wanted; field++) {
@@ -809,7 +821,11 @@ void logger_reader_read_particles_from_ids_single_type(
 
       /* Is the particle still present? */
       if (particle_removed) {
-        error("Particle removed. TODO improve this.");
+        if (i != n_part[type] - 1)
+          ids[i] = ids[i+1];
+        n_part[type] -= 1;
+        i -= 1;
+        break;
       }
     }
   }
@@ -830,12 +846,15 @@ void logger_reader_read_particles_from_ids_single_type(
  * @param output Pointer to the output array. Size: (n_fields_wanted,
  * sum(n_part)).
  * @param n_part Number of particles of each type.
+ * Updated with the number of particles found.
+ * @param ids The particles' ids.
+ * The ids not found are removed from this array.
  */
 void logger_reader_read_particles_from_ids(
     struct logger_reader *reader, double time,
     enum logger_reader_type interp_type, const int *global_fields_wanted,
-    const int n_fields_wanted, void **output, const uint64_t *n_part,
-    const long long **ids) {
+    const int n_fields_wanted, void **output, uint64_t *n_part,
+    long long **ids) {
 
   /* Read the gas */
   if (n_part[swift_type_gas] != 0) {
