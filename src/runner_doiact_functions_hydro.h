@@ -1416,8 +1416,8 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
   const float h_max = limit_max_h ? ci->dmin * (1. / kernel_gamma) : FLT_MAX;
 
   /* Get some other useful values. */
-  const double hi_max = min(ci->hydro.h_max, h_max);
-  const double hj_max = min(cj->hydro.h_max, h_max);
+  const double hi_max = ci->hydro.h_max;
+  const double hj_max = cj->hydro.h_max;
   const int count_i = ci->hydro.count;
   const int count_j = cj->hydro.count;
   struct part *restrict parts_i = ci->hydro.parts;
@@ -1457,6 +1457,7 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
     for (int k = 0; k < count_i; k++) {
       const struct part *p = &parts_i[sort_i[k].i];
       const float h = p->h;
+
       if (part_is_active(p, e) && (h >= h_min) && (h < h_max)) {
         sort_active_i[count_active_i] = sort_i[k];
         count_active_i++;
@@ -1478,6 +1479,7 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
     for (int k = 0; k < count_j; k++) {
       const struct part *p = &parts_j[sort_j[k].i];
       const float h = p->h;
+
       if (part_is_active(p, e) && (h >= h_min) && (h < h_max)) {
         sort_active_j[count_active_j] = sort_j[k];
         count_active_j++;
@@ -1510,11 +1512,11 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
     const float piy = pi->x[1] - shift_i[1];
     const float piz = pi->x[2] - shift_i[2];
 
-    const int doi = part_is_active(pi, e) && (hi >= h_min) && (hi < h_max);
+    const int update_i = part_is_active(pi, e) && (hi >= h_min) && (hi < h_max);
 
     /* Do we need to only check active parts in cj
        (i.e. pi does not need updating) ? */
-    if (!doi) {
+    if (!update_i) {
 
       /* Loop over the *active* parts in cj within range of pi */
       for (int pjd = 0; pjd < count_active_j && sort_active_j[pjd].d < di;
@@ -1579,6 +1581,7 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
         /* Hit or miss?
            (note that we will do the other condition in the reverse loop) */
         if (r2 < hig2) {
+
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
@@ -1650,6 +1653,7 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
         if (pj->ti_drift != e->ti_current)
           error("Particle pj not drifted to current time");
 #endif
+
         /* Hit or miss?
            (note that we will do the other condition in the reverse loop) */
         if (r2 < hig2) {
@@ -1659,6 +1663,7 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
 
           /* Does pj need to be updated too? */
           if (doj) {
+
             IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hi, hj, pi, pj, a, H);
@@ -1671,6 +1676,7 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
                                   t_current, cosmo, with_cosmology);
 #endif
           } else {
+
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
@@ -1714,11 +1720,11 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
     const float pjy = pj->x[1] - shift_j[1];
     const float pjz = pj->x[2] - shift_j[2];
 
-    const int doj = part_is_active(pj, e) && (hj >= h_min) && (hj < h_max);
+    const int update_j = part_is_active(pj, e) && (hj >= h_min) && (hj < h_max);
 
     /* Do we need to only check active parts in ci
        (i.e. pj does not need updating) ? */
-    if (!doj) {
+    if (!update_j) {
 
       /* Loop over the *active* parts in ci. */
       for (int pid = count_active_i - 1;
@@ -1783,6 +1789,7 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
         /* Hit or miss?
            (note that we must avoid the r2 < hig2 cases we already processed) */
         if (r2 < hjg2 && r2 >= hig2) {
+
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
@@ -1865,6 +1872,7 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
 
           /* Does pi need to be updated too? */
           if (doi) {
+
             IACT(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_chemistry(r2, dx, hj, hi, pj, pi, a, H);
@@ -1877,6 +1885,7 @@ void DOPAIR2(struct runner *r, const struct cell *restrict ci,
                                   t_current, cosmo, with_cosmology);
 #endif
           } else {
+
             IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
@@ -2408,18 +2417,22 @@ void DOSELF2(struct runner *r, const struct cell *c, const int limit_min_h,
 
           /* Update both pi and pj */
 
-#ifdef SWIFT_DEBUG_CHECKS
-          if (hi * kernel_gamma > c->dmin)
-            error(
-                "h_i too large for this cell! depth=%d limit min/max=%d%d H=%e "
-                "dmin=%e",
-                c->depth, limit_min_h, limit_max_h, hi * kernel_gamma, c->dmin);
-          if (hj * kernel_gamma > c->dmin)
-            error(
-                "h_j too large for this cell! depth=%d limit min/max=%d%d H=%e "
-                "dmin=%e",
-                c->depth, limit_min_h, limit_max_h, hj * kernel_gamma, c->dmin);
-#endif
+          /* #ifdef SWIFT_DEBUG_CHECKS */
+          /*           if (hi * kernel_gamma > c->dmin) */
+          /*             error( */
+          /*                 "h_i too large for this cell! depth=%d limit
+           * min/max=%d%d H=%e " */
+          /*                 "dmin=%e", */
+          /*                 c->depth, limit_min_h, limit_max_h, hi *
+           * kernel_gamma, c->dmin); */
+          /*           if (hj * kernel_gamma > c->dmin) */
+          /*             error( */
+          /*                 "h_j too large for this cell! depth=%d limit
+           * min/max=%d%d H=%e " */
+          /*                 "dmin=%e", */
+          /*                 c->depth, limit_min_h, limit_max_h, hj *
+           * kernel_gamma, c->dmin); */
+          /* #endif */
 
           IACT(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
@@ -2436,13 +2449,15 @@ void DOSELF2(struct runner *r, const struct cell *c, const int limit_min_h,
 
           /* Update only pi */
 
-#ifdef SWIFT_DEBUG_CHECKS
-          if (hi * kernel_gamma > c->dmin)
-            error(
-                "h_i too large for this cell! depth=%d limit min/max=%d%d H=%e "
-                "dmin=%e",
-                c->depth, limit_min_h, limit_max_h, hi * kernel_gamma, c->dmin);
-#endif
+          /* #ifdef SWIFT_DEBUG_CHECKS */
+          /*           if (hi * kernel_gamma > c->dmin) */
+          /*             error( */
+          /*                 "h_i too large for this cell! depth=%d limit
+           * min/max=%d%d H=%e " */
+          /*                 "dmin=%e", */
+          /*                 c->depth, limit_min_h, limit_max_h, hi *
+           * kernel_gamma, c->dmin); */
+          /* #endif */
 
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
@@ -2731,8 +2746,8 @@ void DOSUB_PAIR2(struct runner *r, struct cell *ci, struct cell *cj,
 
     /* Should we change the recursion regime because we encountered a large
        particle? */
-    if (!recurse_below_h_max && (!cell_can_recurse_in_subpair_hydro_task(ci) ||
-                                 !cell_can_recurse_in_subpair_hydro_task(cj))) {
+    if (!recurse_below_h_max && (!cell_can_recurse_in_pair_hydro_task(ci) ||
+                                 !cell_can_recurse_in_pair_hydro_task(cj))) {
       recurse_below_h_max = 1;
     }
 
@@ -2804,7 +2819,7 @@ void DOSUB_SELF2(struct runner *r, struct cell *c, int recurse_below_h_max,
 
     /* Should we change the recursion regime because we encountered a large
        particle at this level? */
-    if (!recurse_below_h_max && !cell_can_recurse_in_subself_hydro_task(c)) {
+    if (!recurse_below_h_max && !cell_can_recurse_in_self_hydro_task(c)) {
       recurse_below_h_max = 1;
     }
 
