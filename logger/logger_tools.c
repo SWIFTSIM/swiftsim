@@ -353,11 +353,11 @@ size_t tools_check_record_consistency(const struct logger_reader *reader,
 }
 
 /**
- * @brief Remove the previous text and print a progress bar.
+ * @brief Remove the previous text and print the progress of current task.
  *
  * @param percentage The current progress.
  * @param remaining_time The remaining time of the process (in seconds)
- * @param message The message to display before the progress bar.
+ * @param message The message to display before the progress message.
  */
 void tools_print_progress(float percentage, int remaining_time,
                           const char *message) {
