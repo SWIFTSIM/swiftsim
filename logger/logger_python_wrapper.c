@@ -474,11 +474,6 @@ void pyGetParticleData_CheckInput(PyObject *fields, PyObject *types,
       if (PyArray_TYPE(el) != NPY_LONGLONG) {
         error_python("Expecting an array of long long integer for the ids.");
       }
-
-      /* Check if data are contiguous */
-      if (!PyArray_IS_C_CONTIGUOUS(el) && !PyArray_IS_F_CONTIGUOUS(el)) {
-        error_python("The particles ids should be in a contiguous array");
-      }
     }
   }
 
@@ -620,20 +615,35 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
                                      field_indices, n_fields, output, n_part);
   } else {
     /* Get the arrays in a C compatible way */
-    const long long *c_part_ids[swift_type_count];
+    PyObject *list[swift_type_count] = {NULL};
+    long long *c_part_ids[swift_type_count];
     for (int i = 0; i < swift_type_count; i++) {
       PyObject *el = PyList_GetItem(part_ids, i);
+
       /* Check if a list is provided */
       if (el == Py_None) {
         c_part_ids[i] = NULL;
         continue;
       }
 
-      c_part_ids[i] = (long long *)PyArray_DATA((PyArrayObject *)el);
+      /* Copy the ids in order to modify them */
+      list[i] = PyArray_NewCopy((PyArrayObject *) el, NPY_CORDER);
+      c_part_ids[i] = (long long *)PyArray_DATA((PyArrayObject *)list[i]);
     }
+
+    /* Read the particles. */
     logger_reader_read_particles_from_ids(reader, time, logger_reader_lin,
                                           field_indices, n_fields, output,
                                           n_part, c_part_ids);
+
+    /* Free the memory and recompute n_tot */
+    n_tot = 0;
+    for(int i = 0; i < swift_type_count; i++) {
+      if (list[i] != NULL)
+        Py_DECREF(list[i]);
+
+      n_tot += n_part[i];
+    }
   }
 
   /* Create the python output. */
