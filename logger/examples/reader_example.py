@@ -85,9 +85,19 @@ for f in args.files:
         ids[gas_type] = gas_ids
 
         # Read from the ids
+        # As we are filtering by particle ids, the field "ParticleIDs" is required
+        # in order to verify the particle obtained.
         out = reader.get_particle_data(
-            fields=["Coordinates", "Entropies"], time=args.time,
-            part_ids=ids)
+            fields=["Coordinates", "Entropies", "ParticleIDs"], time=args.time,
+            filter_by_ids=ids)
+
+        print(gas_ids)
+        print(out[2])
+
+        # Print the missing ids
+        gas_ids, ids_found = set(gas_ids), set(out[2])
+        print("The following ids were not found: ", gas_ids.difference(ids_found))
+        print("The following ids are wrongly missing: ", ids_found.difference(gas_ids))
 
         # add the data to the list
         positions = np.append(positions, out[0], axis=0)

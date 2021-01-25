@@ -352,17 +352,17 @@ uint64_t logger_index_get_offset(struct logger_index *index, int64_t id,
   struct index_data *data = logger_index_get_data(index, type);
 
   /* Perform a binary search. */
-  int64_t left = data[0].id;
-  int64_t right = data[index->nparts[type] - 1].id;
+  size_t left = 0;
+  size_t right = index->nparts[type] - 1;
 
   /* Find the id through a bisection method. */
   // TODO use interpolation search (same for the other binary searches)
   while (left <= right) {
     int64_t center = (left + right) >> 1;
 
-    if (id > center) {
+    if (id > data[center].id) {
       left = center + 1;
-    } else if (id < center) {
+    } else if (id < data[center].id) {
       right = center - 1;
     } else {
       left = right = center;
@@ -371,7 +371,7 @@ uint64_t logger_index_get_offset(struct logger_index *index, int64_t id,
   }
 
   /* Ensure that we got the correct id */
-  if (left == right && left != id) {
+  if (left == right && data[left].id != id) {
     error("Failed to obtain the correct id");
   }
 

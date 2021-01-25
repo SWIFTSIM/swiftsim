@@ -419,6 +419,32 @@ void pyGetParticleData_CheckInput(PyObject *fields, PyObject *types,
         "a list of ids.");
   }
 
+  /* Ensure that if the ids are provided, the particle ids are requested too */
+  if (part_ids != Py_None) {
+    int found = 0;
+    const size_t size = PyList_Size(fields);
+    /* Loop over all the required fields */
+    for (size_t i = 0; i < size; i++) {
+      /* Get the current string */
+      PyObject *el = PyList_GetItem(fields, i);
+      Py_ssize_t string_size;
+      char *ptr = PyUnicode_AsUTF8AndSize(el, &string_size);
+
+      /* Compare the fields by name */
+      if (strcmp(ptr, "ParticleIDs") == 0) {
+        found = 1;
+        break;
+      }
+    }
+
+    /* Check if ParticleIDs is found */
+    if (!found) {
+      error_python(
+          "The field 'ParticleIDs' is required when filtering by particle "
+          "ids.");
+    }
+  }
+
   /* Ensure that a list of ids are provided. */
   if (part_ids != Py_None) {
     if (!PyList_Check(part_ids)) {
@@ -514,7 +540,8 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   PyObject *part_ids = Py_None;
 
   /* List of keyword arguments. */
-  static char *kwlist[] = {"fields", "time", "part_ids", "part_type", NULL};
+  static char *kwlist[] = {"fields", "time", "filter_by_ids", "part_type",
+                           NULL};
 
   /* parse the arguments. */
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od|OO", kwlist, &fields, &time,
