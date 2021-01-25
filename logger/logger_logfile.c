@@ -135,8 +135,7 @@ void logger_logfile_check_record_consistency(struct logger_logfile *log) {
           (current_time - init_time) * (100. - current) / current;
 
       /* Print the bar */
-      tools_print_progress_bar(current, remaining_time,
-                               "Reversing the offsets");
+      tools_print_progress(current, remaining_time, "Reversing the offsets");
 
       /* Compute the next update of the progress bar */
       next_percentage += delta_percentage;
@@ -191,7 +190,7 @@ void logger_logfile_reverse_offset(struct logger_logfile *log, char *filename) {
     message("Reversing offsets...");
   }
 
-  /* Prepare the progress bar. */
+  /* Prepare the progress message. */
   float next_percentage = 0.;
   const float delta_percentage = 0.2;
   printf("\n");
@@ -201,7 +200,7 @@ void logger_logfile_reverse_offset(struct logger_logfile *log, char *filename) {
   /* reverse the record's offset. */
   for (size_t offset = header->offset_first_record; offset < log->log.mmap_size;
        offset = tools_reverse_offset(header, log->log.map, offset)) {
-    /* Check if we should update the progress bar. */
+    /* Check if we should update the progress. */
     float current = 100 * ((float)offset) / log->log.mmap_size;
     if (current > next_percentage) {
 
@@ -211,15 +210,15 @@ void logger_logfile_reverse_offset(struct logger_logfile *log, char *filename) {
       const int remaining_time =
           (current_time - init_time) * (100. - current) / current;
 
-      /* Print the bar */
-      tools_print_progress_bar(current, remaining_time, "Checking the offsets");
+      /* Print the remaining time */
+      tools_print_progress(current, remaining_time, "Checking the offsets");
 
-      /* Compute the next update of the progress bar */
+      /* Compute the next update of the progress */
       next_percentage += delta_percentage;
     }
   }
 
-  /* Close the progress bar */
+  /* Close the progress */
   printf("\n");
 
   if (reader->verbose > 0) {

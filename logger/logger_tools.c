@@ -24,8 +24,6 @@
 #include "logger_reader.h"
 
 #include <stdio.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
 
 /**
  * @brief Compute the number of fields for a given particle type.
@@ -361,23 +359,8 @@ size_t tools_check_record_consistency(const struct logger_reader *reader,
  * @param remaining_time The remaining time of the process (in seconds)
  * @param message The message to display before the progress bar.
  */
-void tools_print_progress_bar(float percentage, int remaining_time,
-                              const char *message) {
-
-  struct winsize w;
-  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-  const int width = w.ws_col;
-  const int size_before = strlen(message) + 2;
-  const int size_after = 2 /* for h */ + 2 /* for min */
-                         + 2 /* for s */ + 4 /* for percentage */ +
-                         25 /* text */;
-  const int size_bar = min(100, width - size_before - size_after);
-
-  /* Check if we have enough space for the bar. */
-  if (size_bar < 5) {
-    printf("\r");
-    return;
-  }
+void tools_print_progress(float percentage, int remaining_time,
+                          const char *message) {
 
   /* Compute the time */
   int hour = remaining_time / (60 * 60);
@@ -386,23 +369,12 @@ void tools_print_progress_bar(float percentage, int remaining_time,
   int sec = remaining_time - min * 60;
 
   /* Allocate the output string */
-  char *output = (char *)calloc(width + 2, sizeof(char));
-  if (output == NULL) {
-    error("Failed to allocate memory for the progress bar");
-  }
+  char output[300];
 
   /* Write the message */
-  char *current = output + sprintf(output, "%s: [", message);
-
-  /* Write the bar */
-  const int limit = percentage * size_bar / 100;
-  for (int i = 0; i < size_bar - 2; i++) {
-    current[i] = i < limit ? '=' : ' ';
-  }
-  current += size_bar - 2;
-
-  /* Write the remaining time */
-  current += sprintf(current, "] %2.1f%% Remaining time: ", percentage);
+  char *current =
+      output + sprintf(output, "%s: %2.1f%% done, Remaining time: ", message,
+                       percentage);
 
   /* Write the hour */
   if (hour == 0)
@@ -422,7 +394,4 @@ void tools_print_progress_bar(float percentage, int remaining_time,
   /* Print the string */
   printf("\r%s", output);
   fflush(stdout);
-
-  /* Free the memory */
-  free(output);
 }

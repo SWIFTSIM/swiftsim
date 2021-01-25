@@ -119,8 +119,8 @@ size_t tools_reverse_offset(const struct header *h, void *map, size_t offset);
 size_t tools_check_record_consistency(const struct logger_reader *reader,
                                       size_t offset);
 
-void tools_print_progress_bar(float percentage, int remaining_time,
-                              const char *message);
+void tools_print_progress(float percentage, int remaining_time,
+                          const char *message);
 
 #ifndef HAVE_PYTHON
 #define error_python(s, ...) error(s, ##__VA_ARGS__);
