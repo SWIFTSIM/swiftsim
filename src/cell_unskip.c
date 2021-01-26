@@ -1430,8 +1430,8 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
     double shift[3];
     const int sid = space_getsid(s->space, &ci, &cj, shift);
 
-    const int ci_active = cell_is_active_hydro(cj, e) || ci->stars.count > 0;
-    const int cj_active = cell_is_active_hydro(ci, e) || cj->stars.count > 0;
+    const int ci_active = cell_is_active_hydro(cj, e) && ci->stars.count > 0;
+    const int cj_active = cell_is_active_hydro(ci, e) && cj->stars.count > 0;
 
     /* Should we even bother? */
     if (!ci_active && !cj_active) return;
@@ -2497,7 +2497,7 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
 
   /* Drift stars even if they aren't active */
   if (c->stars.drift != NULL) {
-    if (cell_is_active_hydro(c, e) || c->stars.count > 0)
+    if (cell_is_active_hydro(c, e) && c->stars.count > 0)
       cell_activate_drift_spart(c, s);
   }
 
@@ -2522,15 +2522,8 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
       }
     }
 
-    int ci_active, cj_active;
-    if (cj == NULL) {
-      /* self type task, check ci is active hydro */
-      ci_active = (cell_is_active_hydro(ci, e) || ci->stars.count > 0);
-      cj_active = 0;
-    } else {
-      ci_active = (cell_is_active_hydro(cj, e) || ci->stars.count > 0);
-      cj_active = cell_is_active_hydro(ci, e) || cj->stars.count > 0;
-    }
+    const int ci_active = cell_is_active_hydro(ci, e);
+    const int cj_active = (cj != NULL) && cell_is_active_hydro(cj, e);
 
     /* Only activate tasks that involve a local active cell. */
     if ((ci_active || cj_active) &&
@@ -2599,15 +2592,13 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
 
     if (cell_is_active_hydro(c, e)) {
       for (struct link *l = c->hydro.rt_gradient; l != NULL; l = l->next) {
-        /* TODO: all the MPI checks c->nodeID == nodeID once MPI is implemented
-         */
+        /* TODO: all the MPI checks */
         /* I assume that everything necessary here is being done
          * in the hydro part of this function */
         scheduler_activate(s, l->t);
       }
       for (struct link *l = c->hydro.rt_transport; l != NULL; l = l->next) {
-        /* TODO: all the MPI checks c->nodeID == nodeID once MPI is implemented
-         */
+        /* TODO: all the MPI checks */
         /* I assume that everything necessary here is being done
          * in the hydro part of this function */
         scheduler_activate(s, l->t);
