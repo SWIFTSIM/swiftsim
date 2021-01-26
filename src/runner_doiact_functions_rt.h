@@ -44,8 +44,10 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
   if (c->hydro.count == 0 || c->stars.count == 0) return;
   if (!cell_is_active_hydro(c, e)) return;
 
+#ifdef SWIFT_DEBUG_CHECKS
   if (!cell_are_part_drifted(c, e) || !cell_are_spart_drifted(c, e))
-    message("RTERROR:Cell should be drifted: %lld", c->cellID);
+    error("Cell should be drifted: %lld", c->cellID);
+#endif
 
   struct spart *restrict sparts = c->stars.parts;
   struct part *restrict parts = c->hydro.parts;
@@ -110,58 +112,184 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
  */
 void DOPAIR1_NONSYM_RT(struct runner *r, struct cell *ci, struct cell *cj) {
 
+  TIMER_TIC;
+
   const struct engine *e = r->e;
 
-  const int scount_i = ci->stars.count;
+  /* TODO: add cosmology terms to RT_IACT() */
+  /* const int with_cosmology = e->policy & engine_policy_cosmology; */
+  /* const integertime_t ti_current = e->ti_current; */
+  /* const struct cosmology *cosmo = e->cosmology; */
+
+  /* Cosmological terms */
+  /* const float a = cosmo->a; */
+  /* const float H = cosmo->H; */
+
+  /* Get the sort ID. */
+  double shift[3] = {0.0, 0.0, 0.0};
+  const int sid = space_getsid(e->s, &ci, &cj, shift);
+
+  /* Get the cutoff shift. */
+  double rshift = 0.0;
+  for (int k = 0; k < 3; k++) rshift += shift[k] * runner_shift[sid][k];
+
+  /* Pick-out the sorted lists. */
+  const struct sort_entry *restrict sort_j = cell_get_hydro_sorts(cj, sid);
+  const struct sort_entry *restrict sort_i = cell_get_stars_sorts(ci, sid);
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Some constants used to checks that the parts are in the right frame */
+  const float shift_threshold_x =
+      2. * ci->width[0] +
+      2. * max(ci->stars.dx_max_part, cj->hydro.dx_max_part);
+  const float shift_threshold_y =
+      2. * ci->width[1] +
+      2. * max(ci->stars.dx_max_part, cj->hydro.dx_max_part);
+  const float shift_threshold_z =
+      2. * ci->width[2] +
+      2. * max(ci->stars.dx_max_part, cj->hydro.dx_max_part);
+#endif /* SWIFT_DEBUG_CHECKS */
+
+  /* Get some other useful values. */
+  const double hi_max = ci->stars.h_max * kernel_gamma - rshift;
+  const int count_i = ci->stars.count;
   const int count_j = cj->hydro.count;
   struct spart *restrict sparts_i = ci->stars.parts;
   struct part *restrict parts_j = cj->hydro.parts;
 
-  /* Get the relative distance between the pairs, wrapping. */
-  double shift[3] = {0.0, 0.0, 0.0};
-  for (int k = 0; k < 3; k++) {
-    if (cj->loc[k] - ci->loc[k] < -e->s->dim[k] / 2)
-      shift[k] = e->s->dim[k];
-    else if (cj->loc[k] - ci->loc[k] > e->s->dim[k] / 2)
-      shift[k] = -e->s->dim[k];
-  }
+  const double dj_min = sort_j[0].d;
+  const float dx_max = (ci->stars.dx_max_sort + cj->hydro.dx_max_sort);
+  const float hydro_dx_max_rshift = cj->hydro.dx_max_sort - rshift;
 
   /* Loop over the sparts in ci. */
-  for (int sid = 0; sid < scount_i; sid++) {
+  for (int pid = count_i - 1;
+       pid >= 0 && sort_i[pid].d + hi_max + dx_max > dj_min; pid--) {
 
-    /* Get a hold of the ith spart in ci. */
-    struct spart *restrict si = &sparts_i[sid];
+    /* Get a hold of the ith part in ci. */
+    struct spart *restrict spi = &sparts_i[sort_i[pid].i];
+    const float hi = spi->h;
 
-    /* Skip inhibited particles. */
-    if (spart_is_inhibited(si, e)) continue;
+    /* Compute distance from the other cell. */
+    const double px[3] = {spi->x[0], spi->x[1], spi->x[2]};
+    float dist = px[0] * runner_shift[sid][0] + px[1] * runner_shift[sid][1] +
+                 px[2] * runner_shift[sid][2];
 
-    const float hi = si->h;
+    /* Is there anything we need to interact with ? */
+    const double di = dist + hi * kernel_gamma + hydro_dx_max_rshift;
+    if (di < dj_min) continue;
+
+    /* Get some additional information about pi */
     const float hig2 = hi * hi * kernel_gamma2;
-    const float six[3] = {(float)(si->x[0] - (cj->loc[0] + shift[0])),
-                          (float)(si->x[1] - (cj->loc[1] + shift[1])),
-                          (float)(si->x[2] - (cj->loc[2] + shift[2]))};
+    const float pix = spi->x[0] - (cj->loc[0] + shift[0]);
+    const float piy = spi->x[1] - (cj->loc[1] + shift[1]);
+    const float piz = spi->x[2] - (cj->loc[2] + shift[2]);
 
     /* Loop over the parts in cj. */
-    for (int pjd = 0; pjd < count_j; pjd++) {
+    for (int pjd = 0; pjd < count_j && sort_j[pjd].d < di; pjd++) {
 
-      /* Get a pointer to the jth particle. */
-      struct part *restrict pj = &parts_j[pjd];
-      const float hj = pj->h;
+      /* Recover pj */
+      struct part *pj = &parts_j[sort_j[pjd].i];
 
       /* Skip inhibited particles. */
       if (part_is_inhibited(pj, e)) continue;
 
+      const float hj = pj->h;
+      const float pjx = pj->x[0] - cj->loc[0];
+      const float pjy = pj->x[1] - cj->loc[1];
+      const float pjz = pj->x[2] - cj->loc[2];
+
       /* Compute the pairwise distance. */
-      const float pjx[3] = {(float)(pj->x[0] - cj->loc[0]),
-                            (float)(pj->x[1] - cj->loc[1]),
-                            (float)(pj->x[2] - cj->loc[2])};
-      float dx[3] = {six[0] - pjx[0], six[1] - pjx[1], six[2] - pjx[2]};
+      float dx[3] = {pix - pjx, piy - pjy, piz - pjz};
       const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
 
-      if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj);
+#ifdef SWIFT_DEBUG_CHECKS
+      /* Check that particles are in the correct frame after the shifts */
+      if (pix > shift_threshold_x || pix < -shift_threshold_x)
+        error("Invalid particle position in X for pi (pix=%e ci->width[0]=%e)",
+              pix, ci->width[0]);
+      if (piy > shift_threshold_y || piy < -shift_threshold_y)
+        error("Invalid particle position in Y for pi (piy=%e ci->width[1]=%e)",
+              piy, ci->width[1]);
+      if (piz > shift_threshold_z || piz < -shift_threshold_z)
+        error("Invalid particle position in Z for pi (piz=%e ci->width[2]=%e)",
+              piz, ci->width[2]);
+      if (pjx > shift_threshold_x || pjx < -shift_threshold_x)
+        error("Invalid particle position in X for pj (pjx=%e ci->width[0]=%e)",
+              pjx, ci->width[0]);
+      if (pjy > shift_threshold_y || pjy < -shift_threshold_y)
+        error("Invalid particle position in Y for pj (pjy=%e ci->width[1]=%e)",
+              pjy, ci->width[1]);
+      if (pjz > shift_threshold_z || pjz < -shift_threshold_z)
+        error("Invalid particle position in Z for pj (pjz=%e ci->width[2]=%e)",
+              pjz, ci->width[2]);
 
+      /* Check that particles have been drifted to the current time */
+      if (spi->ti_drift != e->ti_current)
+        error("Particle spi not drifted to current time");
+      if (pj->ti_drift != e->ti_current)
+        error("Particle pj not drifted to current time");
+#endif
+
+      /* Hit or miss? */
+      if (r2 < hig2) {
+        IACT_RT(r2, dx, hi, hj, spi, pj);
+        /* IACT_RT(r2, dx, hi, hj, spi, pj, a, H); */
+      }
     } /* loop over the parts in cj. */
   }   /* loop over the parts in ci. */
+
+  /* const struct engine *e = r->e; */
+  /*  */
+  /* const int scount_i = ci->stars.count; */
+  /* const int count_j = cj->hydro.count; */
+  /* struct spart *restrict sparts_i = ci->stars.parts; */
+  /* struct part *restrict parts_j = cj->hydro.parts; */
+  /*  */
+  /* [> Get the relative distance between the pairs, wrapping. <] */
+  /* double shift[3] = {0.0, 0.0, 0.0}; */
+  /* for (int k = 0; k < 3; k++) { */
+  /*   if (cj->loc[k] - ci->loc[k] < -e->s->dim[k] / 2) */
+  /*     shift[k] = e->s->dim[k]; */
+  /*   else if (cj->loc[k] - ci->loc[k] > e->s->dim[k] / 2) */
+  /*     shift[k] = -e->s->dim[k]; */
+  /* } */
+  /*  */
+  /* [> Loop over the sparts in ci. <] */
+  /* for (int sid = 0; sid < scount_i; sid++) { */
+  /*  */
+  /*   [> Get a hold of the ith spart in ci. <] */
+  /*   struct spart *restrict si = &sparts_i[sid]; */
+  /*  */
+  /*   [> Skip inhibited particles. <] */
+  /*   if (spart_is_inhibited(si, e)) continue; */
+  /*  */
+  /*   const float hi = si->h; */
+  /*   const float hig2 = hi * hi * kernel_gamma2; */
+  /*   const float six[3] = {(float)(si->x[0] - (cj->loc[0] + shift[0])), */
+  /*                         (float)(si->x[1] - (cj->loc[1] + shift[1])), */
+  /*                         (float)(si->x[2] - (cj->loc[2] + shift[2]))}; */
+  /*  */
+  /*   [> Loop over the parts in cj. <] */
+  /*   for (int pjd = 0; pjd < count_j; pjd++) { */
+  /*  */
+  /*     [> Get a pointer to the jth particle. <] */
+  /*     struct part *restrict pj = &parts_j[pjd]; */
+  /*     const float hj = pj->h; */
+  /*  */
+  /*     [> Skip inhibited particles. <] */
+  /*     if (part_is_inhibited(pj, e)) continue; */
+  /*  */
+  /*     [> Compute the pairwise distance. <] */
+  /*     const float pjx[3] = {(float)(pj->x[0] - cj->loc[0]), */
+  /*                           (float)(pj->x[1] - cj->loc[1]), */
+  /*                           (float)(pj->x[2] - cj->loc[2])}; */
+  /*     float dx[3] = {six[0] - pjx[0], six[1] - pjx[1], six[2] - pjx[2]}; */
+  /*     const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2]; */
+  /*  */
+  /*     if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj); */
+  /*  */
+  /*   } [> loop over the parts in cj. <] */
+  /* } <]   [> loop over the parts in ci. */
 }
 
 /**
@@ -182,24 +310,12 @@ void DOPAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj, int timer) {
   const int do_stars_in_ci = (cj->nodeID == r->e->nodeID) &&
                              (ci->stars.count != 0) && (cj->hydro.count != 0) &&
                              cell_is_active_hydro(cj, e);
-  if (do_stars_in_ci) {
-    if (!cell_are_spart_drifted(ci, e))
-      message("RTERROR:Cell spart should be drifted! %lld", ci->cellID);
-    if (!cell_are_part_drifted(cj, e))
-      message("RTERROR:Cell part should be drifted! %lld", cj->cellID);
-    DOPAIR1_NONSYM_RT(r, ci, cj);
-  }
+  if (do_stars_in_ci) DOPAIR1_NONSYM_RT(r, ci, cj);
 
   const int do_stars_in_cj = (ci->nodeID == r->e->nodeID) &&
                              (cj->stars.count != 0) && (ci->hydro.count != 0) &&
                              cell_is_active_hydro(ci, e);
-  if (do_stars_in_cj) {
-    if (!cell_are_spart_drifted(cj, e))
-      message("RTERROR:Cell spart should be drifted! %lld", cj->cellID);
-    if (!cell_are_part_drifted(ci, e))
-      message("RTERROR:Cell part should be drifted! %lld", ci->cellID);
-    DOPAIR1_NONSYM_RT(r, cj, ci);
-  }
+  if (do_stars_in_cj) DOPAIR1_NONSYM_RT(r, cj, ci);
 
   if (timer) TIMER_TOC(TIMER_DOPAIR_RT);
 }
@@ -254,11 +370,90 @@ void DOSELF1_BRANCH_RT(struct runner *r, struct cell *c, int timer) {
  */
 void DOPAIR1_BRANCH_RT(struct runner *r, struct cell *ci, struct cell *cj,
                        int timer) {
-#ifdef SWIFT_USE_NAIVE_INTERACTIONS_STARS
-  DOPAIR1_RT_NAIVE(r, ci, cj, 1);
-#else
-  DOPAIR1_RT(r, ci, cj, 1);
+
+  const struct engine *restrict e = r->e;
+  const int do_stars_in_ci = (cj->nodeID == r->e->nodeID) &&
+                             (ci->stars.count != 0) && (cj->hydro.count != 0) &&
+                             cell_is_active_hydro(cj, e);
+  const int do_stars_in_cj = (ci->nodeID == r->e->nodeID) &&
+                             (cj->stars.count != 0) && (ci->hydro.count != 0) &&
+                             cell_is_active_hydro(ci, e);
+
+  /* if (do_stars_in_ci) { */
+  /*  */
+  /*   if (!cell_are_spart_drifted(ci, e)) */
+  /*     error("Cell spart should be drifted! %lld", ci->cellID); */
+  /*   if (!cell_are_part_drifted(cj, e)) */
+  /*     error("Cell part should be drifted! %lld", cj->cellID); */
+  /*   [> TODO: sort checks! <] */
+  /*   [> if (!(ci->stars.dx_max_sort_old > space_maxreldx * ci->dmin)) <] */
+  /*   [>   error("Interacting unsorted cells."); <] */
+  /*   [> if (!(cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin)) <] */
+  /*   [>   error("Interacting unsorted cells."); <] */
+  /*   } */
+  /*  */
+  /* if (do_stars_in_cj) { */
+  /*  */
+  /*   if (!cell_are_spart_drifted(cj, e)) */
+  /*     error("Cell spart should be drifted! %lld", cj->cellID); */
+  /*   if (!cell_are_part_drifted(ci, e)) */
+  /*     error("Cell part should be drifted! %lld", ci->cellID); */
+  /*   [> if (!(ci->hydro.dx_max_sort_old > space_maxreldx * ci->dmin)) <] */
+  /*   [>   error("Interacting unsorted cells."); <] */
+  /*   [> if (!( cj->stars.dx_max_sort_old > space_maxreldx * cj->dmin)) <] */
+  /*   [>   error("Interacting unsorted cells."); <] */
+  /* } */
+
+#ifdef SWIFT_DEBUG_CHECKS
+  /* [> Get the type of pair and flip ci/cj if needed. <] */
+  /* struct space *s = r->e->s; */
+  /* double shift[3]; */
+  /* const int sid = space_getsid(s, &ci, &cj, shift); */
+  /*  */
+  /*   if (do_stars_in_ci) { */
+  /*  */
+  /*     [> Make sure both cells are drifted to the current timestep. <] */
+  /*     if (!cell_are_spart_drifted(ci, e)) */
+  /*       error("Interacting undrifted sparts cell %lld", ci->cellID); */
+  /*  */
+  /*     if (!cell_are_part_drifted(cj, e)) */
+  /*       error("Interacting undrifted parts cell %lld", cj->cellID); */
+  /*  */
+  /*     [> Do any of the cells need to be sorted first? <] */
+  /*     if (!(ci->stars.sorted & (1 << sid))) */
+  /*       error("Interacting unsorted sparts cell %lld", ci->cellID); */
+  /*  */
+  /*     if (!(cj->hydro.sorted & (1 << sid))) */
+  /*       error("Interacting unsorted parts cell %lld", cj->cellID); */
+  /*   } */
+  /*  */
+  /*   if (do_stars_in_cj) { */
+  /*  */
+  /*     [> Make sure both cells are drifted to the current timestep. <] */
+  /*     if (!cell_are_part_drifted(ci, e)) */
+  /*       error("Interacting undrifted parts cells %lld", ci->cellID); */
+  /*  */
+  /* if (!cell_are_spart_drifted(cj, e)) */
+  /*   error("Interacting undrifted sparts cells %lld", cj->cellID); */
+  /*  */
+  /* [> Do any of the cells need to be sorted first? <] */
+  /* if (!(ci->hydro.sorted & (1 << sid))) { */
+  /*   error("Interacting unsorted parts cell %lld", ci->cellID); */
+  /* } */
+  /*  */
+  /* if (!(cj->stars.sorted & (1 << sid))) { */
+  /*   error("Interacting unsorted sparts cell %lld", cj->cellID); */
+  /* } */
+  /* } */
 #endif
+
+  if (do_stars_in_ci || do_stars_in_cj) {
+#ifdef SWIFT_USE_NAIVE_INTERACTIONS_STARS
+    DOPAIR1_RT_NAIVE(r, ci, cj, 1);
+#else
+    DOPAIR1_RT(r, ci, cj, 1);
+#endif
+  }
 }
 
 /**
@@ -296,11 +491,13 @@ void DOSUB_SELF1_RT(struct runner *r, struct cell *c, int timer) {
   /* Otherwise, compute self-interaction. */
   else {
 
+#ifdef SWIFT_DEBUG_CHECKS
     /* Drift the cell to the current timestep if needed. */
     if (!cell_are_spart_drifted(c, r->e))
-      message("RTERROR:Interacting undrifted cell (spart): %lld", c->cellID);
+      error("Interacting undrifted cell (spart): %lld", c->cellID);
     if (!cell_are_part_drifted(c, r->e))
-      message("RTERROR:Interacting undrifted cell (part): %lld", c->cellID);
+      error("Interacting undrifted cell (part): %lld", c->cellID);
+#endif
 
     DOSELF1_BRANCH_RT(r, c, 0);
   }
@@ -326,9 +523,9 @@ void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
   /* Should we even bother? */
   const int should_do_ci = ci->stars.count != 0 && cj->hydro.count != 0 &&
-                           cell_is_active_hydro(ci, e);
-  const int should_do_cj = cj->stars.count != 0 && ci->hydro.count != 0 &&
                            cell_is_active_hydro(cj, e);
+  const int should_do_cj = cj->stars.count != 0 && ci->hydro.count != 0 &&
+                           cell_is_active_hydro(ci, e);
   if (!should_do_ci && !should_do_cj) return;
 
   /* Get the type of pair and flip ci/cj if needed. */
@@ -351,55 +548,10 @@ void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
   else {
 
     /* here we are updating the hydro -> switch ci, cj */
-    const int do_ci_stars = cj->nodeID == e->nodeID;
-    const int do_cj_stars = ci->nodeID == e->nodeID;
-    const int do_ci = ci->stars.count != 0 && cj->hydro.count != 0 &&
-                      cell_is_active_hydro(ci, e) && do_ci_stars;
-    const int do_cj = cj->stars.count != 0 && ci->hydro.count != 0 &&
-                      cell_is_active_hydro(cj, e) && do_cj_stars;
+    const int do_ci_stars = (cj->nodeID == e->nodeID) && should_do_ci;
+    const int do_cj_stars = (ci->nodeID == e->nodeID) && should_do_cj;
 
-    if (do_ci) {
-
-      /* Make sure both cells are drifted to the current timestep. */
-      if (!cell_are_spart_drifted(ci, e))
-        message("RTERROR:Interacting undrifted cells (sparts) %lld",
-                ci->cellID);
-
-      if (!cell_are_part_drifted(cj, e))
-        message("RTERROR:Interacting undrifted cells (parts) %lld", cj->cellID);
-
-      /* Do any of the cells need to be sorted first? */
-      if (!(ci->stars.sorted & (1 << sid))) {
-        message("RTERROR:Interacting unsorted cell (sparts) %lld", ci->cellID);
-      }
-
-      if (!(cj->hydro.sorted & (1 << sid))) {
-        message("RTERROR:Interacting unsorted cell (parts) %i %lld", cj->nodeID,
-                cj->cellID);
-      }
-    }
-
-    if (do_cj) {
-
-      /* Make sure both cells are drifted to the current timestep. */
-      if (!cell_are_part_drifted(ci, e))
-        message("RTERROR:Interacting undrifted cells (parts) %lld", ci->cellID);
-
-      if (!cell_are_spart_drifted(cj, e))
-        message("RTERROR:Interacting undrifted cells (sparts) %lld",
-                cj->cellID);
-
-      /* Do any of the cells need to be sorted first? */
-      if (!(ci->hydro.sorted & (1 << sid))) {
-        message("RTERROR:Interacting unsorted cell (parts) %lld", ci->cellID);
-      }
-
-      if (!(cj->stars.sorted & (1 << sid))) {
-        message("RTERROR:Interacting unsorted cell (sparts) %lld", cj->cellID);
-      }
-    }
-
-    if (do_ci || do_cj) DOPAIR1_BRANCH_RT(r, ci, cj, 0);
+    if (do_ci_stars || do_cj_stars) DOPAIR1_BRANCH_RT(r, ci, cj, 0);
   }
 
   if (timer) TIMER_TOC(TIMER_DOSUB_PAIR_RT);
