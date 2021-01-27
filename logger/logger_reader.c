@@ -795,13 +795,12 @@ void logger_reader_read_particles_from_ids_single_type(
 
     /* Get the offset */
     size_t offset = 0;
-    int found = logger_index_get_offset(&reader->index.index_prev, ids[i],
-                                        type, &offset);
+    int found = logger_index_get_offset(&reader->index.index_prev, ids[i], type,
+                                        &offset);
 
     /* Deal with the particles not found */
     if (!found) {
-      if (i != n_part[type] - 1)
-        ids[i] = ids[i+1];
+      if (i != n_part[type] - 1) ids[i] = ids[i + 1];
       n_part[type] -= 1;
       i -= 1;
       continue;
@@ -821,8 +820,7 @@ void logger_reader_read_particles_from_ids_single_type(
 
       /* Is the particle still present? */
       if (particle_removed) {
-        if (i != n_part[type] - 1)
-          ids[i] = ids[i+1];
+        if (i != n_part[type] - 1) ids[i] = ids[i + 1];
         n_part[type] -= 1;
         i -= 1;
         break;
@@ -850,11 +848,13 @@ void logger_reader_read_particles_from_ids_single_type(
  * @param ids The particles' ids.
  * The ids not found are removed from this array.
  */
-void logger_reader_read_particles_from_ids(
-    struct logger_reader *reader, double time,
-    enum logger_reader_type interp_type, const int *global_fields_wanted,
-    const int n_fields_wanted, void **output, uint64_t *n_part,
-    long long **ids) {
+void logger_reader_read_particles_from_ids(struct logger_reader *reader,
+                                           double time,
+                                           enum logger_reader_type interp_type,
+                                           const int *global_fields_wanted,
+                                           const int n_fields_wanted,
+                                           void **output, uint64_t *n_part,
+                                           long long **ids) {
 
   /* Read the gas */
   if (n_part[swift_type_gas] != 0) {

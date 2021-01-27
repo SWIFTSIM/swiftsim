@@ -82,7 +82,7 @@ for f in args.files:
             fields=fields, time=args.time, part_type=gas_type)
 
         # Get the particle ids
-        gas_ids = out[2]
+        gas_ids = out["ParticleIDs"]
         gas_ids = gas_ids[:len(gas_ids)//2]
         ids = [None] * 6
         ids[gas_type] = gas_ids
@@ -94,13 +94,13 @@ for f in args.files:
             fields=fields, time=args.time, filter_by_ids=ids)
 
         # Print the missing ids
-        gas_ids, ids_found = set(gas_ids), set(out[2])
+        gas_ids, ids_found = set(gas_ids), set(out["ParticleIDs"])
         print("The following ids were not found: ", gas_ids.difference(ids_found))
         print("The following ids are wrongly missing: ", ids_found.difference(gas_ids))
 
         # add the data to the list
-        positions = np.append(positions, out[0], axis=0)
-        entropies = np.append(entropies, out[1], axis=0)
+        positions = np.append(positions, out["Coordinates"], axis=0)
+        entropies = np.append(entropies, out["Entropies"], axis=0)
 
 print("Min/Max of the position:", positions.min(), positions.max())
 print("Min/Max of the entropy:", entropies.min(), entropies.max())
