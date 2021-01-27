@@ -499,11 +499,6 @@ void cooling_cool_part(const struct phys_const *phys_const,
 
   /* No cooling happens over zero time */
   if (dt == 0.) {
-
-    /* But we still set the subgrid properties to a valid state */
-    cooling_set_particle_subgrid_properties(
-        phys_const, us, cosmo, hydro_properties, floor_props, cooling, p, xp);
-
     return;
   }
 
@@ -653,13 +648,6 @@ void cooling_cool_part(const struct phys_const *phys_const,
     /* Update the internal energy time derivative */
     hydro_set_physical_internal_energy_dt(p, cosmo, cooling_du_dt);
   }
-
-  /* Store the radiated energy */
-  xp->cooling_data.radiated_energy -= hydro_get_mass(p) * (u_final - u_0);
-
-  /* set subgrid properties and hydrogen fractions */
-  cooling_set_particle_subgrid_properties(
-      phys_const, us, cosmo, hydro_properties, floor_props, cooling, p, xp);
 }
 
 /**
@@ -700,12 +688,7 @@ __attribute__((always_inline)) INLINE void cooling_first_init_part(
     const struct phys_const *phys_const, const struct unit_system *us,
     const struct hydro_props *hydro_props, const struct cosmology *cosmo,
     const struct cooling_function_data *cooling, struct part *p,
-    struct xpart *xp) {
-
-  xp->cooling_data.radiated_energy = 0.f;
-  p->cooling_data.subgrid_temp = -1.f;
-  p->cooling_data.subgrid_dens = -1.f;
-}
+    struct xpart *xp) {}
 
 /**
  * @brief Compute the fraction of Hydrogen that is in HI based
@@ -730,45 +713,9 @@ float cooling_get_particle_subgrid_HI_fraction(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  /* Physical density of this particle */
-  const float rho_phys = hydro_get_physical_density(p, cosmo);
+  error("Not implemented");
 
-  /* Limit imposed by the entropy floor */
-  const double A_EOS = entropy_floor(p, cosmo, floor_props);
-  const double u_EOS = gas_internal_energy_from_entropy(rho_phys, A_EOS);
-  const double u_EOS_max = u_EOS * exp10(cooling->dlogT_EOS);
-
-  const float log10_u_EOS_max_cgs =
-      log10f(u_EOS_max * cooling->internal_energy_to_cgs + FLT_MIN);
-
-  /* Get the total metallicity in units of solar */
-  float abundance_ratio[colibre_cooling_N_elementtypes];
-  const float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
-
-  /* Get the Hydrogen abundance */
-  const float *const metal_fraction =
-      chemistry_get_metal_mass_fraction_for_cooling(p);
-  const float XH = metal_fraction[chemistry_element_H];
-
-  /* Get the particle pressure */
-  const float P_phys = hydro_get_physical_pressure(p, cosmo);
-
-  /* Get physical internal energy */
-  const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
-
-  /* Are we in an HII region? */
-  const int HII_region = 0; /* No HII regions in the EAGLE-XL flavour */
-
-  /* Get the particle's temperature */
-  const float T = cooling_get_temperature_from_gas(
-      phys_const, cosmo, cooling, rho_phys, logZZsol, XH, u_phys, HII_region);
-  const float log10_T = log10f(T);
-
-  return compute_subgrid_property(
-      cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
-      log10_T, log10_u_EOS_max_cgs, HII_region, abundance_ratio,
-      log10(u_phys * cooling->internal_energy_to_cgs),
-      cooling_compute_subgrid_HI_fraction);
+  return 0.f;
 }
 
 /**
@@ -794,45 +741,8 @@ float cooling_get_particle_subgrid_HII_fraction(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  /* Physical density of this particle */
-  const float rho_phys = hydro_get_physical_density(p, cosmo);
-
-  /* Limit imposed by the entropy floor */
-  const double A_EOS = entropy_floor(p, cosmo, floor_props);
-  const double u_EOS = gas_internal_energy_from_entropy(rho_phys, A_EOS);
-  const double u_EOS_max = u_EOS * exp10(cooling->dlogT_EOS);
-
-  const float log10_u_EOS_max_cgs =
-      log10f(u_EOS_max * cooling->internal_energy_to_cgs + FLT_MIN);
-
-  /* Get the total metallicity in units of solar */
-  float abundance_ratio[colibre_cooling_N_elementtypes];
-  const float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
-
-  /* Get the Hydrogen abundance */
-  const float *const metal_fraction =
-      chemistry_get_metal_mass_fraction_for_cooling(p);
-  const float XH = metal_fraction[chemistry_element_H];
-
-  /* Get the particle pressure */
-  const float P_phys = hydro_get_physical_pressure(p, cosmo);
-
-  /* Get physical internal energy */
-  const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
-
-  /* Are we in an HII region? */
-  const int HII_region = 0; /* No HII regions in the EAGLE-XL flavour */
-
-  /* Get the particle's temperature */
-  const float T = cooling_get_temperature_from_gas(
-      phys_const, cosmo, cooling, rho_phys, logZZsol, XH, u_phys, HII_region);
-  const float log10_T = log10f(T);
-
-  return compute_subgrid_property(
-      cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
-      log10_T, log10_u_EOS_max_cgs, HII_region, abundance_ratio,
-      log10(u_phys * cooling->internal_energy_to_cgs),
-      cooling_compute_subgrid_HII_fraction);
+  error("Not implemented");
+  return 0.f;
 }
 
 /**
@@ -858,45 +768,8 @@ float cooling_get_particle_subgrid_H2_fraction(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  /* Physical density of this particle */
-  const float rho_phys = hydro_get_physical_density(p, cosmo);
-
-  /* Limit imposed by the entropy floor */
-  const double A_EOS = entropy_floor(p, cosmo, floor_props);
-  const double u_EOS = gas_internal_energy_from_entropy(rho_phys, A_EOS);
-  const double u_EOS_max = u_EOS * exp10(cooling->dlogT_EOS);
-
-  const float log10_u_EOS_max_cgs =
-      log10f(u_EOS_max * cooling->internal_energy_to_cgs + FLT_MIN);
-
-  /* Get the total metallicity in units of solar */
-  float abundance_ratio[colibre_cooling_N_elementtypes];
-  const float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
-
-  /* Get the Hydrogen abundance */
-  const float *const metal_fraction =
-      chemistry_get_metal_mass_fraction_for_cooling(p);
-  const float XH = metal_fraction[chemistry_element_H];
-
-  /* Get the particle pressure */
-  const float P_phys = hydro_get_physical_pressure(p, cosmo);
-
-  /* Get physical internal energy */
-  const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
-
-  /* Are we in an HII region? */
-  const int HII_region = 0; /* No HII regions in the EAGLE-XL flavour */
-
-  /* Get the particle's temperature */
-  const float T = cooling_get_temperature_from_gas(
-      phys_const, cosmo, cooling, rho_phys, logZZsol, XH, u_phys, HII_region);
-  const float log10_T = log10f(T);
-
-  return compute_subgrid_property(
-      cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
-      log10_T, log10_u_EOS_max_cgs, HII_region, abundance_ratio,
-      log10(u_phys * cooling->internal_energy_to_cgs),
-      cooling_compute_subgrid_H2_fraction);
+  error("Not implemented");
+  return 0.f;
 }
 
 /**
@@ -921,45 +794,8 @@ float cooling_get_particle_subgrid_temperature(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  /* Physical density of this particle */
-  const float rho_phys = hydro_get_physical_density(p, cosmo);
-
-  /* Limit imposed by the entropy floor */
-  const double A_EOS = entropy_floor(p, cosmo, floor_props);
-  const double u_EOS = gas_internal_energy_from_entropy(rho_phys, A_EOS);
-  const double u_EOS_max = u_EOS * exp10(cooling->dlogT_EOS);
-
-  const float log10_u_EOS_max_cgs =
-      log10f(u_EOS_max * cooling->internal_energy_to_cgs + FLT_MIN);
-
-  /* Get the total metallicity in units of solar */
-  float abundance_ratio[colibre_cooling_N_elementtypes];
-  const float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
-
-  /* Get the Hydrogen abundance */
-  const float *const metal_fraction =
-      chemistry_get_metal_mass_fraction_for_cooling(p);
-  const float XH = metal_fraction[chemistry_element_H];
-
-  /* Get the particle pressure */
-  const float P_phys = hydro_get_physical_pressure(p, cosmo);
-
-  /* Get physical internal energy */
-  const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
-
-  /* Are we in an HII region? */
-  const int HII_region = 0; /* No HII regions in the EAGLE-XL flavour */
-
-  /* Get the particle's temperature */
-  const float T = cooling_get_temperature_from_gas(
-      phys_const, cosmo, cooling, rho_phys, logZZsol, XH, u_phys, HII_region);
-  const float log10_T = log10f(T);
-
-  return compute_subgrid_property(
-      cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
-      log10_T, log10_u_EOS_max_cgs, HII_region, abundance_ratio,
-      log10(u_phys * cooling->internal_energy_to_cgs),
-      cooling_compute_subgrid_temperature);
+  error("Not implemented");
+  return 0.f;
 }
 
 /**
@@ -986,44 +822,8 @@ float cooling_get_particle_subgrid_density(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  /* Physical density of this particle */
-  const float rho_phys = hydro_get_physical_density(p, cosmo);
-
-  /* Limit imposed by the entropy floor */
-  const double A_EOS = entropy_floor(p, cosmo, floor_props);
-  const double u_EOS = gas_internal_energy_from_entropy(rho_phys, A_EOS);
-  const double u_EOS_max = u_EOS * exp10(cooling->dlogT_EOS);
-
-  const float log10_u_EOS_max_cgs =
-      log10f(u_EOS_max * cooling->internal_energy_to_cgs + FLT_MIN);
-
-  /* Get the total metallicity in units of solar */
-  float abundance_ratio[colibre_cooling_N_elementtypes];
-  const float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
-
-  /* Get the Hydrogen abundance */
-  const float *const metal_fraction =
-      chemistry_get_metal_mass_fraction_for_cooling(p);
-  const float XH = metal_fraction[chemistry_element_H];
-
-  /* Get the particle pressure */
-  const float P_phys = hydro_get_physical_pressure(p, cosmo);
-
-  /* Get the particle's temperature */
-  const float T = cooling_get_temperature(phys_const, hydro_props, us, cosmo,
-                                          cooling, p, xp);
-  const float log10_T = log10f(T);
-
-  /* Are we in an HII region? */
-  const int HII_region = 0; /* No HII regions in the EAGLE-XL flavour */
-
-  const float u_start = hydro_get_physical_internal_energy(p, xp, cosmo);
-  const double u_0_cgs = u_start * cooling->internal_energy_to_cgs;
-
-  return compute_subgrid_property(
-      cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
-      log10_T, log10_u_EOS_max_cgs, HII_region, abundance_ratio, log10(u_0_cgs),
-      cooling_compute_subgrid_density);
+  error("Not implemented");
+  return 0.f;
 }
 
 /**
@@ -1044,51 +844,7 @@ void cooling_set_particle_subgrid_properties(
     const struct entropy_floor_properties *floor_props,
     const struct cooling_function_data *cooling, struct part *p,
     struct xpart *xp) {
-
-  /* Physical density of this particle */
-  const float rho_phys = hydro_get_physical_density(p, cosmo);
-
-  /* Limit imposed by the entropy floor */
-  const double A_EOS = entropy_floor(p, cosmo, floor_props);
-  const double u_EOS = gas_internal_energy_from_entropy(rho_phys, A_EOS);
-  const double u_EOS_max = u_EOS * exp10(cooling->dlogT_EOS);
-
-  const float log10_u_EOS_max_cgs =
-      log10f(u_EOS_max * cooling->internal_energy_to_cgs + FLT_MIN);
-
-  /* Get the total metallicity in units of solar */
-  float abundance_ratio[colibre_cooling_N_elementtypes];
-  const float logZZsol = abundance_ratio_to_solar(p, cooling, abundance_ratio);
-
-  /* Get the Hydrogen abundance */
-  const float *const metal_fraction =
-      chemistry_get_metal_mass_fraction_for_cooling(p);
-  const float XH = metal_fraction[chemistry_element_H];
-
-  /* Get the particle pressure */
-  const float P_phys = hydro_get_physical_pressure(p, cosmo);
-
-  /* Get physical internal energy */
-  const float u_phys = hydro_get_physical_internal_energy(p, xp, cosmo);
-  const double u_cgs = u_phys * cooling->internal_energy_to_cgs;
-
-  /* Are we in an HII region? */
-  const int HII_region = 0; /* No HII regions in the EAGLE-XL flavour */
-
-  /* Get the particle's temperature */
-  const float T = cooling_get_temperature_from_gas(
-      phys_const, cosmo, cooling, rho_phys, logZZsol, XH, u_phys, HII_region);
-  const float log10_T = log10f(T);
-
-  p->cooling_data.subgrid_temp = compute_subgrid_property(
-      cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
-      log10_T, log10_u_EOS_max_cgs, HII_region, abundance_ratio, log10(u_cgs),
-      cooling_compute_subgrid_temperature);
-
-  p->cooling_data.subgrid_dens = compute_subgrid_property(
-      cooling, phys_const, floor_props, cosmo, rho_phys, logZZsol, XH, P_phys,
-      log10_T, log10_u_EOS_max_cgs, HII_region, abundance_ratio, log10(u_cgs),
-      cooling_compute_subgrid_density);
+  error("Not implemented");
 }
 
 /**
@@ -1100,7 +856,8 @@ void cooling_set_particle_subgrid_properties(
  */
 float cooling_get_subgrid_temperature(const struct part *p,
                                       const struct xpart *xp) {
-  return p->cooling_data.subgrid_temp;
+  error("Not implemented");
+  return -1.f;
 }
 
 /**
@@ -1112,7 +869,8 @@ float cooling_get_subgrid_temperature(const struct part *p,
  */
 float cooling_get_subgrid_density(const struct part *p,
                                   const struct xpart *xp) {
-  return p->cooling_data.subgrid_dens;
+  error("Not implemented");
+  return -1.f;
 }
 
 /**
@@ -1123,7 +881,8 @@ float cooling_get_subgrid_density(const struct part *p,
 __attribute__((always_inline)) INLINE float cooling_get_radiated_energy(
     const struct xpart *xp) {
 
-  return xp->cooling_data.radiated_energy;
+  error("Not implemented");
+  return -1.f;
 }
 
 /**
@@ -1133,10 +892,7 @@ __attribute__((always_inline)) INLINE float cooling_get_radiated_energy(
  * @param xp The #xpart.
  * @param n The number of pieces to split into.
  */
-void cooling_split_part(struct part *p, struct xpart *xp, double n) {
-
-  xp->cooling_data.radiated_energy /= n;
-}
+void cooling_split_part(struct part *p, struct xpart *xp, double n) {}
 
 /**
  * @brief Inject a fixed amount of energy to each particle in the simulation
