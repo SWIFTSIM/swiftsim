@@ -341,8 +341,8 @@ void logger_index_init(struct logger_index *index,
  *
  * @return Did we find the particle?
  */
-int logger_index_get_offset(struct logger_index *index, int64_t id,
-                                 int type, uint64_t *offset) {
+int logger_index_get_offset(struct logger_index *index, int64_t id, int type,
+                            uint64_t *offset) {
 
   /* Ensure that the file is sorted according to the ids. */
   if (!index->is_sorted) {

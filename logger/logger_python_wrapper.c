@@ -151,6 +151,7 @@ static PyObject *getTimeLimits(PyObject *self, PyObject *Py_UNUSED(ignored)) {
               MODULE##_logger_field_names##PART[local]);                      \
         }                                                                     \
       }                                                                       \
+      strcpy(field_name, MODULE##_logger_field_names##PART[local]);           \
       current_field = &python_fields[local_shifted];                          \
       break;                                                                  \
     }                                                                         \
@@ -189,7 +190,7 @@ logger_loader_create_output(void **output, const int *field_indices,
   struct logger_python_field python_fields[100];
 
   /* Create the python list */
-  PyObject *list = PyList_New(n_fields);
+  PyObject *dict = PyDict_New();
   struct logger_python_field *current_field;
 
   /* Get the hydro fields */
@@ -216,6 +217,7 @@ logger_loader_create_output(void **output, const int *field_indices,
     /* Reset the variables. */
     current_field = NULL;
     total_number_fields = 0;
+    char field_name[STRING_SIZE];
 
     /* Find the fields in the different modules. */
     find_field_in_module_single_particle_type(hydro);
@@ -240,10 +242,10 @@ logger_loader_create_output(void **output, const int *field_indices,
                                         output[i]);
     }
 
-    PyList_SetItem(list, i, array);
+    PyDict_SetItemString(dict, field_name, array);
   }
 
-  return list;
+  return dict;
 }
 
 static PyObject *pyEnter(__attribute__((unused)) PyObject *self,
@@ -627,7 +629,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
       }
 
       /* Copy the ids in order to modify them */
-      list[i] = PyArray_NewCopy((PyArrayObject *) el, NPY_CORDER);
+      list[i] = PyArray_NewCopy((PyArrayObject *)el, NPY_CORDER);
       c_part_ids[i] = (long long *)PyArray_DATA((PyArrayObject *)list[i]);
     }
 
@@ -638,9 +640,8 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
 
     /* Free the memory and recompute n_tot */
     n_tot = 0;
-    for(int i = 0; i < swift_type_count; i++) {
-      if (list[i] != NULL)
-        Py_DECREF(list[i]);
+    for (int i = 0; i < swift_type_count; i++) {
+      if (list[i] != NULL) Py_DECREF(list[i]);
 
       n_tot += n_part[i];
     }
