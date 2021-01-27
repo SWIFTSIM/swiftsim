@@ -88,27 +88,6 @@ struct feedback_spart_data {
       /*! Total mass released by each element */
       float metal_mass[chemistry_element_count];
 
-      /*! Total mass released due to SNIa */
-      float mass_from_SNIa;
-
-      /*! Total metal mass released due to SNIa */
-      float metal_mass_from_SNIa;
-
-      /*! Total iron mass released due to SNIa */
-      float Fe_mass_from_SNIa;
-
-      /*! Total mass released due to SNII */
-      float mass_from_SNII;
-
-      /*! Total metal mass released due to SNII */
-      float metal_mass_from_SNII;
-
-      /*! Total mass released due to AGB */
-      float mass_from_AGB;
-
-      /*! Total metal mass released due to AGB */
-      float metal_mass_from_AGB;
-
       /*! Energy change due to thermal and kinetic energy of ejecta */
       float energy;
 
