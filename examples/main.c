@@ -177,6 +177,7 @@ int main(int argc, char *argv[]) {
   int with_sink = 0;
   int with_qla = 0;
   int with_eagle = 0;
+  int with_bahamas = 0;
   int with_gear = 0;
   int with_line_of_sight = 0;
   int with_rt = 0;
@@ -263,6 +264,12 @@ int main(int argc, char *argv[]) {
           "--star-formation --cooling --feedback --black-holes --fof.",
           NULL, 0, 0),
       OPT_BOOLEAN(
+          0, "bahamas", &with_bahamas,
+          "Run with all the options needed for the BAHAMAS model. This is "
+          "equivalent to --hydro --limiter --sync --self-gravity --stars "
+          "--star-formation --cooling --feedback --black-holes --fof.",
+          NULL, 0, 0),
+      OPT_BOOLEAN(
           0, "gear", &with_gear,
           "Run with all the options needed for the GEAR model. This is "
           "equivalent to --hydro --limiter --sync --self-gravity --stars "
@@ -344,7 +351,7 @@ int main(int argc, char *argv[]) {
     with_star_formation = 1;
     with_cooling = 1;
   }
-  if (with_eagle) {
+  if (with_eagle || with_bahamas) {
     with_hydro = 1;
     with_timestep_limiter = 1;
     with_timestep_sync = 1;
