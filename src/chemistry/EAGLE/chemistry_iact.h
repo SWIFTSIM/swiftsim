@@ -75,12 +75,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_chemistry(
       mj * chj->metal_mass_fraction_total * wi;
   chj->smoothed_metal_mass_fraction_total +=
       mi * chi->metal_mass_fraction_total * wj;
-
-  // Smooth iron mass fraction from SNIa
-  chi->smoothed_iron_mass_fraction_from_SNIa +=
-      mj * chj->iron_mass_fraction_from_SNIa * wi;
-  chj->smoothed_iron_mass_fraction_from_SNIa +=
-      mi * chi->iron_mass_fraction_from_SNIa * wj;
 }
 
 /**
@@ -124,10 +118,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_chemistry(
   // Smooth metal mass fraction of all metals
   chi->smoothed_metal_mass_fraction_total +=
       mj * chj->metal_mass_fraction_total * wi;
-
-  // Smooth iron mass fraction from SNIa
-  chi->smoothed_iron_mass_fraction_from_SNIa +=
-      mj * chj->iron_mass_fraction_from_SNIa * wi;
 }
 
 /**

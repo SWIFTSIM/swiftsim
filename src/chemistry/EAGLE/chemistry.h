@@ -69,7 +69,6 @@ __attribute__((always_inline)) INLINE static void chemistry_init_part(
   }
 
   cpd->smoothed_metal_mass_fraction_total = 0.f;
-  cpd->smoothed_iron_mass_fraction_from_SNIa = 0.f;
 }
 
 /**
@@ -110,11 +109,6 @@ __attribute__((always_inline)) INLINE static void chemistry_end_density(
   cpd->smoothed_metal_mass_fraction_total +=
       m * cpd->metal_mass_fraction_total * kernel_root;
   cpd->smoothed_metal_mass_fraction_total *= factor;
-
-  /* Smooth iron mass fraction from SNIa */
-  cpd->smoothed_iron_mass_fraction_from_SNIa +=
-      m * cpd->iron_mass_fraction_from_SNIa * kernel_root;
-  cpd->smoothed_iron_mass_fraction_from_SNIa *= factor;
 }
 
 /**
@@ -136,10 +130,6 @@ chemistry_part_has_no_neighbours(struct part* restrict p,
 
   /* Total metal mass fraction */
   cpd->smoothed_metal_mass_fraction_total = cpd->metal_mass_fraction_total;
-
-  /* Iron frac from SNIa */
-  cpd->smoothed_iron_mass_fraction_from_SNIa =
-      cpd->iron_mass_fraction_from_SNIa;
 
   /* Individual metal mass fractions */
   for (int i = 0; i < chemistry_element_count; i++) {
@@ -341,17 +331,6 @@ __attribute__((always_inline)) INLINE static void chemistry_bpart_from_part(
   for (int i = 0; i < chemistry_element_count; ++i) {
     bp_data->metal_mass[i] = p_data->metal_mass_fraction[i] * gas_mass;
   }
-  bp_data->mass_from_SNIa = p_data->mass_from_SNIa;
-  bp_data->mass_from_SNII = p_data->mass_from_SNII;
-  bp_data->mass_from_AGB = p_data->mass_from_AGB;
-  bp_data->metal_mass_from_SNIa =
-      p_data->metal_mass_fraction_from_SNIa * gas_mass;
-  bp_data->metal_mass_from_SNII =
-      p_data->metal_mass_fraction_from_SNII * gas_mass;
-  bp_data->metal_mass_from_AGB =
-      p_data->metal_mass_fraction_from_AGB * gas_mass;
-  bp_data->iron_mass_from_SNIa =
-      p_data->iron_mass_fraction_from_SNIa * gas_mass;
   bp_data->formation_metallicity = p_data->metal_mass_fraction_total;
   bp_data->smoothed_formation_metallicity =
       p_data->smoothed_metal_mass_fraction_total;
@@ -374,17 +353,6 @@ __attribute__((always_inline)) INLINE static void chemistry_add_part_to_bpart(
   for (int i = 0; i < chemistry_element_count; ++i) {
     bp_data->metal_mass[i] += p_data->metal_mass_fraction[i] * gas_mass;
   }
-  bp_data->mass_from_SNIa += p_data->mass_from_SNIa;
-  bp_data->mass_from_SNII += p_data->mass_from_SNII;
-  bp_data->mass_from_AGB += p_data->mass_from_AGB;
-  bp_data->metal_mass_from_SNIa +=
-      p_data->metal_mass_fraction_from_SNIa * gas_mass;
-  bp_data->metal_mass_from_SNII +=
-      p_data->metal_mass_fraction_from_SNII * gas_mass;
-  bp_data->metal_mass_from_AGB +=
-      p_data->metal_mass_fraction_from_AGB * gas_mass;
-  bp_data->iron_mass_from_SNIa +=
-      p_data->iron_mass_fraction_from_SNIa * gas_mass;
 }
 
 /**
@@ -413,24 +381,6 @@ chemistry_transfer_part_to_bpart(struct chemistry_bpart_data* bp_data,
   bp_data->metal_mass_total += p_data->metal_mass_fraction_total * nibble_mass;
   for (int i = 0; i < chemistry_element_count; ++i)
     bp_data->metal_mass[i] += p_data->metal_mass_fraction[i] * nibble_mass;
-
-  bp_data->mass_from_SNIa += p_data->mass_from_SNIa * nibble_fraction;
-  bp_data->mass_from_SNII += p_data->mass_from_SNII * nibble_fraction;
-  bp_data->mass_from_AGB += p_data->mass_from_AGB * nibble_fraction;
-
-  /* Absolute masses, so need to reduce the gas particle */
-  p_data->mass_from_SNIa -= p_data->mass_from_SNIa * nibble_fraction;
-  p_data->mass_from_SNII -= p_data->mass_from_SNII * nibble_fraction;
-  p_data->mass_from_AGB -= p_data->mass_from_AGB * nibble_fraction;
-
-  bp_data->metal_mass_from_SNIa +=
-      p_data->metal_mass_fraction_from_SNIa * nibble_mass;
-  bp_data->metal_mass_from_SNII +=
-      p_data->metal_mass_fraction_from_SNII * nibble_mass;
-  bp_data->metal_mass_from_AGB +=
-      p_data->metal_mass_fraction_from_AGB * nibble_mass;
-  bp_data->iron_mass_from_SNIa +=
-      p_data->iron_mass_fraction_from_SNIa * nibble_mass;
 }
 
 /**
@@ -447,13 +397,6 @@ __attribute__((always_inline)) INLINE static void chemistry_add_bpart_to_bpart(
   for (int i = 0; i < chemistry_element_count; ++i) {
     bp_data->metal_mass[i] += swallowed_data->metal_mass[i];
   }
-  bp_data->mass_from_SNIa += swallowed_data->mass_from_SNIa;
-  bp_data->mass_from_SNII += swallowed_data->mass_from_SNII;
-  bp_data->mass_from_AGB += swallowed_data->mass_from_AGB;
-  bp_data->metal_mass_from_SNIa += swallowed_data->metal_mass_from_SNIa;
-  bp_data->metal_mass_from_SNII += swallowed_data->metal_mass_from_SNII;
-  bp_data->metal_mass_from_AGB += swallowed_data->metal_mass_from_AGB;
-  bp_data->iron_mass_from_SNIa += swallowed_data->iron_mass_from_SNIa;
 }
 
 /**
@@ -465,11 +408,7 @@ __attribute__((always_inline)) INLINE static void chemistry_add_bpart_to_bpart(
  * @param n The number of pieces to split into.
  */
 __attribute__((always_inline)) INLINE static void chemistry_split_part(
-    struct part* p, const double n) {
-  p->chemistry_data.mass_from_SNIa /= n;
-  p->chemistry_data.mass_from_SNII /= n;
-  p->chemistry_data.mass_from_AGB /= n;
-}
+    struct part* p, const double n) {}
 
 /**
  * @brief Returns the total metallicity (metal mass fraction) of the
