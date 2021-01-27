@@ -162,6 +162,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                t_subtype == task_subtype_stars_density) {
         if (ci_active_stars) {
           scheduler_activate(s, t);
+          cell_activate_drift_part(ci, s);
+          cell_activate_drift_spart(ci, s);
+          if (with_timestep_sync) cell_activate_sync_part(ci, s);
           cell_activate_subcell_stars_tasks(ci, NULL, s, with_star_formation,
                                             with_timestep_sync);
         }
@@ -445,6 +448,18 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                  t_subtype == task_subtype_stars_density) {
           cell_activate_subcell_stars_tasks(ci, cj, s, with_star_formation,
                                             with_timestep_sync);
+
+          /* Activate the drift tasks. */
+          if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
+          if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
+          if (cj_nodeID == nodeID && with_timestep_sync)
+            cell_activate_sync_part(cj, s);
+
+          /* Activate the drift tasks. */
+          if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
+          if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
+          if (ci_nodeID == nodeID && with_timestep_sync)
+            cell_activate_sync_part(ci, s);
         }
       }
 
