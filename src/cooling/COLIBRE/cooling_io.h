@@ -72,76 +72,6 @@ INLINE static void convert_part_T(const struct engine* e, const struct part* p,
                                    e->cooling_func, p, xp);
 }
 
-INLINE static void convert_part_sub_T(const struct engine* e,
-                                      const struct part* p,
-                                      const struct xpart* xp, float* ret) {
-
-  ret[0] = cooling_get_particle_subgrid_temperature(
-      e->internal_units, e->physical_constants, e->cosmology,
-      e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
-}
-
-INLINE static void convert_part_sub_rho(const struct engine* e,
-                                        const struct part* p,
-                                        const struct xpart* xp, float* ret) {
-
-  ret[0] = cooling_get_particle_subgrid_density(
-      e->internal_units, e->physical_constants, e->cosmology,
-      e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
-}
-
-INLINE static void convert_part_sub_species_frac(const struct engine* e,
-                                                 const struct part* p,
-                                                 const struct xpart* xp,
-                                                 float* ret) {
-
-  ret[0] = cooling_get_particle_subgrid_HI_fraction(
-      e->internal_units, e->physical_constants, e->cosmology,
-      e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
-
-  ret[1] = cooling_get_particle_subgrid_HII_fraction(
-      e->internal_units, e->physical_constants, e->cosmology,
-      e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
-
-  ret[2] = cooling_get_particle_subgrid_H2_fraction(
-      e->internal_units, e->physical_constants, e->cosmology,
-      e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
-
-  /* normalize the sum of the hydrogen fractions to 1 */
-  const float sum = ret[0] + ret[1] + 2. * ret[2];
-  ret[0] /= sum;
-  ret[1] /= sum;
-  ret[2] /= sum;
-}
-
-INLINE static void convert_part_HI_mass(const struct engine* e,
-                                        const struct part* p,
-                                        const struct xpart* xp, float* ret) {
-
-  const float X_H =
-      chemistry_get_metal_mass_fraction_for_cooling(p)[chemistry_element_H];
-
-  const float HI_frac = cooling_get_particle_subgrid_HI_fraction(
-      e->internal_units, e->physical_constants, e->cosmology,
-      e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
-
-  *ret = hydro_get_mass(p) * X_H * HI_frac;
-}
-
-INLINE static void convert_part_H2_mass(const struct engine* e,
-                                        const struct part* p,
-                                        const struct xpart* xp, float* ret) {
-
-  const float X_H =
-      chemistry_get_metal_mass_fraction_for_cooling(p)[chemistry_element_H];
-
-  const float H2_frac = cooling_get_particle_subgrid_H2_fraction(
-      e->internal_units, e->physical_constants, e->cosmology,
-      e->hydro_properties, e->entropy_floor, e->cooling_func, p, xp);
-
-  *ret = hydro_get_mass(p) * X_H * H2_frac * 2.f;
-}
-
 /**
  * @brief Specifies which particle fields to write to a dataset
  *
@@ -159,52 +89,7 @@ __attribute__((always_inline)) INLINE static int cooling_write_particles(
       "Temperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, parts, xparts,
       convert_part_T, "Temperatures of the gas particles");
 
-  list[1] = io_make_output_field_convert_part(
-      "SubgridTemperatures", FLOAT, 1, UNIT_CONV_TEMPERATURE, 0.f, parts,
-      xparts, convert_part_sub_T,
-      "The subgrid temperatures if the particles are within deltaT of the "
-      "entropy floor the subgrid temperature is calculated assuming a "
-      "pressure equilibrium on the entropy floor, if the particles are "
-      "above deltaT of the entropy floor the subgrid temperature is "
-      "identical to the SPH temperature.");
-
-  list[2] = io_make_output_field_convert_part(
-      "SubgridPhysicalDensities", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, parts,
-      xparts, convert_part_sub_rho,
-      "The subgrid physical density if the particles are within deltaT of the "
-      "entropy floor the subgrid density is calculated assuming a pressure "
-      "equilibrium on the entropy floor, if the particles are above deltaT "
-      "of the entropy floor the subgrid density is identical to the "
-      "physical SPH density.");
-
-  list[3] = io_make_output_field_convert_part(
-      "SpeciesFractions", FLOAT, 3, UNIT_CONV_NO_UNITS, 0.f, parts, xparts,
-      convert_part_sub_species_frac,
-      "Fractions of neutral, ionized and molecular hydrogen: [nHI/nH, nHII/nH, "
-      "nH2/nH], assuming equilibrium "
-      "tables. If the particles are within deltaT of the entropy floor the "
-      "fractions are calculated using the subgrid quantities, i.e. assuming a "
-      "pressure equilibrium on the entropy floor. If the particles are "
-      "above deltaT of the entropy floor, the normal hydro quantities are "
-      "used.");
-
-  list[4] = io_make_output_field_convert_part(
-      "AtomicHydrogenMasses", FLOAT, 1, UNIT_CONV_MASS, 0.f, parts, xparts,
-      convert_part_HI_mass,
-      "Atomic hydrogen masses containted in the particles. This quantity is "
-      "obtained from the cooling tables and, if the particle is on the entropy "
-      "floor, by extrapolating to the equilibrium curve assuming constant "
-      "pressure.");
-
-  list[5] = io_make_output_field_convert_part(
-      "MolecularHydrogenMasses", FLOAT, 1, UNIT_CONV_MASS, 0.f, parts, xparts,
-      convert_part_H2_mass,
-      "Molecular hydrogen masses containted in the particles. This quantity is "
-      "obtained from the cooling tables and, if the particle is on the entropy "
-      "floor, by extrapolating to the equilibrium curve assuming constant "
-      "pressure.");
-
-  return 6;
+  return 1;
 }
 
 #endif /* SWIFT_COOLING_COLIBRE_IO_H */

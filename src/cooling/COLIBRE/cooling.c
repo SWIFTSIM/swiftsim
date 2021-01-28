@@ -880,9 +880,7 @@ float cooling_get_subgrid_density(const struct part *p,
  */
 __attribute__((always_inline)) INLINE float cooling_get_radiated_energy(
     const struct xpart *xp) {
-
-  error("Not implemented");
-  return -1.f;
+  return 0.f;
 }
 
 /**
