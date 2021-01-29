@@ -31,6 +31,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* Include PyMethodDef */
+#include <structmember.h>
+
+static PyTypeObject PyParticleReader_Type;
+
+/**
+ * @brief Reader for a single particle type.
+ */
+typedef struct {
+  PyObject_HEAD;
+
+  /* Link to the reader */
+  void *reader;
+
+  /* Particle type */
+  enum part_type type;
+} PyParticleReader;
+
+/**
+ * @brief Main class for the reader.
+ */
 typedef struct {
   PyObject_HEAD;
 
@@ -46,7 +67,19 @@ typedef struct {
   /* Verbose level */
   int verbose;
 
+  /* Reader for each type of particles */
+  PyParticleReader *part_reader[swift_type_count];
+
 } PyObjectReader;
+
+
+/**
+ * @brief Deallocate the memory of a particle reader.
+ */
+__attribute__((always_inline)) INLINE static void
+particle_reader_dealloc(PyParticleReader *self) {
+  Py_TYPE(self)->tp_free((PyObject *)self);
+}
 
 /**
  * @brief Deallocate the memory.
@@ -60,6 +93,16 @@ static void Reader_dealloc(PyObjectReader *self) {
 }
 
 /**
+ * @brief Allocate the memory of a particle reader.
+ */
+__attribute__((always_inline)) INLINE static PyObject
+*particle_reader_new(PyTypeObject *type, PyObject *args,
+                     PyObject *kwds) {
+  PyParticleReader *self = (PyParticleReader *)type->tp_alloc(type, 0);
+  return (PyObject *) self;
+}
+
+/**
  * @brief Allocate the memory.
  */
 static PyObject *Reader_new(PyTypeObject *type, PyObject *args,
@@ -69,6 +112,11 @@ static PyObject *Reader_new(PyTypeObject *type, PyObject *args,
   self = (PyObjectReader *)type->tp_alloc(type, 0);
   self->ready = 0;
   self->basename = NULL;
+
+  for(int i = 0; i < swift_type_count; i++) {
+    self->part_reader[i] = NULL;
+  }
+
   return (PyObject *)self;
 }
 /**
@@ -314,6 +362,22 @@ static PyObject *pyEnter(__attribute__((unused)) PyObject *self,
                      self_reader->verbose);
   self_reader->ready = 1;
 
+  /* Allocate the particle readers */
+  PyObject *args_init = PyTuple_New(0);
+  for(int i = 0; i < swift_type_count; i++) {
+    PyParticleReader *part_reader = (PyParticleReader *)
+      PyObject_CallObject((PyObject *) &PyParticleReader_Type, args_init);
+
+    /* Ensure that the object was created */
+    if (part_reader == NULL) {
+      return NULL;
+    }
+    part_reader->reader = (void *) self_reader;
+    self_reader->part_reader[i] = part_reader;
+    self_reader->part_reader[i]->type = i;
+  }
+  Py_DecRef(args_init);
+
   Py_INCREF(self);
   return self;
 }
@@ -326,6 +390,13 @@ static PyObject *pyExit(__attribute__((unused)) PyObject *self,
   }
   logger_reader_free(&self_reader->reader);
   self_reader->ready = 0;
+
+
+  /* Do the same for the particle readers */
+  for(int i = 0; i < swift_type_count; i++) {
+    self_reader->part_reader[i]->reader = NULL;
+    Py_DecRef((PyObject *)self_reader->part_reader[i]);
+  }
 
   Py_RETURN_NONE;
 }
@@ -456,7 +527,42 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
 }
 
 /**
- * @brief Check the input data for #pyGetParticleData.
+ * @brief shortcut to PyGetListFields for a single particle type
+ */
+static PyObject *pyParticleGetListFields(__attribute__((unused)) PyObject *self,
+                                         PyObject *args, PyObject *kwds) {
+  PyParticleReader *part_reader = (PyParticleReader *) self;
+  PyObject *reader = (PyObject *) part_reader->reader;
+
+  /* Check if we need to create the dictionary */
+  const int dict_created = kwds == NULL;
+  if (dict_created) {
+    kwds = PyDict_New();
+  }
+
+  /* Set the particle type  */
+  PyObject *part_type = PyLong_FromLong(part_reader->type);
+
+  /* Add the list to the k-arguments */
+  if (PyDict_SetItemString(kwds, "part_type", part_type) != 0)
+    return NULL;
+
+  /* Get the fields */
+  PyObject *ret = pyGetListFields(reader, args, kwds);
+
+  /* Cleanup */
+  if (dict_created) {
+    Py_DecRef(kwds);
+    kwds = NULL;
+  }
+  else {
+    PyDict_DelItemString(kwds, "part_type");
+  }
+
+  return ret;
+}
+/**
+ * @brief Check the input data for #pyGetData.
  *
  * @param fields The list of fields to read.
  * @param types The type of particles to read.
@@ -464,7 +570,7 @@ static PyObject *pyGetListFields(__attribute__((unused)) PyObject *self,
  * @param read_types (output) The list of particles' type to
  *   read (needs to be already allocated).
  */
-void pyGetParticleData_CheckInput(PyObject *fields, PyObject *types,
+void pyGetData_CheckInput(PyObject *fields, PyObject *types,
                                   PyObject *part_ids, int *read_types) {
 
   /* Check the inputs. */
@@ -578,7 +684,7 @@ void pyGetParticleData_CheckInput(PyObject *fields, PyObject *types,
  * @return List of numpy array containing the fields requested (in the same
  * order).
  */
-static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
+static PyObject *pyGetData(__attribute__((unused)) PyObject *self,
                                    PyObject *args, PyObject *kwds) {
 
   PyObjectReader *self_reader = (PyObjectReader *)self;
@@ -604,7 +710,7 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
     return NULL;
 
   int read_types[swift_type_count] = {0};
-  pyGetParticleData_CheckInput(fields, types, part_ids, read_types);
+  pyGetData_CheckInput(fields, types, part_ids, read_types);
 
   /* initialize the reader. */
   struct logger_reader *reader = &self_reader->reader;
@@ -715,8 +821,78 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
   return array;
 }
 
-/* definition of the method table. */
+/**
+ * @brief Shortcut to #pyGetData for a single particle type.
+ */
+static PyObject *pyParticleGetData(__attribute__((unused)) PyObject *self,
+                                   PyObject *args, PyObject *kwds) {
 
+  PyParticleReader *part_reader = (PyParticleReader *) self;
+  PyObject *reader = (PyObject *) part_reader->reader;
+
+  /* input variables. */
+  PyObject *fields = NULL;
+  double time = 0;
+  PyObject *part_ids = Py_None;
+
+  /* List of keyword arguments. */
+  static char *kwlist[] = {"fields", "time", "filter_by_ids",
+                           NULL};
+
+  /* parse the arguments. */
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od|O", kwlist, &fields, &time,
+                                   &part_ids))
+    return NULL;
+
+  /* Check if we need to create the dictionary */
+  const int dict_created = kwds == NULL;
+  if (dict_created) {
+    kwds = PyDict_New();
+  }
+
+  /* Adapt the inputs in case we are filtering */
+  PyObject *part_ids_list = part_ids;
+  if (part_ids != Py_None) {
+    if (!PyArray_Check(part_ids)) {
+      error("You need to provide a numpy array of ids");
+    }
+
+    part_ids_list = PyList_New(swift_type_count);
+    for(int i = 0; i < swift_type_count; i++) {
+      PyList_SetItem(part_ids_list, i, Py_None);
+    }
+    PyList_SetItem(part_ids_list, part_reader->type, part_ids);
+
+    if (PyDict_SetItemString(kwds, "filter_by_ids", part_ids_list) != 0)
+      return NULL;
+  }
+  /* Now the case without filtering */
+  else {
+    /* Set the particle type  */
+    PyObject *part_type = PyLong_FromLong(part_reader->type);
+
+    /* Add the list to the k-arguments */
+    if (PyDict_SetItemString(kwds, "part_type", part_type) != 0)
+      return NULL;
+  }
+
+  /* Get the fields */
+  PyObject *ret = pyGetData(reader, args, kwds);
+
+  /* Cleanup */
+  if (dict_created) {
+    Py_DecRef(kwds);
+    kwds = NULL;
+  }
+  else {
+    if (part_ids == Py_None)
+      PyDict_DelItemString(kwds, "part_type");
+  }
+
+  return ret;
+}
+
+/* definition of the method table. */
 static PyMethodDef libloggerMethods[] = {
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
@@ -729,7 +905,7 @@ static PyMethodDef libloggerReaderMethods[] = {
      "-------\n\n"
      "times: tuple\n"
      "  time min, time max\n"},
-    {"get_particle_data", (PyCFunction)pyGetParticleData,
+    {"get_data", (PyCFunction)pyGetData,
      METH_VARARGS | METH_KEYWORDS,
      "Read some fields from the logfile at a given time.\n\n"
      "Parameters\n"
@@ -770,6 +946,22 @@ static struct PyModuleDef libloggermodule = {
     NULL  /* m_free */
 };
 
+static PyMemberDef PyObjectReader_members[] = {
+    {"gas", T_OBJECT_EX,
+     offsetof(PyObjectReader, part_reader), READONLY},
+    {"dark_matter", T_OBJECT_EX,
+     offsetof(PyObjectReader, part_reader) + sizeof(PyParticleReader *), READONLY},
+    {"dark_matter_background", T_OBJECT_EX,
+     offsetof(PyObjectReader, part_reader) +  2 * sizeof(PyParticleReader *), READONLY},
+    {"sinks", T_OBJECT_EX,
+     offsetof(PyObjectReader, part_reader) +  3 * sizeof(PyParticleReader *), READONLY},
+    {"stars", T_OBJECT_EX,
+     offsetof(PyObjectReader, part_reader) +  4 * sizeof(PyParticleReader *), READONLY},
+    {"black_holes", T_OBJECT_EX,
+     offsetof(PyObjectReader, part_reader) +  5 * sizeof(PyParticleReader *), READONLY},
+    {NULL}
+};
+
 static PyTypeObject PyObjectReader_Type = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_name = "liblogger.Reader",
     .tp_basicsize = sizeof(PyObjectReader),
@@ -808,6 +1000,47 @@ static PyTypeObject PyObjectReader_Type = {
     .tp_dealloc = (destructor)Reader_dealloc,
     .tp_new = Reader_new,
     .tp_methods = libloggerReaderMethods,
+    .tp_members = PyObjectReader_members,
+};
+
+/* Definition of the Reader methods */
+static PyMethodDef libloggerParticleReaderMethods[] = {
+    {"get_data", (PyCFunction)pyParticleGetData,
+     METH_VARARGS | METH_KEYWORDS,
+     "Read some fields from the logfile at a given time.\n\n"
+     "Parameters\n"
+     "----------\n\n"
+     "fields: list\n"
+     "  The list of fields (e.g. 'Coordinates', 'Entropies', ...)\n\n"
+     "time: float\n"
+     "  The time at which the fields must be read.\n\n"
+     "Returns\n"
+     "-------\n\n"
+     "list_of_fields: list\n"
+     "  Each element is a numpy array containing the corresponding field.\n"},
+    {"get_list_fields", (PyCFunction)pyParticleGetListFields,
+     METH_VARARGS | METH_KEYWORDS,
+     "Read the list of available fields in the logfile.\n\n"
+     "Parameters\n"
+     "----------\n\n"
+     "type: int, list\n"
+     "  The particle type for the list of fields\n\n"
+     "Returns\n"
+     "-------\n"
+     "fields: tuple\n"
+     "  The list of fields present in the logfile.\n"},
+    {NULL, NULL, 0, NULL} /* Sentinel */
+};
+
+static PyTypeObject PyParticleReader_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "liblogger.ParticleReader",
+    .tp_basicsize = sizeof(PyParticleReader),
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_doc = "TODO",
+    .tp_init = NULL,
+    .tp_dealloc = (destructor)particle_reader_dealloc,
+    .tp_new = particle_reader_new,
+    .tp_methods = libloggerParticleReaderMethods,
 };
 
 PyMODINIT_FUNC PyInit_liblogger(void) {
@@ -821,11 +1054,19 @@ PyMODINIT_FUNC PyInit_liblogger(void) {
   clocks_set_cpufreq(0);
 
   /* Prepare the classes */
+  /* Object reader */
   if (PyType_Ready(&PyObjectReader_Type) < 0) {
     return NULL;
   }
-
   Py_INCREF(&PyObjectReader_Type);
+
+  /* Particle reader */
+  if (PyType_Ready(&PyParticleReader_Type) < 0) {
+    return NULL;
+  }
+  Py_INCREF(&PyParticleReader_Type);
+
+  /* Add the reader object */
   PyModule_AddObject(m, "Reader", (PyObject *)&PyObjectReader_Type);
 
   /* Import numpy. */
