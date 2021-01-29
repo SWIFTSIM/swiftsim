@@ -186,7 +186,8 @@ void io_prepare_output_fields(struct output_options* output_options,
                               const int with_cosmology, const int with_fof,
                               const int with_stf, int verbose);
 
-void io_write_output_field_parameter(const char* filename, int with_cosmology);
+void io_write_output_field_parameter(const char* filename, int with_cosmology,
+                                     int with_fof, int with_stf);
 
 void io_make_snapshot_subdir(const char* dirname);
 
