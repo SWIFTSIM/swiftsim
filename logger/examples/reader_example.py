@@ -65,10 +65,13 @@ for f in args.files:
         raise Exception("It seems that you are not providing a logfile (.dump)")
     with logger.Reader(filename, verbose=0) as reader:
 
-
         # Ensure that the fields are present
         fields = ["Coordinates", "Entropies", "ParticleIDs"]
-        missing = set(fields).difference(set(reader.get_list_fields(part_type=gas_type)))
+        missing = set(fields).difference(set(reader.gas.get_list_fields()))
+
+        # Could be also be called like this:
+        # reader.get_list_fields(part_type=0)
+
         if missing:
             raise Exception("Fields %s not found in the logfile." % missing)
 
@@ -78,20 +81,26 @@ for f in args.files:
 
         # Read all the particles
         t = reader.get_time_limits()
-        out = reader.get_particle_data(
+
+        out = reader.get_data(
             fields=fields, time=args.time, part_type=gas_type)
+        # Could be also called like this
+        # reader.gas.get_data(fields=fields, time=args.time)
 
         # Get the particle ids
         gas_ids = out["ParticleIDs"]
         gas_ids = gas_ids[:len(gas_ids)//2]
-        ids = [None] * 6
-        ids[gas_type] = gas_ids
 
         # Read from the ids
         # As we are filtering by particle ids, the field "ParticleIDs" is required
         # in order to verify the particle obtained.
-        out = reader.get_particle_data(
-            fields=fields, time=args.time, filter_by_ids=ids)
+        out = reader.gas.get_data(
+            fields=fields, time=args.time, filter_by_ids=gas_ids)
+        # Could be also called like this:
+        # ids = [None] * 6
+        # ids[gas_type] = gas_ids
+        # out = reader.get_data(
+        #     fields=fields, time=args.time, filter_by_ids=ids)
 
         # Print the missing ids
         gas_ids, ids_found = set(gas_ids), set(out["ParticleIDs"])
