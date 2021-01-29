@@ -209,9 +209,11 @@ void io_select_hydro_fields(const struct part* const parts,
                             const struct engine* const e, int* const num_fields,
                             struct io_props* const list);
 
-void io_select_dm_fields(const struct gpart* const gparts, const int with_fof,
-                         const int with_stf, const struct engine* const e,
-                         int* const num_fields, struct io_props* const list);
+void io_select_dm_fields(const struct gpart* const gparts,
+                         const struct velociraptor_gpart_data* gpart_group_data,
+                         const int with_fof, const int with_stf,
+                         const struct engine* const e, int* const num_fields,
+                         struct io_props* const list);
 
 void io_select_sink_fields(const struct sink* const sinks,
                            const int with_cosmology, const int with_fof,

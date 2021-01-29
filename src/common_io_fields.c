@@ -84,13 +84,13 @@ int io_get_ptype_fields(const int ptype, struct io_props* list,
       break;
 
     case swift_type_dark_matter:
-      io_select_dm_fields(NULL, with_fof, with_stf, /*e=*/NULL, &num_fields,
-                          list);
+      io_select_dm_fields(NULL, NULL, with_fof, with_stf, /*e=*/NULL,
+                          &num_fields, list);
       break;
 
     case swift_type_dark_matter_background:
-      io_select_dm_fields(NULL, with_fof, with_stf, /*e=*/NULL, &num_fields,
-                          list);
+      io_select_dm_fields(NULL, NULL, with_fof, with_stf, /*e=*/NULL,
+                          &num_fields, list);
       break;
 
     case swift_type_stars:
