@@ -1068,6 +1068,12 @@ PyMODINIT_FUNC PyInit_liblogger(void) {
 
   /* Add the reader object */
   PyModule_AddObject(m, "Reader", (PyObject *)&PyObjectReader_Type);
+  PyModule_AddIntConstant(m, "gas", swift_type_gas);
+  PyModule_AddIntConstant(m, "dark_matter", swift_type_dark_matter);
+  PyModule_AddIntConstant(m, "dark_matter_background", swift_type_dark_matter_background);
+  PyModule_AddIntConstant(m, "sinks", swift_type_sink);
+  PyModule_AddIntConstant(m, "stars", swift_type_stars);
+  PyModule_AddIntConstant(m, "black_holes", swift_type_black_hole);
 
   /* Import numpy. */
   import_array();

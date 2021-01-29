@@ -57,7 +57,6 @@ print("time: %g" % args.time)
 # read the logger
 positions = np.empty((0, 3))
 entropies = np.empty(0)
-gas_type = 0
 for f in args.files:
     if f.endswith(".dump"):
         filename = f[:-5]
@@ -83,7 +82,7 @@ for f in args.files:
         t = reader.get_time_limits()
 
         out = reader.get_data(
-            fields=fields, time=args.time, part_type=gas_type)
+            fields=fields, time=args.time, part_type=logger.gas)
         # Could be also called like this
         # reader.gas.get_data(fields=fields, time=args.time)
 
@@ -98,7 +97,7 @@ for f in args.files:
             fields=fields, time=args.time, filter_by_ids=gas_ids)
         # Could be also called like this:
         # ids = [None] * 6
-        # ids[gas_type] = gas_ids
+        # ids[logger.gas] = gas_ids
         # out = reader.get_data(
         #     fields=fields, time=args.time, filter_by_ids=ids)
 
