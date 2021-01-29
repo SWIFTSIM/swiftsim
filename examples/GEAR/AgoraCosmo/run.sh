@@ -11,6 +11,14 @@ else
     exit
 fi
 
+# Grab the cooling and yield tables if they are not present.
+if [ ! -e CloudyData_UVB=HM2012_shielded.h5 ]
+then
+    echo "Fetching tables..."
+    ../getChemistryTable.sh
+    ../../Cooling/getGrackleCoolingTable.sh
+fi
+
 echo "Generating the initial conditions"
 $music music.conf
 
