@@ -1307,9 +1307,14 @@ __attribute__((always_inline)) INLINE static struct task *cell_get_recv(
  * We have 15 bits set aside in `cell->cellID` for the top level cells. Hence
  * if we have more that 32^3 top level cells, the cell IDs won't be guaranteed
  * to be unique. Top level cells will still be recognizable by the minus sign.
+ *
+ * @param c #cell to work with
+ * @param cdim number of cells in each dimension
+ * @param dim spatial extent.
+ * @param iwidth inverse of top cell width
  */
 __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
-    struct cell *c, int cdim[3], double dim[3], double width[3]) {
+    struct cell *c, int cdim[3], double dim[3], double iwidth[3]) {
 
 #if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
   if (c->depth != 0) {
@@ -1326,9 +1331,11 @@ __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
       c->cellID = -last_cell_id;
       atomic_inc(&last_cell_id);
     } else {
-      int i = (int)(c->loc[0] / width[0]);
-      int j = (int)(c->loc[1] / width[1]);
-      int k = (int)(c->loc[2] / width[2]);
+      int i = (int)(c->loc[0] * iwidth[0] + 0.5);
+      int j = (int)(c->loc[1] * iwidth[1] + 0.5);
+      int k = (int)(c->loc[2] * iwidth[2] + 0.5);
+      printf("%2d %2d %2d; %.3lf %.3lf %.3lf;\n", i, j, k, c->loc[0], c->loc[1],
+             c->loc[2]);
       c->cellID = -(long long)(cell_getid(cdim, i, j, k) + 1);
     }
   }
