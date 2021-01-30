@@ -193,7 +193,6 @@ runner_iact_nonsym_feedback_prep1(const float r2, const float *dx,
                                   struct spart *si, const struct part *pj,
                                   const struct xpart *xpj,
                                   const struct cosmology *cosmo,
-                                  const struct feedback_props *fb_props,
                                   const integertime_t ti_current) {}
 
 __attribute__((always_inline)) INLINE static void
@@ -202,7 +201,6 @@ runner_iact_nonsym_feedback_prep2(const float r2, const float *dx,
                                   struct spart *si, const struct part *pj,
                                   const struct xpart *xpj,
                                   const struct cosmology *cosmo,
-                                  const struct feedback_props *fb_props,
                                   const integertime_t ti_current) {}
 
 /**
