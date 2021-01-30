@@ -47,7 +47,7 @@ struct cell_stars {
     struct spart *parts_rebuild;
 
     /*! The star ghost task itself */
-    struct task *ghost;
+    struct task *density_ghost;
 
     /*! Linked list of the tasks computing this cell's star density. */
     struct link *density;
