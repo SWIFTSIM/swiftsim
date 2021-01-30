@@ -2037,7 +2037,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
     if (cell_is_active_stars(c, e) ||
         (with_star_formation && cell_is_active_hydro(c, e))) {
 
-      if (c->stars.ghost != NULL) scheduler_activate(s, c->stars.ghost);
+      if (c->stars.density_ghost != NULL)
+        scheduler_activate(s, c->stars.density_ghost);
       if (c->stars.stars_in != NULL) scheduler_activate(s, c->stars.stars_in);
       if (c->stars.stars_out != NULL) scheduler_activate(s, c->stars.stars_out);
       if (c->kick1 != NULL) scheduler_activate(s, c->kick1);

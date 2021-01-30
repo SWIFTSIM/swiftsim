@@ -91,7 +91,7 @@ const char *taskID_names[task_type_count] = {
     "stars_in",
     "stars_out",
     "stars_ghost_in",
-    "stars_ghost",
+    "stars_density_ghost",
     "stars_ghost_out",
     "stars_sort",
     "stars_resort",
