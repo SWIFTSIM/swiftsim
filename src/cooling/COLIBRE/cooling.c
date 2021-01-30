@@ -713,8 +713,6 @@ float cooling_get_particle_subgrid_HI_fraction(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  error("Not implemented");
-
   return 0.f;
 }
 
@@ -741,7 +739,6 @@ float cooling_get_particle_subgrid_HII_fraction(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  error("Not implemented");
   return 0.f;
 }
 
@@ -768,7 +765,6 @@ float cooling_get_particle_subgrid_H2_fraction(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  error("Not implemented");
   return 0.f;
 }
 
@@ -794,8 +790,7 @@ float cooling_get_particle_subgrid_temperature(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  error("Not implemented");
-  return 0.f;
+  return -1.f;
 }
 
 /**
@@ -822,8 +817,7 @@ float cooling_get_particle_subgrid_density(
     const struct cooling_function_data *cooling, const struct part *p,
     const struct xpart *xp) {
 
-  error("Not implemented");
-  return 0.f;
+  return -1.f;
 }
 
 /**
