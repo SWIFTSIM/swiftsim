@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_FEEDBACK_EAGLE_H
-#define SWIFT_FEEDBACK_EAGLE_H
+#ifndef SWIFT_FEEDBACK_EAGLE_THERMAL_H
+#define SWIFT_FEEDBACK_EAGLE_THERMAL_H
 
 #include "cosmology.h"
 #include "error.h"
@@ -102,7 +102,7 @@ INLINE static double feedback_get_enrichment_timestep(
     return cosmology_get_delta_time_from_scale_factors(
         cosmo, (double)sp->last_enrichment_time, cosmo->a);
   } else {
-    return time - (double)sp->last_enrichment_time;
+    return time - sp->last_enrichment_time;
   }
 }
 
@@ -309,8 +309,8 @@ void feedback_struct_restore(struct feedback_props* feedback, FILE* stream);
 INLINE static void feedback_write_flavour(struct feedback_props* feedback,
                                           hid_t h_grp) {
 
-  io_write_attribute_s(h_grp, "Feedback Model", "EAGLE");
+  io_write_attribute_s(h_grp, "Feedback Model", "EAGLE (thermal)");
 }
 #endif  // HAVE_HDF5
 
-#endif /* SWIFT_FEEDBACK_EAGLE_H */
+#endif /* SWIFT_FEEDBACK_EAGLE_THERMAL_H */

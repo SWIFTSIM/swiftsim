@@ -21,13 +21,13 @@
 #include "feedback.h"
 
 /* Local includes. */
+#include "../EAGLE/imf.h"
+#include "../EAGLE/interpolate.h"
+#include "../EAGLE/yield_tables.h"
 #include "hydro_properties.h"
-#include "imf.h"
 #include "inline.h"
-#include "interpolate.h"
 #include "random.h"
 #include "timers.h"
-#include "yield_tables.h"
 
 /**
  * @brief Return the change in temperature (in internal units) to apply to a
