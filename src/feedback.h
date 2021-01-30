@@ -26,9 +26,12 @@
 #if defined(FEEDBACK_NONE)
 #include "./feedback/none/feedback.h"
 #include "./feedback/none/feedback_iact.h"
-#elif defined(FEEDBACK_EAGLE)
-#include "./feedback/EAGLE/feedback.h"
-#include "./feedback/EAGLE/feedback_iact.h"
+#elif defined(FEEDBACK_EAGLE_THERMAL)
+#include "./feedback/EAGLE_thermal/feedback.h"
+#include "./feedback/EAGLE_thermal/feedback_iact.h"
+#elif defined(FEEDBACK_EAGLE_KINETIC)
+#include "./feedback/EAGLE_kinetic/feedback.h"
+#include "./feedback/EAGLE_kinetic/feedback_iact.h"
 #elif defined(FEEDBACK_GEAR)
 #include "./feedback/GEAR/feedback.h"
 #include "./feedback/GEAR/feedback_iact.h"
