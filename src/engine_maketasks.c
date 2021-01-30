@@ -49,6 +49,7 @@
 #include "cycle.h"
 #include "debug.h"
 #include "error.h"
+#include "feedback.h"
 #include "proxy.h"
 #include "timers.h"
 
@@ -1235,6 +1236,16 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
         c->stars.density_ghost = scheduler_addtask(
             s, task_type_stars_ghost, task_subtype_none, 0, 0, c, NULL);
 
+#ifdef EXTRA_STAR_LOOPS
+        c->stars.prep1_ghost =
+            scheduler_addtask(s, task_type_stars_prep_ghost1, task_subtype_none,
+                              0, /* implicit = */ 1, c, NULL);
+
+        c->stars.prep2_ghost =
+            scheduler_addtask(s, task_type_stars_prep_ghost2, task_subtype_none,
+                              0, /* implicit = */ 1, c, NULL);
+#endif
+
 #ifdef WITH_LOGGER
         if (with_logger) {
           scheduler_addunlock(s, c->super->logger, c->stars.stars_in);
@@ -1928,6 +1939,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 #ifdef EXTRA_HYDRO_LOOP
   struct task *t_gradient = NULL;
 #endif
+#ifdef EXTRA_STAR_LOOPS
+  struct task *t_star_prep1 = NULL;
+  struct task *t_star_prep2 = NULL;
+#endif
   struct task *t_force = NULL;
   struct task *t_limiter = NULL;
   struct task *t_star_density = NULL;
@@ -1994,6 +2009,15 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_star_feedback =
             scheduler_addtask(sched, task_type_self,
                               task_subtype_stars_feedback, flags, 0, ci, NULL);
+
+#ifdef EXTRA_STAR_LOOPS
+        t_star_prep1 =
+            scheduler_addtask(sched, task_type_self, task_subtype_stars_prep1,
+                              flags, 0, ci, NULL);
+        t_star_prep2 =
+            scheduler_addtask(sched, task_type_self, task_subtype_stars_prep2,
+                              flags, 0, ci, NULL);
+#endif
       }
 
       /* The sink tasks */
@@ -2042,6 +2066,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       if (with_feedback) {
         engine_addlink(e, &ci->stars.density, t_star_density);
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
+#ifdef EXTRA_STAR_LOOPS
+        engine_addlink(e, &ci->stars.prepare1, t_star_prep1);
+        engine_addlink(e, &ci->stars.prepare2, t_star_prep2);
+#endif
       }
       if (with_sink) {
         engine_addlink(e, &ci->sinks.compute_formation, t_sink_formation);
@@ -2093,8 +2121,21 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                             t_star_density);
         scheduler_addunlock(sched, t_star_density,
                             ci->hydro.super->stars.density_ghost);
+#ifdef EXTRA_STAR_LOOPS
+        scheduler_addunlock(sched, ci->hydro.super->stars.density_ghost,
+                            t_star_prep1);
+        scheduler_addunlock(sched, t_star_prep1,
+                            ci->hydro.super->stars.prep1_ghost);
+        scheduler_addunlock(sched, ci->hydro.super->stars.prep1_ghost,
+                            t_star_prep2);
+        scheduler_addunlock(sched, t_star_prep2,
+                            ci->hydro.super->stars.prep2_ghost);
+        scheduler_addunlock(sched, ci->hydro.super->stars.prep2_ghost,
+                            t_star_feedback);
+#else
         scheduler_addunlock(sched, ci->hydro.super->stars.density_ghost,
                             t_star_feedback);
+#endif
         scheduler_addunlock(sched, t_star_feedback,
                             ci->hydro.super->stars.stars_out);
       }
@@ -2212,6 +2253,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_star_feedback =
             scheduler_addtask(sched, task_type_pair,
                               task_subtype_stars_feedback, flags, 0, ci, cj);
+#ifdef EXTRA_STAR_LOOPS
+        t_star_prep1 = scheduler_addtask(
+            sched, task_type_pair, task_subtype_stars_prep1, flags, 0, ci, cj);
+        t_star_prep2 = scheduler_addtask(
+            sched, task_type_pair, task_subtype_stars_prep2, flags, 0, ci, cj);
+#endif
       }
 
       /* The sink tasks */
@@ -2259,6 +2306,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &cj->stars.density, t_star_density);
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
         engine_addlink(e, &cj->stars.feedback, t_star_feedback);
+#ifdef EXTRA_STAR_LOOPS
+        engine_addlink(e, &ci->stars.prepare1, t_star_prep1);
+        engine_addlink(e, &cj->stars.prepare1, t_star_prep1);
+        engine_addlink(e, &ci->stars.prepare2, t_star_prep2);
+        engine_addlink(e, &cj->stars.prepare2, t_star_prep2);
+#endif
       }
       if (with_sink) {
         /* Formation */
@@ -2360,8 +2413,21 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               t_star_density);
           scheduler_addunlock(sched, t_star_density,
                               ci->hydro.super->stars.density_ghost);
+#ifdef EXTRA_STAR_LOOPS
+          scheduler_addunlock(sched, ci->hydro.super->stars.density_ghost,
+                              t_star_prep1);
+          scheduler_addunlock(sched, t_star_prep1,
+                              ci->hydro.super->stars.prep1_ghost);
+          scheduler_addunlock(sched, ci->hydro.super->stars.prep1_ghost,
+                              t_star_prep2);
+          scheduler_addunlock(sched, t_star_prep2,
+                              ci->hydro.super->stars.prep2_ghost);
+          scheduler_addunlock(sched, ci->hydro.super->stars.prep2_ghost,
+                              t_star_feedback);
+#else
           scheduler_addunlock(sched, ci->hydro.super->stars.density_ghost,
                               t_star_feedback);
+#endif
           scheduler_addunlock(sched, t_star_feedback,
                               ci->hydro.super->stars.stars_out);
         }
@@ -2476,8 +2542,21 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 t_star_density);
             scheduler_addunlock(sched, t_star_density,
                                 cj->hydro.super->stars.density_ghost);
+#ifdef EXTRA_STAR_LOOPS
+            scheduler_addunlock(sched, cj->hydro.super->stars.density_ghost,
+                                t_star_prep1);
+            scheduler_addunlock(sched, t_star_prep1,
+                                cj->hydro.super->stars.prep1_ghost);
+            scheduler_addunlock(sched, cj->hydro.super->stars.prep1_ghost,
+                                t_star_prep2);
+            scheduler_addunlock(sched, t_star_prep2,
+                                cj->hydro.super->stars.prep2_ghost);
+            scheduler_addunlock(sched, cj->hydro.super->stars.prep2_ghost,
+                                t_star_feedback);
+#else
             scheduler_addunlock(sched, cj->hydro.super->stars.density_ghost,
                                 t_star_feedback);
+#endif
             scheduler_addunlock(sched, t_star_feedback,
                                 cj->hydro.super->stars.stars_out);
           }
@@ -2616,6 +2695,15 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_star_feedback =
             scheduler_addtask(sched, task_type_sub_self,
                               task_subtype_stars_feedback, flags, 0, ci, NULL);
+
+#ifdef EXTRA_STAR_LOOPS
+        t_star_prep1 =
+            scheduler_addtask(sched, task_type_sub_self,
+                              task_subtype_stars_prep1, flags, 0, ci, NULL);
+        t_star_prep2 =
+            scheduler_addtask(sched, task_type_sub_self,
+                              task_subtype_stars_prep2, flags, 0, ci, NULL);
+#endif
       }
 
       /* The sink tasks */
@@ -2670,6 +2758,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       if (with_feedback) {
         engine_addlink(e, &ci->stars.density, t_star_density);
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
+#ifdef EXTRA_STAR_LOOPS
+        engine_addlink(e, &ci->stars.prepare1, t_star_prep1);
+        engine_addlink(e, &ci->stars.prepare2, t_star_prep2);
+#endif
       }
       if (with_sink) {
         engine_addlink(e, &ci->sinks.compute_formation, t_sink_formation);
@@ -2727,8 +2819,21 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                             t_star_density);
         scheduler_addunlock(sched, t_star_density,
                             ci->hydro.super->stars.density_ghost);
+#ifdef EXTRA_STAR_LOOPS
+        scheduler_addunlock(sched, ci->hydro.super->stars.density_ghost,
+                            t_star_prep1);
+        scheduler_addunlock(sched, t_star_prep1,
+                            ci->hydro.super->stars.prep1_ghost);
+        scheduler_addunlock(sched, ci->hydro.super->stars.prep1_ghost,
+                            t_star_prep2);
+        scheduler_addunlock(sched, t_star_prep2,
+                            ci->hydro.super->stars.prep2_ghost);
+        scheduler_addunlock(sched, ci->hydro.super->stars.prep2_ghost,
+                            t_star_feedback);
+#else
         scheduler_addunlock(sched, ci->hydro.super->stars.density_ghost,
                             t_star_feedback);
+#endif
         scheduler_addunlock(sched, t_star_feedback,
                             ci->hydro.super->stars.stars_out);
       }
@@ -2848,6 +2953,15 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_star_feedback =
             scheduler_addtask(sched, task_type_sub_pair,
                               task_subtype_stars_feedback, flags, 0, ci, cj);
+
+#ifdef EXTRA_STAR_LOOPS
+        t_star_prep1 =
+            scheduler_addtask(sched, task_type_sub_pair,
+                              task_subtype_stars_prep1, flags, 0, ci, cj);
+        t_star_prep2 =
+            scheduler_addtask(sched, task_type_sub_pair,
+                              task_subtype_stars_prep2, flags, 0, ci, cj);
+#endif
       }
 
       /* The sink tasks */
@@ -2902,6 +3016,12 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         engine_addlink(e, &cj->stars.density, t_star_density);
         engine_addlink(e, &ci->stars.feedback, t_star_feedback);
         engine_addlink(e, &cj->stars.feedback, t_star_feedback);
+#ifdef EXTRA_STAR_LOOPS
+        engine_addlink(e, &ci->stars.prepare1, t_star_prep1);
+        engine_addlink(e, &cj->stars.prepare1, t_star_prep1);
+        engine_addlink(e, &ci->stars.prepare2, t_star_prep2);
+        engine_addlink(e, &cj->stars.prepare2, t_star_prep2);
+#endif
       }
       if (with_sink) {
         /* Formation */
@@ -3004,8 +3124,21 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               t_star_density);
           scheduler_addunlock(sched, t_star_density,
                               ci->hydro.super->stars.density_ghost);
+#ifdef EXTRA_STAR_LOOPS
+          scheduler_addunlock(sched, ci->hydro.super->stars.density_ghost,
+                              t_star_prep1);
+          scheduler_addunlock(sched, t_star_prep1,
+                              ci->hydro.super->stars.prep1_ghost);
+          scheduler_addunlock(sched, ci->hydro.super->stars.prep1_ghost,
+                              t_star_prep2);
+          scheduler_addunlock(sched, t_star_prep2,
+                              ci->hydro.super->stars.prep2_ghost);
+          scheduler_addunlock(sched, ci->hydro.super->stars.prep2_ghost,
+                              t_star_feedback);
+#else
           scheduler_addunlock(sched, ci->hydro.super->stars.density_ghost,
                               t_star_feedback);
+#endif
           scheduler_addunlock(sched, t_star_feedback,
                               ci->hydro.super->stars.stars_out);
         }
@@ -3119,8 +3252,21 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 t_star_density);
             scheduler_addunlock(sched, t_star_density,
                                 cj->hydro.super->stars.density_ghost);
+#ifdef EXTRA_STAR_LOOPS
+            scheduler_addunlock(sched, cj->hydro.super->stars.density_ghost,
+                                t_star_prep1);
+            scheduler_addunlock(sched, t_star_prep1,
+                                cj->hydro.super->stars.prep1_ghost);
+            scheduler_addunlock(sched, cj->hydro.super->stars.prep1_ghost,
+                                t_star_prep2);
+            scheduler_addunlock(sched, t_star_prep2,
+                                cj->hydro.super->stars.prep2_ghost);
+            scheduler_addunlock(sched, cj->hydro.super->stars.prep2_ghost,
+                                t_star_feedback);
+#else
             scheduler_addunlock(sched, cj->hydro.super->stars.density_ghost,
                                 t_star_feedback);
+#endif
             scheduler_addunlock(sched, t_star_feedback,
                                 cj->hydro.super->stars.stars_out);
           }
