@@ -31,20 +31,6 @@
 #include "timers.h"
 
 /**
- * @brief Return the change in temperature (in internal units) to apply to a
- * gas particle affected by SNe feedback.
- *
- * @param sp The #spart.
- * @param props The properties of the feedback model.
- */
-double eagle_feedback_temperature_change(const struct spart* sp,
-                                         const struct feedback_props* props) {
-
-  /* In the EAGLE REF model, the change of temperature is constant */
-  return props->SNe_deltaT_desired;
-}
-
-/**
  * @brief Computes the fraction of the available super-novae energy to
  * inject for a given event.
  *
