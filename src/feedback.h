@@ -32,6 +32,7 @@
 #elif defined(FEEDBACK_EAGLE_KINETIC)
 #include "./feedback/EAGLE_kinetic/feedback.h"
 #include "./feedback/EAGLE_kinetic/feedback_iact.h"
+#define EXTRA_STAR_LOOPS
 #elif defined(FEEDBACK_GEAR)
 #include "./feedback/GEAR/feedback.h"
 #include "./feedback/GEAR/feedback_iact.h"
