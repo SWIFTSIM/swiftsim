@@ -440,6 +440,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
           /* Synchronize the particle on the timeline */
           timestep_sync_part(pj);
+
         } else {
 
           /* In the absence of a kick event, store the unused kinetic energy
