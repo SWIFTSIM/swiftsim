@@ -203,6 +203,12 @@ INLINE static void compute_SNII_feedback(
         if (rand_kinetic < prob_kinetic) number_of_kin_SN_events++;
       }
 
+      /* Total kinetic energy needed = Kinetic energy to kick one pair of two
+       * particles, each of mean mass ngb_gas_mass_new/ngb_gas_N, with the kick
+       * velocity delta_v, \times the number of kick events
+       * ( = the number of pairs) */
+      E_kinetic = ngb_gas_mass / ngb_gas_N * delta_v * delta_v *
+                  number_of_kin_SN_events;
     } else {
 
       /* Special case: we need to adjust the kinetic energy irrespective of
