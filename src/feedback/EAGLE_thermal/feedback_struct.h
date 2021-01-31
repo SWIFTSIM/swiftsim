@@ -31,6 +31,11 @@
 struct feedback_part_data {};
 
 /**
+ * @brief Extra feedback fields carried by each hydro particles
+ */
+struct feedback_xpart_data {};
+
+/**
  * @brief Feedback fields carried by each star particles
  */
 struct feedback_spart_data {
