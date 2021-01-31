@@ -479,7 +479,8 @@ void feedback_props_init(struct feedback_props* fp,
       fp->E_SNII_cgs / units_cgs_conversion_factor(us, UNIT_CONV_ENERGY);
 
   /* Kick velocity used by supernova type II */
-  fp->SNII_delta_v = parser_get_param_float(params, "EAGLEFeedback:SNII_delta_v_km_p_s");
+  fp->SNII_delta_v =
+      parser_get_param_float(params, "EAGLEFeedback:SNII_delta_v_km_p_s");
   fp->SNII_delta_v *= 1e5;
   fp->SNII_delta_v /= units_cgs_conversion_factor(us, UNIT_CONV_SPEED);
 
