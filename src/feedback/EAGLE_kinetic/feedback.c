@@ -115,6 +115,9 @@ INLINE static void compute_SNII_feedback(
    * when using a fixed delay */
   const double SNII_wind_delay = feedback_props->SNII_wind_delay;
 
+  /* Change in gas velocity for kinetic feedback */
+  double delta_v = feedback_props->SNII_delta_v;
+
   /* Are we doing feedback this step?
    * Note that since the ages are calculated using an interpolation table we
    * must allow some tolerance here*/
@@ -132,7 +135,6 @@ INLINE static void compute_SNII_feedback(
     }
 
     /* Properties of the model (all in internal units) */
-    const double delta_T = 2.;
     const double E_SNe = feedback_props->E_SNII;
     const double f_E =
         eagle_feedback_energy_fraction(sp, feedback_props, ngb_nH_cgs, ngb_Z);
@@ -149,70 +151,85 @@ INLINE static void compute_SNII_feedback(
     /* Abort if there are no SNe exploding this step */
     if (N_SNe <= 0.) return;
 
-    /* Conversion factor from T to internal energy */
-    const double conv_factor = feedback_props->temp_to_u_factor;
+    /* Total SN energy released by all detonated SNe in this star particle
+     * during this time-step */
+    const double E_SN_total = f_E * E_SNe * N_SNe;
 
-    /* Calculate the default heating probability (accounting for round-off) */
-    double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
-    prob = max(prob, 0.0);
+    /* The probability in SNII kinetic feedback */
+    double prob_kinetic;
 
-    /* Calculate the change in internal energy of the gas particles that get
-     * heated */
-    double delta_u;
+    /* If the velocity from the parameter file is larger than 0,
+     * we compute the probability to do a kick */
+    if (delta_v > 0.) {
 
-    /* Number of SNII events for this stellar particle */
-    int number_of_SN_events = 0;
+      /* Note that in the denominator we have ngb_gas_mass * delta_v * delta_v
+       * and not 0.5 ngb_gas_mass * delta_v * delta_v.
+       *
+       * That is because in our method, if we have a kick event then we kick
+       * two particles instead of one. This implies that we need twice as much
+       * energy and the probability must be lowered by a factor of 2.
+       *
+       * Furthermore, unlike in the thermal feedback here we do not take into
+       * account the ejecta mass because the kicks are done before the mass
+       * transfer. That is, we consider ngb_gas_mass and not ngb_gas_mass_new.
+       */
+      prob_kinetic = E_SN_total / (ngb_gas_mass * delta_v * delta_v);
 
-    if (prob <= 1.) {
+    } else {
 
-      /* Normal case */
-      delta_u = delta_T * conv_factor;
+      /* If delta_v <= 0, this means that the code will compute the kick
+       * velocity based on the available SNII kinetic energy at this time-step
+       */
+      prob_kinetic = 1.;
+    }
+
+    /* Total kinetic energy that is going to be used to kick gas particles
+     * by the star particle during this time-step */
+    double E_kinetic = 0.;
+
+    /* Number of individual kick events done by this star particle during
+     * this time-step */
+    int number_of_kin_SN_events = 0;
+
+    /* If the kicking probability is less than 1, compute the number of heating
+     * events by drawing a random number ngb_gas_N times where ngb_gas_N
+     * is the number of gas particles within the star's kernel */
+    if (prob_kinetic < 1.) {
 
       for (int i = 0; i < ngb_gas_N; i++) {
-        const double rand_thermal = random_unit_interval_part_ID_and_ray_idx(
-            sp->id, i, ti_begin, random_number_stellar_feedback_3);
-        if (rand_thermal < prob) number_of_SN_events++;
+        const double rand_kinetic = random_unit_interval_part_ID_and_ray_idx(
+            sp->id, i, ti_begin, random_number_stellar_feedback_2);
+
+        if (rand_kinetic < prob_kinetic) number_of_kin_SN_events++;
       }
 
     } else {
 
-      /* Special case: we need to adjust the energy irrespective of the
-         desired deltaT to ensure we inject all the available energy. */
-      delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
+      /* Special case: we need to adjust the kinetic energy irrespective of
+       * the desired delta v to ensure we inject all the available SN energy. */
+      E_kinetic = E_SN_total;
 
-      /* Number of SNIa events is equal to the number of Ngbs */
-      number_of_SN_events = ngb_gas_N;
+      /* Number of kick events is equal to the number of Ngbs */
+      number_of_kin_SN_events = ngb_gas_N;
     }
+
+    /* The number of kick events cannot be greater than the number of rays.
+     *
+     * Note that the energy will be adjusted accordingly in the injection
+     * itself.*/
+    number_of_kin_SN_events =
+        min(number_of_kin_SN_events, eagle_SNII_feedback_num_of_rays);
 
 #ifdef SWIFT_DEBUG_CHECKS
     if (f_E < feedback_props->f_E_min || f_E > feedback_props->f_E_max)
       error("f_E is not in the valid range! f_E=%f sp->id=%lld", f_E, sp->id);
 #endif
 
-    /* If we have more heating events than the maximum number of
-     * rays (eagle_feedback_number_of_rays), then we cannot
-     * distribute all of the heating events (since 1 event = 1 ray), so we need
-     * to increase the thermal energy per ray and make the number of events
-     * equal to the number of rays */
-    if (number_of_SN_events > eagle_SNII_feedback_num_of_rays) {
-      const double alpha_thermal =
-          (double)number_of_SN_events / (double)eagle_SNII_feedback_num_of_rays;
-      delta_u *= alpha_thermal;
-      number_of_SN_events = eagle_SNII_feedback_num_of_rays;
-    }
-
-    /* Current total f_E for this star */
-    double star_f_E = sp->f_E * sp->number_of_SNII_events;
-
-    /* New total */
-    star_f_E = (star_f_E + f_E) / (sp->number_of_SNII_events + 1.);
-
-    /* Store all of this in the star for delivery onto the gas and recording */
-    sp->f_E = star_f_E;
-    sp->number_of_SNII_events++;
-    sp->feedback_data.to_distribute.SNII_delta_u = delta_u;
-    sp->feedback_data.to_distribute.SNII_num_of_thermal_energy_inj =
-        number_of_SN_events;
+    /* Store all of this in the star for delivery onto the gas */
+    sp->f_E = f_E;
+    sp->feedback_data.to_distribute.SNII_E_kinetic = E_kinetic;
+    sp->feedback_data.to_distribute.SNII_num_of_kinetic_energy_inj =
+        number_of_kin_SN_events;
   }
 }
 
@@ -455,17 +472,16 @@ void feedback_props_init(struct feedback_props* fp,
         phys_const->const_year * 1e9;
   }
 
-  /* Read the temperature change to use in stochastic heating */
-  fp->SNe_deltaT_desired =
-      parser_get_param_float(params, "EAGLEFeedback:SNII_delta_T_K");
-  fp->SNe_deltaT_desired /=
-      units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
-
   /* Energy released by supernova type II */
   fp->E_SNII_cgs =
       parser_get_param_double(params, "EAGLEFeedback:SNII_energy_erg");
   fp->E_SNII =
       fp->E_SNII_cgs / units_cgs_conversion_factor(us, UNIT_CONV_ENERGY);
+
+  /* Kick velocity used by supernova type II */
+  fp->SNII_delta_v = parser_get_param_float(params, "EAGLEFeedback:SNII_delta_v_km_p_s");
+  fp->SNII_delta_v *= 1e5;
+  fp->SNII_delta_v /= units_cgs_conversion_factor(us, UNIT_CONV_SPEED);
 
   /* Stellar mass limits for SNII feedback */
   const double SNII_min_mass_msun =
