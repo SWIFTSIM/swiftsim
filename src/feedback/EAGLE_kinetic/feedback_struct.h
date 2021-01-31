@@ -116,17 +116,20 @@ struct feedback_spart_data {
       /*! Energy change due to thermal and kinetic energy of ejecta */
       float energy;
 
-      /*! Number of SNII energy injections in thermal form */
-      int SNII_num_of_thermal_energy_inj;
+      /*! Total kinetic energy to distribute in SNII feedback per time step */
+      float SNII_E_kinetic;
 
-      /*! Change in energy from SNII feedback energy injection */
-      float SNII_delta_u;
+      /*! Number of SNII energy injections in kinetic form */
+      int SNII_num_of_kinetic_energy_inj;
 
     } to_distribute;
   };
 
-  /* Instantiate ray structs for SNII isotropic feedback  */
-  struct ray_data SNII_rays[eagle_SNII_feedback_num_of_rays];
+  /* Instantiate ray structs for SNII kinetic feedback  */
+  struct ray_data SNII_rays_true[eagle_SNII_feedback_num_of_rays];
+  struct ray_data SNII_rays_mirr[eagle_SNII_feedback_num_of_rays];
+  struct ray_data_extra SNII_rays_ext_true[eagle_SNII_feedback_num_of_rays];
+  struct ray_data_extra SNII_rays_ext_mirr[eagle_SNII_feedback_num_of_rays];
 };
 
 #endif /* SWIFT_FEEDBACK_STRUCT_EAGLE_H */
