@@ -28,7 +28,16 @@
 /**
  * @brief Feedback fields carried by each hydro particles
  */
-struct feedback_part_data {};
+struct feedback_part_data {
+
+  /* The largest id of the star that wants to kick the gas particle */
+  long long SNII_star_largest_id;
+};
+
+/**
+ * @brief Extra feedback fields carried by each hydro particles
+ */
+struct feedback_xpart_data {};
 
 /**
  * @brief Feedback fields carried by each star particles
