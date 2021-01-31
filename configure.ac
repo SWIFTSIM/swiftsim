@@ -1632,7 +1632,7 @@ case "$with_subgrid" in
 	with_subgrid_entropy_floor=EAGLE
 	with_subgrid_stars=EAGLE
 	with_subgrid_star_formation=EAGLE
-	with_subgrid_feedback=EAGLE
+	with_subgrid_feedback=EAGLE-kinetic
 	with_subgrid_black_holes=EAGLE
 	with_subgrid_sink=none
 	enable_fof=yes
