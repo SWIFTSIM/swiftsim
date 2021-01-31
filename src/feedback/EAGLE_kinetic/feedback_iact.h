@@ -112,10 +112,47 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_feedback_prep1(const float r2, const float *dx,
                                   const float hi, const float hj,
-                                  struct spart *si, const struct part *pj,
+                                  const struct spart *si, struct part *pj,
                                   const struct xpart *xpj,
                                   const struct cosmology *cosmo,
-                                  const integertime_t ti_current) {}
+                                  const integertime_t ti_current) {
+
+  /* Get the the number of SNII kinetic energy injections per stellar
+   * particle at this time-step */
+  const int N_of_SNII_kinetic_events =
+      si->feedback_data.to_distribute.SNII_num_of_kinetic_energy_inj;
+
+  /* Loop over the SNII kick events. In each event, two gas
+   * particles are kicked in exactly the opposite directions. */
+  for (int i = 0; i < N_of_SNII_kinetic_events; i++) {
+
+    /* Find the particle that is closest to the ith ray OR the ith mirror ray
+     */
+    if (pj->id == si->feedback_data.SNII_rays_true[i].id_min_length ||
+        pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+      message("Loop2: Star %lld wants to kick particle %lld using ray %d",
+              si->id, pj->id, i);
+#endif
+
+      /* If this spart has the largest id among all sparts that want to kick
+       * this gas particle in this time-step, then the gas particle will save
+       * the id of this spart. */
+      if (pj->feedback_data.SNII_star_largest_id < si->id) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+        message(
+            "Loop2: Increase the largest stellar id of part %lld from %lld"
+            " to %lld (ray %d)",
+            pj->id, pj->feedback_data.SNII_star_largest_id, si->id, i);
+#endif
+        /* Update the largest stellar id carried by the gas particle */
+        pj->feedback_data.SNII_star_largest_id = si->id;
+      }
+    }
+  }
+}
 
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_feedback_prep2(const float r2, const float *dx,
@@ -123,7 +160,43 @@ runner_iact_nonsym_feedback_prep2(const float r2, const float *dx,
                                   struct spart *si, const struct part *pj,
                                   const struct xpart *xpj,
                                   const struct cosmology *cosmo,
-                                  const integertime_t ti_current) {}
+                                  const integertime_t ti_current) {
+
+  /* Get the the number of SNII kinetic energy injections per stellar
+   * particle at this time-step */
+  const int N_of_SNII_kinetic_events =
+      si->feedback_data.to_distribute.SNII_num_of_kinetic_energy_inj;
+
+  for (int i = 0; i < N_of_SNII_kinetic_events; i++) {
+
+    /* Find the particle that is closest to the ith ray OR the ith mirror ray */
+    if (pj->id == si->feedback_data.SNII_rays_true[i].id_min_length ||
+        pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length) {
+
+      if (pj->feedback_data.SNII_star_largest_id == si->id) {
+
+        /* Increment the value of the kick switch by one if this gas part
+         * lets this spart kick it. The kick will only occur if the other gas
+         * part in the pair wants to be kicked by the same spart
+         * (i.e. kick_switch has the value of 2) */
+        si->feedback_data.kick_switch[i]++;
+
+#ifdef SWIFT_DEBUG_CHECKS
+        message(
+            "Loop3: Increment the switch value of star %lld by 1 because part "
+            "%lld"
+            " wants to be kicked by this star (ray %d)",
+            si->id, pj->id, i);
+#endif
+        /* If we are using maximum_number_of_rays > 1, then for a given spart,
+         * as soon as we have found the first ray that points at this gas part,
+         * we stop. Otherwise, the same spart might kick the same gas part
+         * twice in the same time-step (or even more times). */
+        break;
+      }
+    }
+  }
+}
 
 /**
  * @brief Feedback interaction between two particles (non-symmetric).
@@ -288,6 +361,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   const int N_of_SNII_kinetic_events =
       si->feedback_data.to_distribute.SNII_num_of_kinetic_energy_inj;
 
+  double E_kinetic_unused = 0.0;
+
   /* Are we doing some SNII kinetic feedback? */
   if (N_of_SNII_kinetic_events > 0) {
 
@@ -300,66 +375,82 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       if (pj->id == si->feedback_data.SNII_rays_true[i].id_min_length ||
           pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length) {
 
-        /* Which particles have we caught: the original or the mirror one? */
-        const int mirror_particle_switch =
-            (pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length);
-
-        /* Two random numbers in [0, 1[
-         * Note: this are the same numbers we drew in the density loop! */
-        const double rand_theta = random_unit_interval_part_ID_and_ray_idx(
-            si->id, i, ti_current,
-            random_number_isotropic_SNII_feedback_ray_theta);
-        const double rand_phi = random_unit_interval_part_ID_and_ray_idx(
-            si->id, i, ti_current,
-            random_number_isotropic_SNII_feedback_ray_phi);
-
-        /* Initialise the kick velocity vector and its modulus */
-        float v_kick[3] = {0.f, 0.f, 0.f};
-        float v_kick_abs = 0.f;
-
         /* Get the SNII feedback kinetic energy per pair.
          * We thus divide the  total kinetic energy we have from the star
          * particle by the number of events (in each event, two particles are
          * kicked) */
         const double energy_per_pair =
             si->feedback_data.to_distribute.SNII_E_kinetic /
-            si->feedback_data.to_distribute.SNII_num_of_kinetic_energy_inj;
+            N_of_SNII_kinetic_events;
 
-        /* Get the mass of the gas particles *before* any enrichment mass
-         * (from this star or another) was added */
-        const double mass_true = si->feedback_data.SNII_rays_true[i].mass;
-        const double mass_mirr = si->feedback_data.SNII_rays_mirr[i].mass;
+        /* Are we kicking or heating? If at least one gas part in the pair does
+         * not want to be kicked by this spart, then we heat */
+        if (si->feedback_data.kick_switch[i] == 2) {
 
-        if (mass_true > 0.0 && mass_mirr > 0.0 && energy_per_pair > 0.0) {
+          /* Which particles have we caught: the original or the mirror one? */
+          const int mirror_particle_switch =
+              (pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length);
 
-          /* Mass = 0 means that the ray does not point to any gas particle.
-           * We need to check it for both the original and mirror ray.
-           * We also make sure the energy is positive to avoid the possibility
-           * of division by zero in the function below */
+          /* Two random numbers in [0, 1[
+           * Note: this are the same numbers we drew in the density loop! */
+          const double rand_theta = random_unit_interval_part_ID_and_ray_idx(
+              si->id, i, ti_current,
+              random_number_isotropic_SNII_feedback_ray_theta);
+          const double rand_phi = random_unit_interval_part_ID_and_ray_idx(
+              si->id, i, ti_current,
+              random_number_isotropic_SNII_feedback_ray_phi);
 
-          /* Compute the physical kick velocity in internal units */
-          ray_kinetic_feedback_compute_kick_velocity(
-              v_kick, &v_kick_abs, si->feedback_data.SNII_rays_ext_true + i,
-              si->feedback_data.SNII_rays_ext_mirr + i, mirror_particle_switch,
-              energy_per_pair, cosmo, current_mass, si->v, rand_theta, rand_phi,
-              mass_true, mass_mirr);
+          /* Initialise the kick velocity vector and its modulus */
+          float v_kick[3] = {0.f, 0.f, 0.f};
+          float v_kick_abs = 0.f;
+
+          /* Get the mass of the gas particles *before* any enrichment mass
+           * (from this star or another) was added */
+          const double mass_true = si->feedback_data.SNII_rays_true[i].mass;
+          const double mass_mirr = si->feedback_data.SNII_rays_mirr[i].mass;
+
+          if (mass_true > 0.0 && mass_mirr > 0.0 && energy_per_pair > 0.0) {
+
+            /* Mass = 0 means that the ray does not point to any gas particle.
+             * We need to check it for both the original and mirror ray.
+             * We also make sure the energy is positive to avoid the possibility
+             * of division by zero in the function below */
+
+            /* Compute the physical kick velocity in internal units */
+            ray_kinetic_feedback_compute_kick_velocity(
+                v_kick, &v_kick_abs, si->feedback_data.SNII_rays_ext_true + i,
+                si->feedback_data.SNII_rays_ext_mirr + i,
+                mirror_particle_switch, energy_per_pair, cosmo, current_mass,
+                si->v, rand_theta, rand_phi, mass_true, mass_mirr);
+          }
+
+          /* Do the kicks by updating the particle velocity.
+           *
+           * Note that xpj->v_full = a^2 * dx/dt, with x the comoving
+           * coordinate. Therefore, a physical kick, dv, gets translated into a
+           * code velocity kick, a * dv */
+          xpj->v_full[0] += v_kick[0] * cosmo->a;
+          xpj->v_full[1] += v_kick[1] * cosmo->a;
+          xpj->v_full[2] += v_kick[2] * cosmo->a;
+
+          /* Update the signal velocity of the particle based on the velocity
+           * kick
+           */
+          hydro_set_v_sig_based_on_velocity_kick(pj, cosmo, v_kick_abs);
+
+          /* Synchronize the particle on the timeline */
+          timestep_sync_part(pj);
+        } else {
+
+          /* In the absence of a kick event, store the unused kinetic energy
+           * for heating */
+          E_kinetic_unused = 0.5 * energy_per_pair;
+
+#ifdef SWIFT_DEBUG_CHECKS
+          message("Loop4: Part %lld is heated by star %lld (ray %d)", pj->id,
+                  si->id, i);
+#endif
         }
-
-        /* Do the kicks by updating the particle velocity.
-         *
-         * Note that xpj->v_full = a^2 * dx/dt, with x the comoving coordinate.
-         * Therefore, a physical kick, dv, gets translated into a
-         * code velocity kick, a * dv */
-        xpj->v_full[0] += v_kick[0] * cosmo->a;
-        xpj->v_full[1] += v_kick[1] * cosmo->a;
-        xpj->v_full[2] += v_kick[2] * cosmo->a;
-
-        /* Update the signal velocity of the particle based on the velocity kick
-         */
-        hydro_set_v_sig_based_on_velocity_kick(pj, cosmo, v_kick_abs);
-
-        /* Synchronize the particle on the timeline */
-        timestep_sync_part(pj);
       }
     }
   }
@@ -404,13 +495,15 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
       si->feedback_data.to_distribute.energy * Omega_frac;
 
   /* Apply energy conservation to recover the new thermal energy of the gas
+   * which may include extra energy from the failed kinetic injection attempt.
+   *
    * Note: in some specific cases the new_thermal_energy could be lower
    * than the current_thermal_energy, this is mainly the case if the change
    * in mass is relatively small and the velocity vectors between both the
    * gas particle and the star particle have a small angle. */
   const double new_thermal_energy = current_kinetic_energy_gas +
-                                    current_thermal_energy + injected_energy -
-                                    new_kinetic_energy_gas;
+                                    current_thermal_energy + injected_energy +
+                                    E_kinetic_unused - new_kinetic_energy_gas;
 
   /* Convert this to a specific thermal energy */
   const double u_new_enrich = new_thermal_energy * new_mass_inv;
@@ -418,6 +511,12 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   /* Do the energy injection. */
   hydro_set_physical_internal_energy(pj, xpj, cosmo, u_new_enrich);
   hydro_set_drifted_physical_internal_energy(pj, cosmo, u_new_enrich);
+
+  /* Synchronize the particle on the timeline if we've got some extra
+   * thermal energy from the SNII kicks that have not occured */
+  if (E_kinetic_unused) {
+    timestep_sync_part(pj);
+  }
 }
 
 #endif /* SWIFT_EAGLE_FEEDBACK_IACT_H */
