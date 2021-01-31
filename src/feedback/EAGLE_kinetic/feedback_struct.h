@@ -130,6 +130,9 @@ struct feedback_spart_data {
   struct ray_data SNII_rays_mirr[eagle_SNII_feedback_num_of_rays];
   struct ray_data_extra SNII_rays_ext_true[eagle_SNII_feedback_num_of_rays];
   struct ray_data_extra SNII_rays_ext_mirr[eagle_SNII_feedback_num_of_rays];
+
+  /* Counter verifying that the correct number of particles can be kicked */
+  int kick_switch[eagle_SNII_feedback_num_of_rays];
 };
 
 #endif /* SWIFT_FEEDBACK_STRUCT_EAGLE_H */
