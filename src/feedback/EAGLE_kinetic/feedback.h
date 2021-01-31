@@ -91,7 +91,12 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
   sp->feedback_data.to_collect.ngb_Z = 0.f;
 
   /* Reset all ray structs carried by this star particle */
-  ray_init(sp->feedback_data.SNII_rays, eagle_SNII_feedback_num_of_rays);
+  ray_init(sp->feedback_data.SNII_rays_true, eagle_SNII_feedback_num_of_rays);
+  ray_init(sp->feedback_data.SNII_rays_mirr, eagle_SNII_feedback_num_of_rays);
+  ray_extra_init(sp->feedback_data.SNII_rays_ext_true,
+                 eagle_SNII_feedback_num_of_rays);
+  ray_extra_init(sp->feedback_data.SNII_rays_ext_mirr,
+                 eagle_SNII_feedback_num_of_rays);
 }
 
 /**
@@ -148,10 +153,10 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
   sp->feedback_data.to_distribute.energy = 0.f;
 
   /* Zero the SNII feedback energy */
-  sp->feedback_data.to_distribute.SNII_delta_u = 0.f;
+  sp->feedback_data.to_distribute.SNII_E_kinetic = 0.f;
 
   /* Zero the SNII feedback properties */
-  sp->feedback_data.to_distribute.SNII_num_of_thermal_energy_inj = 0;
+  sp->feedback_data.to_distribute.SNII_num_of_kinetic_energy_inj = 0;
 }
 
 /**
