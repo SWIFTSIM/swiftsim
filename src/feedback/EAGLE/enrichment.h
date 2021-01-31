@@ -294,26 +294,9 @@ INLINE static void evolve_SNIa(
         props->solar_mass_to_mass;
   }
 
-  /* Update the metallicity of the material released */
-  feedback_data->to_distribute.metal_mass_from_SNIa +=
-      num_SNIa * props->yield_SNIa_total_metals_IMF_resampled *
-      props->solar_mass_to_mass;
-
   /* Update the metal mass produced */
   feedback_data->to_distribute.total_metal_mass +=
       num_SNIa * props->yield_SNIa_total_metals_IMF_resampled *
-      props->solar_mass_to_mass;
-
-  /* Compute the mass produced by SNIa
-   * Note: SNIa do not inject H or He so the mass injected is the same
-   * as the metal mass injected. */
-  feedback_data->to_distribute.mass_from_SNIa +=
-      num_SNIa * props->yield_SNIa_total_metals_IMF_resampled *
-      props->solar_mass_to_mass;
-
-  /* Compute the iron mass produced */
-  feedback_data->to_distribute.Fe_mass_from_SNIa +=
-      num_SNIa * props->yield_SNIa_IMF_resampled[chemistry_element_Fe] *
       props->solar_mass_to_mass;
 
   /* Compute the energy to be injected */
@@ -485,12 +468,8 @@ INLINE static void evolve_SNII(
   for (int i = 0; i < chemistry_element_count; i++) {
     feedback_data->to_distribute.metal_mass[i] +=
         metal_mass_released[i] * norm_factor;
-    feedback_data->to_distribute.mass_from_SNII +=
-        metal_mass_released[i] * norm_factor;
   }
   feedback_data->to_distribute.total_metal_mass +=
-      metal_mass_released_total * norm_factor;
-  feedback_data->to_distribute.metal_mass_from_SNII +=
       metal_mass_released_total * norm_factor;
 }
 
@@ -654,12 +633,8 @@ INLINE static void evolve_AGB(const double log10_min_mass,
   for (int i = 0; i < chemistry_element_count; i++) {
     feedback_data->to_distribute.metal_mass[i] +=
         metal_mass_released[i] * norm_factor;
-    feedback_data->to_distribute.mass_from_AGB +=
-        metal_mass_released[i] * norm_factor;
   }
   feedback_data->to_distribute.total_metal_mass +=
-      metal_mass_released_total * norm_factor;
-  feedback_data->to_distribute.metal_mass_from_AGB +=
       metal_mass_released_total * norm_factor;
 }
 
