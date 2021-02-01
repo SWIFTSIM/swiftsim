@@ -70,6 +70,7 @@ for f in args.files:
 
         # Could be also be called like this:
         # reader.get_list_fields(part_type=0)
+        # or reader.get_list_fields(part_type=[0, 1, 4]) for multiple types.
 
         if missing:
             raise Exception("Fields %s not found in the logfile." % missing)
@@ -86,7 +87,7 @@ for f in args.files:
         # Could be also called like this
         # reader.gas.get_data(fields=fields, time=args.time)
 
-        # Get the particle ids
+        # Get the particle ids and select a fraction of the IDs
         gas_ids = out["ParticleIDs"]
         gas_ids = gas_ids[:len(gas_ids)//2]
 
