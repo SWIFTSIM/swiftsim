@@ -230,7 +230,7 @@ struct pcell {
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Cell ID (for debugging) */
-  long long cellID;
+  unsigned long long cellID;
 #endif
 
 } SWIFT_STRUCT_ALIGN;
@@ -1302,11 +1302,10 @@ __attribute__((always_inline)) INLINE static struct task *cell_get_recv(
  * @brief Generate the cell ID for top level cells. Only used for debugging.
  *
  * Cell IDs are stored in the long long `cell->cellID`. Top level cells get
- * their index according to their location on the top level grid, and are
- * marked with a minus sign.
+ * their index according to their location on the top level grid.
  * We have 15 bits set aside in `cell->cellID` for the top level cells. Hence
  * if we have more that 32^3 top level cells, the cell IDs won't be guaranteed
- * to be unique. Top level cells will still be recognizable by the minus sign.
+ * to be unique and reproducible between two runs, but only unique.
  *
  * @param c #cell to work with
  * @param cdim number of cells in each dimension
@@ -1324,19 +1323,18 @@ __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
       /* print warning only once */
       if (last_cell_id == 1) {
         message(
-            "Warning: Got %d x %d x %d top level cells. "
-            "Cell IDs are only guaranteed to be unique if count is < 32^3",
+            "WARNING: Got %d x %d x %d top level cells. "
+            "Cell IDs are only guaranteed to be "
+            "reproduceably unique if count is < 32^3",
             cdim[0], cdim[1], cdim[2]);
       }
-      c->cellID = -last_cell_id;
+      c->cellID = last_cell_id;
       atomic_inc(&last_cell_id);
     } else {
       int i = (int)(c->loc[0] * iwidth[0] + 0.5);
       int j = (int)(c->loc[1] * iwidth[1] + 0.5);
       int k = (int)(c->loc[2] * iwidth[2] + 0.5);
-      printf("%2d %2d %2d; %.3lf %.3lf %.3lf;\n", i, j, k, c->loc[0], c->loc[1],
-             c->loc[2]);
-      c->cellID = -(long long)(cell_getid(cdim, i, j, k) + 1);
+      c->cellID = (unsigned long long)(cell_getid(cdim, i, j, k) + 1);
     }
   }
 #endif
@@ -1345,13 +1343,14 @@ __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
 /**
  * @brief Generate the cell ID for progeny cells. Only used for debugging.
  *
- * Cell IDs are stored in the long long `cell->cellID`.
- * We have 15 bits set aside in `cell->cellID` for the top level cells, and
- * one for a minus sign to mark top level cells. The remaining 48 bits are
- * for all other cells. Each progeny cell gets a unique ID by inheriting
+ * Cell IDs are stored in the unsigned long long `cell->cellID`.
+ * We have 15 bits set aside in `cell->cellID` for the top level cells, with
+ * 49 remaining. Each progeny cell gets a unique ID by inheriting
  * its parent ID and adding 3 bits on the right side, which are set according
- * to the progeny's location within its parent cell. Hence we can store up to
- * 16 levels of depth uniquely.
+ * to the progeny's location within its parent cell. Finally, a 1 is set as the
+ * leading bit such that all recursive children with index (000) are still
+ * recognized as such. This allows us to give IDs to 16 levels of depth
+ * uniquely.
  * If the depth exceeds 16, we use the old scheme where we just add up a
  * counter. This gives us 32^3 new unique cell IDs, previously reserved for
  * top level cells, but the IDs won't be thread safe and will vary each run.
@@ -1368,7 +1367,7 @@ __attribute__((always_inline)) INLINE void cell_assign_cell_index(
     /* print warning only once */
     if (last_cell_id == 1) {
       message(
-          "Warning: Got depth %d > 16."
+          "WARNING: Got depth %d > 16."
           "IDs are only guaranteed unique if depth <= 16",
           c->depth);
     }
@@ -1377,19 +1376,25 @@ __attribute__((always_inline)) INLINE void cell_assign_cell_index(
   } else {
     /* we're good to go for unique IDs */
     /* first inherit the parent's ID and mark it as not top-level*/
-    long long child_id = llabs(parent->cellID);
+    unsigned long long child_id = parent->cellID;
 
-    /* make place for new bits */
-    /* parent's ID needs to be leading bits, so 000 children still
-     * change the value of the cellID */
-    child_id <<= 3;
+    /* if parent isn't top level cell, we have to
+     * zero out the marker of the previous depth first */
+    if (c->depth > 1) child_id &= ~(1ULL << ((c->depth - 1) * 3 + 15));
+
+    /* Now add marker for this depth */
+    child_id |= 1ULL << (15 + c->depth * 3);
 
     /* get progeny index in parent cell */
-    if (c->loc[0] > parent->loc[0]) child_id |= 1LL;
-    if (c->loc[1] > parent->loc[1]) child_id |= 2LL;
-    if (c->loc[2] > parent->loc[2]) child_id |= 4LL;
+    unsigned long long local_id = 0LL;
+    if (c->loc[0] > parent->loc[0]) local_id |= 1LL;
+    if (c->loc[1] > parent->loc[1]) local_id |= 2LL;
+    if (c->loc[2] > parent->loc[2]) local_id |= 4LL;
+    local_id <<= (15 + (c->depth - 1) * 3);
 
     /* add progeny index to cell index */
+    child_id |= local_id;
+
     c->cellID = child_id;
   }
 
