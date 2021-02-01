@@ -35,7 +35,8 @@ extern int space_expected_max_nr_strays;
 
 /*! Counter for cell IDs (when debugging) */
 #if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
-extern long long last_cell_id;
+extern unsigned long long last_cell_id;
+extern unsigned long long last_leaf_cell_id;
 #endif
 
 /**
@@ -56,7 +57,8 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
 #endif
 #if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
   /* Reset the cell counter */
-  last_cell_id = 1;
+  last_cell_id = 1ULL;
+  last_leaf_cell_id = 1ULL;
 #endif
 
   /* Re-grid if necessary, or just re-set the cell data. */

@@ -64,7 +64,8 @@ extern int cell_next_tag;
 
 /*! Counter for cell IDs (when exceeding max values for uniqueness) */
 #if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
-extern long long last_cell_id;
+extern unsigned long long last_cell_id;
+extern unsigned long long last_leaf_cell_id;
 #endif
 
 /* Struct to temporarily buffer the particle locations and bin id. */
@@ -1321,21 +1322,23 @@ __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
   } else {
     if (cdim[0] * cdim[1] * cdim[2] > 32 * 32 * 32) {
       /* print warning only once */
-      if (last_cell_id == 1) {
+      if (last_cell_id == 1ULL) {
         message(
             "WARNING: Got %d x %d x %d top level cells. "
             "Cell IDs are only guaranteed to be "
             "reproduceably unique if count is < 32^3",
             cdim[0], cdim[1], cdim[2]);
       }
-      c->cellID = last_cell_id;
-      atomic_inc(&last_cell_id);
+      /* Do this in same line. Otherwise, bad things happen. */
+      c->cellID = atomic_inc(&last_cell_id);
     } else {
       int i = (int)(c->loc[0] * iwidth[0] + 0.5);
       int j = (int)(c->loc[1] * iwidth[1] + 0.5);
       int k = (int)(c->loc[2] * iwidth[2] + 0.5);
       c->cellID = (unsigned long long)(cell_getid(cdim, i, j, k) + 1);
     }
+    /* in both cases, keep track of first prodigy index */
+    atomic_inc(&last_leaf_cell_id);
   }
 #endif
 }
@@ -1360,19 +1363,17 @@ __attribute__((always_inline)) INLINE void cell_assign_cell_index(
     struct cell *c, const struct cell *parent) {
 
 #if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_CELL_GRAPH)
-  if (c->depth == 0) {
-    error("assigning progeny cell index to top level cell.");
-  } else if (c->depth > 16 || last_cell_id > 1) {
+  if (c->depth == 0) error("assigning progeny cell index to top level cell.");
+  if (c->depth > 16 || last_cell_id > 1ULL) {
     /* last_cell_id > 1 => too many top level cells for clever IDs */
-    /* print warning only once */
-    if (last_cell_id == 1) {
+    if (last_cell_id == 1ULL) { /* warning not yet printed; do it only once */
       message(
           "WARNING: Got depth %d > 16."
           "IDs are only guaranteed unique if depth <= 16",
           c->depth);
     }
-    c->cellID = last_cell_id;
-    atomic_inc(&last_cell_id);
+    /* Do this in same line. Otherwise, bad things happen. */
+    c->cellID = atomic_inc(&last_leaf_cell_id);
   } else {
     /* we're good to go for unique IDs */
     /* first inherit the parent's ID and mark it as not top-level*/
