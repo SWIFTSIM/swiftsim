@@ -103,9 +103,6 @@ struct black_holes_props {
   /*! Switch for the Booth & Schaye 2009 model */
   int with_boost_factor;
 
-  /*! Use constant-alpha version of Booth & Schaye (2009) model? */
-  int boost_alpha_only;
-
   /*! Lowest value of the boost of the Booth & Schaye 2009 model */
   float boost_alpha;
 
@@ -365,18 +362,13 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       parser_get_param_int(params, "EAGLEAGN:with_boost_factor");
 
   if (bp->with_boost_factor) {
-    bp->boost_alpha_only =
-        parser_get_param_int(params, "EAGLEAGN:boost_alpha_only");
     bp->boost_alpha = parser_get_param_float(params, "EAGLEAGN:boost_alpha");
+    bp->boost_beta = parser_get_param_float(params, "EAGLEAGN:boost_beta");
 
-    if (!bp->boost_alpha_only) {
-      bp->boost_beta = parser_get_param_float(params, "EAGLEAGN:boost_beta");
-
-      /* Load the density in cgs and convert to internal units */
-      bp->boost_n_h_star =
-          parser_get_param_float(params, "EAGLEAGN:boost_n_h_star_H_p_cm3") /
-          units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
-    }
+    /* Load the density in cgs and convert to internal units */
+    bp->boost_n_h_star =
+        parser_get_param_float(params, "EAGLEAGN:boost_n_h_star_H_p_cm3") /
+        units_cgs_conversion_factor(us, UNIT_CONV_NUMBER_DENSITY);
   }
 
   bp->use_nibbling = parser_get_param_int(params, "EAGLEAGN:use_nibbling");
