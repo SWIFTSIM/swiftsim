@@ -67,15 +67,16 @@ def parse_files():
 
     for i, filename in enumerate(filenames):  # Loop over each file
         print("Files read %.1f%%\r" % (100 * i / n_files), end="")
-        # Open stdout file
         with open(filename, "r") as f:
 
             # Search the different phrases
             for line in f:
 
                 # Extract the number of threads
-                if re.search("threads / rank and", line):
+                if "threads / rank and" in line:
                     all_numbers = re.findall(r"[+-]?((\d+\.?\d*)|(\.\d+))", line)
+                    if len(all_numbers) != 12:
+                        raise Exception("Failed to read the following line", line)
                     rank = int(all_numbers[5][0])
                     thread = int(all_numbers[6][0])
                     threads[i] = rank * thread
@@ -94,6 +95,13 @@ def parse_files():
                 if re.findall(r"\[[0-9]{4}\][ ]\[*", line) or re.findall(
                         r"^\[[0-9]*[.][0-9]+\][ ]", line):
                     lastline = line
+
+    return threads, total_time
+
+
+def cleanup_data(threads, total_time):
+    n_labels = len(labels)
+    n_files = len(filenames)
 
     # Remove the functions not found
     time = np.sum(total_time, axis=1)
@@ -143,6 +151,7 @@ def parse_files():
     parallel_eff = speed_up / threads
 
     return threads, total_time, speed_up, parallel_eff
+
 
 
 def plot_results(threads, total_time, speed_up, parallel_eff):
@@ -215,7 +224,8 @@ def plot_results(threads, total_time, speed_up, parallel_eff):
 
 
 # Calculate results
-threads, total_time, speed_up, parallel_eff = parse_files()
+threads, total_time = parse_files()
+threads, total_time, speed_up, parallel_eff = cleanup_data(threads, total_time)
 
 print("Functions found: ", [l[0] for l in labels])
 
