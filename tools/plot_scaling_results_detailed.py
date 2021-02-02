@@ -48,13 +48,6 @@ colors = [
     hexcols[7],
 ]
 
-linestyle = [
-    "-",
-    "--",
-    "-.",
-    ":"
-]
-
 # Work out how many data series there are
 if len(sys.argv) == 1:
     print("Please specify an input file in the arguments.")
@@ -130,7 +123,6 @@ def parse_files():
 
     # Add the other group if required
     if np.sum(remaining_frac > 0.5 * min_fraction) > 0:
-        print(remaining_frac)
         labels.append(("Others", -1))
         total_time = np.append(total_time, remaining, axis=0)
         n_labels = len(labels)
@@ -166,10 +158,8 @@ def plot_results(threads, total_time, speed_up, parallel_eff):
     # Plot speed up
     speed_up_plot.plot(threads, threads, linestyle="--", lw=1.5, color="0.2")
     for i in range(n_labels):
-        i_line = i % len(linestyle)
         i_color = i % len(colors)
-        speed_up_plot.plot(threads, speed_up[i, :], c=colors[i_color],
-                           linestyle=linestyle[i_line])
+        speed_up_plot.plot(threads, speed_up[i, :], c=colors[i_color])
 
     speed_up_plot.set_ylabel("Speed up", labelpad=0.0)
     speed_up_plot.set_xlabel("Threads", labelpad=0.0)
@@ -178,10 +168,8 @@ def plot_results(threads, total_time, speed_up, parallel_eff):
 
     # Plot parallel efficiency
     for i in range(n_labels):
-        i_line = i % len(linestyle)
         i_color = i % len(colors)
-        parallel_eff_plot.plot(threads, parallel_eff[i, :], c=colors[i_color],
-                               linestyle=linestyle[i_line])
+        parallel_eff_plot.plot(threads, parallel_eff[i, :], c=colors[i_color])
 
     parallel_eff_plot.set_xscale("log")
     parallel_eff_plot.set_ylabel("Parallel efficiency", labelpad=0.0)
@@ -191,14 +179,15 @@ def plot_results(threads, total_time, speed_up, parallel_eff):
 
     # Plot time to solution
     pts = np.array([1, 10 ** np.floor(np.log10(threads.max()) + 1)])
-    total_time_plot.loglog(pts, 1. / pts, "k--", lw=1.0, color="0.2")
     for i in range(n_labels):
-        i_line = i % len(linestyle)
         i_color = i % len(colors)
         label = labels[i][0]
+        # Data
         total_time_plot.loglog(
-            threads, total_time[i, :], c=colors[i_color],
-            linestyle=linestyle[i_line], label=label)
+            threads, total_time[i, :], c=colors[i_color], label=label)
+        # Perfect scaling
+        total_time_plot.loglog(pts, total_time[i, 0] / pts, "--", c=colors[i_color],
+                               lw=1.0)
 
     y_min = 10 ** np.floor(np.log10(total_time.min() * 0.6))
     y_max = 1.0 * 10 ** np.floor(np.log10(total_time.max() * 1.5) + 1)
