@@ -1349,15 +1349,14 @@ __attribute__((always_inline)) INLINE void cell_assign_top_level_cell_index(
  * Cell IDs are stored in the unsigned long long `cell->cellID`.
  * We have 15 bits set aside in `cell->cellID` for the top level cells, with
  * 49 remaining. Each progeny cell gets a unique ID by inheriting
- * its parent ID and adding 3 bits on the right side, which are set according
+ * its parent ID and adding 3 bits on the left side, which are set according
  * to the progeny's location within its parent cell. Finally, a 1 is set as the
  * leading bit such that all recursive children with index (000) are still
  * recognized as such. This allows us to give IDs to 16 levels of depth
  * uniquely.
  * If the depth exceeds 16, we use the old scheme where we just add up a
- * counter. This gives us 32^3 new unique cell IDs, previously reserved for
- * top level cells, but the IDs won't be thread safe and will vary each run.
- * After the 32^3 cells are filled, we reach degeneracy.
+ * counter, which is not a reproducible way of giving IDs to cells, but
+ * guarantees uniqueness.
  */
 __attribute__((always_inline)) INLINE void cell_assign_cell_index(
     struct cell *c, const struct cell *parent) {
@@ -1371,6 +1370,7 @@ __attribute__((always_inline)) INLINE void cell_assign_cell_index(
           "WARNING: Got depth %d > 16."
           "IDs are only guaranteed unique if depth <= 16",
           c->depth);
+      last_cell_id += 1ULL;
     }
     /* Do this in same line. Otherwise, bad things happen. */
     c->cellID = atomic_inc(&last_leaf_cell_id);
