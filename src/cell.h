@@ -1376,14 +1376,16 @@ __attribute__((always_inline)) INLINE void cell_assign_cell_index(
     c->cellID = atomic_inc(&last_leaf_cell_id);
   } else {
     /* we're good to go for unique IDs */
-    /* first inherit the parent's ID and mark it as not top-level*/
+    /* first inherit the parent's ID */
     unsigned long long child_id = parent->cellID;
 
     /* if parent isn't top level cell, we have to
-     * zero out the marker of the previous depth first */
+     * remove the marker (leading 1) of the previous depth first,
+     * as we're going to add 3 bits for this new depth at that
+     * position in the variable now. So turn that leading 1 into a 0 */
     if (c->depth > 1) child_id &= ~(1ULL << ((c->depth - 1) * 3 + 15));
 
-    /* Now add marker for this depth */
+    /* Now add marker (leading 1) for this depth 3 bits further to the left*/
     child_id |= 1ULL << (15 + c->depth * 3);
 
     /* get progeny index in parent cell */
