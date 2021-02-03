@@ -657,6 +657,7 @@ void cell_activate_stars_sorts(struct cell *c, int sid, struct scheduler *s) {
     atomic_or(&c->stars.do_sort, (1 << sid));
     cell_activate_stars_sorts_up(c, s);
   }
+
 }
 
 /**
@@ -1401,20 +1402,23 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
   ci->stars.h_max_old = ci->stars.h_max;
   ci->hydro.dx_max_part_old = ci->hydro.dx_max_part;
   ci->hydro.h_max_old = ci->hydro.h_max;
+  if (ci->cellID < 0) printf("called subcell RT for cell %lld\n", ci->cellID);
 
   if (cj != NULL) {
     cj->stars.dx_max_part_old = cj->stars.dx_max_part;
     cj->stars.h_max_old = cj->stars.h_max;
     cj->hydro.dx_max_part_old = cj->hydro.dx_max_part;
     cj->hydro.h_max_old = cj->hydro.h_max;
+    if (cj->cellID < 0) printf("called subcell RT for cell %lld\n", cj->cellID);
   }
+  fflush(stdout);
 
   /* Self interaction? */
   if (cj == NULL) {
-    const int ci_active = cell_is_active_hydro(ci, e) && ci->stars.count > 0;
+    const int ci_active = cell_is_active_hydro(ci, e) && (ci->stars.count > 0) && (ci->hydro.count > 0);
 
     /* Do anything? */
-    if (!ci_active || ci->hydro.count == 0) return;
+    if (!ci_active) return;
 
     /* Recurse? */
     if (cell_can_recurse_in_self_stars_task(ci)) {
@@ -1429,6 +1433,9 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
       }
     } else {
       /* We have reached the bottom of the tree: activate drift */
+
+      printf("Activating drift spart U1 %lld\n", ci->cellID);
+      fflush(stdout);
       cell_activate_drift_spart(ci, s);
       cell_activate_drift_part(ci, s);
     }
@@ -1441,8 +1448,10 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
     double shift[3];
     const int sid = space_getsid(s->space, &ci, &cj, shift);
 
-    const int ci_active = cell_is_active_hydro(cj, e) && ci->stars.count > 0;
-    const int cj_active = cell_is_active_hydro(ci, e) && cj->stars.count > 0;
+    /* const int ci_active = cell_is_active_hydro(cj, e) && ((ci->stars.count > 0) && (cj->hydro.count > 0)); */
+    /* const int cj_active = cell_is_active_hydro(ci, e) && ((cj->stars.count > 0) && (ci->hydro.count > 0)); */
+    const int ci_active = (cell_is_active_hydro(cj, e) || (ci->stars.count > 0)) && (cj->hydro.count > 0);
+    const int cj_active = (cell_is_active_hydro(ci, e) || (cj->stars.count > 0)) && (ci->hydro.count > 0);
 
     /* Should we even bother? */
     if (!ci_active && !cj_active) return;
@@ -1473,8 +1482,14 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
         ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
 
         /* Activate the drifts if the cells are local. */
-        if (ci->nodeID == engine_rank) cell_activate_drift_spart(ci, s);
-        if (cj->nodeID == engine_rank) cell_activate_drift_part(cj, s);
+        if (ci->nodeID == engine_rank) {
+          printf("Activating drift spart U2 %lld\n", ci->cellID);
+          fflush(stdout);
+          cell_activate_drift_spart(ci, s);
+        }
+        if (cj->nodeID == engine_rank) {
+          cell_activate_drift_part(cj, s);
+        }
 
         /* Do we need to sort the cells? */
         cell_activate_hydro_sorts(cj, sid, s);
@@ -1491,8 +1506,14 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
         cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
 
         /* Activate the drifts if the cells are local. */
-        if (ci->nodeID == engine_rank) cell_activate_drift_part(ci, s);
-        if (cj->nodeID == engine_rank) cell_activate_drift_spart(cj, s);
+        if (ci->nodeID == engine_rank) {
+          cell_activate_drift_part(ci, s);
+        }
+        if (cj->nodeID == engine_rank) {
+          printf("Activating drift spart U3 %lld\n", cj->cellID);
+          fflush(stdout);
+          cell_activate_drift_spart(cj, s);
+        }
 
         /* Do we need to sort the cells? */
         cell_activate_hydro_sorts(ci, sid, s);
@@ -2700,10 +2721,17 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
   const int nodeID = e->nodeID;
   int rebuild = 0; /* TODO: implement rebuild conditions? */
 
+  if (c->cellID < 0) {
+    printf("Called unskip for cell %lld\n", c->cellID);
+    fflush(stdout);
+  }
+
   /* Drift stars even if they aren't active */
   if (c->stars.drift != NULL) {
-    if (cell_is_active_hydro(c, e) && c->stars.count > 0)
+    if (cell_is_active_hydro(c, e) && c->stars.count > 0) {
+      cell_activate_drift_part(c, s);
       cell_activate_drift_spart(c, s);
+    }
   }
 
   /* Now unskip all RT specific tasks */
@@ -2747,7 +2775,11 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
           cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
 
           /* Activate the drift tasks. */
-          if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
+          if (ci_nodeID == nodeID) {
+              printf("Activating drift spart U4 %lld\n", ci->cellID);
+              fflush(stdout);
+              cell_activate_drift_spart(ci, s);
+          }
           if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
 
           /* Check the sorts and activate them if needed. */
@@ -2766,7 +2798,11 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
           cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
 
           /* Activate the drift tasks. */
-          if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
+          if (cj_nodeID == nodeID) {
+            printf("Activating drift spart U5 %lld\n", ci->cellID);
+            fflush(stdout);
+            cell_activate_drift_spart(cj, s);
+          }
           if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
 
           /* Check the sorts and activate them if needed. */

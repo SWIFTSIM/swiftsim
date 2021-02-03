@@ -99,6 +99,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       const int ci_active_sinks =
           cell_is_active_sinks(ci, e) || ci_active_hydro;
       const int ci_active_rt =
+          /* with_rt && (ci_active_hydro); */
           with_rt && (ci_active_hydro || ci->stars.count > 0);
 
       /* Activate the hydro drift */
@@ -332,6 +333,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
         if (ci_active_rt) {
           scheduler_activate(s, t);
           cell_activate_drift_part(ci, s);
+          printf("Activating drift spart M3 %lld\n", ci->cellID);
           cell_activate_drift_spart(ci, s);
         }
       }
@@ -383,8 +385,10 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       const int cj_active_stars = cell_is_active_stars(cj, e) ||
                                   (with_star_formation && cj_active_hydro);
       const int ci_active_rt =
+          /* with_rt && (ci_active_hydro); */
           with_rt && (ci_active_hydro || cj->stars.count > 0);
       const int cj_active_rt =
+          /* with_rt && (cj_active_hydro); */
           with_rt && (cj_active_hydro || ci->stars.count > 0);
 
       const int ci_active_sinks =
@@ -702,8 +706,14 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
               cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
 
               /* Activate the drift tasks. */
-              if (ci_nodeID == nodeID) cell_activate_drift_spart(ci, s);
-              if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
+              if (ci_nodeID == nodeID) {
+                printf("Activating drift spart M1 %lld\n", ci->cellID);
+                fflush(stdout);
+                cell_activate_drift_spart(ci, s);
+              }
+              if (cj_nodeID == nodeID) {
+                cell_activate_drift_part(cj, s);
+              }
 
               /* Check the sorts and activate them if needed. */
               cell_activate_hydro_sorts(cj, t->flags, s);
@@ -722,8 +732,14 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
               cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
 
               /* Activate the drift tasks. */
-              if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
-              if (cj_nodeID == nodeID) cell_activate_drift_spart(cj, s);
+              if (ci_nodeID == nodeID) {
+                cell_activate_drift_part(ci, s);
+              }
+              if (cj_nodeID == nodeID) {
+                printf("Activating drift spart M2 %lld\n", cj->cellID);
+                fflush(stdout);
+                cell_activate_drift_spart(cj, s);
+              }
 
               /* Check the sorts and activate them if needed. */
               cell_activate_hydro_sorts(ci, t->flags, s);
@@ -732,8 +748,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           }
 
           /* Store current values of dx_max and h_max. */
-          else if (t_type == task_type_sub_pair &&
-                   t_subtype == task_subtype_rt_inject) {
+          else if (t_type == task_type_sub_pair) {
             cell_activate_subcell_rt_tasks(ci, cj, s);
           }
         }
