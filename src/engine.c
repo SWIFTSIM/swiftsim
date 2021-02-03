@@ -2060,6 +2060,7 @@ void engine_step(struct engine *e) {
         e->min_active_bin, e->max_active_bin, e->updates, e->g_updates,
         e->s_updates, e->sink_updates, e->b_updates, e->wallclock_time,
         e->step_props);
+    printf("=====================================================================================\n");
 #ifdef SWIFT_DEBUG_CHECKS
     fflush(stdout);
 #endif
