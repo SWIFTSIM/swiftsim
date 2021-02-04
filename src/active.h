@@ -329,7 +329,7 @@ __attribute__((always_inline)) INLINE static int cell_is_active_rt(
         e->ti_current * e->time_base, e->cosmology->a, c->nodeID);
 #endif
 
-  return (c->hydro.ti_end_min == e->ti_current) || (c->stars.count > 0);
+  return ((c->hydro.ti_end_min == e->ti_current) || (c->stars.count > 0));
 }
 
 /**
@@ -355,7 +355,7 @@ __attribute__((always_inline)) INLINE static int cell_is_active_rt_pair(
         cj->nodeID);
 #endif
 
-  return (cj->hydro.ti_end_min == e->ti_current) || (ci->stars.count > 0);
+  return ((cj->hydro.ti_end_min == e->ti_current) || (ci->stars.count > 0));
 }
 
 /**
