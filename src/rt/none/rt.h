@@ -64,7 +64,8 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
 
 /**
  * @brief Update the photon number of a particle, i.e. compute
- *        E^{n+1} = E^n + dt * dE_* / dt
+ *  E^{n+1} = E^n + dt * dE_* / dt. This function finalises
+ *  the injection step.
  */
 __attribute__((always_inline)) INLINE static void
 rt_injection_update_photon_density(struct part* restrict p) {}

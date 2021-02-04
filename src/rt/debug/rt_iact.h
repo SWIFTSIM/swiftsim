@@ -47,6 +47,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
   sd->iact_hydro_inject += 1;
   sd->calls_tot += 1;
   sd->calls_per_step += 1;
+
   pd->iact_stars_inject += 1;
   pd->calls_tot += 1;
   pd->calls_per_step += 1;
@@ -71,6 +72,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
 __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, float a, float H, int mode) {
+
+  if (!pi->rt_data.injection_done)
+    error(
+        "Trying to compute fluxes for particle where "
+        "injection isn't finished");
+  if (!pj->rt_data.injection_done)
+    error(
+        "Trying to compute fluxes for particle where "
+        "injection isn't finished");
 
   if (!pi->rt_data.gradients_done)
     error(
