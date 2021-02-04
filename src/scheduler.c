@@ -2290,6 +2290,15 @@ struct task *scheduler_done(struct scheduler *s, struct task *t) {
      they are ready. */
   for (int k = 0; k < t->nr_unlock_tasks; k++) {
     struct task *t2 = t->unlock_tasks[k];
+
+    if (t2->subtype == task_subtype_rt_inject) {
+      if (t2->cj == NULL)
+        printf("Unlocking injection for cell %lld from %s/%s\n", t2->ci->cellID, taskID_names[t->type], subtaskID_names[t->subtype]);
+      else 
+        printf("Unlocking injection for cells %lld, %lld from %s/%s\n", t2->ci->cellID, t2->cj->cellID, taskID_names[t->type], subtaskID_names[t->subtype]);
+
+    }
+
     if (t2->skip) continue;
 
     const int res = atomic_dec(&t2->wait);

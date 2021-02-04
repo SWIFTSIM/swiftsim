@@ -1402,20 +1402,20 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
   ci->stars.h_max_old = ci->stars.h_max;
   ci->hydro.dx_max_part_old = ci->hydro.dx_max_part;
   ci->hydro.h_max_old = ci->hydro.h_max;
-  if (ci->cellID < 0) printf("called subcell RT for cell %lld\n", ci->cellID);
+  printf("called subcell RT for cell %lld\n", ci->cellID);
 
   if (cj != NULL) {
     cj->stars.dx_max_part_old = cj->stars.dx_max_part;
     cj->stars.h_max_old = cj->stars.h_max;
     cj->hydro.dx_max_part_old = cj->hydro.dx_max_part;
     cj->hydro.h_max_old = cj->hydro.h_max;
-    if (cj->cellID < 0) printf("called subcell RT for cell %lld\n", cj->cellID);
+    printf("called subcell RT for cell %lld\n", cj->cellID);
   }
   fflush(stdout);
 
   /* Self interaction? */
   if (cj == NULL) {
-    const int ci_active = cell_is_active_hydro(ci, e) && (ci->stars.count > 0) && (ci->hydro.count > 0);
+    const int ci_active = cell_is_active_rt(ci, e);
 
     /* Do anything? */
     if (!ci_active) return;
@@ -1448,10 +1448,8 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
     double shift[3];
     const int sid = space_getsid(s->space, &ci, &cj, shift);
 
-    /* const int ci_active = cell_is_active_hydro(cj, e) && ((ci->stars.count > 0) && (cj->hydro.count > 0)); */
-    /* const int cj_active = cell_is_active_hydro(ci, e) && ((cj->stars.count > 0) && (ci->hydro.count > 0)); */
-    const int ci_active = (cell_is_active_hydro(cj, e) || (ci->stars.count > 0)) && (cj->hydro.count > 0);
-    const int cj_active = (cell_is_active_hydro(ci, e) || (cj->stars.count > 0)) && (ci->hydro.count > 0);
+    const int ci_active = cell_is_active_rt_pair(ci, cj, e) && (cj->hydro.count > 0);
+    const int cj_active = cell_is_active_rt_pair(cj, ci, e) && (ci->hydro.count > 0);
 
     /* Should we even bother? */
     if (!ci_active && !cj_active) return;
@@ -2721,16 +2719,16 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
   const int nodeID = e->nodeID;
   int rebuild = 0; /* TODO: implement rebuild conditions? */
 
-  if (c->cellID < 0) {
-    printf("Called unskip for cell %lld\n", c->cellID);
-    fflush(stdout);
-  }
+  printf("Called unskip for cell %lld\n", c->cellID);
+  fflush(stdout);
 
   /* Drift stars even if they aren't active */
   if (c->stars.drift != NULL) {
-    if (cell_is_active_hydro(c, e) && c->stars.count > 0) {
+    if (cell_is_active_rt(c, e)) {
       cell_activate_drift_part(c, s);
       cell_activate_drift_spart(c, s);
+      printf("Activating drift spart U6 %lld\n", c->cellID);
+      fflush(stdout);
     }
   }
 
@@ -2749,66 +2747,74 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
 
     /* Activate the drifts */
     if (t->type == task_type_self) {
-      if (cell_is_active_hydro(ci, e)) {
+      if (cell_is_active_rt(ci, e)) {
         cell_activate_drift_part(ci, s);
+        printf("Activating drift spart U7 %lld\n", ci->cellID);
+        fflush(stdout);
         cell_activate_drift_spart(ci, s);
+        scheduler_activate(s, t);
       }
     }
 
-    const int ci_active = cell_is_active_hydro(ci, e);
-    const int cj_active = (cj != NULL) && cell_is_active_hydro(cj, e);
 
-    /* Only activate tasks that involve a local active cell. */
-    if ((ci_active || cj_active) &&
-        (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
-      scheduler_activate(s, t);
+    if (t->type == task_type_pair) {
 
-      if (t->type == task_type_pair) {
-        /* Do ci */
-        if (ci_active) {
-          /* stars for ci */
-          atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
-          ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
+      const int ci_active = cell_is_active_rt_pair(ci, cj, e);
+      const int cj_active = (cj != NULL) && cell_is_active_rt_pair(cj, ci, e);
 
-          /* hydro for cj */
-          atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
-          cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
+      /* Only activate tasks that involve a local active cell. */
+      if ((ci_active || cj_active) &&
+          (ci_nodeID == nodeID || cj_nodeID == nodeID)) {
+        scheduler_activate(s, t);
 
-          /* Activate the drift tasks. */
-          if (ci_nodeID == nodeID) {
-              printf("Activating drift spart U4 %lld\n", ci->cellID);
+        if (t->type == task_type_pair) {
+          /* Do ci */
+          if (ci_active) {
+            /* stars for ci */
+            atomic_or(&ci->stars.requires_sorts, 1 << t->flags);
+            ci->stars.dx_max_sort_old = ci->stars.dx_max_sort;
+
+            /* hydro for cj */
+            atomic_or(&cj->hydro.requires_sorts, 1 << t->flags);
+            cj->hydro.dx_max_sort_old = cj->hydro.dx_max_sort;
+
+            /* Activate the drift tasks. */
+            if (ci_nodeID == nodeID) {
+                printf("Activating drift spart U4 %lld\n", ci->cellID);
+                fflush(stdout);
+                cell_activate_drift_spart(ci, s);
+            }
+            if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
+
+            /* Check the sorts and activate them if needed. */
+            cell_activate_stars_sorts(ci, t->flags, s);
+            cell_activate_hydro_sorts(cj, t->flags, s);
+          }
+
+          /* Do cj */
+          if (cj_active) {
+            /* hydro for ci */
+            atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
+            ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
+
+            /* stars for cj */
+            atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
+            cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
+
+            /* Activate the drift tasks. */
+            if (cj_nodeID == nodeID) {
+              printf("Activating drift spart U5 %lld\n", cj->cellID);
               fflush(stdout);
-              cell_activate_drift_spart(ci, s);
+              cell_activate_drift_spart(cj, s);
+            }
+            if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
+
+            /* Check the sorts and activate them if needed. */
+            cell_activate_hydro_sorts(ci, t->flags, s);
+            cell_activate_stars_sorts(cj, t->flags, s);
           }
-          if (cj_nodeID == nodeID) cell_activate_drift_part(cj, s);
-
-          /* Check the sorts and activate them if needed. */
-          cell_activate_stars_sorts(ci, t->flags, s);
-          cell_activate_hydro_sorts(cj, t->flags, s);
         }
-
-        /* Do cj */
-        if (cj_active) {
-          /* hydro for ci */
-          atomic_or(&ci->hydro.requires_sorts, 1 << t->flags);
-          ci->hydro.dx_max_sort_old = ci->hydro.dx_max_sort;
-
-          /* stars for cj */
-          atomic_or(&cj->stars.requires_sorts, 1 << t->flags);
-          cj->stars.dx_max_sort_old = cj->stars.dx_max_sort;
-
-          /* Activate the drift tasks. */
-          if (cj_nodeID == nodeID) {
-            printf("Activating drift spart U5 %lld\n", ci->cellID);
-            fflush(stdout);
-            cell_activate_drift_spart(cj, s);
-          }
-          if (ci_nodeID == nodeID) cell_activate_drift_part(ci, s);
-
-          /* Check the sorts and activate them if needed. */
-          cell_activate_hydro_sorts(ci, t->flags, s);
-          cell_activate_stars_sorts(cj, t->flags, s);
-        }
+        
       }
 
       else if (t->type == task_type_sub_self) {
