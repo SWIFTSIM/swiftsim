@@ -99,8 +99,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       const int ci_active_sinks =
           cell_is_active_sinks(ci, e) || ci_active_hydro;
       const int ci_active_rt =
-          /* with_rt && (ci_active_hydro); */
-          with_rt && (ci_active_hydro || ci->stars.count > 0);
+          with_rt && cell_is_active_rt(ci, e);
 
       /* Activate the hydro drift */
       if (t_type == task_type_self && t_subtype == task_subtype_density) {
@@ -345,11 +344,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
       const int cj_active_stars = cell_is_active_stars(cj, e) ||
                                   (with_star_formation && cj_active_hydro);
       const int ci_active_rt =
-          /* with_rt && (ci_active_hydro); */
-          with_rt && (ci_active_hydro || cj->stars.count > 0);
+          with_rt && cell_is_active_rt_pair(ci, cj, e);
       const int cj_active_rt =
-          /* with_rt && (cj_active_hydro); */
-          with_rt && (cj_active_hydro || ci->stars.count > 0);
+          with_rt && cell_is_active_rt_pair(cj, ci, e);
 
       const int ci_active_sinks =
           cell_is_active_sinks(ci, e) || ci_active_hydro;
