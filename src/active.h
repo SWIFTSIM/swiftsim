@@ -332,7 +332,6 @@ __attribute__((always_inline)) INLINE static int cell_is_active_rt(
   return (c->hydro.ti_end_min == e->ti_current) || (c->stars.count > 0);
 }
 
-
 /**
  * @brief Does a cell contain any particle finishing their RT time-step now ?
  * For a pair type interaction, where we take stars from cell ci and hydro
@@ -351,14 +350,13 @@ __attribute__((always_inline)) INLINE static int cell_is_active_rt_pair(
     error(
         "cell in an impossible time-zone! c->ti_end_min=%lld (t=%e) and "
         "e->ti_current=%lld (t=%e, a=%e) c->nodeID=%d",
-        cj->hydro.ti_end_min, cj->hydro.ti_end_min * e->time_base, e->ti_current,
-        e->ti_current * e->time_base, e->cosmology->a, cj->nodeID);
+        cj->hydro.ti_end_min, cj->hydro.ti_end_min * e->time_base,
+        e->ti_current, e->ti_current * e->time_base, e->cosmology->a,
+        cj->nodeID);
 #endif
 
   return (cj->hydro.ti_end_min == e->ti_current) || (ci->stars.count > 0);
 }
-
-
 
 /**
  * @brief Is this particle finishing its time-step now ?

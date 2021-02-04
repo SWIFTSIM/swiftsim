@@ -2205,8 +2205,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       }
 
       if (with_rt) {
-        printf("~~~ added star_drift->inject dependency %lld -> %lld\n", 
-                ci->hydro.super->cellID, ci->cellID);
         scheduler_addunlock(sched, ci->hydro.super->stars.drift, t_rt_inject);
         scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t_rt_inject);
         scheduler_addunlock(sched, ci->hydro.super->hydro.rt_in, t_rt_inject);
@@ -2514,8 +2512,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
 
         if (with_rt) {
-          printf("~~~ added star_drift->inject dependency %lld -> %lld\n", 
-                  ci->hydro.super->cellID, ci->cellID);
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts, t_rt_inject);
           scheduler_addunlock(sched, ci->hydro.super->stars.drift, t_rt_inject);
           scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t_rt_inject);
@@ -2541,7 +2537,8 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
 
         if (with_rt) {
-          scheduler_addunlock(sched, ci->hydro.super->stars.sorts, ci->hydro.super->hydro.rt_ghost1);
+          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
+                              ci->hydro.super->hydro.rt_ghost1);
         }
       }
 
@@ -2639,8 +2636,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           }
 
           if (with_rt) {
-            printf("~~~ added star_drift->inject dependency %lld -> %lld\n", 
-                    cj->hydro.super->cellID, cj->cellID);
             scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                                 t_rt_inject);
             scheduler_addunlock(sched, cj->hydro.super->stars.drift,
@@ -2935,8 +2930,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
       if (with_rt) {
         scheduler_addunlock(sched, ci->hydro.super->stars.drift, t_rt_inject);
-        printf("~~~ added star_drift->inject dependency %lld -> %lld\n", 
-                ci->hydro.super->cellID, ci->cellID);
         scheduler_addunlock(sched, ci->hydro.super->stars.sorts, t_rt_inject);
         scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t_rt_inject);
         scheduler_addunlock(sched, ci->hydro.super->hydro.sorts, t_rt_inject);
@@ -3253,8 +3246,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
 
         if (with_rt) {
-          printf("~~~ added star_drift->inject dependency %lld -> %lld\n", 
-                ci->hydro.super->cellID, ci->cellID);
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts, t_rt_inject);
           scheduler_addunlock(sched, ci->hydro.super->stars.drift, t_rt_inject);
           scheduler_addunlock(sched, ci->hydro.super->hydro.drift, t_rt_inject);
@@ -3372,8 +3363,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                                 cj->hydro.super->black_holes.black_holes_out);
           }
           if (with_rt) {
-            printf("~~~ added star_drift->inject dependency %lld -> %lld\n", 
-                    cj->hydro.super->cellID, cj->cellID);
             scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                                 t_rt_inject);
             scheduler_addunlock(sched, cj->hydro.super->stars.drift,
