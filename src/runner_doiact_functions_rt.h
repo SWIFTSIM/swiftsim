@@ -200,10 +200,10 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
   double rshift = 0.0;
   for (int k = 0; k < 3; k++) rshift += shift[k] * runner_shift[sid][k];
 
-  const int do_ci_stars = (ci->nodeID == e->nodeID) && (ci->stars.count != 0) &&
-                          (cj->hydro.count != 0) && cell_is_active_hydro(cj, e);
-  const int do_cj_stars = (cj->nodeID == e->nodeID) && (cj->stars.count != 0) &&
-                          (ci->hydro.count != 0) && cell_is_active_hydro(ci, e);
+  const int do_ci_stars = (ci->nodeID == e->nodeID) && (cj->hydro.count != 0) &&
+                          cell_is_active_rt_pair(ci, cj, e);
+  const int do_cj_stars = (cj->nodeID == e->nodeID) && (ci->hydro.count != 0) &&
+                          cell_is_active_rt_pair(cj, ci, e);
 
   if (do_ci_stars) {
 
@@ -225,9 +225,11 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
     for (int pid = count_i - 1;
          pid >= 0 && sort_i[pid].d + hi_max + dx_max > dj_min; pid--) {
 
-      /* Get a hold of the ith part in ci. */
+      /* Get a hold of the ith spart in ci. */
       struct spart *restrict spi = &sparts_i[sort_i[pid].i];
       const float hi = spi->h;
+
+      if (spart_is_inhibited(spi, e)) continue;
 
       /* Compute distance from the other cell. */
       const double px[3] = {spi->x[0], spi->x[1], spi->x[2]};
@@ -252,6 +254,9 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
         /* Skip inhibited particles. */
         if (part_is_inhibited(pj, e)) continue;
+
+        /* Skip inactive particles. */
+        if (!part_is_active(pj, e)) continue;
 
         const float hj = pj->h;
         const float pjx = pj->x[0] - cj->loc[0];
@@ -294,13 +299,15 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
     const float dx_max = (ci->hydro.dx_max_sort + cj->stars.dx_max_sort);
     const float hydro_dx_max_rshift = ci->hydro.dx_max_sort - rshift;
 
-    /* Loop over the parts in cj. */
+    /* Loop over the sparts in cj. */
     for (int pjd = 0; pjd < count_j && sort_j[pjd].d - hj_max - dx_max < di_max;
          pjd++) {
 
-      /* Get a hold of the jth part in cj. */
+      /* Get a hold of the jth spart in cj. */
       struct spart *spj = &sparts_j[sort_j[pjd].i];
       const float hj = spj->h;
+
+      if (spart_is_inhibited(spj, e)) continue;
 
       /* Compute distance from the other cell. */
       const double px[3] = {spj->x[0], spj->x[1], spj->x[2]};
@@ -325,6 +332,9 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
         /* Skip inhibited particles. */
         if (part_is_inhibited(pi, e)) continue;
+
+        /* Skip inactive particles. */
+        if (!part_is_active(pi, e)) continue;
 
         const float hi = pi->h;
         const float pix = pi->x[0] - (cj->loc[0] + shift[0]);
@@ -373,13 +383,13 @@ void DOPAIR1_RT_NAIVE(struct runner *r, struct cell *ci, struct cell *cj,
   const struct engine *restrict e = r->e;
 
   const int do_stars_in_ci = (cj->nodeID == r->e->nodeID) &&
-                             (ci->stars.count > 0) && (cj->hydro.count > 0) &&
-                             cell_is_active_hydro(cj, e);
+                             (cj->hydro.count > 0) &&
+                             cell_is_active_rt_pair(ci, cj, e);
   if (do_stars_in_ci) DOPAIR1_NONSYM_RT_NAIVE(r, ci, cj);
 
   const int do_stars_in_cj = (ci->nodeID == r->e->nodeID) &&
-                             (cj->stars.count > 0) && (ci->hydro.count > 0) &&
-                             cell_is_active_hydro(ci, e);
+                             (ci->hydro.count > 0) &&
+                             cell_is_active_rt_pair(cj, ci, e);
   if (do_stars_in_cj) DOPAIR1_NONSYM_RT_NAIVE(r, cj, ci);
 
   if (timer) TIMER_TOC(TIMER_DOPAIR_RT);
@@ -467,7 +477,7 @@ void DOPAIR1_BRANCH_RT(struct runner *r, struct cell *ci, struct cell *cj,
 #endif /* SWIFT_DEBUG_CHECKS */
 
   if (do_stars_ci || do_stars_cj) {
-#ifdef SWIFT_USE_NAIVE_INTERACTIONS_STARS
+#ifdef SWIFT_USE_NAIVE_INTERACTIONS_RT
     DOPAIR1_RT_NAIVE(r, ci, cj, 1);
 #else
     DO_SYM_PAIR1_RT(r, ci, cj, sid, shift);

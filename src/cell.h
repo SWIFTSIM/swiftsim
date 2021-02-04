@@ -1131,8 +1131,7 @@ cell_get_hydro_sorts(const struct cell *c, const int sid) {
   if (sid >= 13 || sid < 0) error("Invalid sid!");
 
   if (!(c->hydro.sort_allocated & (1 << sid)))
-    error("Sort not allocated along direction %d cell %lld count %d", sid,
-          c->cellID, c->hydro.count);
+    error("Sort not allocated along direction %d", sid);
 #endif
 
   /* We need to find at what position in the meta-array of
@@ -1249,7 +1248,7 @@ cell_get_stars_sorts(const struct cell *c, const int sid) {
   if (sid >= 13 || sid < 0) error("Invalid sid!");
 
   if (!(c->stars.sort_allocated & (1 << sid)))
-    error("Sort not allocated along direction %d; cell %lld", sid, c->cellID);
+    error("Sort not allocated along direction %d", sid);
 #endif
 
   /* We need to find at what position in the meta-array of

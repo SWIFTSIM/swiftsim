@@ -1414,7 +1414,7 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
     const int ci_active = cell_is_active_rt(ci, e);
 
     /* Do anything? */
-    if (!ci_active) return;
+    if (!ci_active || ci->hydro.count == 0 || ci->stars.count == 0) return;
 
     /* Recurse? */
     if (cell_can_recurse_in_self_stars_task(ci)) {
