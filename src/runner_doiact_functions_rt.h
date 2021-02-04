@@ -83,6 +83,9 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
       /* Skip inhibited particles. */
       if (part_is_inhibited(pj, e)) continue;
 
+      /* Skip inactive particles. */
+      if (!part_is_active(pj, e)) continue;
+
       /* Compute the pairwise distance. */
       const float pjx[3] = {(float)(pj->x[0] - c->loc[0]),
                             (float)(pj->x[1] - c->loc[1]),
@@ -158,6 +161,9 @@ void DOPAIR1_NONSYM_RT_NAIVE(struct runner *r, struct cell *ci,
 
       /* Skip inhibited particles. */
       if (part_is_inhibited(pj, e)) continue;
+
+      /* Skip inactive particles. */
+      if (!part_is_active(pj, e)) continue;
 
       /* Compute the pairwise distance. */
       const float pjx[3] = {(float)(pj->x[0] - cj->loc[0]),
