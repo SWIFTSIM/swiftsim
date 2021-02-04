@@ -252,10 +252,7 @@ static void engine_do_unskip_rt(struct cell *c, struct engine *e) {
   if (!cell_get_flag(c, cell_flag_has_tasks)) return;
 
   /* Ignore empty cells. */
-  if (c->hydro.count == 0) return;
-
-  /* Skip inactive cells. */
-  if (!cell_is_active_hydro(c, e)) return;
+  if (!cell_is_active_rt(c, e)) return;
 
   /* Recurse */
   if (c->split) {
@@ -407,7 +404,7 @@ void engine_unskip(struct engine *e) {
         (with_stars && c->nodeID == nodeID && cell_is_active_stars(c, e)) ||
         (with_sinks && cell_is_active_sinks(c, e)) ||
         (with_black_holes && cell_is_active_black_holes(c, e)) ||
-        (with_rt && cell_is_active_hydro(c, e))) {
+        (with_rt && cell_is_active_rt(c, e))) {
 
       if (num_active_cells != k)
         memswap(&local_cells[k], &local_cells[num_active_cells], sizeof(int));
