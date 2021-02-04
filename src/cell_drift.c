@@ -434,9 +434,6 @@ void cell_drift_spart(struct cell *c, const struct engine *e, int force) {
   if (ti_current < ti_old_spart) error("Attempt to drift to the past");
 #endif
 
-  printf("--- drifting stars %lld\n", c->cellID);
-  fflush(stdout);
-
   /* Early abort? */
   if (c->stars.count == 0) {
     /* Clear the drift flags. */
