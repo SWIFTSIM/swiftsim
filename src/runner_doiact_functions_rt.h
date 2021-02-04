@@ -110,7 +110,8 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
  * @param ci the first cell, where we take star particles from
  * @param cj the second cell, where we take hydro particles from
  */
-void DOPAIR1_NONSYM_RT_NAIVE(struct runner *r, struct cell *ci, struct cell *cj) {
+void DOPAIR1_NONSYM_RT_NAIVE(struct runner *r, struct cell *ci,
+                             struct cell *cj) {
 
   TIMER_TIC;
 
@@ -179,7 +180,7 @@ void DOPAIR1_NONSYM_RT_NAIVE(struct runner *r, struct cell *ci, struct cell *cj)
  * @param timer 1 if the time is to be recorded.
  */
 void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
-                        const int sid, const double *shift) {
+                     const int sid, const double *shift) {
 
   TIMER_TIC;
 
@@ -309,7 +310,6 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
         if (r2 < hig2) {
           IACT_RT(r2, dx, hi, hj, spi, pj);
           /* IACT_RT(r2, dx, hi, hj, spi, pj, a, H); */
-
         }
       } /* loop over the parts in cj. */
     }   /* loop over the parts in ci. */
@@ -423,7 +423,6 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
           IACT_RT(r2, dx, hj, hi, spj, pi);
           /* IACT_RT(r2, dx, hj, hi, spj, pi, a, H); */
-
         }
       } /* loop over the parts in ci. */
     }   /* loop over the parts in cj. */
@@ -490,53 +489,52 @@ void DOPAIR1_BRANCH_RT(struct runner *r, struct cell *ci, struct cell *cj,
   const int sid = space_getsid(e->s, &ci, &cj, shift);
 
   const int do_stars_ci = (cj->nodeID == r->e->nodeID) &&
-                           (ci->stars.count > 0) && (cj->hydro.count > 0) &&
-                           cell_is_active_hydro(cj, e);
+                          (ci->stars.count > 0) && (cj->hydro.count > 0) &&
+                          cell_is_active_hydro(cj, e);
   const int do_stars_cj = (ci->nodeID == r->e->nodeID) &&
-                           (cj->stars.count > 0) && (ci->hydro.count > 0) &&
-                           cell_is_active_hydro(ci, e);
+                          (cj->stars.count > 0) && (ci->hydro.count > 0) &&
+                          cell_is_active_hydro(ci, e);
 
   /* Anything to do here? */
   if (!do_stars_ci && !do_stars_cj) return;
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Check that cells are drifted. */
-  if (do_stars_ci && (!cell_are_spart_drifted(ci, e))){
-      error("Interacting undrifted stars in cells i=%12lld, j=%12lld, h=%i, s=%i", 
+  if (do_stars_ci && (!cell_are_spart_drifted(ci, e))) {
+    error("Interacting undrifted stars in cells i=%12lld, j=%12lld, h=%i, s=%i",
           ci->cellID, cj->cellID, cj->hydro.count, ci->stars.count);
   }
   if (do_stars_ci && !cell_are_part_drifted(cj, e))
-      error("Interacting undrifted hydro in cells i=%12lld, j=%12lld, h=%i, s=%i", 
+    error("Interacting undrifted hydro in cells i=%12lld, j=%12lld, h=%i, s=%i",
           ci->cellID, cj->cellID, cj->hydro.count, ci->stars.count);
 
   /* Have the cells been sorted? */
   if (do_stars_ci && (!(ci->stars.sorted & (1 << sid)) ||
-                ci->stars.dx_max_sort_old > space_maxreldx * ci->dmin))
+                      ci->stars.dx_max_sort_old > space_maxreldx * ci->dmin))
     error("Interacting unsorted cells: %lld %d", ci->cellID, sid);
 
   if (do_stars_ci && (!(cj->hydro.sorted & (1 << sid)) ||
-                cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin))
+                      cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin))
     error("Interacting unsorted cells: %lld %lld", ci->cellID, cj->cellID);
 
-  if (do_stars_cj && (!cell_are_spart_drifted(cj, e))){
-      error("Interacting undrifted stars in cells j=%12lld, i=%12lld, h=%i, s=%i", 
+  if (do_stars_cj && (!cell_are_spart_drifted(cj, e))) {
+    error("Interacting undrifted stars in cells j=%12lld, i=%12lld, h=%i, s=%i",
           cj->cellID, ci->cellID, ci->hydro.count, cj->stars.count);
   }
   if (do_stars_cj && !cell_are_part_drifted(ci, e))
-      error("Interacting undrifted hydro in cells j=%12lld, i=%12lld, h=%i, s=%i", 
+    error("Interacting undrifted hydro in cells j=%12lld, i=%12lld, h=%i, s=%i",
           cj->cellID, ci->cellID, cj->hydro.count, ci->stars.count);
 
   /* Have the cells been sorted? */
   if (do_stars_cj && (!(ci->hydro.sorted & (1 << sid)) ||
-                ci->hydro.dx_max_sort_old > space_maxreldx * ci->dmin))
+                      ci->hydro.dx_max_sort_old > space_maxreldx * ci->dmin))
     error("Interacting unsorted cells: %lld %d", cj->cellID, sid);
 
   if (do_stars_cj && (!(cj->stars.sorted & (1 << sid)) ||
-                cj->stars.dx_max_sort_old > space_maxreldx * cj->dmin))
+                      cj->stars.dx_max_sort_old > space_maxreldx * cj->dmin))
     error("Interacting unsorted cells: %lld %lld", ci->cellID, cj->cellID);
 
 #endif /* SWIFT_DEBUG_CHECKS */
-
 
   if (do_stars_ci || do_stars_cj) {
 #ifdef SWIFT_USE_NAIVE_INTERACTIONS_STARS
@@ -545,7 +543,6 @@ void DOPAIR1_BRANCH_RT(struct runner *r, struct cell *ci, struct cell *cj,
     DO_SYM_PAIR1_RT(r, ci, cj, sid, shift);
 #endif
   }
-
 }
 
 /**
