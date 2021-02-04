@@ -41,6 +41,48 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
 
   const struct engine *e = r->e;
 
+#ifdef RT_DEBUG
+  /* Before an early exit, loop over all parts and sparts in this cell
+   * and mark that we checked these particles */
+
+  if (c->hydro.count > 0) {
+    struct part *restrict parts = c->hydro.parts;
+    const int count = c->hydro.count;
+
+    /* Loop over the parts in cell */
+    for (int pid = 0; pid < count; pid++) {
+
+      /* Get a pointer to the jth particle. */
+      struct part *restrict pj = &parts[pid];
+
+      /* Skip inhibited particles. */
+      if (part_is_inhibited(pj, e)) continue;
+
+      /* Skip inactive particles. */
+      if (!part_is_active(pj, e)) continue;
+
+      rt_debugging_check_injection_part(pj);
+    }
+  }
+
+  if (c->stars.count > 0) {
+    struct spart *restrict sparts = c->stars.parts;
+    const int scount = c->stars.count;
+
+    /* Loop over the parts in cell */
+    for (int sid = 0; sid < scount; sid++) {
+
+      /* Get a pointer to the ith spart. */
+      struct spart *restrict si = &sparts[sid];
+
+      /* Skip inhibited particles. */
+      if (spart_is_inhibited(si, e)) continue;
+
+      rt_debugging_check_injection_spart(si);
+    }
+  }
+#endif
+
   /* Anything to do here? */
   if (c->hydro.count == 0 || c->stars.count == 0) return;
   if (!rt_should_do_cell(c, e)) return;
@@ -103,6 +145,7 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
       if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj);
     }
   }
+
 
   if (timer) TIMER_TOC(TIMER_DOSELF_RT);
 }

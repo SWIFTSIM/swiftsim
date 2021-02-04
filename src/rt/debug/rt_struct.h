@@ -35,8 +35,9 @@ struct rt_part_data {
   int iact_stars_inject;     /* how many stars this particle interacted with */
   int calls_iact_gradient;   /* calls from gradient interaction loop */
   int calls_iact_transport;  /* calls from transport interaction loop */
-  int photon_number_updated; /* calls from ghost1 tasks */
+  int injection_check;       /* called in a self/rt_injection task? */
 
+  int injection_done;  /* calls from ghost1 tasks */
   int gradients_done;  /* finalised computing gradients? */
   int transport_done;  /* transport step done? */
   int thermochem_done; /* thermochemistry done? */
@@ -53,6 +54,7 @@ struct rt_spart_data {
   int iact_hydro_inject; /* how many hydro particles this particle interacted
                             with */
   int emission_rate_set; /* stellar photon emisison rate has been computed */
+  int injection_check;   /* called in a self/rt_injection task? */
 };
 
 #endif /* SWIFT_RT_STRUCT_DEBUG_H */
