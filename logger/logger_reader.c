@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 /* Include corresponding header */
+#include "logger_parameters.h"
 #include "logger_reader.h"
 
 /* Include standard library */
@@ -50,6 +51,7 @@ void logger_reader_init(struct logger_reader *reader, const char *basename,
 
   /* Initialize the reader variables. */
   reader->verbose = verbose;
+  logger_parameters_init(&reader->params, reader);
 
   /* Generate the logfile filename */
   char logfile_name[STRING_SIZE];
@@ -539,7 +541,8 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
 
     /* Interpolate the data. */
     logger_particle_interpolate_field(time_before, &before, time_after, &after,
-                                      output, time, field_wanted, type);
+                                      output, time, field_wanted, type,
+                                      &reader->params);
   }
   return 0;
 }
