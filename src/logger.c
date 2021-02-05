@@ -976,10 +976,12 @@ void logger_init_masks(struct logger_writer *log, const struct engine *e) {
   log->logger_count_mask = num_fields;
 
 #ifdef SWIFT_DEBUG_CHECKS
-  message("The logger contains the following masks:");
-  for (int i = 0; i < log->logger_count_mask; i++) {
-    message("%20s:\t mask=%03u\t size=%i", log->logger_mask_data[i].name,
-            log->logger_mask_data[i].mask, log->logger_mask_data[i].size);
+  if (e->nodeID == 0) {
+    message("The logger contains the following masks:");
+    for (int i = 0; i < log->logger_count_mask; i++) {
+      message("%20s:\t mask=%03u\t size=%i", log->logger_mask_data[i].name,
+              log->logger_mask_data[i].mask, log->logger_mask_data[i].size);
+    }
   }
 #endif
 }
