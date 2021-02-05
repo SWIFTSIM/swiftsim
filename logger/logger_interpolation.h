@@ -20,6 +20,7 @@
 #ifndef LOGGER_LOGGER_INTERPOLATION_H
 #define LOGGER_LOGGER_INTERPOLATION_H
 
+#include "logger_parameters.h"
 #include "logger_tools.h"
 
 /**
@@ -47,11 +48,10 @@
  * @return The function evaluated at t.
  */
 __attribute__((always_inline)) INLINE static double
-interpolate_quintic_hermite_spline(const double t0, const double x0,
-                                   const float v0, const float a0,
-                                   const double t1, const double x1,
-                                   const float v1, const float a1,
-                                   const double t) {
+interpolate_quintic_hermite_spline(
+    const double t0, const double x0, const float v0, const float a0,
+    const double t1, const double x1, const float v1, const float a1,
+    const double t) {
 
   /* Generates recurring variables  */
   /* Time differences */
@@ -151,43 +151,94 @@ interpolate_cubic_hermite_spline(const double t0, const float v0,
  * @param t_before Time of field_before (< t).
  * @param t_after Time of field_after (> t).
  * @param t Requested time.
+ * @param periodic Should the periodic boundary be applied?
+ * @param params The simulation's #logger_parameters.
  */
 __attribute__((always_inline)) INLINE static void
-interpolate_quintic_double_float_ND(const double t_before,
-                                    const struct logger_field *restrict before,
-                                    const double t_after,
-                                    const struct logger_field *restrict after,
-                                    void *restrict output, const double t,
-                                    const int dimension) {
-  /* Compute the interpolation scaling. */
-  const double wa = (t - t_before) / (t_after - t_before);
-  const double wb = 1. - wa;
+interpolate_quintic_double_float_ND(
+    const double t_before, const struct logger_field *restrict before,
+    const double t_after, const struct logger_field *restrict after,
+    void *restrict output, const double t, const int dimension,
+    int periodic, const struct logger_parameters *params) {
 
+  /* Get the arrays */
+  const double *x_bef = (double *)before->field;
+  const float *v_bef = (float *)before->first_deriv;
+  const float *a_bef = (float *)before->second_deriv;
+
+  const double *x_aft = (double *)after->field;
+  const float *v_aft = (float *)after->first_deriv;
+  const float *a_aft = (float *)after->second_deriv;
+
+  double *x = (double *)output;
+
+  /* Loop over the dimensions */
   for (int i = 0; i < dimension; i++) {
-    double *x = (double *)output;
-    const double *x_bef = (double *)before->field;
-    const float *v_bef = (float *)before->first_deriv;
-    const float *a_bef = (float *)before->second_deriv;
+    /* Get the current variables */
+    double x0 = x_bef[i];
+    double x1 = x_aft[i];
+    float v0 = v_bef ? v_bef[i] : -1;
+    float v1 = v_aft ? v_aft[i] : -1;
+    float a0 = a_bef ? a_bef[i] : -1;
+    float a1 = a_aft ? a_aft[i] : -1;
 
-    const double *x_aft = (double *)after->field;
-    const float *v_aft = (float *)after->first_deriv;
-    const float *a_aft = (float *)after->second_deriv;
+    a0 = 0;
+    a1 = 0;
+
+    /* Apply the periodic boundaries */
+    if (periodic) {
+      /* Move towards the origin for more accuracy */
+      const double half = 0.5 * params->box_size[i];
+      if (x0 > x1 + half)
+        x0 -= params->box_size[i];
+      else if (x1 > x0 + half)
+        x1 -= params->box_size[i];
+    }
+
 
     /* Use quintic hermite spline. */
     if (v_bef && v_aft && a_bef && a_aft) {
-      x[i] = interpolate_quintic_hermite_spline(t_before, x_bef[i], v_bef[i],
-                                                a_bef[i], t_after, x_aft[i],
-                                                v_aft[i], a_aft[i], t);
+      x[i] = interpolate_quintic_hermite_spline(
+          t_before, x0, v0, a0,
+          t_after, x1, v1, a1, t);
     }
     /* Use cubic hermite spline. */
     else if (v_bef && v_aft) {
-      x[i] = interpolate_cubic_hermite_spline(t_before, x_bef[i], v_bef[i],
-                                              t_after, x_aft[i], v_aft[i], t);
+      x[i] = interpolate_cubic_hermite_spline(t_before, x0, v0,
+                                              t_after, x1, v1, t);
     }
     /* Use linear interpolation. */
     else {
-      x[i] = wa * x_aft[i] + wb * x_bef[i];
+      const double wa = (t - t_before) / (t_after - t_before);
+      const double wb = 1. - wa;
+      x[i] = wa * x1 + wb * x0;
     }
+
+    /* Apply the periodic boundaries to the output */
+    if (periodic) {
+      /* We suppose that only 1 wrapping is enough
+         otherwise something really bad happened */
+      if (x[i] < 0.) {
+        x[i] += params->box_size[i];
+      }
+      else if (x[i] >= params->box_size[i]) {
+        x[i] -= params->box_size[i];
+      }
+
+#ifdef SWIFT_DEBUG_CHECKS
+      /* Check if the periodic box is correctly applied */
+      if (x[i] > params->box_size[i] || x[i] < 0) {
+        message("%g %g %g", t_before, t_after, t);
+        message("%g %g", a0, a1);
+        message("%g %g", v0, v1);
+        error_python("A particle is outside the periodic box (%g):"
+                     "before=%g, after=%g interpolation=%g",
+                     params->box_size[i], x0, x1, x[i]);
+      }
+#endif
+
+    }
+
   }
 }
 
@@ -203,11 +254,19 @@ interpolate_quintic_double_float_ND(const double t_before,
  * @param t_before Time of field_before (< t).
  * @param t_after Time of field_after (> t).
  * @param t Requested time.
+ * @param periodic Should the periodic boundary be applied?
+ * @param params The simulation's #logger_parameters.
  */
 __attribute__((always_inline)) INLINE static void interpolate_cubic_float_ND(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t, const int dimension) {
+    void *restrict output, const double t, const int dimension,
+    int periodic, const struct logger_parameters *params) {
+
+  /* The position is expected to be a double => error with periodic */
+  if (periodic) {
+    error_python("Not implemented yet");
+  }
 
   /* Compute the interpolation scaling. */
   const float wa = (t - t_before) / (t_after - t_before);
@@ -244,11 +303,19 @@ __attribute__((always_inline)) INLINE static void interpolate_cubic_float_ND(
  * @param t_before Time of field_before (< t).
  * @param t_after Time of field_after (> t).
  * @param t Requested time.
+ * @param periodic Should the periodic boundary be applied?
+ * @param params The simulation's #logger_parameters.
  */
 __attribute__((always_inline)) INLINE static void interpolate_linear_float_ND(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t, const int dimension) {
+    void *restrict output, const double t, const int dimension,
+    int periodic, const struct logger_parameters *params) {
+
+  /* The position is expected to be a double => error with periodic */
+  if (periodic) {
+    error_python("Not implemented yet");
+  }
 
   /* Compute the interpolation scaling. */
   const float wa = (t - t_before) / (t_after - t_before);
@@ -274,11 +341,19 @@ __attribute__((always_inline)) INLINE static void interpolate_linear_float_ND(
  * @param t_before Time of field_before (< t).
  * @param t_after Time of field_after (> t).
  * @param t Requested time.
+ * @param periodic Should the periodic boundary be applied?
+ * @param params The simulation's #logger_parameters.
  */
 __attribute__((always_inline)) INLINE static void interpolate_linear_double_ND(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t, const int dimension) {
+    void *restrict output, const double t, const int dimension,
+    int periodic, const struct logger_parameters *params) {
+
+  /* The velocity and acceleration are supposed to be provided => quintic => error here */
+  if (periodic) {
+    error_python("Not implemented yet");
+  }
 
   /* Compute the interpolation scaling. */
   const double wa = (t - t_before) / (t_after - t_before);
@@ -302,11 +377,19 @@ __attribute__((always_inline)) INLINE static void interpolate_linear_double_ND(
  * @param t_before Time of field_before (< t).
  * @param t_after Time of field_after (> t).
  * @param t Requested time.
+ * @param periodic Should the periodic boundary be applied?
+ * @param params The simulation's #logger_parameters.
  */
 __attribute__((always_inline)) INLINE static void interpolate_linear_float(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t) {
+    void *restrict output, const double t,
+    int periodic, const struct logger_parameters *params) {
+
+  /* The position is expected to be a double => error with periodic */
+  if (periodic) {
+    error_python("Not implemented yet");
+  }
 
   /* Compute the interpolation scaling. */
   const float wa = (t - t_before) / (t_after - t_before);
@@ -337,4 +420,5 @@ __attribute__((always_inline)) INLINE static void interpolate_ids(
   }
   *(long long *)output = *(long long *)after->field;
 }
+
 #endif  // LOGGER_LOGGER_INTERPOLATION_H
