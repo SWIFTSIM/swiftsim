@@ -131,22 +131,10 @@ runner_iact_nonsym_feedback_prep1(const float r2, const float *dx,
     if (pj->id == si->feedback_data.SNII_rays_true[i].id_min_length ||
         pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length) {
 
-#ifdef SWIFT_DEBUG_CHECKS
-      message("Loop2: Star %lld wants to kick particle %lld using ray %d",
-              si->id, pj->id, i);
-#endif
-
       /* If this spart has the largest id among all sparts that want to kick
        * this gas particle in this time-step, then the gas particle will save
        * the id of this spart. */
       if (pj->feedback_data.SNII_star_largest_id < si->id) {
-
-#ifdef SWIFT_DEBUG_CHECKS
-        message(
-            "Loop2: Increase the largest stellar id of part %lld from %lld"
-            " to %lld (ray %d)",
-            pj->id, pj->feedback_data.SNII_star_largest_id, si->id, i);
-#endif
         /* Update the largest stellar id carried by the gas particle */
         pj->feedback_data.SNII_star_largest_id = si->id;
       }
@@ -169,29 +157,26 @@ runner_iact_nonsym_feedback_prep2(const float r2, const float *dx,
 
   for (int i = 0; i < N_of_SNII_kinetic_events; i++) {
 
-    /* Find the particle that is closest to the ith ray OR the ith mirror ray */
-    if (pj->id == si->feedback_data.SNII_rays_true[i].id_min_length ||
-        pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length) {
+    /* Find the particle that is closest to the ith ray */
+    if (pj->id == si->feedback_data.SNII_rays_true[i].id_min_length){
+      
+      /* Does this gas particle want to be kicked by this stellar particle
+       * via ray i? If so, store this information in the ith ray extra struct */
+      if (pj->feedback_data.SNII_star_largest_id == si->id){
 
-      if (pj->feedback_data.SNII_star_largest_id == si->id) {
+        si->feedback_data.SNII_rays_ext_true[i].status = allowed_to_kick;
 
-        /* Increment the value of the kick switch by one if this gas part
-         * lets this spart kick it. The kick will only occur if the other gas
-         * part in the pair wants to be kicked by the same spart
-         * (i.e. kick_switch has the value of 2) */
-        si->feedback_data.kick_switch[i]++;
-
-#ifdef SWIFT_DEBUG_CHECKS
-        message(
-            "Loop3: Increment the switch value of star %lld by 1 because part "
-            "%lld"
-            " wants to be kicked by this star (ray %d)",
-            si->id, pj->id, i);
-#endif
         /* If we are using maximum_number_of_rays > 1, then for a given spart,
          * as soon as we have found the first ray that points at this gas part,
          * we stop. Otherwise, the same spart might kick the same gas part
          * twice in the same time-step (or even more times). */
+        break;
+      }
+    }
+    /* Same as above but for the mirror ith ray */
+    else if (pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length){
+      if (pj->feedback_data.SNII_star_largest_id == si->id){
+        si->feedback_data.SNII_rays_ext_mirr[i].status = allowed_to_kick;
         break;
       }
     }
@@ -385,7 +370,8 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
         /* Are we kicking or heating? If at least one gas part in the pair does
          * not want to be kicked by this spart, then we heat */
-        if (si->feedback_data.kick_switch[i] == 2) {
+        if (si->feedback_data.SNII_rays_ext_true[i].status == allowed_to_kick &&
+            si->feedback_data.SNII_rays_ext_mirr[i].status == allowed_to_kick) {
 
           /* Which particles have we caught: the original or the mirror one? */
           const int mirror_particle_switch =
@@ -446,11 +432,6 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
           /* In the absence of a kick event, store the unused kinetic energy
            * for heating */
           E_kinetic_unused = 0.5 * energy_per_pair;
-
-#ifdef SWIFT_DEBUG_CHECKS
-          message("Loop4: Part %lld is heated by star %lld (ray %d)", pj->id,
-                  si->id, i);
-#endif
         }
       }
     }
