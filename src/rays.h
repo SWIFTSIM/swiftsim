@@ -74,6 +74,11 @@ __attribute__((always_inline)) INLINE static void ray_extra_init(
 
   /* Set all fields in the ray struct at their default values */
   for (int i = 0; i < max_number_of_rays; i++) {
+
+    /* Reset status of all rays to 'not allowed to kick' */
+    rays_ext[i].status = not_allowed_to_kick;
+
+    /* Zero velocity and position fields */
     for (int j = 0; j < 3; j++) {
       rays_ext[i].x[j] = 0.f;
       rays_ext[i].v[j] = 0.f;
