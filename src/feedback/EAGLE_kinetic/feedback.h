@@ -97,11 +97,6 @@ __attribute__((always_inline)) INLINE static void feedback_init_spart(
                  eagle_SNII_feedback_num_of_rays);
   ray_extra_init(sp->feedback_data.SNII_rays_ext_mirr,
                  eagle_SNII_feedback_num_of_rays);
-
-  /* Reset switch in SNII kinetic feedback */
-  for (int i = 0; i < eagle_SNII_feedback_num_of_rays; i++) {
-    sp->feedback_data.kick_switch[i] = 0;
-  }
 }
 
 /**

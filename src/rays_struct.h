@@ -47,6 +47,11 @@ struct ray_data_extra {
 
   /*! Gas particle's internal velocity in code units */
   float v[3];
+
+  /* Does the gas particle this ray is pointing to allow this stellar particle
+   * to kick it or not? Note, however, that the kick will only occur if both 
+   * gas particles in the pair agree to be kicked by this stellar particle. */
+  enum {not_allowed_to_kick, allowed_to_kick} status; 
 };
 
 #endif /* SWIFT_RAYS_STRUCT_H */
