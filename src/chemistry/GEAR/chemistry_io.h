@@ -133,7 +133,7 @@ INLINE static int chemistry_write_bparticles(const struct bpart* bparts,
 INLINE static void chemistry_write_flavour(hid_t h_grp, hid_t h_grp_columns,
                                            const struct engine* e) {
 
-  io_write_attribute_s(h_grp, "Chemistry Model", "GEAR");
+  io_write_attribute_s(h_grp, "Chemistry model", "GEAR");
   io_write_attribute_d(h_grp, "Chemistry element count",
                        GEAR_CHEMISTRY_ELEMENT_COUNT);
 #ifdef FEEDBACK_GEAR
@@ -154,6 +154,16 @@ INLINE static void chemistry_write_flavour(hid_t h_grp, hid_t h_grp_columns,
   H5Dclose(dset);
 
   H5Tclose(type);
+
+  /* Write the solar abundances and the elements */
+  io_write_array_attribute_f(h_grp, "Solar Abundances",
+                             e->chemistry->solar_abundances,
+                             GEAR_CHEMISTRY_ELEMENT_COUNT);
+
+  /* Write the elements names */
+  io_write_array_attribute_s(h_grp, "Chemistry elements", element_names,
+                             GEAR_LABELS_SIZE, GEAR_CHEMISTRY_ELEMENT_COUNT);
+
 #endif
 }
 #endif

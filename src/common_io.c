@@ -488,6 +488,50 @@ void io_write_attribute_s(hid_t grp, const char* name, const char* str) {
 }
 
 /**
+ * @brief Writes a float array as an attribute
+ * @param grp The group in which to write
+ * @param name The name of the attribute
+ * @param data The value to write
+ * @param num The number of elements to write
+ */
+void io_write_array_attribute_f(hid_t grp, const char* name, const float* data,
+                                size_t num) {
+  io_write_attribute(grp, name, FLOAT, data, num);
+}
+
+/**
+ * @brief Writes a string array as an attribute
+ * @param grp The group in which to write
+ * @param name The name of the attribute
+ * @param data The value to write
+ * @param num The number of elements to write
+ */
+void io_write_array_attribute_s(hid_t grp, const char* name, const char* data,
+                                int max_length, int num) {
+  hsize_t dim[1] = {(hsize_t)num};
+  const hid_t h_space = H5Screate_simple(1, dim, NULL);
+  if (h_space < 0)
+    error("Error while creating dataspace for attribute '%s'.", name);
+
+  const hid_t h_type = H5Tcopy(H5T_C_S1);
+  if (h_type < 0) error("Error while copying datatype 'H5T_C_S1'.");
+
+  const hid_t h_err = H5Tset_size(h_type, max_length);
+  if (h_err < 0)
+    error("Error while resizing attribute type to '%i'.", max_length);
+
+  const hid_t h_attr = H5Acreate1(grp, name, h_type, h_space, H5P_DEFAULT);
+  if (h_attr < 0) error("Error while creating attribute '%s'.", name);
+
+  const hid_t h_err2 = H5Awrite(h_attr, h_type, data);
+  if (h_err2 < 0) error("Error while reading attribute '%s'.", name);
+
+  H5Tclose(h_type);
+  H5Sclose(h_space);
+  H5Aclose(h_attr);
+}
+
+/**
  * @brief Writes the meta-data of the run to an open hdf5 snapshot file.
  *
  * @param h_file The opened hdf5 file.
