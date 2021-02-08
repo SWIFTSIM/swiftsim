@@ -60,15 +60,17 @@ enum logger_special_flags logger_particle_read_special_flag(
     size_t *h_offset, int *data);
 
 /**
- * @brief Generate the data for the special flags.
+ * @brief Extract the flag and its related data from the data inside a record.
  *
- * @param flag The special flag to use.
- * @param data The data to write in the .
+ * @param logfile_data The raw data taken from the logfile.
+ * @param data (output) The data related to the flag.
+ *
+ * @return The flag extracted from the raw data.
  */
 INLINE static enum logger_special_flags logger_unpack_flags_and_data(
-    uint32_t flag, int *data) {
-  *data = flag & 0xFFFFFF;
-  return (enum logger_special_flags)(flag >> (3 * 8));
+    uint32_t logfile_data, int *data) {
+  *data = logfile_data & 0xFFFFFF;
+  return (enum logger_special_flags)(logfile_data >> (3 * 8));
 }
 
 #endif  // LOGGER_LOGGER_PARTICLE_H
