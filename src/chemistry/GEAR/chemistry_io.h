@@ -156,7 +156,7 @@ INLINE static void chemistry_write_flavour(hid_t h_grp, hid_t h_grp_columns,
   H5Tclose(type);
 
   /* Write the solar abundances and the elements */
-  io_write_array_attribute_f(h_grp, "Solar Abundances",
+  io_write_array_attribute_f(h_grp, "Solar abundances",
                              e->chemistry->solar_abundances,
                              GEAR_CHEMISTRY_ELEMENT_COUNT);
 
