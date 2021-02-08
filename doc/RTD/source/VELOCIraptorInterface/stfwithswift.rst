@@ -61,7 +61,7 @@ downloaded SWIFT from the GitLab repository. This can be done by running
 .. code:: bash
   
   ./autogen.sh 
-  ./configure --with-velociraptor=/path/to/VELOCIraptor-STF/src/build
+  ./configure --with-velociraptor=/path/to/VELOCIraptor-STF/build/src
   make 
 
 In which ``./autogen.sh`` only needs to be run once after the code is cloned
