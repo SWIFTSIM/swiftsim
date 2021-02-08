@@ -146,7 +146,6 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
     }
   }
 
-
   if (timer) TIMER_TOC(TIMER_DOSELF_RT);
 }
 

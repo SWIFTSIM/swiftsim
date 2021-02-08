@@ -95,12 +95,12 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
  * @brief Update the photon number of a particle, i.e. compute
  *  E^{n+1} = E^n + dt * dE_* / dt. This function finalises
  *  the injection step.
- *        
+ *
  */
 __attribute__((always_inline)) INLINE static void
 rt_injection_update_photon_density(struct part* restrict p) {
 
-  if (p->rt_data.injection_check == 0) 
+  if (p->rt_data.injection_check == 0)
     error("Updating a particle that hasn't gone through injection interaction");
   p->rt_data.injection_done += 1;
   p->rt_data.calls_tot += 1;
@@ -208,31 +208,30 @@ __attribute__((always_inline)) INLINE static void rt_tchem(
 
 /**
  * @brief This function is intended for debugging purposes only. It is called
- * during the self injection tasks, (regardless whether the particle actually 
+ * during the self injection tasks, (regardless whether the particle actually
  * has neighbours to interact with) and intended to mark star or gas particles
  * to have been called during the step so further checks can be performed
  * further down the task system.
  *
  * @param p Hydro particle.
  */
-__attribute__((always_inline)) INLINE static void rt_debugging_check_injection_part(
-    struct part *restrict p) {
+__attribute__((always_inline)) INLINE static void
+rt_debugging_check_injection_part(struct part* restrict p) {
 
   p->rt_data.injection_check += 1;
 }
 
-
 /**
  * @brief This function is intended for debugging purposes only. It is called
- * during the self injection tasks, (regardless whether the particle actually 
+ * during the self injection tasks, (regardless whether the particle actually
  * has neighbours to interact with) and intended to mark star or gas particles
  * to have been called during the step so further checks can be performed
  * further down the task system.
  *
  * @param s Star particle.
  */
-__attribute__((always_inline)) INLINE static void rt_debugging_check_injection_spart(
-    struct spart *restrict s) {
+__attribute__((always_inline)) INLINE static void
+rt_debugging_check_injection_spart(struct spart* restrict s) {
 
   s->rt_data.injection_check += 1;
 }

@@ -31,11 +31,11 @@ struct rt_part_data {
   int calls_tot; /* total number of calls to this particle during entire run */
 
   /* data to store during one time step */
-  int calls_per_step;        /* calls per time step to this particle */
-  int iact_stars_inject;     /* how many stars this particle interacted with */
-  int calls_iact_gradient;   /* calls from gradient interaction loop */
-  int calls_iact_transport;  /* calls from transport interaction loop */
-  int injection_check;       /* called in a self/rt_injection task? */
+  int calls_per_step;       /* calls per time step to this particle */
+  int iact_stars_inject;    /* how many stars this particle interacted with */
+  int calls_iact_gradient;  /* calls from gradient interaction loop */
+  int calls_iact_transport; /* calls from transport interaction loop */
+  int injection_check;      /* called in a self/rt_injection task? */
 
   int injection_done;  /* calls from ghost1 tasks */
   int gradients_done;  /* finalised computing gradients? */
