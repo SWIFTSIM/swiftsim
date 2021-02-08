@@ -49,7 +49,7 @@ __attribute__((always_inline)) INLINE size_t logger_particle_read_field(
 
   /* Get a few pointers. */
   const struct header *h = &reader->log.header;
-  char *map = (char *) reader->log.log.map;
+  char *map = (char *)reader->log.log.map;
 
   *mask = 0;
   *h_offset = 0;
@@ -90,7 +90,7 @@ __attribute__((always_inline)) INLINE size_t logger_particle_read_field(
     }
   }
 
-  return map - (char *) reader->log.log.map;
+  return map - (char *)reader->log.log.map;
 }
 
 /**

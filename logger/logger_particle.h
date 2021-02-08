@@ -68,7 +68,7 @@ enum logger_special_flags logger_particle_read_special_flag(
 INLINE static enum logger_special_flags logger_unpack_flags_and_data(
     uint32_t flag, int *data) {
   *data = flag & 0xFFFFFF;
-  return (enum logger_special_flags) (flag >> (3 * 8));
+  return (enum logger_special_flags)(flag >> (3 * 8));
 }
 
 #endif  // LOGGER_LOGGER_PARTICLE_H

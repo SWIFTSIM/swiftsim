@@ -310,7 +310,7 @@ size_t logger_reader_count_number_removed_particles(
 void logger_reader_get_number_particles(struct logger_reader *reader,
                                         uint64_t *n_parts,
                                         const int *read_types) {
-  for (enum part_type i = (enum part_type) 0; i < swift_type_count; i++) {
+  for (enum part_type i = (enum part_type)0; i < swift_type_count; i++) {
     /* Should we skip this type of particles? */
     if (read_types[i] == 0) {
       n_parts[i] = 0;
@@ -400,7 +400,7 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
   */
   while (offset < offset_time) {
     /* Read the particle. */
-    logger_loader_io_read_mask(h, (char *) reader->log.log.map + offset, &mask,
+    logger_loader_io_read_mask(h, (char *)reader->log.log.map + offset, &mask,
                                &h_offset);
 
     /* Is the particle removed from the logfile? */
@@ -469,7 +469,7 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
     while (1) {
 
       /* Read the particle. */
-      logger_loader_io_read_mask(h, (char *) reader->log.log.map + offset, &mask,
+      logger_loader_io_read_mask(h, (char *)reader->log.log.map + offset, &mask,
                                  &h_offset);
 
       /* Do we have the field? */
@@ -670,7 +670,7 @@ void logger_reader_read_all_particles_single_type(
       for (int field = 0; field < n_fields_wanted; field++) {
         const int global = fields_wanted[field].global_index;
         void *output_single =
-          (char *) output[field] + (i + prev_npart) * h->masks[global].size;
+            (char *)output[field] + (i + prev_npart) * h->masks[global].size;
 
         /* Read the field. */
         particle_removed = logger_reader_read_field(
