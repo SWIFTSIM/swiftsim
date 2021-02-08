@@ -19,9 +19,14 @@
 #ifndef SWIFT_RAYS_STRUCT_H
 #define SWIFT_RAYS_STRUCT_H
 
-/* In SNII kinetic feedback, each ray needs to carry such an enum
- * to decide whether its kick will be allowed or not */
-enum {not_allowed_to_kick, allowed_to_kick} SNII_kick_permission;
+/** 
+ * @brief In SNII kinetic feedback, each ray needs to carry such an enum
+ * to decide whether its kick will be allowed or not 
+ */
+enum SNII_kick_permission {
+  not_allowed_to_kick, /*< Stellar particle is not allowed to kick */
+  allowed_to_kick /*< Stellar particle is allowed to kick */
+}; 
 
 /**
  * @brief Fields used in isotropic thermal SN/AGN feedback
