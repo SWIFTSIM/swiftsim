@@ -310,7 +310,7 @@ size_t logger_reader_count_number_removed_particles(
 void logger_reader_get_number_particles(struct logger_reader *reader,
                                         uint64_t *n_parts,
                                         const int *read_types) {
-  for (int i = 0; i < swift_type_count; i++) {
+  for (enum part_type i = 0; i < swift_type_count; i++) {
     /* Should we skip this type of particles? */
     if (read_types[i] == 0) {
       n_parts[i] = 0;
