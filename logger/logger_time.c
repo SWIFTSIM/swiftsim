@@ -128,7 +128,7 @@ size_t time_offset_first_record(const struct header *h) {
 
   /* Initialize a few variables. */
   size_t offset = h->offset_first_record;
-  void *map = h->log->log.map;
+  char *map = h->log->log.map;
 
   /* Check that the first record is really a time record. */
   int i = header_get_field_index(h, "Timestamp");

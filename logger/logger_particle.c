@@ -111,7 +111,7 @@ logger_particle_read_special_flag(const struct logger_reader *reader,
 
   /* Get a few pointers. */
   const struct header *h = &reader->log.header;
-  void *map = reader->log.log.map;
+  char *map = reader->log.log.map;
 
   *mask = 0;
   *h_offset = 0;

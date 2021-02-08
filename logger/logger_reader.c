@@ -799,7 +799,7 @@ size_t logger_reader_read_record(struct logger_reader *reader, void **output,
 
   /* Get a few pointers. */
   const struct header *h = &reader->log.header;
-  void *map = reader->log.log.map;
+  char *map = reader->log.log.map;
 
   size_t mask = 0;
   size_t h_offset = 0;
