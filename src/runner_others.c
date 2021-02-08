@@ -901,11 +901,13 @@ void runner_do_fof_pair(struct runner *r, struct cell *ci, struct cell *cj,
 void runner_do_rt_tchem(struct runner *r, struct cell *c, int timer) {
 
   const struct engine *e = r->e;
-
-  TIMER_TIC;
+  const int count = c->hydro.count;
 
   /* Anything to do here? */
+  if (count == 0) return;
   if (!cell_is_active_hydro(c, e)) return;
+
+  TIMER_TIC;
 
   /* Recurse? */
   if (c->split) {
@@ -914,7 +916,6 @@ void runner_do_rt_tchem(struct runner *r, struct cell *c, int timer) {
   } else {
 
     /* const struct cosmology *cosmo = e->cosmology; */
-    const int count = c->hydro.count;
     struct part *restrict parts = c->hydro.parts;
 
     /* Loop over the gas particles in this cell. */
@@ -927,6 +928,8 @@ void runner_do_rt_tchem(struct runner *r, struct cell *c, int timer) {
 
         /* Finish the force loop */
         rt_finalise_transport(p);
+
+        /* And finally do thermochemistry */
         rt_tchem(p);
       }
     }

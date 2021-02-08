@@ -73,23 +73,39 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
     struct part *restrict pj, float a, float H, int mode) {
 
-  if (!pi->rt_data.injection_done)
+  if (pi->rt_data.injection_done != 1)
     error(
-        "Trying to compute fluxes for particle where "
-        "injection isn't finished");
-  if (!pj->rt_data.injection_done)
-    error(
-        "Trying to compute fluxes for particle where "
-        "injection isn't finished");
+        "Trying to do iact transport when "
+        "finalise injection count is %d",
+        pi->rt_data.injection_done);
 
-  if (!pi->rt_data.gradients_done)
+  if (pi->rt_data.calls_iact_gradient == 0)
     error(
-        "Trying to compute fluxes for particle where "
-        "gradients aren't finished");
-  if (!pj->rt_data.gradients_done)
+        "Called iact transport on particle "
+        "with iact gradient count 0");
+
+  if (pi->rt_data.gradients_done != 1)
     error(
-        "Trying to compute fluxes for particle where "
-        "gradients aren't finished");
+        "Trying to do iact transport when "
+        "rt_finalise_gradient count is %d",
+        pi->rt_data.gradients_done);
+
+  if (pj->rt_data.injection_done != 1)
+    error(
+        "Trying to do iact transport when "
+        "finalise injection count is %d",
+        pj->rt_data.injection_done);
+
+  if (pj->rt_data.calls_iact_gradient == 0)
+    error(
+        "Called iact transport on particle "
+        "with iact gradient count 0");
+
+  if (pj->rt_data.gradients_done != 1)
+    error(
+        "Trying to do iact transport when "
+        "rt_finalise_gradient count is %d",
+        pj->rt_data.gradients_done);
 
   if (mode == 1) {
     pi->rt_data.calls_tot += 1;
