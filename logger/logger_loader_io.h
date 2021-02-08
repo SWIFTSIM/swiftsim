@@ -54,7 +54,7 @@ void logger_loader_io_munmap_file(struct mapped_file *map);
  *
  * @return memory after the record header.
  */
-__attribute__((always_inline)) INLINE static void *logger_loader_io_read_mask(
+__attribute__((always_inline)) INLINE static char *logger_loader_io_read_mask(
     const struct header *h, char *data, size_t *mask, size_t *diff_offset) {
   /* read mask */
   if (mask) {
@@ -83,7 +83,7 @@ __attribute__((always_inline)) INLINE static void *logger_loader_io_read_mask(
  * @return memory after the data written.
  */
 __attribute__((always_inline)) INLINE static char *logger_loader_io_read_data(
-    void *data, const size_t size, void *p) {
+    char *data, const size_t size, void *p) {
   memcpy(p, data, size);
   return data + size;
 };
@@ -97,8 +97,8 @@ __attribute__((always_inline)) INLINE static char *logger_loader_io_read_data(
  *
  * @return memory after the data written.
  */
-__attribute__((always_inline)) INLINE static void *logger_loader_io_write_data(
-    void *data, const size_t size, const void *p) {
+__attribute__((always_inline)) INLINE static char *logger_loader_io_write_data(
+    char *data, const size_t size, const void *p) {
   memcpy(data, p, size);
 
   return data + size;
