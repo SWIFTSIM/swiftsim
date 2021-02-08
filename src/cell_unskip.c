@@ -2058,11 +2058,11 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
         scheduler_activate(s, t);
       }
       /* Cells ci and cj are from different MPI domains */
-      else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && (cj_active)) {
-        /* In task prepare1, we update gas so sparts must be on foreign node */
+      else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && (ci_active)) {
+        /* In task prep2, we update stars so sparts must be on the local node */
         scheduler_activate(s, t);
-      } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && (ci_active)) {
-        /* In task prepare1, we update gas so sparts must be on foreign node */
+      } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && (cj_active)) {
+        /* In task prep2, we update stars so sparts must be on the local node */
         scheduler_activate(s, t);
       }
     }
