@@ -400,7 +400,7 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
   */
   while (offset < offset_time) {
     /* Read the particle. */
-    logger_loader_io_read_mask(h, (char *)reader->log.log.map + offset, &mask,
+    logger_loader_io_read_mask(h, reader->log.log.map + offset, &mask,
                                &h_offset);
 
     /* Is the particle removed from the logfile? */
@@ -469,7 +469,7 @@ int logger_reader_read_field(struct logger_reader *reader, double time,
     while (1) {
 
       /* Read the particle. */
-      logger_loader_io_read_mask(h, (char *)reader->log.log.map + offset, &mask,
+      logger_loader_io_read_mask(h, reader->log.log.map + offset, &mask,
                                  &h_offset);
 
       /* Do we have the field? */
@@ -805,7 +805,7 @@ size_t logger_reader_read_record(struct logger_reader *reader, void **output,
   size_t h_offset = 0;
 
   /* Read the record's mask. */
-  map = logger_loader_io_read_mask(h, (char *)map + offset, &mask, &h_offset);
+  map = logger_loader_io_read_mask(h, map + offset, &mask, &h_offset);
 
   *is_particle = !(mask & h->timestamp_mask);
   /* The record is a particle. */

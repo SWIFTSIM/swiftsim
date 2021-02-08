@@ -49,13 +49,13 @@ __attribute__((always_inline)) INLINE size_t logger_particle_read_field(
 
   /* Get a few pointers. */
   const struct header *h = &reader->log.header;
-  char *map = (char *)reader->log.log.map;
+  char *map = reader->log.log.map;
 
   *mask = 0;
   *h_offset = 0;
 
   /* Read the record's mask. */
-  map = logger_loader_io_read_mask(h, (char *)map + offset, mask, h_offset);
+  map = logger_loader_io_read_mask(h, map + offset, mask, h_offset);
 
   /* Check that the mask is within the limits. */
   if (*mask > (unsigned int)(1 << h->masks_count)) {
@@ -90,7 +90,7 @@ __attribute__((always_inline)) INLINE size_t logger_particle_read_field(
     }
   }
 
-  return map - (char *)reader->log.log.map;
+  return map - reader->log.log.map;
 }
 
 /**
@@ -117,7 +117,7 @@ logger_particle_read_special_flag(const struct logger_reader *reader,
   *h_offset = 0;
 
   /* Read the record's mask. */
-  map = logger_loader_io_read_mask(h, (char *)map + offset, mask, h_offset);
+  map = logger_loader_io_read_mask(h, map + offset, mask, h_offset);
 
   /* Check that the mask is within the limits. */
   if (*mask > (unsigned int)(1 << h->masks_count)) {
