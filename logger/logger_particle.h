@@ -62,15 +62,20 @@ enum logger_special_flags logger_particle_read_special_flag(
 /**
  * @brief Extract the flag and its related data from the data inside a record.
  *
+ * Flags and data are stored as a 32-bit unsigned int in which the lower 24 bits
+ * contain the data, and the top 8 bits contain the flag value.
+
  * @param logfile_data The raw data taken from the logfile.
  * @param data (output) The data related to the flag.
  *
  * @return The flag extracted from the raw data.
  */
+
 INLINE static enum logger_special_flags logger_unpack_flags_and_data(
-    uint32_t logfile_data, int *data) {
-  *data = logfile_data & 0xFFFFFF;
-  return (enum logger_special_flags)(logfile_data >> (3 * 8));
+    uint32_t logfile_data, int *flag_data) {
+  const int num_data_bits = 24;
+  *flag_data = logfile_data & ((1U << num_data_bits) - 1);
+  return (enum logger_special_flags)(logfile_data >> num_data_bits);
 }
 
 #endif  // LOGGER_LOGGER_PARTICLE_H

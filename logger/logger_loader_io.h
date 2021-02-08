@@ -32,7 +32,7 @@
 /* Structure for mapping a file. */
 struct mapped_file {
   /* Mapped data. */
-  void *map;
+  char *map;
 
   /* File size. */
   size_t mmap_size;
