@@ -1475,6 +1475,7 @@ void runner_do_rt_ghost1(struct runner *r, struct cell *c, int timer) {
 
   /* Anything to do here? */
   if (count == 0) return;
+  if (!cell_is_active_hydro(c, e)) return;
 
   TIMER_TIC;
 
@@ -1485,11 +1486,11 @@ void runner_do_rt_ghost1(struct runner *r, struct cell *c, int timer) {
         runner_do_rt_ghost1(r, c->progeny[k], 0);
       }
     }
-  }
-
-  for (int pid = 0; pid < count; pid++) {
-    struct part *restrict p = &(c->hydro.parts[pid]);
-    if (part_is_active(p, e)) rt_injection_update_photon_density(p);
+  } else {
+    for (int pid = 0; pid < count; pid++) {
+      struct part *restrict p = &(c->hydro.parts[pid]);
+      if (part_is_active(p, e)) rt_injection_update_photon_density(p);
+    }
   }
 
   if (timer) TIMER_TOC(timer_do_rt_ghost1);
@@ -1510,6 +1511,7 @@ void runner_do_rt_ghost2(struct runner *r, struct cell *c, int timer) {
 
   /* Anything to do here? */
   if (count == 0) return;
+  if (!cell_is_active_hydro(c, e)) return;
 
   TIMER_TIC;
 
@@ -1520,11 +1522,12 @@ void runner_do_rt_ghost2(struct runner *r, struct cell *c, int timer) {
         runner_do_rt_ghost2(r, c->progeny[k], 0);
       }
     }
-  }
+  } else {
 
-  for (int pid = 0; pid < count; pid++) {
-    struct part *restrict p = &(c->hydro.parts[pid]);
-    if (part_is_active(p, e)) rt_finalise_gradient(p);
+    for (int pid = 0; pid < count; pid++) {
+      struct part *restrict p = &(c->hydro.parts[pid]);
+      if (part_is_active(p, e)) rt_finalise_gradient(p);
+    }
   }
 
   if (timer) TIMER_TOC(timer_do_rt_ghost2);

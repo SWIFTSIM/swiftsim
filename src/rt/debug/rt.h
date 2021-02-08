@@ -28,12 +28,16 @@
 
 /**
  * @brief Initialisation of the RT density loop related particle data.
+ * Note: during initalisation (space_init), rt_reset_part and rt_init_part
+ * are both called individually.
  */
 __attribute__((always_inline)) INLINE static void rt_init_part(
     struct part* restrict p) {}
 
 /**
  * @brief Reset of the RT extra hydro particle data.
+ * Note: during initalisation (space_init), rt_reset_part and rt_init_part
+ * are both called individually.
  */
 __attribute__((always_inline)) INLINE static void rt_reset_part(
     struct part* restrict p) {
@@ -63,12 +67,16 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
 
 /**
  * @brief Initialisation of the RT density loop related particle data.
+ * Note: during initalisation (space_init), rt_reset_spart and rt_init_part
+ * are both called individually.
  */
 __attribute__((always_inline)) INLINE static void rt_init_spart(
     struct spart* restrict sp) {}
 
 /**
  * @brief Reset of the RT extra star particle data.
+ * Note: during initalisation (space_init), rt_reset_spart and rt_init_part
+ * are both called individually.
  */
 __attribute__((always_inline)) INLINE static void rt_reset_spart(
     struct spart* restrict sp) {
@@ -100,8 +108,9 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
 __attribute__((always_inline)) INLINE static void
 rt_injection_update_photon_density(struct part* restrict p) {
 
-  if (p->rt_data.injection_check == 0)
-    error("Updating a particle that hasn't gone through injection interaction");
+  if (p->rt_data.injection_check != 1)
+    error("called ghost1 when injection count is %d",
+          p->rt_data.injection_check);
   p->rt_data.injection_done += 1;
   p->rt_data.calls_tot += 1;
   p->rt_data.calls_per_step += 1;
@@ -151,15 +160,17 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
 __attribute__((always_inline)) INLINE static void rt_finalise_gradient(
     struct part* restrict p) {
 
-  if (p->rt_data.injection_done == 0)
+  if (p->rt_data.injection_done != 1)
     error(
         "Called finalise gradient on particle "
-        "where injection isn't finished");
+        "where injection count = %d",
+        p->rt_data.injection_done);
 
   if (p->rt_data.calls_iact_gradient == 0)
     error(
         "Called finalise gradient on particle "
-        "with iact gradient count = 0");
+        "with iact gradient count = %d",
+        p->rt_data.calls_iact_gradient);
 
   p->rt_data.gradients_done += 1;
 }
@@ -172,25 +183,29 @@ __attribute__((always_inline)) INLINE static void rt_finalise_gradient(
 __attribute__((always_inline)) INLINE static void rt_finalise_transport(
     struct part* restrict p) {
 
+  if (p->rt_data.injection_done != 1)
+    error(
+        "Trying to do finalise_transport when "
+        "injection count is %d",
+        p->rt_data.injection_done);
+
+  if (p->rt_data.gradients_done != 1)
+    error(
+        "Trying to do finalise_transport when "
+        "rt_finalise_gradient count is %d",
+        p->rt_data.gradients_done);
+
   if (p->rt_data.calls_iact_gradient == 0)
     error(
         "Called finalise transport on particle "
-        "with iact gradient count = 0");
+        "with iact gradient count = %d",
+        p->rt_data.calls_iact_gradient);
 
   if (p->rt_data.calls_iact_transport == 0)
     error(
         "Called finalise transport on particle "
-        "with iact transport count = 0");
-
-  if (!p->rt_data.gradients_done)
-    error(
-        "Trying to do finalise_transport when "
-        "rt_finalise_gradient hasn't been done");
-
-  if (!p->rt_data.injection_done)
-    error(
-        "Trying to do finalise_transport when "
-        "injection hasn't been finalised");
+        "with iact transport count = %d",
+        p->rt_data.calls_iact_transport);
 
   p->rt_data.transport_done += 1;
 }

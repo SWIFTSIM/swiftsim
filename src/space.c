@@ -785,6 +785,7 @@ void space_convert_rt_quantities_mapper(void *restrict map_data, int scount,
  * initialisation function on all star particles in the space.
  * This function requires that the time bins for star particles
  * have been set already and is called after the 0-th time step.
+ * TODO MLADEN: double check the documentation comments here
  *
  * @param s The #space.
  * @param verbose Are we talkative?
