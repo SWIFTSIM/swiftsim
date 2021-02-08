@@ -2782,16 +2782,17 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
             cell_activate_stars_sorts(cj, t->flags, s);
           }
         }
-
       }
+    }
 
-      else if (t->type == task_type_sub_self) {
-        cell_activate_subcell_rt_tasks(ci, NULL, s);
-      }
+    else if (t->type == task_type_sub_self) {
+      scheduler_activate(s, t);
+      cell_activate_subcell_rt_tasks(ci, NULL, s);
+    }
 
-      else if (t->type == task_type_sub_pair) {
-        cell_activate_subcell_rt_tasks(ci, cj, s);
-      }
+    else if (t->type == task_type_sub_pair) {
+      scheduler_activate(s, t);
+      cell_activate_subcell_rt_tasks(ci, cj, s);
     }
 
     /* Only interested in pair interactions as of here. */

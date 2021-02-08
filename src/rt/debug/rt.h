@@ -102,7 +102,6 @@ rt_injection_update_photon_density(struct part* restrict p) {
 
   if (p->rt_data.injection_check == 0) 
     error("Updating a particle that hasn't gone through injection interaction");
-
   p->rt_data.injection_done += 1;
   p->rt_data.calls_tot += 1;
   p->rt_data.calls_per_step += 1;

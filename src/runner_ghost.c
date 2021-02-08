@@ -1469,7 +1469,8 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
  * @param timer Are we timing this ?
  */
 void runner_do_rt_ghost1(struct runner *r, struct cell *c, int timer) {
-  /* const struct engine *e = r->e; */
+
+  const struct engine *e = r->e;
   int count = c->hydro.count;
 
   /* Anything to do here? */
@@ -1488,7 +1489,7 @@ void runner_do_rt_ghost1(struct runner *r, struct cell *c, int timer) {
 
   for (int pid = 0; pid < count; pid++) {
     struct part *restrict p = &(c->hydro.parts[pid]);
-    rt_injection_update_photon_density(p);
+    if (part_is_active(p, e)) rt_injection_update_photon_density(p);
   }
 
   if (timer) TIMER_TOC(timer_do_rt_ghost1);
@@ -1503,7 +1504,8 @@ void runner_do_rt_ghost1(struct runner *r, struct cell *c, int timer) {
  * @param timer Are we timing this ?
  */
 void runner_do_rt_ghost2(struct runner *r, struct cell *c, int timer) {
-  /* const struct engine *e = r->e; */
+
+  const struct engine *e = r->e;
   int count = c->hydro.count;
 
   /* Anything to do here? */
@@ -1522,7 +1524,7 @@ void runner_do_rt_ghost2(struct runner *r, struct cell *c, int timer) {
 
   for (int pid = 0; pid < count; pid++) {
     struct part *restrict p = &(c->hydro.parts[pid]);
-    rt_finalise_gradient(p);
+    if (part_is_active(p, e)) rt_finalise_gradient(p);
   }
 
   if (timer) TIMER_TOC(timer_do_rt_ghost2);
