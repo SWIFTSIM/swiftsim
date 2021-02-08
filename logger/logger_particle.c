@@ -90,7 +90,7 @@ __attribute__((always_inline)) INLINE size_t logger_particle_read_field(
     }
   }
 
-  return map - reader->log.log.map;
+  return map - (char *) reader->log.log.map;
 }
 
 /**
