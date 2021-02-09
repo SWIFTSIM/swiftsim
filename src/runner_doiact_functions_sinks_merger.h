@@ -69,7 +69,7 @@ void DOSELF1_SINKS_MERGER(struct runner *r, struct cell *c) {
                           (float)(si->x[1] - c->loc[1]),
                           (float)(si->x[2] - c->loc[2])};
 
-    /* Loop over the parts in cj. */
+    /* Loop over the sinks in cj. */
     for (int sjd = sid + 1; sjd < scount; sjd++) {
 
       /* Get a pointer to the jth particle. */
@@ -184,7 +184,7 @@ void DO_SYM_PAIR1_SINKS_MERGER(struct runner *r, struct cell *restrict ci,
                           (float)(si->x[1] - (cj->loc[1] + shift[1])),
                           (float)(si->x[2] - (cj->loc[2] + shift[2]))};
 
-    /* Loop over the parts in cj. */
+    /* Loop over the sinks in cj. */
     for (int sjd = 0; sjd < scount_j; sjd++) {
 
       /* Get a pointer to the jth particle. */

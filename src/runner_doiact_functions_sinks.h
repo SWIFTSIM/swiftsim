@@ -55,7 +55,7 @@ void DOSELF1_SINKS(struct runner *r, struct cell *c, int timer) {
   struct sink *restrict sinks = c->sinks.parts;
   struct part *restrict parts = c->hydro.parts;
 
-  /* Loop over the sinks in ci. */
+  /* Loop over the particles in ci. */
   for (int pjd = 0; pjd < count; pjd++) {
 
     /* Get a pointer to the jth particle. */
@@ -69,7 +69,7 @@ void DOSELF1_SINKS(struct runner *r, struct cell *c, int timer) {
                           (float)(pj->x[1] - c->loc[1]),
                           (float)(pj->x[2] - c->loc[2])};
 
-    /* Loop over the parts in cj. */
+    /* Loop over the sinks in cj. */
     for (int sid = 0; sid < scount; sid++) {
 
       /* Get a hold of the ith sink in ci. */
@@ -358,7 +358,7 @@ void DO_SYM_PAIR1_SINKS(struct runner *r, struct cell *ci, struct cell *cj,
     const double di_max = sort_i[count_i - 1].d - rshift;
     const float hydro_dx_max_rshift = ci->hydro.dx_max_sort - rshift;
 
-    /* Loop over the parts in cj. */
+    /* Loop over the sinks in cj. */
     for (int j = 0; j < count_j; j++) {
 
       /* Get a hold of the jth part in cj. */
