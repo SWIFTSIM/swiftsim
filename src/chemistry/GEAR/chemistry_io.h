@@ -144,11 +144,11 @@ INLINE static void chemistry_write_flavour(hid_t h_grp, hid_t h_grp_columns,
   hid_t type = H5Tcopy(H5T_C_S1);
   H5Tset_size(type, GEAR_LABELS_SIZE);
   hid_t space = H5Screate_simple(1, dims, NULL);
-  hid_t dset = H5Dcreate(h_grp_columns, "ElementAbundances", type, space,
+  hid_t dset = H5Dcreate(h_grp_columns, "MetalMassFractions", type, space,
                          H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5Dwrite(dset, type, H5S_ALL, H5S_ALL, H5P_DEFAULT, element_names);
   H5Dclose(dset);
-  dset = H5Dcreate(h_grp_columns, "SmoothedElementAbundances", type, space,
+  dset = H5Dcreate(h_grp_columns, "SmoothedMetalMassFractions", type, space,
                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5Dwrite(dset, type, H5S_ALL, H5S_ALL, H5P_DEFAULT, element_names);
   H5Dclose(dset);
