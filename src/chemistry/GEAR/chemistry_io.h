@@ -157,13 +157,13 @@ INLINE static void chemistry_write_flavour(hid_t h_grp, hid_t h_grp_columns,
 
   /* Write the solar abundances and the elements */
   /* Create the group */
-  hid_t h_sol_ab = H5Gcreate(h_grp, "SolarAbundances", H5P_DEFAULT,
-                             H5P_DEFAULT, H5P_DEFAULT);
+  hid_t h_sol_ab = H5Gcreate(h_grp, "SolarAbundances", H5P_DEFAULT, H5P_DEFAULT,
+                             H5P_DEFAULT);
   if (h_sol_ab < 0) error("Error while creating the SolarAbundances group\n");
 
   /* Write all the elements as attributes */
-  for(int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
-    const char *name = stellar_evolution_get_element_name(
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
+    const char* name = stellar_evolution_get_element_name(
         &e->feedback_props->stellar_model, i);
     io_write_attribute_f(h_sol_ab, name, e->chemistry->solar_abundances[i]);
   }
