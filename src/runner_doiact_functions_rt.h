@@ -25,6 +25,7 @@
    and runner_dosub_FUNCTION calling the pairwise interaction function
    runner_iact_FUNCTION. */
 
+#include "rt_do_cells.h"
 #include "runner_doiact_rt.h"
 
 /**
@@ -42,7 +43,7 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
 
   /* Anything to do here? */
   if (c->hydro.count == 0 || c->stars.count == 0) return;
-  if (!cell_is_active_rt(c, e)) return;
+  if (!rt_should_do_cell(c, e)) return;
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Drift the cell to the current timestep if needed. */
@@ -207,9 +208,9 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
   for (int k = 0; k < 3; k++) rshift += shift[k] * runner_shift[sid][k];
 
   const int do_ci_stars = (ci->nodeID == e->nodeID) && (cj->hydro.count != 0) &&
-                          cell_is_active_rt_pair(ci, cj, e);
+                          rt_should_do_cell_pair(ci, cj, e);
   const int do_cj_stars = (cj->nodeID == e->nodeID) && (ci->hydro.count != 0) &&
-                          cell_is_active_rt_pair(cj, ci, e);
+                          rt_should_do_cell_pair(cj, ci, e);
 
   if (do_ci_stars) {
 
@@ -392,12 +393,12 @@ void DOPAIR1_RT_NAIVE(struct runner *r, struct cell *ci, struct cell *cj,
 
   const int do_stars_in_ci = (cj->nodeID == r->e->nodeID) &&
                              (cj->hydro.count > 0) &&
-                             cell_is_active_rt_pair(ci, cj, e);
+                             rt_should_do_cell_pair(ci, cj, e);
   if (do_stars_in_ci) DOPAIR1_NONSYM_RT_NAIVE(r, ci, cj);
 
   const int do_stars_in_cj = (ci->nodeID == r->e->nodeID) &&
                              (ci->hydro.count > 0) &&
-                             cell_is_active_rt_pair(cj, ci, e);
+                             rt_should_do_cell_pair(cj, ci, e);
   if (do_stars_in_cj) DOPAIR1_NONSYM_RT_NAIVE(r, cj, ci);
 
   if (timer) TIMER_TOC(TIMER_DOPAIR_RT);
@@ -434,10 +435,10 @@ void DOPAIR1_BRANCH_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
   const int do_stars_ci = (cj->nodeID == r->e->nodeID) &&
                           (cj->hydro.count > 0) &&
-                          cell_is_active_rt_pair(ci, cj, e);
+                          rt_should_do_cell_pair(ci, cj, e);
   const int do_stars_cj = (ci->nodeID == r->e->nodeID) &&
                           (ci->hydro.count > 0) &&
-                          cell_is_active_rt_pair(cj, ci, e);
+                          rt_should_do_cell_pair(cj, ci, e);
 
   /* Anything to do here? */
   if (!do_stars_ci && !do_stars_cj) return;
@@ -551,9 +552,9 @@ void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
   /* Should we even bother? */
   const int should_do_ci = ci->stars.count != 0 && cj->hydro.count != 0 &&
-                           cell_is_active_rt_pair(ci, cj, e);
+                           rt_should_do_cell_pair(ci, cj, e);
   const int should_do_cj = cj->stars.count != 0 && ci->hydro.count != 0 &&
-                           cell_is_active_rt_pair(cj, ci, e);
+                           rt_should_do_cell_pair(cj, ci, e);
   if (!should_do_ci && !should_do_cj) return;
 
   /* Get the type of pair and flip ci/cj if needed. */
@@ -577,9 +578,9 @@ void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
     /* do full checks again, space_getsid() might swap ci/cj pointers */
     const int do_ci_stars = (cj->nodeID == e->nodeID) && cj->hydro.count != 0 &&
-                            cell_is_active_rt_pair(ci, cj, e);
+                            rt_should_do_cell_pair(ci, cj, e);
     const int do_cj_stars = (ci->nodeID == e->nodeID) && ci->hydro.count != 0 &&
-                            cell_is_active_rt_pair(cj, ci, e);
+                            rt_should_do_cell_pair(cj, ci, e);
 
     if (do_ci_stars || do_cj_stars) DOPAIR1_BRANCH_RT(r, ci, cj, 0);
   }

@@ -51,6 +51,7 @@
 #include "debug.h"
 #include "error.h"
 #include "proxy.h"
+#include "rt_do_cells.h"
 #include "timers.h"
 
 /**
@@ -98,7 +99,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                                   (with_star_formation && ci_active_hydro);
       const int ci_active_sinks =
           cell_is_active_sinks(ci, e) || ci_active_hydro;
-      const int ci_active_rt = with_rt && cell_is_active_rt(ci, e);
+      const int ci_active_rt = with_rt && rt_should_do_cell(ci, e);
 
       /* Activate the hydro drift */
       if (t_type == task_type_self && t_subtype == task_subtype_density) {
@@ -341,8 +342,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                                   (with_star_formation && ci_active_hydro);
       const int cj_active_stars = cell_is_active_stars(cj, e) ||
                                   (with_star_formation && cj_active_hydro);
-      const int ci_active_rt = with_rt && cell_is_active_rt_pair(ci, cj, e);
-      const int cj_active_rt = with_rt && cell_is_active_rt_pair(cj, ci, e);
+      const int ci_active_rt = with_rt && rt_should_do_cell_pair(ci, cj, e);
+      const int cj_active_rt = with_rt && rt_should_do_cell_pair(cj, ci, e);
 
       const int ci_active_sinks =
           cell_is_active_sinks(ci, e) || ci_active_hydro;
@@ -645,8 +646,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
            going to update some gas on the *local* node */
         if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
             (ci_active_hydro || cj_active_hydro)) {
-          /* I assume that everything necessary here is being done
-           * in the hydro part of this function */
+          /* The gradient and transport task subtypes mirror the hydro tasks.
+           * Therefore all the (subcell) sorts and drifts should already have
+           * been activated properly in the hydro part of the activation. */
           scheduler_activate(s, t);
         }
       }
