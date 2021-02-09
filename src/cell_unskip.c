@@ -28,6 +28,7 @@
 /* Local headers. */
 #include "active.h"
 #include "engine.h"
+#include "rt_do_cells.h"
 #include "space_getsid.h"
 
 extern int engine_star_resort_task_depth;
@@ -1400,10 +1401,10 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
 
   /* Self interaction? */
   if (cj == NULL) {
-    const int ci_active = cell_is_active_rt(ci, e);
+    const int ci_active = rt_should_do_cell(ci, e);
 
     /* Do anything? */
-    if (!ci_active || ci->hydro.count == 0 || ci->stars.count == 0) return;
+    if (!ci_active || ci->hydro.count == 0) return;
 
     /* Recurse? */
     if (cell_can_recurse_in_self_stars_task(ci)) {
@@ -1431,9 +1432,9 @@ void cell_activate_subcell_rt_tasks(struct cell *ci, struct cell *cj,
     const int sid = space_getsid(s->space, &ci, &cj, shift);
 
     const int ci_active =
-        cell_is_active_rt_pair(ci, cj, e) && (cj->hydro.count > 0);
+        rt_should_do_cell_pair(ci, cj, e) && (cj->hydro.count > 0);
     const int cj_active =
-        cell_is_active_rt_pair(cj, ci, e) && (ci->hydro.count > 0);
+        rt_should_do_cell_pair(cj, ci, e) && (ci->hydro.count > 0);
 
     /* Should we even bother? */
     if (!ci_active && !cj_active) return;
@@ -2499,7 +2500,7 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
 
   /* Drift stars even if they aren't active */
   if (c->stars.drift != NULL) {
-    if (cell_is_active_rt(c, e)) {
+    if (rt_should_do_cell(c, e)) {
       cell_activate_drift_part(c, s);
       cell_activate_drift_spart(c, s);
     }
@@ -2520,7 +2521,7 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
 
     /* Activate the drifts */
     if (t->type == task_type_self) {
-      if (cell_is_active_rt(ci, e)) {
+      if (rt_should_do_cell(ci, e)) {
         cell_activate_drift_part(ci, s);
         cell_activate_drift_spart(ci, s);
         scheduler_activate(s, t);
@@ -2529,8 +2530,8 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
 
     else if (t->type == task_type_pair) {
 
-      const int ci_active = cell_is_active_rt_pair(ci, cj, e);
-      const int cj_active = (cj != NULL) && cell_is_active_rt_pair(cj, ci, e);
+      const int ci_active = rt_should_do_cell_pair(ci, cj, e);
+      const int cj_active = (cj != NULL) && rt_should_do_cell_pair(cj, ci, e);
 
       /* Only activate tasks that involve a local active cell. */
       if ((ci_active || cj_active) &&
