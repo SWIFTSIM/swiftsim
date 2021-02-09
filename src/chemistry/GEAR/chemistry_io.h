@@ -168,6 +168,9 @@ INLINE static void chemistry_write_flavour(hid_t h_grp, hid_t h_grp_columns,
     io_write_attribute_f(h_sol_ab, name, e->chemistry->solar_abundances[i]);
   }
 
+  /* Close group */
+  H5Gclose(h_sol_ab);
+
 #endif
 }
 #endif
