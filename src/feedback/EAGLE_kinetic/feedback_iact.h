@@ -99,13 +99,13 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
         si->id, i, ti_current, random_number_isotropic_SNII_feedback_ray_phi);
 
     /* Compute arclength for the true particle (SNII kinetic feedback) */
-    ray_minimise_arclength(dx, r, si->feedback_data.SNII_rays_true + i, 0,
-                           pj->id, rand_theta_SNII, rand_phi_SNII, mj,
-                           si->feedback_data.SNII_rays_ext_true + i, pj->v);
+    ray_minimise_arclength(dx, r, si->feedback_data.SNII_rays_true + i, 
+                           kinetic_true, pj->id, rand_theta_SNII, rand_phi_SNII, 
+                           mj, si->feedback_data.SNII_rays_ext_true + i, pj->v);
     /* Compute arclength for the mirror particle (SNII kinetic feedback) */
-    ray_minimise_arclength(dx, r, si->feedback_data.SNII_rays_mirr + i, 1,
-                           pj->id, rand_theta_SNII, rand_phi_SNII, mj,
-                           si->feedback_data.SNII_rays_ext_mirr + i, pj->v);
+    ray_minimise_arclength(dx, r, si->feedback_data.SNII_rays_mirr + i, 
+                           kinetic_mirr, pj->id, rand_theta_SNII, rand_phi_SNII,
+                           mj, si->feedback_data.SNII_rays_ext_mirr + i, pj->v);
   }
 }
 
@@ -374,8 +374,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
             si->feedback_data.SNII_rays_ext_mirr[i].status == allowed_to_kick) {
 
           /* Which particles have we caught: the original or the mirror one? */
-          const int mirror_particle_switch =
-              (pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length);
+          const feedback_ray_type ray_type =
+              (pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length) ?
+              kinetic_mirr : kinetic_true;
 
           /* Two random numbers in [0, 1[
            * Note: this are the same numbers we drew in the density loop! */
@@ -406,7 +407,7 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
             ray_kinetic_feedback_compute_kick_velocity(
                 v_kick, &v_kick_abs, si->feedback_data.SNII_rays_ext_true + i,
                 si->feedback_data.SNII_rays_ext_mirr + i,
-                mirror_particle_switch, energy_per_pair, cosmo, current_mass,
+                ray_type, energy_per_pair, cosmo, current_mass,
                 si->v, rand_theta, rand_phi, mass_true, mass_mirr);
           }
 
