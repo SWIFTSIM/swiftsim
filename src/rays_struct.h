@@ -20,6 +20,20 @@
 #define SWIFT_RAYS_STRUCT_H
 
 /** 
+ * @brief The ray type: "thermal" or "kinetic". The kinetic type is then
+ * subdivided into "kinetic true" and "kinetic mirr" types becasue in SNII 
+ * kinetic feedback, in one event we kick two particles in the opposite 
+ * directions; hence, we need two rays. The "true" ray is pointing to the 1st 
+ * particle and the second ray, which mirrors the direction of the first one, is
+ * pointing to the 2nd particle.
+ */
+typedef enum {
+  thermal, /*< Used in AGN and SNII thermal feedback */
+  kinetic_true, /*< Used in SNII kinetic feedback (1st particle in the pair) */
+  kinetic_mirr /*< Used in SNII kinetic feedback (2nd particle in the pair) */
+} feedback_ray_type; 
+
+/** 
  * @brief In SNII kinetic feedback, each ray needs to carry such an enum
  * to decide whether its kick will be allowed or not 
  */

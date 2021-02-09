@@ -123,7 +123,7 @@ __attribute__((always_inline)) INLINE static float ray_arclength(
  * @param dx Comoving vector separating both particles (si - pj)
  * @param r Comoving distance between the two particles
  * @param ray Ray data
- * @param mirror_particle_switch Mirror particle switch
+ * @param ray_type Ray type ("thermal", "kinetic true", or "kinetic mirror")
  * @param gas_part_id ID of the gas particle
  * @param rand_theta_gen Random number to generate \theta_ray
  * @param rand_phi_gen Random number to generate \phi_ray
@@ -133,7 +133,7 @@ __attribute__((always_inline)) INLINE static float ray_arclength(
  */
 __attribute__((always_inline)) INLINE static void ray_minimise_arclength(
     const float *dx, const float r, struct ray_data *ray,
-    const int mirror_particle_switch, const long long gas_part_id,
+    const feedback_ray_type ray_type, const long long gas_part_id,
     const double rand_theta_gen, const double rand_phi_gen, const float m,
     struct ray_data_extra *ray_ext, const float *v) {
 
@@ -150,8 +150,8 @@ __attribute__((always_inline)) INLINE static void ray_minimise_arclength(
   /* Transform the random number from [0,1[ to [-pi, pi[ */
   double phi_ray = 2.0 * M_PI * rand_phi_gen - M_PI;
 
-  /* Flip the angles if it is a mirror particle */
-  if (mirror_particle_switch == 1) {
+  /* Flip the angles if it is the mirror ray */
+  if (ray_type == kinetic_mirr) {
     theta_ray = M_PI - theta_ray;
     phi_ray = phi_ray - copysign(M_PI, phi_ray);
   }
@@ -170,13 +170,13 @@ __attribute__((always_inline)) INLINE static void ray_minimise_arclength(
     ray->id_min_length = gas_part_id;
     ray->mass = m;
 
-    /* In stellar feedback, we do kicks so we need to store additional data */
-    if (mirror_particle_switch != -1) {
+    /* In kinetic feedback, we also need to store velocities and positions */
+    if (ray_type != thermal) {
 
-      /* Position and velocities are neIf prob <1. and we are running with eded
-       * in SNII kinetic feedback to exactly conserve momentum and energy.
-       * That's because in a pair of two particles, the first one needs to know
-       * the properties of the other one, and vice versa */
+      /* In SNII kinetic feedback, position and velocities are neeeded to 
+       * exactly conserve momentum and energy. That's because in a pair of two  
+       * particles, the first one needs to know the properties of the other one, 
+       * and vice versa. */
 
       ray_ext->x[0] = -dx[0];
       ray_ext->x[1] = -dx[1];
@@ -196,7 +196,7 @@ __attribute__((always_inline)) INLINE static void ray_minimise_arclength(
  * @param v_kick_abs Modulus of the kick velocity vector
  * @param ray_ext_true Extra ray data of the true gas particle
  * @param ray_ext_mirr Extra ray data of the mirror gas particle
- * @param mirror_particle_switch Mirror particle switch
+ * @param ray_type Ray type ("kinetic true" or "kinetic mirror")
  * @param energy_pair SN energy per pair
  * @param cosmo The cosmological model
  * @param current_mass Current mass of the gas particle
@@ -209,11 +209,28 @@ __attribute__((always_inline)) INLINE static void ray_minimise_arclength(
 __attribute__((always_inline)) INLINE static void
 ray_kinetic_feedback_compute_kick_velocity(
     float *v_kick, float *v_kick_abs, const struct ray_data_extra *ray_ext_true,
-    const struct ray_data_extra *ray_ext_mirr, const int mirror_particle_switch,
+    const struct ray_data_extra *ray_ext_mirr, const feedback_ray_type ray_type,
     const double energy_pair, const struct cosmology *cosmo,
     const double current_mass, const float *v_star, const double rand_theta_gen,
     const double rand_phi_gen, const double mass_true,
     const double mass_mirror) {
+
+  /* We need to convert the provided ray type into 0 (true ray) or 1 
+   * (mirror ray). Doing such a conversion simplifies the code below. */
+  int mirror_particle_switch;
+
+  /* Set the switch to 0 if this function was called for the true ray */
+  if (ray_type == kinetic_true){
+    mirror_particle_switch = 0;
+  }
+  /* Set the switch to 1 if this function was called for the mirror ray */
+  else if (ray_type == kinetic_mirr){
+    mirror_particle_switch = 1;
+  }
+  /* Do nothing if this function was called for the thermal ray */
+  else{
+    return;
+  }
 
   /* Transform the random number from [0,1[ to [-1, 1[ */
   const double cos_theta_ray = 2. * rand_theta_gen - 1.;
