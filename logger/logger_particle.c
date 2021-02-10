@@ -169,10 +169,9 @@ void logger_particle_interpolate_field(
           break;
 
         case field_module_chemistry:
-          chemistry_logger_interpolate_field_part(time_before, before,
-                                                  time_after, after, output,
-                                                  time, field->local_index,
-                                                  params);
+          chemistry_logger_interpolate_field_part(
+              time_before, before, time_after, after, output, time,
+              field->local_index, params);
           break;
 
         default:
@@ -200,17 +199,15 @@ void logger_particle_interpolate_field(
           break;
 
         case field_module_chemistry:
-          chemistry_logger_interpolate_field_spart(time_before, before,
-                                                   time_after, after, output,
-                                                   time, field->local_index,
-                                                   params);
+          chemistry_logger_interpolate_field_spart(
+              time_before, before, time_after, after, output, time,
+              field->local_index, params);
           break;
 
         case field_module_star_formation:
-          star_formation_logger_interpolate_field(time_before, before,
-                                                  time_after, after, output,
-                                                  time, field->local_index,
-                                                  params);
+          star_formation_logger_interpolate_field(
+              time_before, before, time_after, after, output, time,
+              field->local_index, params);
           break;
 
         default:

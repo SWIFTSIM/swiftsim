@@ -48,10 +48,11 @@
  * @return The function evaluated at t.
  */
 __attribute__((always_inline)) INLINE static double
-interpolate_quintic_hermite_spline(
-    const double t0, const double x0, const float v0, const float a0,
-    const double t1, const double x1, const float v1, const float a1,
-    const double t) {
+interpolate_quintic_hermite_spline(const double t0, const double x0,
+                                   const float v0, const float a0,
+                                   const double t1, const double x1,
+                                   const float v1, const float a1,
+                                   const double t) {
 
   /* Generates recurring variables  */
   /* Time differences */
@@ -155,11 +156,13 @@ interpolate_cubic_hermite_spline(const double t0, const float v0,
  * @param params The simulation's #logger_parameters.
  */
 __attribute__((always_inline)) INLINE static void
-interpolate_quintic_double_float_ND(
-    const double t_before, const struct logger_field *restrict before,
-    const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t, const int dimension,
-    int periodic, const struct logger_parameters *params) {
+interpolate_quintic_double_float_ND(const double t_before,
+                                    const struct logger_field *restrict before,
+                                    const double t_after,
+                                    const struct logger_field *restrict after,
+                                    void *restrict output, const double t,
+                                    const int dimension, int periodic,
+                                    const struct logger_parameters *params) {
 
   /* Get the arrays */
   const double *x_bef = (double *)before->field;
@@ -192,17 +195,15 @@ interpolate_quintic_double_float_ND(
         x1 -= params->box_size[i];
     }
 
-
     /* Use quintic hermite spline. */
     if (v_bef && v_aft && a_bef && a_aft) {
-      x[i] = interpolate_quintic_hermite_spline(
-          t_before, x0, v0, a0,
-          t_after, x1, v1, a1, t);
+      x[i] = interpolate_quintic_hermite_spline(t_before, x0, v0, a0, t_after,
+                                                x1, v1, a1, t);
     }
     /* Use cubic hermite spline. */
     else if (v_bef && v_aft) {
-      x[i] = interpolate_cubic_hermite_spline(t_before, x0, v0,
-                                              t_after, x1, v1, t);
+      x[i] = interpolate_cubic_hermite_spline(t_before, x0, v0, t_after, x1, v1,
+                                              t);
     }
     /* Use linear interpolation. */
     else {
@@ -217,22 +218,20 @@ interpolate_quintic_double_float_ND(
          otherwise something really bad happened */
       if (x[i] < 0.) {
         x[i] += params->box_size[i];
-      }
-      else if (x[i] >= params->box_size[i]) {
+      } else if (x[i] >= params->box_size[i]) {
         x[i] -= params->box_size[i];
       }
 
 #ifdef SWIFT_DEBUG_CHECKS
       /* Check if the periodic box is correctly applied */
       if (x[i] >= params->box_size[i] || x[i] < 0) {
-        error_python("A particle is outside the periodic box (%g):"
-                     "before=%g, after=%g interpolation=%g",
-                     params->box_size[i], x0, x1, x[i]);
+        error_python(
+            "A particle is outside the periodic box (%g):"
+            "before=%g, after=%g interpolation=%g",
+            params->box_size[i], x0, x1, x[i]);
       }
 #endif
-
     }
-
   }
 }
 
@@ -254,13 +253,15 @@ interpolate_quintic_double_float_ND(
 __attribute__((always_inline)) INLINE static void interpolate_cubic_float_ND(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t, const int dimension,
-    int periodic, const struct logger_parameters *params) {
+    void *restrict output, const double t, const int dimension, int periodic,
+    const struct logger_parameters *params) {
 
+#ifdef SWIFT_DEBUG_CHECKS
   /* The position is expected to be a double => error with periodic */
   if (periodic) {
     error_python("Not implemented yet");
   }
+#endif
 
   /* Compute the interpolation scaling. */
   const float wa = (t - t_before) / (t_after - t_before);
@@ -303,13 +304,15 @@ __attribute__((always_inline)) INLINE static void interpolate_cubic_float_ND(
 __attribute__((always_inline)) INLINE static void interpolate_linear_float_ND(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t, const int dimension,
-    int periodic, const struct logger_parameters *params) {
+    void *restrict output, const double t, const int dimension, int periodic,
+    const struct logger_parameters *params) {
 
+#ifdef SWIFT_DEBUG_CHECKS
   /* The position is expected to be a double => error with periodic */
   if (periodic) {
     error_python("Not implemented yet");
   }
+#endif
 
   /* Compute the interpolation scaling. */
   const float wa = (t - t_before) / (t_after - t_before);
@@ -341,13 +344,16 @@ __attribute__((always_inline)) INLINE static void interpolate_linear_float_ND(
 __attribute__((always_inline)) INLINE static void interpolate_linear_double_ND(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t, const int dimension,
-    int periodic, const struct logger_parameters *params) {
+    void *restrict output, const double t, const int dimension, int periodic,
+    const struct logger_parameters *params) {
 
-  /* The velocity and acceleration are supposed to be provided => quintic => error here */
+#ifdef SWIFT_DEBUG_CHECKS
+  /* The velocity and acceleration are supposed to be provided => quintic =>
+   * error here */
   if (periodic) {
     error_python("Not implemented yet");
   }
+#endif
 
   /* Compute the interpolation scaling. */
   const double wa = (t - t_before) / (t_after - t_before);
@@ -377,13 +383,15 @@ __attribute__((always_inline)) INLINE static void interpolate_linear_double_ND(
 __attribute__((always_inline)) INLINE static void interpolate_linear_float(
     const double t_before, const struct logger_field *restrict before,
     const double t_after, const struct logger_field *restrict after,
-    void *restrict output, const double t,
-    int periodic, const struct logger_parameters *params) {
+    void *restrict output, const double t, int periodic,
+    const struct logger_parameters *params) {
 
+#ifdef SWIFT_DEBUG_CHECKS
   /* The position is expected to be a double => error with periodic */
   if (periodic) {
     error_python("Not implemented yet");
   }
+#endif
 
   /* Compute the interpolation scaling. */
   const float wa = (t - t_before) / (t_after - t_before);

@@ -24,8 +24,8 @@
 /* local includes */
 #include "logger_interpolation.h"
 #include "logger_loader_io.h"
-#include "logger_python_tools.h"
 #include "logger_parameters.h"
+#include "logger_python_tools.h"
 #include "star_formation_particle_logger.h"
 
 /* Index of the mask in the header mask array */
@@ -81,7 +81,7 @@ star_formation_logger_interpolate_field(
   switch (field) {
     case star_formation_logger_field_all:
       interpolate_linear_float_ND(t_before, before, t_after, after, output, t,
-                                  /* Dimension */ 2, /* periodic= */0, params);
+                                  /* Dimension */ 2, /* periodic= */ 0, params);
 
       /* Deal with the progenitor id */
       long long *proj_id =

@@ -22,7 +22,6 @@
  * @brief This file contains the functions that deals with the yaml file.
  */
 
-
 #ifndef LOGGER_LOGGER_PARAMETERS_H
 #define LOGGER_LOGGER_PARAMETERS_H
 
@@ -46,10 +45,7 @@ struct logger_parameters {
   int with_cosmology;
 };
 
-
-
 void logger_parameters_init(struct logger_parameters *params,
                             const struct logger_reader *reader);
 
-
-#endif // LOGGER_LOGGER_PARAMETERS_H
+#endif  // LOGGER_LOGGER_PARAMETERS_H

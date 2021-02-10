@@ -143,8 +143,8 @@ static PyObject *getTimeLimits(PyObject *self, PyObject *Py_UNUSED(ignored)) {
 static PyObject *get_box_size(PyObject *self, PyObject *Py_UNUSED(ignored)) {
   if (!((PyObjectReader *)self)->ready) {
     error_python(
-                 "The logger is not ready yet."
-                 "Did you forget to open it with \"with\"?");
+        "The logger is not ready yet."
+        "Did you forget to open it with \"with\"?");
   }
 
   /* initialize the reader. */
@@ -152,7 +152,7 @@ static PyObject *get_box_size(PyObject *self, PyObject *Py_UNUSED(ignored)) {
 
   /* Create the output */
   PyObject *out = PyTuple_New(reader->params.dimension);
-  for(int i = 0; i < reader->params.dimension; i++) {
+  for (int i = 0; i < reader->params.dimension; i++) {
     PyTuple_SetItem(out, i, PyFloat_FromDouble(reader->params.box_size[i]));
   }
 
