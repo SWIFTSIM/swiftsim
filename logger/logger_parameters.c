@@ -52,7 +52,8 @@ void logger_parameters_init(struct logger_parameters *params,
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Print the parameters */
-  parser_print_params(&swift_params);
+  if (reader->verbose > 0)
+    parser_print_params(&swift_params);
 #endif
 
   /* Read the number of dimension */

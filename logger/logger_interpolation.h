@@ -182,9 +182,6 @@ interpolate_quintic_double_float_ND(
     float a0 = a_bef ? a_bef[i] : -1;
     float a1 = a_aft ? a_aft[i] : -1;
 
-    a0 = 0;
-    a1 = 0;
-
     /* Apply the periodic boundaries */
     if (periodic) {
       /* Move towards the origin for more accuracy */
@@ -227,10 +224,7 @@ interpolate_quintic_double_float_ND(
 
 #ifdef SWIFT_DEBUG_CHECKS
       /* Check if the periodic box is correctly applied */
-      if (x[i] > params->box_size[i] || x[i] < 0) {
-        message("%g %g %g", t_before, t_after, t);
-        message("%g %g", a0, a1);
-        message("%g %g", v0, v1);
+      if (x[i] >= params->box_size[i] || x[i] < 0) {
         error_python("A particle is outside the periodic box (%g):"
                      "before=%g, after=%g interpolation=%g",
                      params->box_size[i], x0, x1, x[i]);
