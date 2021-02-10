@@ -688,6 +688,7 @@ void logger_reader_read_all_particles_single_type(
       }
       current_in_index++;
     }
+
   }
 
   /* Free the memory */
