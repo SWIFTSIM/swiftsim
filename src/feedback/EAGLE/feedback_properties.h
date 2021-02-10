@@ -23,6 +23,7 @@
 #include "../config.h"
 
 /* Local includes. */
+#include "feedback.h"
 #include "chemistry.h"
 #include "hydro_properties.h"
 
@@ -34,6 +35,15 @@ enum SNII_feedback_models {
   SNII_isotropic_model,        /*< Isotropic model of SNII feedback */
   SNII_minimum_distance_model, /*< Minimum-distance model of SNII feedback */
   SNII_minimum_density_model   /*< Minimum-density model of SNII feedback */
+};
+
+/**
+ * @brief Type of high-density oversampling criterion
+ */
+enum SNII_oversampling_criterion {
+  eagle_SNII_timescale_none,        /*<! No additional criterion */
+  eagle_SNII_timescale_gasconsum,   /*<! Gas consumption timescale */
+  eagle_SNII_timescale_freefall     /*<! Free-fall timescale */
 };
 
 /**
@@ -252,8 +262,85 @@ struct feedback_props {
   /*! Wind delay time for SNII when using a fixed delay */
   double SNII_wind_delay;
 
-  /*! Temperature increase induced by SNe feedback */
-  float SNe_deltaT_desired;
+  /*! Use variable temperature increase? */
+  int SNII_use_variable_delta_T;
+
+  /*! Buffer factor for numerical efficiency temperature */
+  double SNII_T_crit_factor;
+
+  /*! Should we use the instantaneous or birth density for determining dT? */
+  int SNII_use_instantaneous_density_for_dT;
+
+  /*! Should we use the instantaneous or birth metallicity for finding dT? */
+  int SNII_use_instantaneous_Z_for_dT;
+
+  /*! Number of neighbours that should be heatable by SNII */
+  double SNII_delta_T_num_ngb_to_heat;
+
+  /*! Maximum temperature increase induced by SNII feedback [Kelvin] */
+  double SNII_delta_T_max;
+
+  /*! Switch to enable sub-critical SNII efficiency compensation */
+  int SNII_with_energy_compensation;
+
+  /*! Assumed power-law for sub-critical SNII efficiency scaling */
+  double SNII_efficiency_zeta;
+
+  /*! Maximum allowed increase in SNII energy to compensate numerical losses */
+  double SNII_delta_T_omega_max;
+
+  /*! Maximum allowed sampling suppression factor */
+  float SNII_maximum_nu;
+
+  /*! Normalisation SFR density for sampling reduction at high density */
+  double SNII_gamma_star;
+
+  /*! Switch to use adaptive sampling reduction based on smoothing length */
+  int SNII_sampling_reduction_within_smoothing_length;
+
+  /*! Switch to allow nu < 0, i.e. higher sampling at low density */
+  int SNII_with_nu_below_one;
+
+  /*! Switch to increase the sampling criterion according to a time scale */
+  enum SNII_oversampling_criterion SNII_with_oversampling_timescale;
+
+  /*! Set omega to enforce sampling, rather than energy conservation? */
+  int SNII_omega_by_sampling;
+
+  /* --- Parameters describing the dT_crit and dT_limit planes --- */
+
+  /*! Solar metallicity value */
+  float Z_Sol;
+
+  /*! Minimum allowed dT_crit */
+  float SNII_dTcrit_floor;
+
+  /*! Density exponent for dT_crit plane */
+  float SNII_dTcrit_exp_nH;
+
+  /*! Metallicity exponent for dT_crit plane */
+  float SNII_dTcrit_exp_Z;
+
+  /*! Normalisation temperature for dT_crit plane */
+  float SNII_dTcrit_norm;
+
+  /*! Density exponent for dT_limit plane */
+  float SNII_dTlimit_exp_nH;
+
+  /*! Metallicity exponent for dT_limit plane */
+  float SNII_dTlimit_exp_Z;
+
+  /*! Minimum metallicity for dT_limit plane */
+  float SNII_dT_Zmin;
+
+  /*! Normalisation temperature for dT_limit plane */
+  float SNII_dTlimit_norm;
+
+  /*! Minimum allowed efficiency for compromise dT finding */
+  float SNII_efficiency_eta_min;
+
+  /*! (Constant) temperature increase induced by SNe feedback */
+  double SNe_deltaT_desired;
 
   /*! Energy released by one supernova type II in cgs units */
   double E_SNII_cgs;

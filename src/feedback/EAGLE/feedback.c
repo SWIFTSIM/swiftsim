@@ -22,6 +22,7 @@
 
 /* Local includes. */
 #include "hydro_properties.h"
+#include "feedback_properties.h"
 #include "imf.h"
 #include "inline.h"
 #include "interpolate.h"
@@ -41,6 +42,368 @@ double eagle_feedback_temperature_change(const struct spart* sp,
 
   /* In the EAGLE REF model, the change of temperature is constant */
   return props->SNe_deltaT_desired;
+}
+
+/**
+ * @brief Compute the critical heating temperature increase, dT_crit.
+ *
+ * @param ngb_n The ambient density of the star.
+ * @param ngb_Z The ambient metallicity of the star.
+ * @param props The feedback model properties.
+ */
+double compute_SNII_dT_crit(const double ngb_n,
+                            const double ngb_Z,
+                            const double mean_ngb_mass,
+                            const struct feedback_props* props) {
+
+  /* Base line: analytic value from Dalla Vecchia & Schaye (2012) */
+  double dT_crit = 3.162e7 * pow(ngb_n * 0.1, 0.6666667) *
+      pow(mean_ngb_mass * props->mass_to_solar_mass * 1e-6, 0.33333333);
+
+  /* Limit dT_crit to a specified minimum */
+  dT_crit = max(dT_crit, props->SNII_dTcrit_floor);
+
+  /* Finally, apply a density and metallicity dependent additional floor */
+  const double dT_crit_plane =
+      pow(ngb_n, props->SNII_dTcrit_exp_nH) *
+      pow(ngb_Z / props->Z_Sol, props->SNII_dTcrit_exp_Z) *
+      props->SNII_dTcrit_norm;
+  dT_crit = max(dT_crit, dT_crit_plane);
+
+  return dT_crit;
+}
+
+/**
+ * @brief Compute the limiting mimimum heating temperature increase, dT_limit.
+ *
+ * @param ngb_n The ambient density of the star.
+ * @param ngb_Z The ambient metallicity of the star.
+ * @param props The feedback model properties.
+ */
+double compute_SNII_dT_limit(const double ngb_n,
+                             const double ngb_Z,
+                             const struct feedback_props* props) {
+
+  const double Z = max(ngb_Z / props->Z_Sol, props->SNII_dT_Zmin);
+  const double dT_limit =
+      pow(ngb_n, props->SNII_dTlimit_exp_nH) *
+      pow(Z, props->SNII_dTlimit_exp_Z) * props->SNII_dTlimit_norm;
+
+  return dT_limit;
+}
+
+/**
+ * @brief Compute the target sampling temperature increase, dT_sample.
+ *
+ * @param ngb_n The ambient density of the star.
+ * @param ngb_Z The ambient metallicity of the star.
+ * @param props The feedback model properties.
+ */
+double compute_SNII_dT_sample(
+  const double ngb_n, const double ngb_Z, const double gamma_star,
+  const double frac_SNII, const double ngb_SFR, const double ngb_rho_phys,
+  const double G_Newton, const double SNe_energy, const double mean_ngb_mass,
+  const double dt, struct spart* sp, const struct feedback_props* props) {
+
+  /* Extract properties from SN model */
+  const double num_to_heat = props->SNII_delta_T_num_ngb_to_heat;
+
+  /* -- Increase base line sampling factor if desired -- */
+
+  double n_single = -1.;
+  switch (props->SNII_with_oversampling_timescale) {
+
+    case eagle_SNII_timescale_none:
+      n_single = frac_SNII * num_to_heat;
+      break;
+
+    case eagle_SNII_timescale_gasconsum:
+      {
+        /* Time scale for gas consumption by star formation.
+         * If SFR = 0, set it to very large, in which case it has no effect. */
+        const double dt_consum = (ngb_SFR > 0) ?
+            ngb_rho_phys / ngb_SFR : FLT_MAX;
+
+        /* Maximally, ask for num_to_heat heating events, even for long dt */
+        const double f_dt = min(dt / dt_consum, 1.);
+        n_single = num_to_heat * max(frac_SNII, f_dt);
+      }
+      break;
+
+    case eagle_SNII_timescale_freefall:
+      {
+        const double dt_freefall =
+            sqrt(3. * M_PI /
+                 (32. * G_Newton * ngb_rho_phys));
+
+        /* Maximally, ask for num_to_heat heating events, even for long dt */
+        const double f_dt = min(dt / dt_freefall, 1.);
+        n_single = num_to_heat * max(frac_SNII, f_dt);
+      }
+      break;
+
+    default:
+      error("Invalid SNII oversampling requirement!!!");
+  }
+
+   /* Sanity check to make sure that we have set n_single... */
+    if (n_single < 0)
+    error("Tiny problem in adaptive SN-dT: N_single=%g.", n_single);
+
+  /* -- Compute sampling reduction factor -- */
+
+  const double rho_birth_phys = sp->birth_density;
+  const double sfr_birth_phys = sp->birth_star_formation_rate;
+  const double m_initial = sp->mass_init;
+  double nu = rho_birth_phys * sfr_birth_phys / (m_initial * m_initial) /
+      gamma_star;
+
+  /* Apply specified limit to nu */
+  nu = min(nu, props->SNII_maximum_nu);
+
+  /* Normally, we want nu >= 1, but this limit can be disabled */
+  if (!props->SNII_with_nu_below_one)
+    nu = max(nu, 1.0);
+
+  /* Record current sampling reduction factor */
+  sp->nu = (float) nu;
+
+  /* -- Calculate sampling temperature -- */
+  const double dT_sample = SNe_energy /
+      (mean_ngb_mass * props->temp_to_u_factor * n_single / nu);
+
+  return dT_sample;
+}
+
+/* Returns the modelled SN efficiency at sub-critical dT.
+ *
+ * This is the fraction of the injected energy that is assumed to go into
+ * doing actual work, rather than being lost to numerical overcooling.
+ * 
+ * @param dT The temperature increase for which to calculate the efficiency.
+ * @param dT_crit The temperature above which the efficiency is 1.
+ * @param dT_limit The temperature below which the efficiency is 0.
+ * @param zeta The power-law index of eta between dT_limit and dT_crit.
+ */
+INLINE static double SN_eta(
+  const double dT, const double dT_crit, const double dT_limit,
+  const double zeta) {
+
+  /* If dT < dT_limit, then all is lost */
+  if (dT <= dT_limit)
+    return 0.;
+
+  /* If dT > dT_crit, then all is well */
+  if (dT >= dT_crit)
+    return 1.;
+
+  /* Otherwise, use the appropriate power-law model (index zeta) */
+  const double tau = (dT - dT_limit) / (dT_crit - dT_limit);
+  return pow(tau, zeta);
+}
+
+/**
+ * @brief Compute the "compromise" temperature increase that results in the
+ *        right amount of energy received by the gas if dT must be < dT_crit.
+ *
+ * @param dT_sample The ideal dT for satisfying the sampling criterion.
+ * @param dT_crit The temperature at which feedback would be numerically fully
+ *                efficient.
+ * @param props The feedback model properties.
+ */
+double compute_compromise_dT(
+  const double dT_sample, const double dT_crit, const double dT_limit,
+  const struct feedback_props* props) {
+
+  /* Extract relevant model parameters. */
+  const double zeta = props->SNII_efficiency_zeta;
+
+  /* Compute minimum allowed dT */
+  const double eta_min = props->SNII_efficiency_eta_min;
+  const double dT_min = pow(eta_min, 1./zeta) * (dT_crit - dT_limit) + dT_limit;
+
+  /* If energy compensation is off, stay as close to dT_sample as possible. */
+  if (!props->SNII_with_energy_compensation)
+    return max(dT_min, dT_sample);
+
+  /* Check whether dT_min gives an effective dT that is above
+   * dT_sample. If this is the case, we would have to use dT_comp < dT_min
+   * to get an effective dT_sample, which is not allowed. Use dT_min. */
+  if (dT_min * SN_eta(dT_min, dT_crit, dT_limit, zeta) >= dT_sample)
+    return dT_min;
+
+  /* If we get here, we can find a compromise dT between dT_min and dT_crit
+   * that gives an effective dT_sample. Start in the middle of the two, and
+   * iterate with a Newton-Raphson scheme (should always work...) */
+  double dT = (dT_min + dT_crit) / 2.;
+  for (int ii = 0; ii < 1000; ii++) {
+
+    const double eta = SN_eta(dT, dT_crit, dT_limit, zeta);
+    const double tau = (dT - dT_limit) / (dT_crit - dT_limit);
+
+    /* Effective temperature offset from dT_sample and its derivative */
+    const double f = dT * eta - dT_sample;
+    const double f_dash =
+        eta + dT * zeta * pow(tau, zeta - 1.) / (dT_crit - dT_limit);
+
+    /* Updated estimate of dT according to Newton-Raphson scheme.
+     * The value should never get below dT_min, but better be explicit... */
+    dT = max(dT - f / f_dash, dT_min);
+    
+    /* Check whether we are sufficiently close to the true answer */
+    const double dT_eff = SN_eta(dT, dT_crit, dT_limit, zeta) * dT;
+    if ((fabs(dT_eff - dT_sample) / dT_sample) < 1e-4)
+      break;
+  }
+  
+  /* Make sure we have not gone too high somehow... */
+  if (dT > dT_crit * 1.001)
+    error("dT_comp=%g > dT_crit=%g!", dT, dT_crit);
+
+  /* Make sure we have not somehow remained unconverged... */
+  const double dT_eff = SN_eta(dT, dT_crit, dT_limit, zeta) * dT;
+  if ((fabs(dT_eff - dT_sample) / dT_sample) >= 1e-4)
+    error("Unconverged dT_comp=%g: dT_sample=%g, dT_eff=%g "
+          "(dT_crit=%g, dT_limit=%g, zeta=%g)",
+         dT, dT_sample, dT_eff, dT_crit, dT_limit, zeta);
+
+  return dT;
+}
+
+/**
+ * @brief Return the variable change in temperature (in internal units) to
+ * apply to a gas particle affected by SNe feedback.
+ *
+ * @param sp The #spart.
+ * @param ngb_gas_mass The total mass of the star's gas neighbours
+ * @param num_gas_ngbs The total number of gas neighbours of the star
+ * @param ngb_nH_cgs The SPH-smoothed gas density within the kernel [cgs]
+ * @param p_SNe_energy Pointer to the SN energy fraction of this star
+ * @param props The feedback model
+ * @param frac_SNII The fraction of the star's SNII going off in this step
+ * @param h_pkpc_inv Inverse of the star's smoothing length [kpc^-1]
+ * @param dt The length of the star's current time step
+ * @param G_Newton Newton's gravitational constant
+ * @param ngb_SFR The SPH-smoothed SFR of the neighbour gas particles
+ * @param ngb_rho_phys The SPH-smoothed gas density within the kernel [code]
+ * @param ngb_Z The SPH-smoothed gas metallicity within the kernel
+ */
+double eagle_variable_feedback_temperature_change(
+  struct spart* sp, const double ngb_gas_mass, const int num_gas_ngbs,
+  const double ngb_nH_cgs, double* p_SNe_energy,
+  const struct feedback_props* props, const double frac_SNII,
+  const double h_pkpc_inv,
+  const double dt, const double G_Newton, const double ngb_SFR,
+  const double ngb_rho_phys, const double ngb_Z) {
+
+  /* Safety check: should only get here if we run with the adaptive-dT model,
+   * version 3 */
+  if (props->SNII_use_variable_delta_T != 3)
+    error("Attempting to compute variable SNII heating temperature "
+          "without activating this model, v3. Cease and desist.");
+
+  /* Model parameters */
+  const double f_crit = props->SNII_T_crit_factor;
+  const double dT_max = props->SNII_delta_T_max;  
+  const double zeta = props->SNII_efficiency_zeta;
+  const double omega_max = (props->SNII_with_energy_compensation) ?
+      props->SNII_delta_T_omega_max : 1.0;
+  const double gamma_star = props->SNII_gamma_star *
+      ((props->SNII_sampling_reduction_within_smoothing_length) ?
+       (h_pkpc_inv * h_pkpc_inv * h_pkpc_inv) : 1.0);
+
+  /* Relevant star properties */
+  const double mean_ngb_mass = ngb_gas_mass / ((double)num_gas_ngbs);
+  const double n_phys = (props->SNII_use_instantaneous_density_for_dT ?
+      ngb_nH_cgs : sp->birth_density * props->rho_to_n_cgs);
+  const double Z_star = (props->SNII_use_instantaneous_Z_for_dT) ?
+      ngb_Z : chemistry_get_star_total_metal_mass_fraction_for_feedback(sp);
+
+  /* Calculate critical temperature */
+  const double dT_crit = compute_SNII_dT_crit(
+      n_phys, Z_star, mean_ngb_mass, props);
+
+  /* Calculate minimum effective temperature */
+  const double dT_limit = compute_SNII_dT_limit(n_phys, Z_star, props);
+
+  /* Calculate target sampling temperature */
+  const double dT_sample =
+      compute_SNII_dT_sample(n_phys, Z_star, gamma_star, frac_SNII, ngb_SFR,
+        ngb_rho_phys, G_Newton, *p_SNe_energy, mean_ngb_mass, dt, sp, props);
+
+  /* Begin decision logic... */
+  double dT = -1;
+  double omega = 1.0;
+
+  if (f_crit * dT_crit < dT_sample) {
+    /* Case A: critical temperature below sampling temperature --> fine
+     * (the critical temperature is always above dT_limit) */
+    dT = dT_crit * f_crit;
+  } else {
+    /* Case B: critical temperature above sampling --> need to compromise */
+    dT = compute_compromise_dT_v3(dT_sample, dT_crit, dT_limit, props);
+
+    /* Compromise dT is guaranteed to be within partly efficient region,
+     * and may be much higher than dT_sample. To avoid boosting the energy
+     * too much, limit omega to the specified maximum. */
+    omega = (props->SNII_omega_by_sampling) ? dT / dT_sample :
+        1. / SN_eta(dT, dT_crit, dT_limit, zeta);
+    omega = min(omega, omega_max); 
+  }
+
+  /* Apply maximum dT ceiling, correcting for expected cooling losses */
+  if (dT > dT_max) {
+    dT = dT_max;
+    if (dT > dT_crit * 1.01)
+      error("Internal logic error: forced to heat at dT_max=%g, "
+            "but dT_crit=%g", dT_max, dT_crit);
+    if (props->SNII_with_energy_compensation) {
+      omega = 1. / SN_eta(dT, dT_crit, dT_limit, zeta);
+ 
+      /* Limit omega energy boost to maximum (should rarely apply) */
+      omega = min(omega, omega_max);
+    }
+  }
+
+  /* Apply (potential) SNe energy increase to achieve desired sampling */
+  if (omega > 1.01 && !props->SNII_with_energy_compensation)
+    error("Running without energy compensation, but omega=%g!", omega);
+  *p_SNe_energy *= omega;
+
+  if (dT < 0)
+    error("Ahm... I'm not going to set a negative heating temperature "
+          "(star ID=%lld, dT=%g).",
+          sp->id, dT);
+
+  /* Record how delta_T compares to targets */
+  const double critical_fraction = dT / dT_crit;
+  const double sampling_fraction = dT_sample / dT * omega;
+
+  sp->delta_T_min = (float) min(sp->delta_T_min, dT);
+  sp->delta_T_max = (float) max(sp->delta_T_max, dT);
+  sp->T_critical_fraction_min = (float) min(sp->T_critical_fraction_min,
+                                    critical_fraction);
+  sp->T_critical_fraction_max = (float) max(sp->T_critical_fraction_max,
+                                    critical_fraction);
+  sp->T_sampling_fraction_min = (float) min(sp->T_sampling_fraction_min,
+                                    sampling_fraction);
+  sp->T_sampling_fraction_max = (float) max(sp->T_sampling_fraction_max,
+                                    sampling_fraction);
+
+  sp->delta_T = (float) dT;
+  sp->dT_crit = (float) dT_crit;
+  sp->dT_sample = (float) dT_sample;
+  sp->omega = (float) omega;
+  sp->dT_limit = (float) dT_limit;
+  sp->eta = (float) SN_eta(dT, dT_crit, dT_limit, zeta);  
+
+  sp->ngb_rho = (float) ngb_rho_phys;
+  sp->ngb_Z = (float) ngb_Z;
+
+  sp->omega_min = (float) min(sp->omega_min, omega);
+  sp->omega_max = (float) max(sp->omega_max, omega);
+
+  return dT;
 }
 
 /**
@@ -272,10 +635,10 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
  * @param sp The star particle.
  * @param star_age Age of star at the beginning of the step in internal units.
  * @param dt Length of time-step in internal units.
+ * @param ngb_gas_N Total (integer) number of gas neighbours within the
+ * star's kernel.
  * @param ngb_gas_mass Total un-weighted mass in the star's kernel (internal
  * units)
- * @param num_gas_ngbs Total (integer) number of gas neighbours within the
- * star's kernel.
  * @param ngb_nH_cgs Hydrogen number density of the gas surrounding the star
  * (physical cgs units).
  * @param ngb_Z Metallicity (metal mass fraction) of the gas surrounding the
@@ -285,13 +648,19 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
  * masses).
  * @param max_dying_mass_Msun Maximal star mass dying this step (in solar
  * masses).
+ * @param ti_begin ???
+ * @param h_pkpc_inv The inverse of the smoothing length in kpc
+ * @param G_Newton Newton's gravitational constant
+ * @param ngb_SFR The SPH-smoothed SFR of the gas neighbour particles
+ * @param ngb_rho_phys The SPH-smoothed density within the kernel
  */
 INLINE static void compute_SNII_feedback(
     struct spart* sp, const double star_age, const double dt,
     const int ngb_gas_N, const float ngb_gas_mass, const double ngb_nH_cgs,
     const double ngb_Z, const struct feedback_props* feedback_props,
     const double min_dying_mass_Msun, const double max_dying_mass_Msun,
-    const integertime_t ti_begin) {
+    const integertime_t ti_begin, const double h_pkpc_inv,
+    const double G_Newton, const double ngb_SFR, const double ngb_rho_phys) {
 
   /* Are we sampling the delay function or using a fixed delay? */
   const int SNII_sampled_delay = feedback_props->SNII_sampled_delay;
@@ -317,19 +686,20 @@ INLINE static void compute_SNII_feedback(
     }
 
     /* Properties of the model (all in internal units) */
-    const double delta_T =
-        eagle_feedback_temperature_change(sp, feedback_props);
     const double E_SNe = feedback_props->E_SNII;
     const double f_E =
         eagle_feedback_energy_fraction(sp, feedback_props, ngb_nH_cgs, ngb_Z);
 
     /* Number of SNe at this time-step */
     double N_SNe;
+    double frac_SNII;
     if (SNII_sampled_delay) {
       N_SNe = eagle_feedback_number_of_sampled_SNII(
           sp, feedback_props, min_dying_mass_Msun, max_dying_mass_Msun);
+      frac_SNII = N_SNe / eagle_feedback_number_of_SNII(sp, feedback_props);
     } else {
       N_SNe = eagle_feedback_number_of_SNII(sp, feedback_props);
+      frac_SNII = 1.0;
     }
 
     /* Abort if there are no SNe exploding this step */
@@ -338,8 +708,17 @@ INLINE static void compute_SNII_feedback(
     /* Conversion factor from T to internal energy */
     const double conv_factor = feedback_props->temp_to_u_factor;
 
+    /* Calculate the heating temperature increment */
+    double SNe_energy = f_E * E_SNe * N_SNe;
+    const double delta_T = (feedback_props->SNII_use_variable_delta_T) ?
+      eagle_variable_feedback_temperature_change(
+          sp, ngb_gas_mass, ngb_gas_N, ngb_nH_cgs, &SNe_energy,
+          feedback_props, frac_SNII, h_pkpc_inv, dt,
+          G_Newton, ngb_SFR, ngb_rho_phys, ngb_Z) :
+      eagle_feedback_temperature_change(sp, feedback_props);
+
     /* Calculate the default heating probability (accounting for round-off) */
-    double prob = f_E * E_SNe * N_SNe / (conv_factor * delta_T * ngb_gas_mass);
+    double prob = SNe_energy / (conv_factor * delta_T * ngb_gas_mass);
     prob = max(prob, 0.0);
 
     /* Calculate the change in internal energy of the gas particles that get
@@ -366,7 +745,7 @@ INLINE static void compute_SNII_feedback(
          desired deltaT to ensure we inject all the available energy. */
       delta_u = f_E * E_SNe * N_SNe / ngb_gas_mass;
 
-      /* Number of SNIa events is equal to the number of Ngbs */
+      /* Number of SNII events is equal to the number of Ngbs */
       number_of_SN_events = ngb_gas_N;
     }
 
@@ -887,6 +1266,7 @@ INLINE static void evolve_AGB(const double log10_min_mass,
  * @param ti_begin The current integer time (for random number hashing).
  */
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
+                               const struct hydro_props* hydro_props,
                                const struct phys_const* phys_const,
                                const struct cosmology* cosmo, struct spart* sp,
                                const struct unit_system* us, const double age,
@@ -920,12 +1300,16 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
       chemistry_get_star_metal_mass_fraction_for_feedback(sp);
 
   /* Properties collected in the stellar density loop. */
-  const int ngb_Number = sp->feedback_data.to_collect.ngb_N;
+  const int ngb_gas_N = sp->feedback_data.to_collect.ngb_N;
   const float ngb_gas_mass = sp->feedback_data.to_collect.ngb_mass;
   const float ngb_gas_Z = sp->feedback_data.to_collect.ngb_Z;
-  const float ngb_gas_rho = sp->feedback_data.to_collect.ngb_rho;
+  const float ngb_gas_SFR = sp->feedback_data.to_collect.ngb_SFR;
+  const float ngb_gas_rho_phys =
+      sp->feedback_data.to_collect.ngb_rho * cosmo->a3_inv;
   const float ngb_gas_phys_nH_cgs =
-      ngb_gas_rho * cosmo->a3_inv * feedback_props->rho_to_n_cgs;
+      ngb_gas_rho_phys * feedback_props->rho_to_n_cgs;
+  const float enrichment_weight_sum =
+      sp->feedback_data.to_collect.enrichment_weight_sum;
 
   /* Check if there are neighbours, otherwise exit */
   if (ngb_gas_mass == 0.f || sp->density.wcount * pow_dimension(sp->h) < 1e-4) {
@@ -933,13 +1317,10 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
     return;
   }
 
-  /* Update the enrichment weights */
-  const float enrichment_weight_inv =
-      sp->feedback_data.to_collect.enrichment_weight_inv;
-
 #ifdef SWIFT_DEBUG_CHECKS
-  if (sp->feedback_data.to_collect.enrichment_weight_inv < 0.)
-    error("Negative inverse weight!");
+  if (enrichment_weight_sum < 0.)
+    error("Enrichment weight sum must be positive, not %g!",
+          enrichment_weight_sum);
 #endif
 
   /* Now we start filling the data structure for information to apply to the
@@ -948,14 +1329,14 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
   /* Zero all the output fields */
   feedback_reset_feedback(sp, feedback_props);
 
-  /* Update the weights used for distribution */
-  const float enrichment_weight =
-      (enrichment_weight_inv != 0.f) ? 1.f / enrichment_weight_inv : 0.f;
-  sp->feedback_data.to_distribute.enrichment_weight = enrichment_weight;
+  /* Store the inverse sum of all enrichment weights as normalisation factor */
+  sp->feedback_data.to_distribute.enrichment_normalisation =
+      (enrichment_weight_sum > 0) ? 1.f / enrichment_weight_sum : 0.f;
 
 #ifdef SWIFT_DEBUG_CHECKS
-  if (sp->feedback_data.to_distribute.enrichment_weight < 0.)
-    error("Negative weight!");
+  if (sp->feedback_data.to_distribute.enrichment_normalisation < 0.)
+    error("Enrichment normalisation must be positive, not %g",
+          sp->feedback_data.to_distribute.enrichment_normalisation);
 #endif
 
   /* Calculate mass of stars that has died from the star's birth up to the
@@ -974,9 +1355,14 @@ void compute_stellar_evolution(const struct feedback_props* feedback_props,
 
   /* Compute properties of the stochastic SNII feedback model. */
   if (feedback_props->with_SNII_feedback) {
-    compute_SNII_feedback(sp, age, dt, ngb_Number, ngb_gas_mass,
+    const double h_pkpc_inv = phys_const->const_parsec * 1e3 * cosmo->a_inv /
+        sp->h;
+    const double G_Newton = phys_const->const_newton_G;
+    compute_SNII_feedback(sp, age, dt, ngb_gas_N, ngb_gas_mass,
                           ngb_gas_phys_nH_cgs, ngb_gas_Z, feedback_props,
-                          min_dying_mass_Msun, max_dying_mass_Msun, ti_begin);
+                          min_dying_mass_Msun, max_dying_mass_Msun,
+                          ti_begin, h_pkpc_inv, G_Newton,
+                          ngb_gas_SFR, ngb_gas_rho_phys);
   }
 
   /* Integration interval is zero - this can happen if minimum and maximum
@@ -1112,12 +1498,6 @@ void feedback_props_init(struct feedback_props* fp,
         phys_const->const_year * 1e9;
   }
 
-  /* Read the temperature change to use in stochastic heating */
-  fp->SNe_deltaT_desired =
-      parser_get_param_float(params, "EAGLEFeedback:SNII_delta_T_K");
-  fp->SNe_deltaT_desired /=
-      units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
-
   /* Energy released by supernova type II */
   fp->E_SNII_cgs =
       parser_get_param_double(params, "EAGLEFeedback:SNII_energy_erg");
@@ -1139,6 +1519,92 @@ void feedback_props_init(struct feedback_props* fp,
   fp->SNII_max_mass_msun = SNII_max_mass_msun;
   fp->log10_SNII_min_mass_msun = log10(SNII_min_mass_msun);
   fp->log10_SNII_max_mass_msun = log10(SNII_max_mass_msun);
+
+  /* Heating temperature parameters */
+  fp->SNII_use_variable_delta_T =
+      parser_get_param_int(params, "EAGLEFeedback:SNII_use_variable_delta_T");
+  if (fp->SNII_use_variable_delta_T) {
+    fp->SNII_use_instantaneous_density_for_dT =
+        parser_get_param_int(
+            params, "EAGLEFeedback:SNII_use_instantaneous_density_for_dT");
+    fp->SNII_use_instantaneous_Z_for_dT =
+        parser_get_param_int(
+          params, "EAGLEFeedback:SNII_use_instantaneous_metallicity_for_dT");
+    fp->SNII_delta_T_num_ngb_to_heat =
+        parser_get_param_double(
+          params, "EAGLEFeedback:SNII_delta_T_num_ngb_to_heat");
+    fp->SNII_T_crit_factor =
+        parser_get_param_double(params, "EAGLEFeedback:SNII_T_crit_factor");
+
+    fp->SNII_delta_T_max =
+        parser_get_param_double(params, "EAGLEFeedback:SNII_delta_T_max") /
+        units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
+
+    fp->SNII_with_energy_compensation =
+        parser_get_param_int(
+            params, "EAGLEFeedback:SNII_with_energy_compensation");
+    if (fp->SNII_with_energy_compensation) {
+      fp->SNII_delta_T_omega_max = parser_get_param_double(
+        params, "EAGLEFeedback:SNII_delta_T_omega_max");
+      fp->SNII_efficiency_zeta =
+          parser_get_param_double(params, "EAGLEFeedback:SNII_efficiency_zeta");
+    }
+
+    fp->SNII_gamma_star =
+        parser_get_param_double(params, "EAGLEFeedback:SNII_gamma") /
+            (phys_const->const_year * 1e7 * 4.0 / 3.0 * M_PI *
+            phys_const->const_parsec * phys_const->const_parsec *
+            phys_const->const_parsec * 1e9);
+    fp->SNII_sampling_reduction_within_smoothing_length =
+        parser_get_param_int(params,
+          "EAGLEFeedback:SNII_sampling_reduction_within_smoothing_length");
+    fp->SNII_with_nu_below_one =
+        parser_get_param_int(params, "EAGLEFeedback:SNII_with_nu_below_one");
+
+    char temp[32];
+    parser_get_param_string(
+        params, "EAGLEFeedback:SNII_with_oversampling_timescale", temp);
+    if (strcmp(temp, "None") == 0)
+      fp->SNII_with_oversampling_timescale = eagle_SNII_timescale_none;
+    else if (strcmp(temp, "GasConsumption") == 0)
+      fp->SNII_with_oversampling_timescale = eagle_SNII_timescale_gasconsum;
+    else if (strcmp(temp, "FreeFall") == 0)
+      fp->SNII_with_oversampling_timescale = eagle_SNII_timescale_freefall;
+    else
+      error("Invalid value of "
+            "EAGLEFeedback:SNII_with_oversampling_timescale: '%s'",
+            temp);
+
+    fp->SNII_dTcrit_floor =
+        parser_get_param_float(params, "EAGLEFeedback:SNII_dTcrit_floor");
+    fp->SNII_dTcrit_exp_nH =
+        parser_get_param_float(params, "EAGLEFeedback:SNII_dTcrit_exp_nH");
+    fp->SNII_dTcrit_exp_Z =
+        parser_get_param_float(params, "EAGLEFeedback:SNII_dTcrit_exp_Z");
+    fp->SNII_dTcrit_norm =
+        parser_get_param_float(params, "EAGLEFeedback:SNII_dTcrit_norm");
+    fp->SNII_dTlimit_exp_nH =
+        parser_get_param_float(params, "EAGLEFeedback:SNII_dTlimit_exp_nH");
+    fp->SNII_dTlimit_exp_Z =
+        parser_get_param_float(params, "EAGLEFeedback:SNII_dTlimit_exp_Z");
+    fp->SNII_dT_Zmin =
+        parser_get_param_float(params, "EAGLEFeedback:SNII_dT_Zmin");
+    fp->SNII_dTlimit_norm =
+        parser_get_param_float(params, "EAGLEFeedback:SNII_dTlimit_norm");
+    fp->Z_Sol = parser_get_param_float(params, "EAGLEFeedback:Z_Sol");
+
+    fp->SNII_efficiency_eta_min = parser_get_param_float(
+        params, "EAGLEFeedback:SNII_efficiency_eta_min");
+    fp->SNII_maximum_nu = parser_get_param_float(
+        params, "EAGLEFeedback:SNII_maximum_nu");
+    fp->SNII_omega_by_sampling = parser_get_param_int(
+       params, "EAGLEFeedback:SNII_omega_by_sampling");
+
+  } else {    /* Constant dT model */
+    fp->SNe_deltaT_desired =
+        parser_get_param_float(params, "EAGLEFeedback:SNII_delta_T_K") /
+        units_cgs_conversion_factor(us, UNIT_CONV_TEMPERATURE);
+  }
 
   /* Properties of the energy fraction model */
   fp->f_E_min =

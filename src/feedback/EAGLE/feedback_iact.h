@@ -24,6 +24,7 @@
 #include "rays.h"
 #include "timestep_sync_part.h"
 #include "tracers.h"
+#include "kernel_hydro.h"
 
 /**
  * @brief Density interaction between two particles (non-symmetric).
@@ -60,9 +61,6 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
   float wi;
   kernel_eval(ui, &wi);
 
-  /* We found a neighbour! */
-  si->feedback_data.to_collect.ngb_N++;
-
   /* Add mass of pj to neighbour mass of si  */
   si->feedback_data.to_collect.ngb_mass += mj;
 
@@ -72,17 +70,21 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
   /* Contribution to the star's surrounding gas density */
   si->feedback_data.to_collect.ngb_rho += mj * wi;
 
+  /* Contribution to the star's surrounding SFR density */
+  si->feedback_data.to_collect.ngb_SFR += mj * wi * max(pj->SFR, 0.);
+
   const float Zj = chemistry_get_total_metal_mass_fraction_for_feedback(pj);
 
   /* Contribution to the star's surrounding metallicity (metal mass fraction */
   si->feedback_data.to_collect.ngb_Z += mj * Zj * wi;
 
-  /* Add contribution of pj to normalisation of density weighted fraction
-   * which determines how much mass to distribute to neighbouring
-   * gas particles */
+  /* Add contribution of pj to the normalisation of the fraction of mass that
+   * each neighbouring gas particles will receive. We weight each particle
+   * by the product of its kernel weight and its inverse (!) density (particles
+   * with zero density are ignored). */
   const float rho = hydro_get_comoving_density(pj);
   if (rho != 0.f)
-    si->feedback_data.to_collect.enrichment_weight_inv += wi / rho;
+    si->feedback_data.to_collect.enrichment_weight_sum += wi / rho;
 
   /* Choose SNII feedback model */
   switch (fb_props->feedback_model) {
@@ -119,7 +121,7 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
        * star), then bi->num_ngbs = 1 and there is nothing to sort. Note that
        * the maximum size of the sorted array cannot be larger then the maximum
        * number of rays. */
-      const int arr_size = min(si->feedback_data.to_collect.ngb_N,
+      const int arr_size = min(si->feedback_data.to_collect.num_ngbs,
                                eagle_SNII_feedback_num_of_rays);
 
       /* Minimise separation between the gas particles and the star. The rays
@@ -135,7 +137,7 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
        * star), then bi->num_ngbs = 1 and there is nothing to sort. Note that
        * the maximum size of the sorted array cannot be larger then the maximum
        * number of rays. */
-      const int arr_size = min(si->feedback_data.to_collect.ngb_N,
+      const int arr_size = min(si->feedback_data.to_collect.num_ngbs,
                                eagle_SNII_feedback_num_of_rays);
 
       /* Minimise separation between the gas particles and the star. The rays
@@ -151,7 +153,7 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
        * star), then bi->num_ngbs = 1 and there is nothing to sort. Note that
        * the maximum size of the sorted array cannot be larger then the maximum
        * number of rays. */
-      const int arr_size = min(si->feedback_data.to_collect.ngb_N,
+      const int arr_size = min(si->feedback_data.to_collect.num_ngbs,
                                eagle_SNII_feedback_num_of_rays);
 
       /* To mimic a random draw among all the particles in the kernel, we
@@ -200,8 +202,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
     error("Computing feedback from a star that should not");
 #endif
 
-  /* Get r. */
+  /* Get distance si <--> pj and density of pj */
   const float r = sqrtf(r2);
+  const float rho_j = hydro_get_comoving_density(pj);
 
   /* Compute the kernel function */
   const float hi_inv = 1.0f / hi;
@@ -209,23 +212,16 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   float wi;
   kernel_eval(ui, &wi);
 
-  /* Gas particle density */
-  const float rho_j = hydro_get_comoving_density(pj);
-
-  /* Compute weighting for distributing feedback quantities */
-  float Omega_frac;
-  if (rho_j != 0.f) {
-    Omega_frac = si->feedback_data.to_distribute.enrichment_weight * wi / rho_j;
-  } else {
-    Omega_frac = 0.f;
-  }
+  /* Compute Omega_frac, the fraction of feedback quantities going to pj */
+  const float Omega_frac = (rho_j > 0) ? wi / rho_j *
+        si->feedback_data.to_distribute.enrichment_normalisation : 0.f;
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (Omega_frac < 0. || Omega_frac > 1.01)
     error(
-        "Invalid fraction of material to distribute for star ID=%lld "
-        "Omega_frac=%e count since last enrich=%d",
-        si->id, Omega_frac, si->count_since_last_enrichment);
+        "Invalid fraction of material to distribute from star ID=%lld "
+        "to gas ID=%lld: Omega_frac=%e (count since last enrich=%d).",
+        si->id, pj->id, Omega_frac, si->count_since_last_enrichment);
 #endif
 
   /* Update particle mass */

@@ -23,6 +23,7 @@
 #include "error.h"
 #include "feedback_properties.h"
 #include "hydro_properties.h"
+#include "star_formation.h"
 #include "part.h"
 #include "rays.h"
 #include "units.h"
@@ -30,6 +31,7 @@
 #include <strings.h>
 
 void compute_stellar_evolution(const struct feedback_props* feedback_props,
+                               const struct hydro_props* hydro_props,
                                const struct phys_const* phys_const,
                                const struct cosmology* cosmo, struct spart* sp,
                                const struct unit_system* us, const double age,
@@ -72,11 +74,12 @@ __attribute__((always_inline)) INLINE static int feedback_is_active(
 __attribute__((always_inline)) INLINE static void feedback_init_spart(
     struct spart* sp) {
 
-  sp->feedback_data.to_collect.enrichment_weight_inv = 0.f;
+  sp->feedback_data.to_collect.enrichment_weight_sum = 0.f;
   sp->feedback_data.to_collect.ngb_N = 0;
   sp->feedback_data.to_collect.ngb_mass = 0.f;
   sp->feedback_data.to_collect.ngb_rho = 0.f;
   sp->feedback_data.to_collect.ngb_Z = 0.f;
+  sp->feedback_data.to_collect.ngb_SFR = 0.;
 
   /* Reset all ray structs carried by this star particle */
   ray_init(sp->feedback_data.SNII_rays, eagle_SNII_feedback_num_of_rays);
@@ -114,7 +117,7 @@ __attribute__((always_inline)) INLINE static void feedback_reset_feedback(
     struct spart* sp, const struct feedback_props* feedback_props) {
 
   /* Zero the distribution weights */
-  sp->feedback_data.to_distribute.enrichment_weight = 0.f;
+  sp->feedback_data.to_distribute.enrichment_normalisation = 0.f;
 
   /* Zero the amount of mass that is distributed */
   sp->feedback_data.to_distribute.mass = 0.f;
@@ -191,7 +194,7 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_feedback(
     const struct cosmology* cosmo, const struct unit_system* us,
     const struct phys_const* phys_const, const double star_age_beg_step,
     const double dt, const double time, const integertime_t ti_begin,
-    const int with_cosmology) {
+    const int with_cosmology, const struct hydro_props* hydro_props) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (sp->birth_time == -1.) error("Evolving a star particle that should not!");
@@ -205,11 +208,12 @@ __attribute__((always_inline)) INLINE static void feedback_prepare_feedback(
   sp->feedback_data.to_collect.ngb_rho *= h_inv_dim;
   const float rho_inv = 1.f / sp->feedback_data.to_collect.ngb_rho;
   sp->feedback_data.to_collect.ngb_Z *= h_inv_dim * rho_inv;
+  sp->feedback_data.to_collect.ngb_SFR *= h_inv_dim;
 
   /* Compute amount of enrichment and feedback that needs to be done in this
    * step */
-  compute_stellar_evolution(feedback_props, phys_const, cosmo, sp, us,
-                            star_age_beg_step, dt, ti_begin);
+  compute_stellar_evolution(feedback_props, hydro_props, phys_const, cosmo, sp,
+                            us, star_age_beg_step, dt, ti_begin);
 
   /* Decrease star mass by amount of mass distributed to gas neighbours */
   sp->mass -= sp->feedback_data.to_distribute.mass;

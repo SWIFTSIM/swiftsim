@@ -42,8 +42,8 @@ struct feedback_spart_data {
      */
     struct {
 
-      /*! Inverse of normalisation factor used for the enrichment */
-      float enrichment_weight_inv;
+      /*! Sum of the (non-normalised) enrichment weights for all neighbours */
+      float enrichment_weight_sum;
 
       /*! Total mass (unweighted) of neighbouring gas particles */
       float ngb_mass;
@@ -59,8 +59,8 @@ struct feedback_spart_data {
        * (dimensionless) */
       float ngb_Z;
 
-      /*! Total (unweighted) number gas neighbours in the stellar kernel */
-      int ngb_N;
+      /*! SPH-weighted SFR density of the neighbouring gas particles */
+      float ngb_SFR;
 
     } to_collect;
 
@@ -72,7 +72,7 @@ struct feedback_spart_data {
     struct {
 
       /*! Normalisation factor used for the enrichment */
-      float enrichment_weight;
+      float enrichment_normalisation;
 
       /*! Mass released */
       float mass;
