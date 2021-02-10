@@ -193,9 +193,10 @@ runner_iact_nonsym_bh_gas_density(
             random_number_isotropic_AGN_feedback_ray_phi);
 
         /* Compute arc length */
-        ray_minimise_arclength(dx, r, bi->rays + i, /*ray_type=*/thermal,
-                               gas_id, rand_theta, rand_phi, pj->mass, 
-                               /*ray_ext=*/NULL, /*v=*/NULL);
+        ray_minimise_arclength(dx, r, bi->rays + i,
+                               /*ray_type=*/ray_feedback_thermal, gas_id,
+                               rand_theta, rand_phi, pj->mass, /*ray_ext=*/NULL,
+                               /*v=*/NULL);
       }
       break;
     }
