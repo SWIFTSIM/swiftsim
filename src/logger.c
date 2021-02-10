@@ -301,7 +301,8 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
   char *buff = (char *)dump_get(&log->dump, size_total, &offset_new);
 
 #ifdef SWIFT_DEBUG_CHECKS
-  /* Save the buffer position in order to test if the requested buffer was really used */
+  /* Save the buffer position in order to test if the requested buffer was
+   * really used */
   const char *buff_before = buff;
 #endif
 
@@ -352,7 +353,7 @@ void logger_log_parts(struct logger_writer *log, const struct part *p,
 #ifdef SWIFT_DEBUG_CHECKS
   /* Ensure that the buffer was fully used */
   const int diff = buff - buff_before;
-  if (diff != (int) size_total) {
+  if (diff != (int)size_total) {
     error("It seems that the requested buffer was not totally used: %i != %zi",
           diff, size_total);
   }
@@ -477,7 +478,8 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
   size_t offset_new;
   char *buff = (char *)dump_get(&log->dump, size_total, &offset_new);
 #ifdef SWIFT_DEBUG_CHECKS
-  /* Save the buffer position in order to test if the requested buffer was really used */
+  /* Save the buffer position in order to test if the requested buffer was
+   * really used */
   const char *buff_before = buff;
 #endif
 
@@ -530,7 +532,7 @@ void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
 #ifdef SWIFT_DEBUG_CHECKS
   /* Ensure that the buffer was fully used */
   const int diff = buff - buff_before;
-  if (diff != (int) size_total) {
+  if (diff != (int)size_total) {
     error("It seems that the requested buffer was not totally used: %i != %zi",
           diff, size_total);
   }
@@ -621,7 +623,7 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
   const uint32_t special_flags = logger_pack_flags_and_data(flag, flag_data);
 
   /* Compute the size of the buffer. */
-  /* As we might have some non DM particles, we cannot log_all_fields blindly  */
+  /* As we might have some non DM particles, we cannot log_all_fields blindly */
   size_t size_total = 0;
   for (int i = 0; i < count; i++) {
     /* Log only the dark matter */
@@ -631,8 +633,8 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
 
     unsigned int mask = 0;
     size_t size = 0;
-    gravity_logger_compute_size_and_mask(log->mask_data_pointers.gravity,
-                                         &p[i], log_all_fields, &size, &mask);
+    gravity_logger_compute_size_and_mask(log->mask_data_pointers.gravity, &p[i],
+                                         log_all_fields, &size, &mask);
     if (flag != 0) {
       size += size_special_flag;
     }
@@ -643,7 +645,8 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
   size_t offset_new;
   char *buff = (char *)dump_get(&log->dump, size_total, &offset_new);
 #ifdef SWIFT_DEBUG_CHECKS
-  /* Save the buffer position in order to test if the requested buffer was really used */
+  /* Save the buffer position in order to test if the requested buffer was
+   * really used */
   const char *buff_before = buff;
 #endif
 
@@ -694,7 +697,7 @@ void logger_log_gparts(struct logger_writer *log, struct gpart *p, int count,
 #ifdef SWIFT_DEBUG_CHECKS
   /* Ensure that the buffer was fully used */
   const int diff = buff - buff_before;
-  if (diff != (int) size_total) {
+  if (diff != (int)size_total) {
     error("It seems that the requested buffer was not totally used: %i != %zi",
           diff, size_total);
   }

@@ -102,15 +102,16 @@ gravity_logger_interpolate_field(const double t_before,
       break;
     case gravity_logger_field_velocities:
       interpolate_cubic_float_ND(t_before, before, t_after, after, output, t,
-                                 /* dimension= */ 3, /* periodic= */0, params);
+                                 /* dimension= */ 3, /* periodic= */ 0, params);
       break;
     case gravity_logger_field_accelerations:
       interpolate_linear_float_ND(t_before, before, t_after, after, output, t,
-                                  /* dimension= */ 3, /* periodic= */0, params);
+                                  /* dimension= */ 3, /* periodic= */ 0,
+                                  params);
       break;
     case gravity_logger_field_masses:
       interpolate_linear_float(t_before, before, t_after, after, output, t,
-                               /* periodic= */0, params);
+                               /* periodic= */ 0, params);
       break;
     case gravity_logger_field_particle_ids:
       interpolate_ids(t_before, before, t_after, after, output, t);

@@ -24,8 +24,8 @@
 /* local includes */
 #include "logger_interpolation.h"
 #include "logger_loader_io.h"
-#include "logger_python_tools.h"
 #include "logger_parameters.h"
+#include "logger_python_tools.h"
 #include "star_formation_particle_logger.h"
 
 /* Index of the mask in the header mask array */

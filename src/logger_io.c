@@ -437,21 +437,23 @@ void logger_write_description(struct logger_writer* log, struct engine* e) {
 
   /* Write the header section */
   fprintf(f, "Header:\n");
-  fprintf(f, "  BoxSize: [%g, %g, %g]\n", e->s->dim[0],
-          e->s->dim[1], e->s->dim[2]);
-  fprintf(f, "  Dimension: %i\n", (int) hydro_dimension);
+  fprintf(f, "  BoxSize: [%g, %g, %g]\n", e->s->dim[0], e->s->dim[1],
+          e->s->dim[2]);
+  fprintf(f, "  Dimension: %i\n", (int)hydro_dimension);
   fprintf(f, "  RunName: %s\n", e->run_name);
   fprintf(f, "  Periodic: %i\n", e->s->periodic);
   fprintf(f, "\n");
 
   /* Write unit system */
-  const struct unit_system *us = e->internal_units;
+  const struct unit_system* us = e->internal_units;
   fprintf(f, "InternalUnitSystem:\n");
   fprintf(f, "  UnitMass_in_cgs: %g\n", units_get_base_unit(us, UNIT_MASS));
   fprintf(f, "  UnitLength_in_cgs: %g\n", units_get_base_unit(us, UNIT_LENGTH));
   fprintf(f, "  UnitTime_in_cgs: %g\n", units_get_base_unit(us, UNIT_TIME));
-  fprintf(f, "  UnitCurrent_in_cgs: %g\n", units_get_base_unit(us, UNIT_CURRENT));
-  fprintf(f, "  UnitTemp_in_cgs: %g\n", units_get_base_unit(us, UNIT_TEMPERATURE));
+  fprintf(f, "  UnitCurrent_in_cgs: %g\n",
+          units_get_base_unit(us, UNIT_CURRENT));
+  fprintf(f, "  UnitTemp_in_cgs: %g\n",
+          units_get_base_unit(us, UNIT_TEMPERATURE));
   fprintf(f, "\n");
 
   /* Write the code section */
@@ -469,7 +471,7 @@ void logger_write_description(struct logger_writer* log, struct engine* e) {
 
   /* Write the policy section */
   fprintf(f, "Policy:\n");
-  for(int i = 1; i <  engine_maxpolicy; i++) {
+  for (int i = 1; i < engine_maxpolicy; i++) {
     const int value = e->policy & (1 << i) ? 1 : 0;
     fprintf(f, "  %s: %i\n", engine_policy_names[i + 1], value);
   }

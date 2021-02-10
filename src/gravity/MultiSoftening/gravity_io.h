@@ -148,9 +148,9 @@ INLINE static void darkmatter_write_particles(const struct gpart* gparts,
       "Softenings", FLOAT, 1, UNIT_CONV_LENGTH, 1.f, gparts, convert_gpart_soft,
       "Co-moving Plummer-equivalent softening lengths of the particles.");
 
-  list[5] = io_make_output_field_convert_gpart(
-                                               "Accelerations", FLOAT, 3, UNIT_CONV_ACCELERATION, 0.f, gparts, convert_gpart_acc,
-                                               "");
+  list[5] = io_make_output_field_convert_gpart("Accelerations", FLOAT, 3,
+                                               UNIT_CONV_ACCELERATION, 0.f,
+                                               gparts, convert_gpart_acc, "");
 }
 
 #endif /* SWIFT_MULTI_SOFTENING_GRAVITY_IO_H */

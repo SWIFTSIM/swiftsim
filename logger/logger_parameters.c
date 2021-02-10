@@ -27,7 +27,6 @@
 /* Include swift */
 #include "parser.h"
 
-
 /**
  * @brief Initialize the parameters from the yaml file.
  *
@@ -52,8 +51,7 @@ void logger_parameters_init(struct logger_parameters *params,
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Print the parameters */
-  if (reader->verbose > 0)
-    parser_print_params(&swift_params);
+  if (reader->verbose > 0) parser_print_params(&swift_params);
 #endif
 
   /* Read the number of dimension */
@@ -67,6 +65,6 @@ void logger_parameters_init(struct logger_parameters *params,
   params->periodic = parser_get_param_int(&swift_params, "Header:Periodic");
 
   /* Read if we are running with cosmology */
-  params->with_cosmology = parser_get_param_int(
-      &swift_params, "Policy:cosmological integration");
+  params->with_cosmology =
+      parser_get_param_int(&swift_params, "Policy:cosmological integration");
 }
