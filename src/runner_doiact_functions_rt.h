@@ -141,6 +141,9 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
       if (pj->ti_drift != e->ti_current)
         error("Particle pj not drifted to current time");
 #endif
+#ifdef RT_DEBUG
+      if (r2 < hig2) rt_injection_timestep_debugging_check(si, pj, e);
+#endif
 
       if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj);
     }
@@ -215,6 +218,9 @@ void DOPAIR1_NONSYM_RT_NAIVE(struct runner *r, struct cell *ci,
       float dx[3] = {six[0] - pjx[0], six[1] - pjx[1], six[2] - pjx[2]};
       const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
 
+#ifdef RT_DEBUG
+      if (r2 < hig2) rt_injection_timestep_debugging_check(si, pj, e);
+#endif
       if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj);
 
     } /* loop over the parts in cj. */
@@ -327,6 +333,9 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
         /* Hit or miss? */
         if (r2 < hig2) {
+#ifdef RT_DEBUG
+          rt_injection_timestep_debugging_check(spi, pj, e);
+#endif
           IACT_RT(r2, dx, hi, hj, spi, pj);
           /* IACT_RT(r2, dx, hi, hj, spi, pj, a, H); */
         }
@@ -407,6 +416,9 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
         /* Hit or miss? */
         if (r2 < hjg2) {
 
+#ifdef RT_DEBUG
+          rt_injection_timestep_debugging_check(spj, pi, e);
+#endif
           IACT_RT(r2, dx, hj, hi, spj, pi);
           /* IACT_RT(r2, dx, hj, hi, spj, pi, a, H); */
         }

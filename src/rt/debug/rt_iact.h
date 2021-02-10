@@ -54,6 +54,39 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
 }
 
 /**
+ * @brief Check the time step sizes of the star and hydro particle
+ * are compatible. Debugging-only function.
+ *
+ * @param si Star particle.
+ * @param pj Hydro particle.
+ * @param e pointer to the engine.
+ */
+__attribute__((always_inline)) INLINE static void
+rt_injection_timestep_debugging_check(struct spart *restrict sp,
+                                      struct part *restrict p,
+                                      const struct engine *e) {
+
+  const integertime_t ti_current = e->ti_current;
+  const integertime_t pti_end = get_integer_time_end(ti_current, p->time_bin);
+  const integertime_t sti_end = get_integer_time_end(ti_current, sp->time_bin);
+
+  if (sti_end < ti_current)
+    error(
+        "s-particle in an impossible time-zone! sp->ti_end=%lld "
+        "e->ti_current=%lld",
+        sti_end, ti_current);
+  if (pti_end < ti_current)
+    error(
+        "particle in an impossible time-zone! p->ti_end=%lld "
+        "e->ti_current=%lld",
+        pti_end, ti_current);
+  if (pti_end > sti_end)
+    message(
+        "WARNING: Got star that whose time step ends before the interacting "
+        "hydro particle's time step ends. This needs to be dealt with.");
+}
+
+/**
  * @brief Flux calculation between particle i and particle j
  *
  * This method calls runner_iact_rt_fluxes_common with mode 1.
