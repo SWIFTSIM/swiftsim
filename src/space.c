@@ -783,9 +783,14 @@ void space_convert_rt_quantities_mapper(void *restrict map_data, int scount,
 /**
  * @brief Calls the first radiative transfer additional data
  * initialisation function on all star particles in the space.
+ * In particular, we need the stellar emisison rates to be set
+ * from the start, not only after the stellar particle has been
+ * active.
  * This function requires that the time bins for star particles
  * have been set already and is called after the 0-th time step.
- * TODO MLADEN: double check the documentation comments here
+ * TODO MLADEN: this is only for the injection version where
+ * hydro particles "pull" radiation from stars. Shouldn't be
+ * necessary for feedback like model.
  *
  * @param s The #space.
  * @param verbose Are we talkative?

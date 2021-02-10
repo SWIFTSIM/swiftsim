@@ -19,6 +19,7 @@
 #ifndef SWIFT_RT_NONE_H
 #define SWIFT_RT_NONE_H
 
+#include "rt_stellar_emission_rate.h"
 #include "rt_thermochemistry.h"
 
 /**
@@ -72,7 +73,8 @@ rt_injection_update_photon_density(struct part* restrict p) {}
 
 /**
  * @brief Compute the photon emission rates for this stellar particle
- *        This function is called every time the spart is initialized
+ *        This function is called every time the spart is being reset
+ *        (during start-up and during stars ghost if spart is active)
  *        and assumes that the photon emission rate is an intrinsic
  *        stellar property, i.e. doesn't depend on the environment.
  *
