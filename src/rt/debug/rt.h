@@ -19,6 +19,7 @@
 #ifndef SWIFT_RT_DEBUG_H
 #define SWIFT_RT_DEBUG_H
 
+#include "rt_stellar_emission_rate.h"
 #include "rt_thermochemistry.h"
 
 /**
@@ -109,7 +110,7 @@ __attribute__((always_inline)) INLINE static void
 rt_injection_update_photon_density(struct part* restrict p) {
 
   if (p->rt_data.injection_check != 1)
-    error("called ghost1 when injection count is %d",
+    error("called ghost1 when injection check count is %d",
           p->rt_data.injection_check);
   p->rt_data.injection_done += 1;
   p->rt_data.calls_tot += 1;
@@ -118,7 +119,8 @@ rt_injection_update_photon_density(struct part* restrict p) {
 
 /**
  * @brief Compute the photon emission rates for this stellar particle
- *        This function is called every time the spart is initialized
+ *        This function is called every time the spart is being reset
+ *        (during start-up and during stars ghost if spart is active)
  *        and assumes that the photon emission rate is an intrinsic
  *        stellar property, i.e. doesn't depend on the environment.
  *
@@ -131,25 +133,24 @@ __attribute__((always_inline)) INLINE static void
 rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
                                  double star_age, double dt) {
 
+  /* Skip initial fake time-step */
+  if (dt == 0.0l) return;
+
+  if (time == 0.l) {
+    /* if function is called before the first actual step, time is still
+     * at zero unless specified otherwise in parameter file.*/
+    star_age = dt;
+  }
+
   /* first reset old values */
   rt_reset_spart(sp);
   sp->rt_data.calls_tot += 1;
   sp->rt_data.calls_per_step += 1;
 
-  if (time == 0.) {
-    /* if this is the zeroth step, time is still at zero.
-     * Do some bogus stuff for now. */
-    /* TODO: check that this covers every possible case */
-    star_age += 2 * dt;
-  }
-  if (star_age - dt >= 0.) {
-    sp->rt_data.emission_rate_set += 1;
-  } else {
-    error(
-        "Got negative time when setting emission rates?"
-        " %10.3g %10.3g",
-        star_age, dt);
-  }
+  /* now get the emission rates */
+  double star_age_begin_of_step = star_age - dt;
+  star_age_begin_of_step = max(0.l, star_age_begin_of_step);
+  rt_set_stellar_emission_rate(sp, star_age_begin_of_step, star_age);
 }
 
 /**
