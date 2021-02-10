@@ -107,9 +107,9 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
 
         /* Compute arclength */
         ray_minimise_arclength(dx, r, si->feedback_data.SNII_rays + i,
-                               /*ray_type=*/thermal, pj->id, rand_theta_SNII,
-                               rand_phi_SNII, pj->mass, /*ray_ext=*/NULL,
-                               /*v=*/NULL);
+                               /*ray_type=*/ray_feedback_thermal, pj->id,
+                               rand_theta_SNII, rand_phi_SNII, pj->mass,
+                               /*ray_ext=*/NULL, /*v=*/NULL);
       }
       break;
     }
