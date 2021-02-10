@@ -76,7 +76,7 @@ __attribute__((always_inline)) INLINE static void ray_extra_init(
   for (int i = 0; i < max_number_of_rays; i++) {
 
     /* Reset status of all rays to 'not allowed to kick' */
-    rays_ext[i].status = not_allowed_to_kick;
+    rays_ext[i].status = ray_feedback_kick_non_allowed;
 
     /* Zero velocity and position fields */
     for (int j = 0; j < 3; j++) {
@@ -133,7 +133,7 @@ __attribute__((always_inline)) INLINE static float ray_arclength(
  */
 __attribute__((always_inline)) INLINE static void ray_minimise_arclength(
     const float *dx, const float r, struct ray_data *ray,
-    const feedback_ray_type ray_type, const long long gas_part_id,
+    const ray_feedback_type ray_type, const long long gas_part_id,
     const double rand_theta_gen, const double rand_phi_gen, const float m,
     struct ray_data_extra *ray_ext, const float *v) {
 
@@ -151,7 +151,7 @@ __attribute__((always_inline)) INLINE static void ray_minimise_arclength(
   double phi_ray = 2.0 * M_PI * rand_phi_gen - M_PI;
 
   /* Flip the angles if it is the mirror ray */
-  if (ray_type == kinetic_mirr) {
+  if (ray_type == ray_feedback_kinetic_mirr) {
     theta_ray = M_PI - theta_ray;
     phi_ray = phi_ray - copysign(M_PI, phi_ray);
   }
@@ -171,11 +171,11 @@ __attribute__((always_inline)) INLINE static void ray_minimise_arclength(
     ray->mass = m;
 
     /* In kinetic feedback, we also need to store velocities and positions */
-    if (ray_type != thermal) {
+    if (ray_type != ray_feedback_thermal) {
 
-      /* In SNII kinetic feedback, position and velocities are neeeded to 
-       * exactly conserve momentum and energy. That's because in a pair of two  
-       * particles, the first one needs to know the properties of the other one, 
+      /* In SNII kinetic feedback, position and velocities are neeeded to
+       * exactly conserve momentum and energy. That's because in a pair of two
+       * particles, the first one needs to know the properties of the other one,
        * and vice versa. */
 
       ray_ext->x[0] = -dx[0];
@@ -209,7 +209,7 @@ __attribute__((always_inline)) INLINE static void ray_minimise_arclength(
 __attribute__((always_inline)) INLINE static void
 ray_kinetic_feedback_compute_kick_velocity(
     float *v_kick, float *v_kick_abs, const struct ray_data_extra *ray_ext_true,
-    const struct ray_data_extra *ray_ext_mirr, const feedback_ray_type ray_type,
+    const struct ray_data_extra *ray_ext_mirr, const ray_feedback_type ray_type,
     const double energy_pair, const struct cosmology *cosmo,
     const double current_mass, const float *v_star, const double rand_theta_gen,
     const double rand_phi_gen, const double mass_true,
@@ -220,15 +220,15 @@ ray_kinetic_feedback_compute_kick_velocity(
   int mirror_particle_switch;
 
   /* Set the switch to 0 if this function was called for the true ray */
-  if (ray_type == kinetic_true){
+  if (ray_type == ray_feedback_kinetic_true) {
     mirror_particle_switch = 0;
   }
   /* Set the switch to 1 if this function was called for the mirror ray */
-  else if (ray_type == kinetic_mirr){
+  else if (ray_type == ray_feedback_kinetic_mirr) {
     mirror_particle_switch = 1;
   }
   /* Do nothing if this function was called for the thermal ray */
-  else{
+  else {
     return;
   }
 

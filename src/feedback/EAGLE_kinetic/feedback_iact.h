@@ -99,13 +99,15 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
         si->id, i, ti_current, random_number_isotropic_SNII_feedback_ray_phi);
 
     /* Compute arclength for the true particle (SNII kinetic feedback) */
-    ray_minimise_arclength(dx, r, si->feedback_data.SNII_rays_true + i, 
-                           kinetic_true, pj->id, rand_theta_SNII, rand_phi_SNII, 
-                           mj, si->feedback_data.SNII_rays_ext_true + i, pj->v);
+    ray_minimise_arclength(dx, r, si->feedback_data.SNII_rays_true + i,
+                           ray_feedback_kinetic_true, pj->id, rand_theta_SNII,
+                           rand_phi_SNII, mj,
+                           si->feedback_data.SNII_rays_ext_true + i, pj->v);
     /* Compute arclength for the mirror particle (SNII kinetic feedback) */
-    ray_minimise_arclength(dx, r, si->feedback_data.SNII_rays_mirr + i, 
-                           kinetic_mirr, pj->id, rand_theta_SNII, rand_phi_SNII,
-                           mj, si->feedback_data.SNII_rays_ext_mirr + i, pj->v);
+    ray_minimise_arclength(dx, r, si->feedback_data.SNII_rays_mirr + i,
+                           ray_feedback_kinetic_mirr, pj->id, rand_theta_SNII,
+                           rand_phi_SNII, mj,
+                           si->feedback_data.SNII_rays_ext_mirr + i, pj->v);
   }
 }
 
@@ -162,9 +164,10 @@ runner_iact_nonsym_feedback_prep2(const float r2, const float *dx,
       
       /* Does this gas particle want to be kicked by this stellar particle
        * via ray i? If so, store this information in the ith ray extra struct */
-      if (pj->feedback_data.SNII_star_largest_id == si->id){
+      if (pj->feedback_data.SNII_star_largest_id == si->id) {
 
-        si->feedback_data.SNII_rays_ext_true[i].status = allowed_to_kick;
+        si->feedback_data.SNII_rays_ext_true[i].status =
+            ray_feedback_kick_allowed;
 
         /* If we are using maximum_number_of_rays > 1, then for a given spart,
          * as soon as we have found the first ray that points at this gas part,
@@ -175,8 +178,9 @@ runner_iact_nonsym_feedback_prep2(const float r2, const float *dx,
     }
     /* Same as above but for the mirror ith ray */
     else if (pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length){
-      if (pj->feedback_data.SNII_star_largest_id == si->id){
-        si->feedback_data.SNII_rays_ext_mirr[i].status = allowed_to_kick;
+      if (pj->feedback_data.SNII_star_largest_id == si->id) {
+        si->feedback_data.SNII_rays_ext_mirr[i].status =
+            ray_feedback_kick_allowed;
         break;
       }
     }
@@ -370,13 +374,16 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
 
         /* Are we kicking or heating? If at least one gas part in the pair does
          * not want to be kicked by this spart, then we heat */
-        if (si->feedback_data.SNII_rays_ext_true[i].status == allowed_to_kick &&
-            si->feedback_data.SNII_rays_ext_mirr[i].status == allowed_to_kick) {
+        if (si->feedback_data.SNII_rays_ext_true[i].status ==
+                ray_feedback_kick_allowed &&
+            si->feedback_data.SNII_rays_ext_mirr[i].status ==
+                ray_feedback_kick_allowed) {
 
           /* Which particles have we caught: the original or the mirror one? */
-          const feedback_ray_type ray_type =
-              (pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length) ?
-              kinetic_mirr : kinetic_true;
+          const ray_feedback_type ray_type =
+              (pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length)
+                  ? ray_feedback_kinetic_mirr
+                  : ray_feedback_kinetic_true;
 
           /* Two random numbers in [0, 1[
            * Note: this are the same numbers we drew in the density loop! */
