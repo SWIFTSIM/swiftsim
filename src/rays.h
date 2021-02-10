@@ -215,22 +215,11 @@ ray_kinetic_feedback_compute_kick_velocity(
     const double rand_phi_gen, const double mass_true,
     const double mass_mirror) {
 
-  /* We need to convert the provided ray type into 0 (true ray) or 1 
-   * (mirror ray). Doing such a conversion simplifies the code below. */
-  int mirror_particle_switch;
-
-  /* Set the switch to 0 if this function was called for the true ray */
-  if (ray_type == ray_feedback_kinetic_true) {
-    mirror_particle_switch = 0;
-  }
-  /* Set the switch to 1 if this function was called for the mirror ray */
-  else if (ray_type == ray_feedback_kinetic_mirr) {
-    mirror_particle_switch = 1;
-  }
-  /* Do nothing if this function was called for the thermal ray */
-  else {
-    return;
-  }
+#ifdef SWIFT_DEBUG_CHECKS
+  if (ray_type != ray_feedback_kinetic_true &&
+      ray_type != ray_feedback_kinetic_mirr)
+    error("Parsing wrong ray feedback type!");
+#endif
 
   /* Transform the random number from [0,1[ to [-1, 1[ */
   const double cos_theta_ray = 2. * rand_theta_gen - 1.;
@@ -368,12 +357,13 @@ ray_kinetic_feedback_compute_kick_velocity(
 
   /* Find out whether the minimal arc length is that with the original
   ray or the mirror ray */
-  const int mirror_ray_switch = (arclength_min == arclength_mirror);
+  const ray_feedback_type min_arclength_ray_type =
+      (arclength_min == arclength_mirror) ? ray_feedback_kinetic_mirr
+                                          : ray_feedback_kinetic_true;
 
   /* Compute the sign of the kick depending on which case we are in: 1,
    * 2, 3 or 4 */
-  const double kick_sign =
-      (mirror_particle_switch == mirror_ray_switch) ? 1.0 : -1.0;
+  const double kick_sign = (ray_type == min_arclength_ray_type) ? 1.0 : -1.0;
 
   /* Compute the normal vector of the kick */
   const double n_kick[3] = {kick_sign * a / normalisation,   // x,
@@ -434,7 +424,8 @@ ray_kinetic_feedback_compute_kick_velocity(
   /* Compute the correction to the energy and momentum due to relative
    * star-gas motion. If it is the mirror particle multiply by the minus
    * sign. If there is no correction then alpha = 0 and beta = 1 */
-  const double correction_sign = (mirror_particle_switch) ? -1.0 : 1.0;
+  const double correction_sign =
+      (ray_type == ray_feedback_kinetic_mirr) ? -1.0 : 1.0;
 
   const double alpha = correction_sign * m_alpha *
                        (v_cos_theta - v_mirror_cos_theta) / SNII_delta_v;
