@@ -104,11 +104,11 @@ hydro_logger_interpolate_field(const double t_before,
       /* Do the velocity */
     case hydro_logger_field_velocities:
       interpolate_cubic_float_ND(t_before, before, t_after, after, output, t,
-                                 /* dimesion= */ 3, /* periodic= */0, params);
+                                 /* dimesion= */ 3, /* periodic= */ 0, params);
       break;
     case hydro_logger_field_accelerations:
       interpolate_linear_float_ND(t_before, before, t_after, after, output, t,
-                                  /* dimesion= */ 3, /* periodic= */0, params);
+                                  /* dimesion= */ 3, /* periodic= */ 0, params);
       break;
       /* Do the linear interpolation of float. */
     case hydro_logger_field_smoothing_lengths:
@@ -116,7 +116,7 @@ hydro_logger_interpolate_field(const double t_before,
     case hydro_logger_field_densities:
     case hydro_logger_field_masses:
       interpolate_linear_float(t_before, before, t_after, after, output, t,
-                               /* periodic= */0, params);
+                               /* periodic= */ 0, params);
       break;
       /* Check the ids */
     case hydro_logger_field_particle_ids:

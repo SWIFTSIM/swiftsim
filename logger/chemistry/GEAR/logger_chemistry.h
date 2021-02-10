@@ -138,7 +138,7 @@ chemistry_logger_interpolate_field_spart(
     case chemistry_logger_field_spart_metal_mass_fractions:
       interpolate_linear_double_ND(t_before, before, t_after, after, output, t,
                                    GEAR_CHEMISTRY_ELEMENT_COUNT,
-                                   /* periodic= */0, params);
+                                   /* periodic= */ 0, params);
       break;
 
     default:
