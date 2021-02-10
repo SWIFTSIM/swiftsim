@@ -36,10 +36,12 @@
  * @param hj Comoving smoothing-length of particle j.
  * @param si Star particle.
  * @param pj Hydro particle.
+ * @param a Current scale factor.
+ * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
     const float r2, float *dx, const float hi, const float hj,
-    struct spart *restrict si, struct part *restrict pj) {
+    struct spart *restrict si, struct part *restrict pj, float a, float H) {
 
   struct rt_spart_data *restrict sd = &(si->rt_data);
   struct rt_part_data *restrict pd = &(pj->rt_data);

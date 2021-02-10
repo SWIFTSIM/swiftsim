@@ -41,6 +41,11 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
 
   const struct engine *e = r->e;
 
+  /* Cosmological terms */
+  const struct cosmology *cosmo = e->cosmology;
+  const float a = cosmo->a;
+  const float H = cosmo->H;
+
 #ifdef RT_DEBUG
   /* Before an early exit, loop over all parts and sparts in this cell
    * and mark that we checked these particles */
@@ -145,7 +150,7 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
       if (r2 < hig2) rt_injection_timestep_debugging_check(si, pj, e);
 #endif
 
-      if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj);
+      if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj, a, H);
     }
   }
 
@@ -168,6 +173,11 @@ void DOPAIR1_NONSYM_RT_NAIVE(struct runner *r, struct cell *ci,
   TIMER_TIC;
 
   const struct engine *e = r->e;
+
+  /* Cosmological terms */
+  const struct cosmology *cosmo = e->cosmology;
+  const float a = cosmo->a;
+  const float H = cosmo->H;
 
   const int scount_i = ci->stars.count;
   const int count_j = cj->hydro.count;
@@ -221,7 +231,7 @@ void DOPAIR1_NONSYM_RT_NAIVE(struct runner *r, struct cell *ci,
 #ifdef RT_DEBUG
       if (r2 < hig2) rt_injection_timestep_debugging_check(si, pj, e);
 #endif
-      if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj);
+      if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj, a, H);
 
     } /* loop over the parts in cj. */
   }   /* loop over the parts in ci. */
@@ -243,13 +253,11 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
   TIMER_TIC;
 
   const struct engine *e = r->e;
-  /* const int with_cosmology = e->policy & engine_policy_cosmology; */
-  /* const integertime_t ti_current = e->ti_current; */
-  /* const struct cosmology *cosmo = e->cosmology; */
 
   /* Cosmological terms */
-  /* const float a = cosmo->a; */
-  /* const float H = cosmo->H; */
+  const struct cosmology *cosmo = e->cosmology;
+  const float a = cosmo->a;
+  const float H = cosmo->H;
 
   /* Get the cutoff shift. */
   double rshift = 0.0;
@@ -336,8 +344,7 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 #ifdef RT_DEBUG
           rt_injection_timestep_debugging_check(spi, pj, e);
 #endif
-          IACT_RT(r2, dx, hi, hj, spi, pj);
-          /* IACT_RT(r2, dx, hi, hj, spi, pj, a, H); */
+          IACT_RT(r2, dx, hi, hj, spi, pj, a, H);
         }
       } /* loop over the parts in cj. */
     }   /* loop over the parts in ci. */
@@ -419,8 +426,7 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 #ifdef RT_DEBUG
           rt_injection_timestep_debugging_check(spj, pi, e);
 #endif
-          IACT_RT(r2, dx, hj, hi, spj, pi);
-          /* IACT_RT(r2, dx, hj, hi, spj, pi, a, H); */
+          IACT_RT(r2, dx, hj, hi, spj, pi, a, H);
         }
       } /* loop over the parts in ci. */
     }   /* loop over the parts in cj. */

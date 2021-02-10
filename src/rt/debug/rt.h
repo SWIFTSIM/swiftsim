@@ -36,7 +36,7 @@ __attribute__((always_inline)) INLINE static void rt_init_part(
     struct part* restrict p) {}
 
 /**
- * @brief Reset of the RT extra hydro particle data.
+ * @brief Reset of the RT hydro particle data not related to the density.
  * Note: during initalisation (space_init), rt_reset_part and rt_init_part
  * are both called individually.
  */
@@ -56,7 +56,7 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
 }
 
 /**
- * @brief First initialisation of the RT extra hydro particle data.
+ * @brief First initialisation of the RT hydro particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_first_init_part(
     struct part* restrict p) {
@@ -67,16 +67,16 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
 }
 
 /**
- * @brief Initialisation of the RT density loop related particle data.
- * Note: during initalisation (space_init), rt_reset_spart and rt_init_part
+ * @brief Initialisation of the RT density loop related star particle data.
+ * Note: during initalisation (space_init), rt_reset_spart and rt_init_spart
  * are both called individually.
  */
 __attribute__((always_inline)) INLINE static void rt_init_spart(
     struct spart* restrict sp) {}
 
 /**
- * @brief Reset of the RT extra star particle data.
- * Note: during initalisation (space_init), rt_reset_spart and rt_init_part
+ * @brief Reset of the RT star particle data not related to the density.
+ * Note: during initalisation (space_init), rt_reset_spart and rt_init_spart
  * are both called individually.
  */
 __attribute__((always_inline)) INLINE static void rt_reset_spart(
@@ -90,7 +90,7 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
 }
 
 /**
- * @brief First initialisation of the RT extra star particle data.
+ * @brief First initialisation of the RT star particle data.
  */
 __attribute__((always_inline)) INLINE static void rt_first_init_spart(
     struct spart* restrict sp) {
@@ -177,7 +177,7 @@ __attribute__((always_inline)) INLINE static void rt_finalise_gradient(
 }
 
 /**
- * @brief finishes up the transport step by actually doing the time integration
+ * @brief finishes up the transport step
  *
  * @param p particle to work on
  */
@@ -212,7 +212,9 @@ __attribute__((always_inline)) INLINE static void rt_finalise_transport(
 }
 
 /**
- * @brief Wraps around rt_do_thermochemistry function
+ * @brief Do the thermochemistry on a particle.
+ *
+ * This function wraps around rt_do_thermochemistry function.
  *
  * @param p particle to work on
  */
