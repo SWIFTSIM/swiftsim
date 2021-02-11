@@ -258,7 +258,7 @@ static void engine_do_unskip_rt(struct cell *c, struct engine *e) {
   if (!cell_get_flag(c, cell_flag_has_tasks)) return;
 
   /* Do we have work to do? */
-  if (rt_should_do_top_cell(c, e)) return;
+  if (!rt_should_do_cell(c, e)) return;
 
   /* Recurse */
   if (c->split) {
@@ -410,7 +410,7 @@ void engine_unskip(struct engine *e) {
         (with_stars && c->nodeID == nodeID && cell_is_active_stars(c, e)) ||
         (with_sinks && cell_is_active_sinks(c, e)) ||
         (with_black_holes && cell_is_active_black_holes(c, e)) ||
-        (with_rt && rt_should_do_top_cell(c, e))) {
+        (with_rt && rt_should_do_cell(c, e))) {
 
       if (num_active_cells != k)
         memswap(&local_cells[k], &local_cells[num_active_cells], sizeof(int));
