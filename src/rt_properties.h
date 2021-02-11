@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2020 Mladen Ivkovic (mladen.ivkovic@hotmail.com)
+ * Copyright (c) 2021 Mladen Ivkovic (mladen.ivkovic@hotmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,12 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_RT_H
-#define SWIFT_RT_H
+#ifndef SWIFT_RT_PROPERTIES_H
+#define SWIFT_RT_PROPERTIES_H
 
 /**
- * @file src/rt.h
- * @brief Branches between the different radiative transfer schemes.
+ * @file src/rt_properties.h
+ * @brief Branches between the different radiative transfer schemes properties.
  */
 
 /* Config parameters. */
@@ -29,19 +29,13 @@
 
 /* Import the right RT definition */
 #if defined(RT_NONE)
-#define RT_IMPLEMENTATION "none"
-#include "./rt/none/rt.h"
-#include "./rt/none/rt_iact.h"
+#include "./rt/none/rt_properties.h"
 #elif defined(RT_DEBUG)
-#define RT_IMPLEMENTATION "debug"
-#include "./rt/debug/rt.h"
-#include "./rt/debug/rt_iact.h"
+#include "./rt/debug/rt_properties.h"
 #elif defined(RT_M1)
-#define RT_IMPLEMENTATION "M1closure"
-#include "./rt/M1closure/rt.h"
-#include "./rt/M1closure/rt_iact.h"
+#include "./rt/M1closure/rt_properties.h"
 #else
 #error "Invalid choice of radiation scheme"
 #endif
 
-#endif /* SWIFT_RT_H */
+#endif /* SWIFT_RT_PROPERTIES_H */
