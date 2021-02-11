@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2020 Mladen Ivkovic (mladen.ivkovic@hotmail.com)
+ * Copyright (c) 2021 Mladen Ivkovic (mladen.ivkovic@hotmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -19,9 +19,6 @@
 #ifndef SWIFT_RT_DO_CELLS_H
 #define SWIFT_RT_DO_CELLS_H
 
-/* Config parameters. */
-#include "../config.h"
-
 /* Local includes. */
 #include "active.h"
 
@@ -35,7 +32,9 @@
  */
 
 /**
- * @brief Does a cell contain any particle finishing their RT time-step now ?
+ * @brief Does a cell contain particles that should do RT this step?
+ * This function is for a self-type interaction, where we need a cell
+ * to have active hydro particles and star particles in any state.
  *
  * @param c The #cell.
  * @param e The #engine containing information about the current time.
@@ -44,22 +43,13 @@
 __attribute__((always_inline)) INLINE static int rt_should_do_cell(
     const struct cell *c, const struct engine *e) {
 
-#ifdef SWIFT_DEBUG_CHECKS
-  if (c->hydro.ti_end_min < e->ti_current)
-    error(
-        "cell in an impossible time-zone! c->ti_end_min=%lld (t=%e) and "
-        "e->ti_current=%lld (t=%e, a=%e) c->nodeID=%d",
-        c->hydro.ti_end_min, c->hydro.ti_end_min * e->time_base, e->ti_current,
-        e->ti_current * e->time_base, e->cosmology->a, c->nodeID);
-#endif
-
-  return ((c->hydro.ti_end_min == e->ti_current) || (c->stars.count > 0));
+  return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) || (c->stars.count > 0));
 }
 
 /**
- * @brief Does a cell contain any particle finishing their RT time-step now ?
- * For a pair type interaction, where we take stars from cell ci and hydro
- * particles from cell cj.
+ * @brief Does a cell contain particles that should do RT this step?
+ * This function is for a pair-type interaction, where we take stars from 
+ * cell ci and hydro particles from cell cj.
  *
  * @param ci First #cell.
  * @param cj Second #cell.
@@ -69,17 +59,20 @@ __attribute__((always_inline)) INLINE static int rt_should_do_cell(
 __attribute__((always_inline)) INLINE static int rt_should_do_cell_pair(
     const struct cell *ci, const struct cell *cj, const struct engine *e) {
 
-#ifdef SWIFT_DEBUG_CHECKS
-  if (cj->hydro.ti_end_min < e->ti_current)
-    error(
-        "cell in an impossible time-zone! c->ti_end_min=%lld (t=%e) and "
-        "e->ti_current=%lld (t=%e, a=%e) c->nodeID=%d",
-        cj->hydro.ti_end_min, cj->hydro.ti_end_min * e->time_base,
-        e->ti_current, e->ti_current * e->time_base, e->cosmology->a,
-        cj->nodeID);
-#endif
+  return (cell_is_active_hydro(cj, e) && (cj->hydro.count > 0) && (ci->stars.count > 0));
+}
 
-  return ((cj->hydro.ti_end_min == e->ti_current) || (ci->stars.count > 0));
+/**
+ * @brief Does a top level cell contain particles that should do RT this step?
+ *
+ * @param c The #cell.
+ * @param e The #engine containing information about the current time.
+ * @return 1 if the #cell contains at least an active particle, 0 otherwise.
+ */
+__attribute__((always_inline)) INLINE static int rt_should_do_top_cell(
+    const struct cell *c, const struct engine *e) {
+
+  return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) || (c->stars.count > 0));
 }
 
 #endif /* SWIFT_RT_DO_CELLS_H */
