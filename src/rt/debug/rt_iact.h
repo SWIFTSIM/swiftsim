@@ -125,24 +125,25 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
         "rt_finalise_gradient count is %d",
         pi->rt_data.gradients_done);
 
-  if (pj->rt_data.injection_done != 1)
-    error(
-        "Trying to do iact transport when "
-        "finalise injection count is %d",
-        pj->rt_data.injection_done);
-
-  if (pj->rt_data.calls_iact_gradient == 0)
-    error(
-        "Called iact transport on particle "
-        "with iact gradient count 0");
-
-  if (pj->rt_data.gradients_done != 1)
-    error(
-        "Trying to do iact transport when "
-        "rt_finalise_gradient count is %d",
-        pj->rt_data.gradients_done);
-
   if (mode == 1) {
+
+    if (pj->rt_data.injection_done != 1)
+      error(
+          "Trying to do iact transport when "
+          "finalise injection count is %d",
+          pj->rt_data.injection_done);
+
+    if (pj->rt_data.calls_iact_gradient == 0)
+      error(
+          "Called iact transport on particle "
+          "with iact gradient count 0");
+
+    if (pj->rt_data.gradients_done != 1)
+      error(
+          "Trying to do iact transport when "
+          "rt_finalise_gradient count is %d",
+          pj->rt_data.gradients_done);
+
     pi->rt_data.calls_tot += 1;
     pi->rt_data.calls_per_step += 1;
     pi->rt_data.calls_iact_transport += 1;
@@ -150,6 +151,24 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
     pj->rt_data.calls_per_step += 1;
     pj->rt_data.calls_iact_transport += 1;
   } else {
+
+    if (pj->rt_data.injection_done != 1)
+      message(
+          "Trying to do iact transport when finalise injection "
+          "count is %d in nonsym flux. You should look into this",
+          pj->rt_data.injection_done);
+
+    if (pj->rt_data.calls_iact_gradient == 0)
+      message(
+          "Called iact transport on particle with iact gradient "
+          "count 0 in nonsym flux. You should look into this");
+
+    if (pj->rt_data.gradients_done != 1)
+      message(
+          "Trying to do iact transport when rt_finalise_gradient "
+          "count is %d in nonsym flux. You should look into this",
+          pj->rt_data.gradients_done);
+
     pi->rt_data.calls_tot += 1;
     pi->rt_data.calls_per_step += 1;
     pi->rt_data.calls_iact_transport += 1;

@@ -43,12 +43,13 @@
 __attribute__((always_inline)) INLINE static int rt_should_do_cell(
     const struct cell *c, const struct engine *e) {
 
-  return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) || (c->stars.count > 0));
+  return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) ||
+          (c->stars.count > 0));
 }
 
 /**
  * @brief Does a cell contain particles that should do RT this step?
- * This function is for a pair-type interaction, where we take stars from 
+ * This function is for a pair-type interaction, where we take stars from
  * cell ci and hydro particles from cell cj.
  *
  * @param ci First #cell.
@@ -59,20 +60,8 @@ __attribute__((always_inline)) INLINE static int rt_should_do_cell(
 __attribute__((always_inline)) INLINE static int rt_should_do_cell_pair(
     const struct cell *ci, const struct cell *cj, const struct engine *e) {
 
-  return (cell_is_active_hydro(cj, e) && (cj->hydro.count > 0) && (ci->stars.count > 0));
-}
-
-/**
- * @brief Does a top level cell contain particles that should do RT this step?
- *
- * @param c The #cell.
- * @param e The #engine containing information about the current time.
- * @return 1 if the #cell contains at least an active particle, 0 otherwise.
- */
-__attribute__((always_inline)) INLINE static int rt_should_do_top_cell(
-    const struct cell *c, const struct engine *e) {
-
-  return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) || (c->stars.count > 0));
+  return (cell_is_active_hydro(cj, e) && (cj->hydro.count > 0) &&
+          (ci->stars.count > 0));
 }
 
 #endif /* SWIFT_RT_DO_CELLS_H */
