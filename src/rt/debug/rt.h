@@ -19,6 +19,7 @@
 #ifndef SWIFT_RT_DEBUG_H
 #define SWIFT_RT_DEBUG_H
 
+#include "rt_properties.h"
 #include "rt_stellar_emission_rate.h"
 #include "rt_thermochemistry.h"
 
@@ -108,9 +109,10 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
  *
  */
 __attribute__((always_inline)) INLINE static void
-rt_injection_update_photon_density(struct part* restrict p) {
+rt_injection_update_photon_density(struct part* restrict p,
+                                   struct rt_props* props) {
 
-  if (p->rt_data.injection_check != 1)
+  if (props->do_all_parts_have_stars_checks && p->rt_data.injection_check != 1)
     error("called ghost1 when injection check count is %d; ID=%lld",
           p->rt_data.injection_check, p->id);
   p->rt_data.injection_done += 1;
@@ -235,9 +237,10 @@ __attribute__((always_inline)) INLINE static void rt_tchem(
  * @param p Hydro particle.
  */
 __attribute__((always_inline)) INLINE static void
-rt_debugging_check_injection_part(struct part* restrict p) {
+rt_debugging_check_injection_part(struct part* restrict p,
+                                  struct rt_props* props) {
 
-  p->rt_data.injection_check += 1;
+  if (props->do_all_parts_have_stars_checks) p->rt_data.injection_check += 1;
 }
 
 /**
@@ -250,9 +253,10 @@ rt_debugging_check_injection_part(struct part* restrict p) {
  * @param s Star particle.
  */
 __attribute__((always_inline)) INLINE static void
-rt_debugging_check_injection_spart(struct spart* restrict s) {
+rt_debugging_check_injection_spart(struct spart* restrict s,
+                                   struct rt_props* props) {
 
-  s->rt_data.injection_check += 1;
+  if (props->do_all_parts_have_stars_checks) s->rt_data.injection_check += 1;
 }
 
 #endif /* SWIFT_RT_DEBUG_H */
