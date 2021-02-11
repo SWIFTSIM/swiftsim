@@ -43,8 +43,7 @@
 __attribute__((always_inline)) INLINE static int rt_should_do_cell(
     const struct cell *c, const struct engine *e) {
 
-  return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) ||
-          (c->stars.count > 0));
+  return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) && (c->stars.count > 0));
 }
 
 /**
@@ -62,6 +61,23 @@ __attribute__((always_inline)) INLINE static int rt_should_do_cell_pair(
 
   return (cell_is_active_hydro(cj, e) && (cj->hydro.count > 0) &&
           (ci->stars.count > 0));
+}
+
+/**
+ * @brief Do we need to unskip this cell's RT (injection) related tasks?
+ * For unskipping (recursively), don't check about the star's count here.
+ * Pair tasks might need to be checked for as well first. This way, we can
+ * be more restrictive for the check for pair type tasks and include the
+ * check for star count > 0 there on a pair by pair basis.
+ *
+ * @param c The #cell.
+ * @param e The #engine containing information about the current time.
+ * @return 1 if the #cell needs to activate tasks
+ */
+__attribute__((always_inline)) INLINE static int rt_should_do_unskip_cell(
+    const struct cell *c, const struct engine *e) {
+
+  return (cell_is_active_hydro(c, e) && (c->hydro.count > 0));
 }
 
 #endif /* SWIFT_RT_DO_CELLS_H */

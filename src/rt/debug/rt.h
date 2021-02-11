@@ -64,6 +64,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
   p->rt_data.calls_tot = 0;
   rt_init_part(p);
   rt_reset_part(p);
+  p->rt_data.injection_check = 1;
 }
 
 /**
@@ -110,8 +111,8 @@ __attribute__((always_inline)) INLINE static void
 rt_injection_update_photon_density(struct part* restrict p) {
 
   if (p->rt_data.injection_check != 1)
-    error("called ghost1 when injection check count is %d",
-          p->rt_data.injection_check);
+    error("called ghost1 when injection check count is %d; ID=%lld",
+          p->rt_data.injection_check, p->id);
   p->rt_data.injection_done += 1;
   p->rt_data.calls_tot += 1;
   p->rt_data.calls_per_step += 1;

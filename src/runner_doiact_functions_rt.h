@@ -46,51 +46,8 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
   const float a = cosmo->a;
   const float H = cosmo->H;
 
-#ifdef RT_DEBUG
-  /* Before an early exit, loop over all parts and sparts in this cell
-   * and mark that we checked these particles */
-
-  if (c->hydro.count > 0) {
-    struct part *restrict parts = c->hydro.parts;
-    const int count = c->hydro.count;
-
-    /* Loop over the parts in cell */
-    for (int pid = 0; pid < count; pid++) {
-
-      /* Get a pointer to the jth particle. */
-      struct part *restrict pj = &parts[pid];
-
-      /* Skip inhibited particles. */
-      if (part_is_inhibited(pj, e)) continue;
-
-      /* Skip inactive particles. */
-      if (!part_is_active(pj, e)) continue;
-
-      rt_debugging_check_injection_part(pj);
-    }
-  }
-
-  if (c->stars.count > 0) {
-    struct spart *restrict sparts = c->stars.parts;
-    const int scount = c->stars.count;
-
-    /* Loop over the parts in cell */
-    for (int sid = 0; sid < scount; sid++) {
-
-      /* Get a pointer to the ith spart. */
-      struct spart *restrict si = &sparts[sid];
-
-      /* Skip inhibited particles. */
-      if (spart_is_inhibited(si, e)) continue;
-
-      rt_debugging_check_injection_spart(si);
-    }
-  }
-#endif
-
   /* Anything to do here? */
-  if (c->hydro.count == 0 || c->stars.count == 0) return;
-  if (!rt_should_do_cell(c, e)) return;
+  /* early exit checks are already done in DOSELF1_BRANCH_RT */
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Drift the cell to the current timestep if needed. */
@@ -263,10 +220,8 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
   double rshift = 0.0;
   for (int k = 0; k < 3; k++) rshift += shift[k] * runner_shift[sid][k];
 
-  const int do_ci_stars = (ci->nodeID == e->nodeID) && (cj->hydro.count != 0) &&
-                          rt_should_do_cell_pair(ci, cj, e);
-  const int do_cj_stars = (cj->nodeID == e->nodeID) && (ci->hydro.count != 0) &&
-                          rt_should_do_cell_pair(cj, ci, e);
+  const int do_ci_stars = (ci->nodeID == e->nodeID) && rt_should_do_cell_pair(ci, cj, e);
+  const int do_cj_stars = (cj->nodeID == e->nodeID) && rt_should_do_cell_pair(cj, ci, e);
 
   if (do_ci_stars) {
 
@@ -451,14 +406,10 @@ void DOPAIR1_RT_NAIVE(struct runner *r, struct cell *ci, struct cell *cj,
   TIMER_TIC;
   const struct engine *restrict e = r->e;
 
-  const int do_stars_in_ci = (cj->nodeID == r->e->nodeID) &&
-                             (cj->hydro.count > 0) &&
-                             rt_should_do_cell_pair(ci, cj, e);
+  const int do_stars_in_ci = (cj->nodeID == r->e->nodeID) && rt_should_do_cell_pair(ci, cj, e);
   if (do_stars_in_ci) DOPAIR1_NONSYM_RT_NAIVE(r, ci, cj);
 
-  const int do_stars_in_cj = (ci->nodeID == r->e->nodeID) &&
-                             (ci->hydro.count > 0) &&
-                             rt_should_do_cell_pair(cj, ci, e);
+  const int do_stars_in_cj = (ci->nodeID == r->e->nodeID) && rt_should_do_cell_pair(cj, ci, e);
   if (do_stars_in_cj) DOPAIR1_NONSYM_RT_NAIVE(r, cj, ci);
 
   if (timer) TIMER_TOC(TIMER_DOPAIR_RT);
@@ -473,6 +424,50 @@ void DOPAIR1_RT_NAIVE(struct runner *r, struct cell *ci, struct cell *cj,
  */
 void DOSELF1_BRANCH_RT(struct runner *r, struct cell *c, int timer) {
 
+#ifdef RT_DEBUG
+  /* Before an early exit, loop over all parts and sparts in this cell
+   * and mark that we checked these particles */
+
+  const struct engine *e = r->e;
+
+  if (c->hydro.count > 0) {
+    struct part *restrict parts = c->hydro.parts;
+
+    /* Loop over the parts in cell */
+    for (int pid = 0; pid < c->hydro.count; pid++) {
+
+      /* Get a pointer to the jth particle. */
+      struct part *restrict pj = &parts[pid];
+
+      /* Skip inhibited particles. */
+      if (part_is_inhibited(pj, e)) continue;
+
+      /* Skip inactive particles. */
+      if (!part_is_active(pj, e)) continue;
+
+      rt_debugging_check_injection_part(pj);
+    }
+  }
+
+  if (c->stars.count > 0) {
+    struct spart *restrict sparts = c->stars.parts;
+
+    /* Loop over the parts in cell */
+    for (int sid = 0; sid < c->stars.count; sid++) {
+
+      /* Get a pointer to the ith spart. */
+      struct spart *restrict si = &sparts[sid];
+
+      /* Skip inhibited particles. */
+      if (spart_is_inhibited(si, e)) continue;
+
+      rt_debugging_check_injection_spart(si);
+    }
+  }
+#endif
+
+  /* early exit? */
+  if (!rt_should_do_cell(c, r->e)) return;
   DOSELF1_RT(r, c, timer);
 }
 
@@ -494,10 +489,8 @@ void DOPAIR1_BRANCH_RT(struct runner *r, struct cell *ci, struct cell *cj,
   const int sid = space_getsid(e->s, &ci, &cj, shift);
 
   const int do_stars_ci = (cj->nodeID == r->e->nodeID) &&
-                          (cj->hydro.count > 0) &&
                           rt_should_do_cell_pair(ci, cj, e);
   const int do_stars_cj = (ci->nodeID == r->e->nodeID) &&
-                          (ci->hydro.count > 0) &&
                           rt_should_do_cell_pair(cj, ci, e);
 
   /* Anything to do here? */
@@ -571,7 +564,55 @@ void DOSUB_SELF1_RT(struct runner *r, struct cell *c, int timer) {
 #endif
 
   /* Should we even bother? */
-  if (c->hydro.count == 0 || c->stars.count == 0) return;
+  if (!rt_should_do_cell(c, r->e)) {
+
+#ifdef RT_DEBUG
+    /* Before an early exit, loop over all parts and sparts in this cell
+     * and mark that we checked these particles */
+
+    const struct engine *e = r->e;
+
+    if (c->hydro.count > 0) {
+      struct part *restrict parts = c->hydro.parts;
+      const int count = c->hydro.count;
+
+      /* Loop over the parts in cell */
+      for (int pid = 0; pid < count; pid++) {
+
+        /* Get a pointer to the jth particle. */
+        struct part *restrict pj = &parts[pid];
+
+        /* Skip inhibited particles. */
+        if (part_is_inhibited(pj, e)) continue;
+
+        /* Skip inactive particles. */
+        if (!part_is_active(pj, e)) continue;
+
+        rt_debugging_check_injection_part(pj);
+      }
+    }
+
+    if (c->stars.count > 0) {
+      struct spart *restrict sparts = c->stars.parts;
+      const int scount = c->stars.count;
+
+      /* Loop over the parts in cell */
+      for (int sid = 0; sid < scount; sid++) {
+
+        /* Get a pointer to the ith spart. */
+        struct spart *restrict si = &sparts[sid];
+
+        /* Skip inhibited particles. */
+        if (spart_is_inhibited(si, e)) continue;
+
+        rt_debugging_check_injection_spart(si);
+      }
+    }
+#endif
+
+    /* exit early if there is nothing to do */
+    return;
+  }
 
   /* Recurse? */
   if (cell_can_recurse_in_self_stars_task(c)) {
@@ -611,10 +652,8 @@ void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
   const struct engine *e = r->e;
 
   /* Should we even bother? */
-  const int should_do_ci = ci->stars.count != 0 && cj->hydro.count != 0 &&
-                           rt_should_do_cell_pair(ci, cj, e);
-  const int should_do_cj = cj->stars.count != 0 && ci->hydro.count != 0 &&
-                           rt_should_do_cell_pair(cj, ci, e);
+  const int should_do_ci = rt_should_do_cell_pair(ci, cj, e);
+  const int should_do_cj = rt_should_do_cell_pair(cj, ci, e);
   if (!should_do_ci && !should_do_cj) return;
 
   /* Get the type of pair and flip ci/cj if needed. */
@@ -637,10 +676,8 @@ void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
   else {
 
     /* do full checks again, space_getsid() might swap ci/cj pointers */
-    const int do_ci_stars = (cj->nodeID == e->nodeID) && cj->hydro.count != 0 &&
-                            rt_should_do_cell_pair(ci, cj, e);
-    const int do_cj_stars = (ci->nodeID == e->nodeID) && ci->hydro.count != 0 &&
-                            rt_should_do_cell_pair(cj, ci, e);
+    const int do_ci_stars = (cj->nodeID == e->nodeID) && rt_should_do_cell_pair(ci, cj, e);
+    const int do_cj_stars = (ci->nodeID == e->nodeID) && rt_should_do_cell_pair(cj, ci, e);
 
     if (do_ci_stars || do_cj_stars) DOPAIR1_BRANCH_RT(r, ci, cj, 0);
   }

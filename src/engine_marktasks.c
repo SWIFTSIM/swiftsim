@@ -99,7 +99,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                                   (with_star_formation && ci_active_hydro);
       const int ci_active_sinks =
           cell_is_active_sinks(ci, e) || ci_active_hydro;
-      const int ci_active_rt = with_rt && rt_should_do_cell(ci, e);
+      const int ci_active_rt = with_rt && rt_should_do_unskip_cell(ci, e);
 
       /* Activate the hydro drift */
       if (t_type == task_type_self && t_subtype == task_subtype_density) {
