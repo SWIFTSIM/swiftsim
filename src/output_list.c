@@ -367,7 +367,7 @@ void output_list_init(struct output_list **list, const struct engine *e,
   output_list_read_file(*list, filename, cosmo);
 
   if ((*list)->size < 2)
-    error("You need to provide more snapshots in '%s'", filename);
+    error("You need to provide more entries in '%s'", filename);
 
   if (strcmp(name, "Snapshots") == 0) {
     if ((*list)->select_output_on &&
