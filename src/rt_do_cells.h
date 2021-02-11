@@ -43,7 +43,8 @@
 __attribute__((always_inline)) INLINE static int rt_should_do_cell(
     const struct cell *c, const struct engine *e) {
 
-  return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) && (c->stars.count > 0));
+  return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) &&
+          (c->stars.count > 0));
 }
 
 /**
