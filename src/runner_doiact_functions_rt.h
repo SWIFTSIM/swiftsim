@@ -449,7 +449,7 @@ void DOSELF1_BRANCH_RT(struct runner *r, struct cell *c, int timer) {
       /* Skip inactive particles. */
       if (!part_is_active(pj, e)) continue;
 
-      rt_debugging_check_injection_part(pj);
+      rt_debugging_check_injection_part(pj, e->rt_props);
     }
   }
 
@@ -465,7 +465,7 @@ void DOSELF1_BRANCH_RT(struct runner *r, struct cell *c, int timer) {
       /* Skip inhibited particles. */
       if (spart_is_inhibited(si, e)) continue;
 
-      rt_debugging_check_injection_spart(si);
+      rt_debugging_check_injection_spart(si, e->rt_props);
     }
   }
 #endif
@@ -592,7 +592,7 @@ void DOSUB_SELF1_RT(struct runner *r, struct cell *c, int timer) {
         /* Skip inactive particles. */
         if (!part_is_active(pj, e)) continue;
 
-        rt_debugging_check_injection_part(pj);
+        rt_debugging_check_injection_part(pj, e->rt_props);
       }
     }
 
@@ -609,7 +609,7 @@ void DOSUB_SELF1_RT(struct runner *r, struct cell *c, int timer) {
         /* Skip inhibited particles. */
         if (spart_is_inhibited(si, e)) continue;
 
-        rt_debugging_check_injection_spart(si);
+        rt_debugging_check_injection_spart(si, e->rt_props);
       }
     }
 #endif

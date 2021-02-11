@@ -67,7 +67,7 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
     struct rt_props* rtp, struct swift_params* params) {
 
   rtp->do_all_parts_have_stars_checks =
-      parser_get_opt_param_int(params, "RTDEBUG:all_parts_have_stars", 0);
+      parser_get_opt_param_int(params, "DebugRT:all_parts_have_stars", 0);
 
   /* After initialisation, print params to screen */
   rt_props_print(rtp);
