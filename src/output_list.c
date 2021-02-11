@@ -369,6 +369,14 @@ void output_list_init(struct output_list **list, const struct engine *e,
   if ((*list)->size < 2)
     error("You need to provide more snapshots in '%s'", filename);
 
+  if (strcmp(name, "Snapshots") == 0) {
+    if ((*list)->select_output_on &&
+        e->output_options->select_output->paramCount == 0)
+      error(
+          "Cannot use an output list with individual output selection entries "
+          "if 'Snapshots:select_output_on' is set to 0.");
+  }
+
   /* Set data for later checks */
   if (cosmo) {
     *delta_time = (*list)->times[1] / (*list)->times[0];
