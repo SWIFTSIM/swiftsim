@@ -33,14 +33,14 @@ typedef enum ray_feedback_modes {
   ray_feedback_kinetic_mirr  /*< Used in SNII kinetic feedback (2nd particle) */
 } ray_feedback_type;
 
-/** 
+/**
  * @brief In SNII kinetic feedback, each ray needs to carry such an enum
- * to decide whether its kick will be allowed or not 
+ * to decide whether its kick will be allowed or not
  */
 enum ray_feedback_kick_permission {
   ray_feedback_kick_non_allowed, /*< Stellar particle is not allowed to kick */
   ray_feedback_kick_allowed      /*< Stellar particle is allowed to kick */
-}; 
+};
 
 /**
  * @brief Fields used in isotropic thermal SN/AGN feedback
