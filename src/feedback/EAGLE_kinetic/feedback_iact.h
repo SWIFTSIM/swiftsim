@@ -160,8 +160,8 @@ runner_iact_nonsym_feedback_prep2(const float r2, const float *dx,
   for (int i = 0; i < N_of_SNII_kinetic_events; i++) {
 
     /* Find the particle that is closest to the ith ray */
-    if (pj->id == si->feedback_data.SNII_rays_true[i].id_min_length){
-      
+    if (pj->id == si->feedback_data.SNII_rays_true[i].id_min_length) {
+
       /* Does this gas particle want to be kicked by this stellar particle
        * via ray i? If so, store this information in the ith ray extra struct */
       if (pj->feedback_data.SNII_star_largest_id == si->id) {
@@ -177,7 +177,7 @@ runner_iact_nonsym_feedback_prep2(const float r2, const float *dx,
       }
     }
     /* Same as above but for the mirror ith ray */
-    else if (pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length){
+    else if (pj->id == si->feedback_data.SNII_rays_mirr[i].id_min_length) {
       if (pj->feedback_data.SNII_star_largest_id == si->id) {
         si->feedback_data.SNII_rays_ext_mirr[i].status =
             ray_feedback_kick_allowed;
@@ -413,9 +413,9 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
             /* Compute the physical kick velocity in internal units */
             ray_kinetic_feedback_compute_kick_velocity(
                 v_kick, &v_kick_abs, si->feedback_data.SNII_rays_ext_true + i,
-                si->feedback_data.SNII_rays_ext_mirr + i,
-                ray_type, energy_per_pair, cosmo, current_mass,
-                si->v, rand_theta, rand_phi, mass_true, mass_mirr);
+                si->feedback_data.SNII_rays_ext_mirr + i, ray_type,
+                energy_per_pair, cosmo, current_mass, si->v, rand_theta,
+                rand_phi, mass_true, mass_mirr);
           }
 
           /* Do the kicks by updating the particle velocity.
