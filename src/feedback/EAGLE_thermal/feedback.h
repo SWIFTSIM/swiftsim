@@ -313,7 +313,7 @@ void feedback_struct_restore(struct feedback_props* feedback, FILE* stream);
 INLINE static void feedback_write_flavour(struct feedback_props* feedback,
                                           hid_t h_grp) {
 
-  io_write_attribute_s(h_grp, "Feedback Model", "EAGLE (kinetic)");
+  io_write_attribute_s(h_grp, "Feedback Model", "EAGLE (thermal)");
 }
 #endif  // HAVE_HDF5
 
