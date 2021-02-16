@@ -261,7 +261,6 @@ static INLINE void potential_init_backend(
 
   /* NFW scale-radius */
   potential->r_s = potential->R_200 / potential->c_200;
-  // const double r_s3 = potential->r_s * potential->r_s * potential->r_s;
 
   /* Log(c_200) term appearing in many expressions */
   potential->log_c200_term =
