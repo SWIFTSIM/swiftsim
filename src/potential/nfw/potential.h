@@ -81,6 +81,12 @@ struct external_potential {
 
   /*! Softening length */
   double eps;
+
+  /*! Bulge fraction */
+  double bulgefraction;
+
+  /*! disk fraction */
+  double diskfraction;
 };
 
 /**
@@ -238,9 +244,13 @@ static INLINE void potential_init_backend(
       parser_get_param_double(parameter_file, "NFWPotential:epsilon");
   const double h =
         parser_get_param_double(parameter_file, "NFWPotential:h");
-  const double bulgefraction = parser_get_param_double(
-        parameter_file, "NFWPotential:bulgefraction");
-  message("Bulge fraction = %e", bulgefraction);
+  potential->bulgefraction = parser_get_opt_param_double(
+        parameter_file, "NFWPotential:bulgefraction", 0.0);
+  potential->diskfraction = parser_get_opt_param_double(
+        parameter_file, "NFWPotential:diskfraction", 0.0);
+
+  /* Update the halo mass to take into account the central galaxy */
+  potential->M200 = (1-potential->bulgefraction-potential->diskfraction) * potential->M200;
 
   /* Some constants we need to calculate the critical density */
   const double G_newton = phys_const->const_newton_G;
@@ -289,6 +299,9 @@ static INLINE void potential_print_backend(
       potential->x[0], potential->x[1], potential->x[2], potential->r_s,
       potential->timestep_mult, potential->mintime);
   message("Properties of the halo M200 = %e, R200 = %e, c = %e", potential->M_200, potential->R_200, potential->c_200); 
+  if (potential->bulgefraction > 0.) OR (potential->diskfraction > 0.) {
+    message("bulge fraction = %e, disk fraction = %e", potential->bulgefraction, potential->diskfraction); 
+  }
 }
 
 #endif /* SWIFT_POTENTIAL_NFW_H */
