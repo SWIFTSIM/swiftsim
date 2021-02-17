@@ -769,6 +769,9 @@ static PyObject *pyGetData(__attribute__((unused)) PyObject *self,
     output[i] = malloc(n_tot * h->masks[field_indices[i]].size);
   }
 
+  /* Enable multithreading */
+  Py_BEGIN_ALLOW_THREADS;
+
   /* Read the particles. */
   if (part_ids == Py_None) {
     logger_reader_read_all_particles(reader, time, logger_reader_lin,
@@ -804,6 +807,9 @@ static PyObject *pyGetData(__attribute__((unused)) PyObject *self,
       n_tot += n_part[i];
     }
   }
+
+  /* Disable multithreading */
+  Py_END_ALLOW_THREADS;
 
   /* Create the python output. */
   PyObject *array = logger_loader_create_output(output, field_indices, n_fields,
