@@ -642,14 +642,17 @@ struct extra_data_read_all {
  * @brief Mapper function of #logger_reader_read_all_particles_single_type.
  *
  * @param map_data (size_t) The current position (not used)
- * @param num_elements The number of elements to process with the current thread.
+ * @param num_elements The number of elements to process with the current
+ * thread.
  * @param extra_data Pointer to a #extra_data_read_all.
  */
-void logger_reader_read_all_particles_single_type_mapper(
-    void *map_data, int num_elements, void *extra_data) {
+void logger_reader_read_all_particles_single_type_mapper(void *map_data,
+                                                         int num_elements,
+                                                         void *extra_data) {
 
   /* Extract the data */
-  struct extra_data_threadpool *data_tp = (struct extra_data_read_all *) extra_data;
+  struct extra_data_threadpool *data_tp =
+      (struct extra_data_read_all *)extra_data;
   struct logger_reader *reader = data_tp->reader;
   double time = data_tp->time;
   enum logger_reader_type interp_type = data_tp->interp_type;
@@ -666,12 +669,12 @@ void logger_reader_read_all_particles_single_type_mapper(
 
   const size_t size_index = reader->index.index_prev.nparts[type];
   const size_t size_history =
-    logger_reader_count_number_new_particles(reader, type);
+      logger_reader_count_number_new_particles(reader, type);
 
   struct index_data *data =
-    logger_index_get_data(&reader->index.index_prev, type);
+      logger_index_get_data(&reader->index.index_prev, type);
   struct index_data *data_created =
-    logger_index_get_created_history(&reader->index.index_next, type);
+      logger_index_get_created_history(&reader->index.index_next, type);
 
   /* Count the number of previous parts for the shift in output */
   uint64_t prev_npart = 0;
@@ -684,7 +687,7 @@ void logger_reader_read_all_particles_single_type_mapper(
   if (output_tmp == NULL) {
     error_python("Failed to allocate the temporary output buffer");
   }
-  for(int i = 0; i < n_fields_wanted; i++) {
+  for (int i = 0; i < n_fields_wanted; i++) {
     const int global = fields_wanted[i].global_index;
     output_tmp[i] = malloc(h->masks[global].size);
     if (output_tmp[i] == NULL) {
@@ -707,9 +710,10 @@ void logger_reader_read_all_particles_single_type_mapper(
     }
 
     /* Get the offset */
-    const size_t current = reading_history? current_index - size_index : current_index;
-    size_t offset = reading_history ? data_created[current].offset
-      : data[current].offset;
+    const size_t current =
+        reading_history ? current_index - size_index : current_index;
+    size_t offset =
+        reading_history ? data_created[current].offset : data[current].offset;
 
     /* Loop over each field. */
     int particle_removed = 0;
@@ -718,8 +722,8 @@ void logger_reader_read_all_particles_single_type_mapper(
       /* Read the field. */
       particle_removed = logger_reader_read_field(
           reader, time, reader->time.time_offset, interp_type, offset,
-          &fields_wanted[field], all_fields, all_fields_count, output_tmp[field],
-          type);
+          &fields_wanted[field], all_fields, all_fields_count,
+          output_tmp[field], type);
 
       /* Should we continue to read the fields of this particle? */
       if (particle_removed) {
@@ -730,12 +734,13 @@ void logger_reader_read_all_particles_single_type_mapper(
     /* Write the particle into the output if it was not removed */
     if (!particle_removed) {
       size_t current_output = atomic_inc(&data_tp->current_output);
-      for(int field = 0; field < n_fields_wanted; field++) {
+      for (int field = 0; field < n_fields_wanted; field++) {
 
         /* Get the array */
         const int global = fields_wanted[field].global_index;
         void *output_single =
-          (char *)output[field] + (current_output + prev_npart) * h->masks[global].size;
+            (char *)output[field] +
+            (current_output + prev_npart) * h->masks[global].size;
 
         /* Copy the temporary buffer into the global one */
         memcpy(output_single, output_tmp[field], h->masks[global].size);
@@ -744,7 +749,7 @@ void logger_reader_read_all_particles_single_type_mapper(
   }
 
   /* Free the allocated memory */
-  for(int i = 0; i < n_fields_wanted; i++) {
+  for (int i = 0; i < n_fields_wanted; i++) {
     free(output_tmp[i]);
   }
   free(output_tmp);
@@ -789,13 +794,18 @@ void logger_reader_read_all_particles_single_type(
                                   type);
 
   /* Compact the data */
-  struct extra_data_threadpool extra = {
-      reader, time, interp_type, fields_wanted,
-      n_fields_wanted, output, n_part, type,
-      all_fields_count, all_fields, /* current_index */0,
-      /* current_output */0
-  };
-
+  struct extra_data_threadpool extra = {reader,
+                                        time,
+                                        interp_type,
+                                        fields_wanted,
+                                        n_fields_wanted,
+                                        output,
+                                        n_part,
+                                        type,
+                                        all_fields_count,
+                                        all_fields,
+                                        /* current_index */ 0,
+                                        /* current_output */ 0};
 
   /* Create the threadpool */
   struct threadpool tp;
@@ -803,9 +813,8 @@ void logger_reader_read_all_particles_single_type(
   threadpool_init(&tp, 6);
 
   /* Read the particles */
-  threadpool_map(&tp, logger_reader_read_all_particles_single_type_mapper,
-                 NULL, n_part[type], 1, threadpool_auto_chunk_size,
-                 &extra);
+  threadpool_map(&tp, logger_reader_read_all_particles_single_type_mapper, NULL,
+                 n_part[type], 1, threadpool_auto_chunk_size, &extra);
 
   /* Free the memory */
   threadpool_clean(&tp);
