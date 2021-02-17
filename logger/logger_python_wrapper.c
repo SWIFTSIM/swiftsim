@@ -514,9 +514,15 @@ static PyObject *pyGetParticleData(__attribute__((unused)) PyObject *self,
     output[i] = malloc(n_tot * h->masks[field_indices[i]].size);
   }
 
+  /* Enable multithreading */
+  Py_BEGIN_ALLOW_THREADS;
+
   /* Read the particles. */
   logger_reader_read_all_particles(reader, time, logger_reader_lin,
                                    field_indices, n_fields, output, n_part);
+
+  /* Disable multithreading */
+  Py_END_ALLOW_THREADS;
 
   /* Create the python output. */
   PyObject *array = logger_loader_create_output(output, field_indices, n_fields,
