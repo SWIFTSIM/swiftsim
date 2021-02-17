@@ -655,7 +655,7 @@ void logger_reader_read_all_particles_single_type_mapper(void *map_data,
                                                          void *extra_data) {
 
   /* Extract the data */
-  struct extra_data_threadpool *data_tp =
+  struct extra_data_read_all *data_tp =
       (struct extra_data_read_all *)extra_data;
   struct logger_reader *reader = data_tp->reader;
   double time = data_tp->time;
@@ -798,18 +798,18 @@ void logger_reader_read_all_particles_single_type(
                                   type);
 
   /* Compact the data */
-  struct extra_data_threadpool extra = {reader,
-                                        time,
-                                        interp_type,
-                                        fields_wanted,
-                                        n_fields_wanted,
-                                        output,
-                                        n_part,
-                                        type,
-                                        all_fields_count,
-                                        all_fields,
-                                        /* current_index */ 0,
-                                        /* current_output */ 0};
+  struct extra_data_read_all extra = {reader,
+                                      time,
+                                      interp_type,
+                                      fields_wanted,
+                                      n_fields_wanted,
+                                      output,
+                                      n_part,
+                                      type,
+                                      all_fields_count,
+                                      all_fields,
+                                      /* current_index */ 0,
+                                      /* current_output */ 0};
 
   /* Create the threadpool */
   struct threadpool tp;
