@@ -72,7 +72,8 @@ struct external_potential {
    * time to get the time steps */
   double timestep_mult;
 
-  /*! Mode to use 0 for simplest form of potential purely 1 for idealized galaxies */
+  /*! Mode to use 0 for simplest form of potential purely 1 for idealized
+   * galaxies */
   int usedisk;
 };
 
@@ -260,33 +261,35 @@ static INLINE void potential_init_backend(
       error("Please specify one of the 3 variables M200, V200 or R200");
     }
 
-    potential->M200 = M200; 
+    potential->M200 = M200;
     potential->R200 = R200;
 
     /* get the concentration from the parameter file */
-    potential->c = parser_get_param_double(
-        parameter_file, "HernquistPotential:concentration");
+    potential->c = parser_get_param_double(parameter_file,
+                                           "HernquistPotential:concentration");
 
     /* Define the concentration a bit more simple */
     const double cc = potential->c;
 
     /* Calculate the Scale radius using the NFW definition */
     potential->Rs = R200 / cc;
-    
+
     /* Define inv concentration */
-    const double cc_inv = 1/cc;
+    const double cc_inv = 1 / cc;
 
     /* Calculate b using the concentration*/
-    const double b = 2. * cc_inv * cc_inv * (log(1. + cc) - cc/(1. + cc));
+    const double b = 2. * cc_inv * cc_inv * (log(1. + cc) - cc / (1. + cc));
 
     /* Calculate the Hernquist equivalent scale length */
-    potential->al = (b + sqrt(b))/(1-b) * R200;
+    potential->al = (b + sqrt(b)) / (1 - b) * R200;
 
     /* Define R200 inv*/
-    const double R200_inv = 1./R200;
+    const double R200_inv = 1. / R200;
 
     /* Calculate the total mass */
-    const double M_total_mass = (potential->R200 + potential->al)*(potential->R200 + potential->al) * R200_inv * R200_inv * potential->M200;
+    const double M_total_mass = (potential->R200 + potential->al) *
+                                (potential->R200 + potential->al) * R200_inv *
+                                R200_inv * potential->M200;
 
     /* Depending on the disk mass and and the bulge mass the halo
      * gets a different mass, because of this we read the fractions
@@ -328,12 +331,18 @@ static inline void potential_print_backend(
 
   message(
       "external potential is 'hernquist' with properties are (x,y,z) = (%e, "
-      "%e, %e), mass = %e scale length = %e , minimum time = %e timestep multiplier = %e",
+      "%e, %e), mass = %e scale length = %e , minimum time = %e timestep "
+      "multiplier = %e",
       potential->x[0], potential->x[1], potential->x[2], potential->mass,
       potential->al, potential->mintime, potential->timestep_mult);
-  if (potential->usedisk==1) {
-    message("Running with the idealized disk setup, M200 = %e, R200 = %e, c = %e", potential->M200, potential->R200, potential->c);
-    message("Hernquist scale length = %e, NFW equivalent scale length = %e, total Hernquist mass = %e", potential->al, potential->Rs, potential->mass);
+  if (potential->usedisk == 1) {
+    message(
+        "Running with the idealized disk setup, M200 = %e, R200 = %e, c = %e",
+        potential->M200, potential->R200, potential->c);
+    message(
+        "Hernquist scale length = %e, NFW equivalent scale length = %e, total "
+        "Hernquist mass = %e",
+        potential->al, potential->Rs, potential->mass);
   }
 }
 

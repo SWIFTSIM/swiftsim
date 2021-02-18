@@ -76,7 +76,8 @@ struct external_potential {
   /*! Common log term \f$ \ln(1+c_{200}) - \frac{c_{200}}{1 + c_{200}} \f$ */
   double log_c200_term;
 
-  /*! inverse of common log term \f$ \ln(1+c_{200}) - \frac{c_{200}}{1 + c_{200}} \f$ */
+  /*! inverse of common log term \f$ \ln(1+c_{200}) - \frac{c_{200}}{1 +
+   * c_{200}} \f$ */
   double M_200_times_log_c200_term_inv;
 
   /*! Softening length */
@@ -96,12 +97,12 @@ struct external_potential {
  * @param radius The radius of the particle
  */
 __attribute__((always_inline)) INLINE static float enclosed_mass_NFW(
-    const struct external_potential* restrict potential,
-    const double r) {
-  
-  const double r_over_Rs = r/potential->r_s;
+    const struct external_potential* restrict potential, const double r) {
 
-  return potential->M_200_times_log_c200_term_inv * (log(1+r_over_Rs) -r/(r+potential->r_s));
+  const double r_over_Rs = r / potential->r_s;
+
+  return potential->M_200_times_log_c200_term_inv *
+         (log(1 + r_over_Rs) - r / (r + potential->r_s));
 }
 
 /**
@@ -163,14 +164,14 @@ __attribute__((always_inline)) INLINE static void external_gravity_acceleration(
   const float dz = g->x[2] - potential->x[2];
 
   const float r2 = dx * dx + dy * dy + dz * dz;
-  const float r2_inv = 1.f/r2;
+  const float r2_inv = 1.f / r2;
 
-  const float r = sqrtf(r2); 
-  const float r_inv = 1.f/r; 
+  const float r = sqrtf(r2);
+  const float r_inv = 1.f / r;
 
   const float M_encl = enclosed_mass_NFW(potential, r);
 
-  const float minus_M_encl_over_r3 = - M_encl * r_inv * r2_inv;
+  const float minus_M_encl_over_r3 = -M_encl * r_inv * r2_inv;
 
   g->a_grav[0] += minus_M_encl_over_r3 * dx;
   g->a_grav[1] += minus_M_encl_over_r3 * dy;
@@ -240,14 +241,13 @@ static INLINE void potential_init_backend(
       parser_get_param_double(parameter_file, "NFWPotential:concentration");
   potential->M_200 =
       parser_get_param_double(parameter_file, "NFWPotential:M_200");
-  potential->eps = 
+  potential->eps =
       parser_get_param_double(parameter_file, "NFWPotential:epsilon");
-  const double h =
-        parser_get_param_double(parameter_file, "NFWPotential:h");
+  const double h = parser_get_param_double(parameter_file, "NFWPotential:h");
   potential->bulgefraction = parser_get_opt_param_double(
-        parameter_file, "NFWPotential:bulgefraction", 0.0);
+      parameter_file, "NFWPotential:bulgefraction", 0.0);
   potential->diskfraction = parser_get_opt_param_double(
-        parameter_file, "NFWPotential:diskfraction", 0.0);
+      parameter_file, "NFWPotential:diskfraction", 0.0);
 
   /* Some constants we need to calculate the critical density */
   const double G_newton = phys_const->const_newton_G;
@@ -257,7 +257,7 @@ static INLINE void potential_init_backend(
   const double H0 = h * kmoversoverMpc;
 
   /* Compute R_200 for this use the parameter critical density*/
-  potential->R_200 = cbrt(10. * potential->M_200 * G_newton * H0) / (10 * H0) ;
+  potential->R_200 = cbrt(10. * potential->M_200 * G_newton * H0) / (10 * H0);
 
   /* NFW scale-radius */
   potential->r_s = potential->R_200 / potential->c_200;
@@ -266,9 +266,13 @@ static INLINE void potential_init_backend(
   potential->log_c200_term =
       log(1. + potential->c_200) - potential->c_200 / (1. + potential->c_200);
 
-  potential->M_200_times_log_c200_term_inv = potential->M_200 /potential->log_c200_term ;
+  potential->M_200_times_log_c200_term_inv =
+      potential->M_200 / potential->log_c200_term;
 
-  potential->pre_factor = potential->M_200 * (1-potential->bulgefraction-potential->diskfraction) / (4 * M_PI * potential->log_c200_term);
+  potential->pre_factor =
+      potential->M_200 *
+      (1 - potential->bulgefraction - potential->diskfraction) /
+      (4 * M_PI * potential->log_c200_term);
 
   /* Compute the orbital time at the softening radius */
   const double sqrtgm = sqrt(phys_const->const_newton_G * potential->M_200);
@@ -294,9 +298,11 @@ static INLINE void potential_print_backend(
       "timestep multiplier = %e, mintime = %e",
       potential->x[0], potential->x[1], potential->x[2], potential->r_s,
       potential->timestep_mult, potential->mintime);
-  message("Properties of the halo M200 = %e, R200 = %e, c = %e", potential->M_200, potential->R_200, potential->c_200); 
+  message("Properties of the halo M200 = %e, R200 = %e, c = %e",
+          potential->M_200, potential->R_200, potential->c_200);
   if ((potential->bulgefraction > 0.) || (potential->diskfraction > 0.)) {
-    message("bulge fraction = %e, disk fraction = %e", potential->bulgefraction, potential->diskfraction); 
+    message("bulge fraction = %e, disk fraction = %e", potential->bulgefraction,
+            potential->diskfraction);
   }
 }
 
