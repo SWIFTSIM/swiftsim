@@ -154,6 +154,7 @@ const char *subtaskID_names[task_subtype_count] = {
     "sink_merger",
     "rt_inject",
     "sink_compute_formation",
+    "sink_accretion",
     "rt_gradient",
     "rt_transport",
 };
@@ -281,8 +282,11 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
           return task_action_bpart;
           break;
 
-        case task_subtype_sink_merger:
+        case task_subtype_sink_accretion:
         case task_subtype_sink_compute_formation:
+          return task_action_all;
+
+        case task_subtype_sink_merger:
           return task_action_sink;
 
         case task_subtype_rt_inject:
@@ -562,7 +566,8 @@ void task_unlock(struct task *t) {
         cell_gunlocktree(ci);
         cell_munlocktree(ci);
 #endif
-      } else if (subtype == task_subtype_sink_compute_formation) {
+      } else if (subtype == task_subtype_sink_compute_formation ||
+                 subtype == task_subtype_sink_accretion) {
         cell_sink_unlocktree(ci);
         cell_unlocktree(ci);
       } else if (subtype == task_subtype_sink_merger) {
@@ -603,7 +608,8 @@ void task_unlock(struct task *t) {
         cell_munlocktree(ci);
         cell_munlocktree(cj);
 #endif
-      } else if (subtype == task_subtype_sink_compute_formation) {
+      } else if (subtype == task_subtype_sink_compute_formation ||
+                 subtype == task_subtype_sink_accretion) {
         cell_sink_unlocktree(ci);
         cell_sink_unlocktree(cj);
         cell_unlocktree(ci);
@@ -791,7 +797,8 @@ int task_lock(struct task *t) {
           cell_sink_unlocktree(ci);
           return 0;
         }
-      } else if (subtype == task_subtype_sink_compute_formation) {
+      } else if (subtype == task_subtype_sink_compute_formation ||
+                 subtype == task_subtype_sink_accretion) {
         if (ci->sinks.hold) return 0;
         if (ci->hydro.hold) return 0;
         if (cell_sink_locktree(ci) != 0) return 0;
@@ -864,7 +871,8 @@ int task_lock(struct task *t) {
           return 0;
         }
 #endif
-      } else if (subtype == task_subtype_sink_compute_formation) {
+      } else if (subtype == task_subtype_sink_compute_formation ||
+                 subtype == task_subtype_sink_accretion) {
         /* Lock the sinks and the gas particles in both cells */
         if (ci->sinks.hold || cj->sinks.hold) return 0;
         if (ci->hydro.hold || cj->hydro.hold) return 0;
@@ -1163,6 +1171,9 @@ void task_get_group_name(int type, int subtype, char *cluster) {
       break;
     case task_subtype_sink_merger:
       strcpy(cluster, "SinkMerger");
+      break;
+    case task_subtype_sink_accretion:
+      strcpy(cluster, "SinkAccretion");
       break;
     default:
       strcpy(cluster, "None");

@@ -150,6 +150,7 @@ enum task_subtypes {
   task_subtype_sink_merger,
   task_subtype_rt_inject,
   task_subtype_sink_compute_formation,
+  task_subtype_sink_accretion,
   task_subtype_rt_gradient,
   task_subtype_rt_transport,
   task_subtype_count

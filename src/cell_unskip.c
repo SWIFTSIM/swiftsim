@@ -2687,6 +2687,8 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
       (cell_is_active_sinks(c, e) || cell_is_active_hydro(c, e))) {
     for (struct link *l = c->sinks.merger; l != NULL; l = l->next)
       scheduler_activate(s, l->t);
+    for (struct link *l = c->sinks.accretion; l != NULL; l = l->next)
+      scheduler_activate(s, l->t);
 
     if (c->sinks.sink_in != NULL) scheduler_activate(s, c->sinks.sink_in);
     if (c->sinks.sink_out != NULL) scheduler_activate(s, c->sinks.sink_out);
