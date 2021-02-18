@@ -1941,6 +1941,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
   struct task *t_rt_gradient = NULL;
   struct task *t_rt_transport = NULL;
   struct task *t_sink_merger = NULL;
+  struct task *t_sink_accretion = NULL;
 
   for (int ind = 0; ind < num_elements; ind++) {
 
@@ -2003,6 +2004,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_sink_merger =
             scheduler_addtask(sched, task_type_self, task_subtype_sink_merger,
                               flags, 0, ci, NULL);
+        t_sink_accretion =
+            scheduler_addtask(sched, task_type_self,
+                              task_subtype_sink_accretion, flags, 0, ci, NULL);
       }
 
       /* The black hole feedback tasks */
@@ -2045,6 +2049,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       if (with_sink) {
         engine_addlink(e, &ci->sinks.compute_formation, t_sink_formation);
         engine_addlink(e, &ci->sinks.merger, t_sink_merger);
+        engine_addlink(e, &ci->sinks.accretion, t_sink_accretion);
       }
       if (with_black_holes && bcount_i > 0) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
@@ -2220,6 +2225,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
             0, ci, cj);
         t_sink_merger = scheduler_addtask(
             sched, task_type_pair, task_subtype_sink_merger, flags, 0, ci, cj);
+        t_sink_accretion =
+            scheduler_addtask(sched, task_type_pair,
+                              task_subtype_sink_accretion, flags, 0, ci, cj);
       }
 
       /* The black hole feedback tasks */
@@ -2266,6 +2274,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         /* Merger */
         engine_addlink(e, &ci->sinks.merger, t_sink_merger);
         engine_addlink(e, &cj->sinks.merger, t_sink_merger);
+        /* Accretion */
+        engine_addlink(e, &ci->sinks.accretion, t_sink_accretion);
+        engine_addlink(e, &cj->sinks.accretion, t_sink_accretion);
       }
       if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
@@ -2625,6 +2636,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_sink_merger =
             scheduler_addtask(sched, task_type_sub_self,
                               task_subtype_sink_merger, flags, 0, ci, NULL);
+        t_sink_accretion =
+            scheduler_addtask(sched, task_type_sub_self,
+                              task_subtype_sink_accretion, flags, 0, ci, NULL);
       }
 
       /* The black hole feedback tasks */
@@ -2673,6 +2687,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       if (with_sink) {
         engine_addlink(e, &ci->sinks.compute_formation, t_sink_formation);
         engine_addlink(e, &ci->sinks.merger, t_sink_merger);
+        engine_addlink(e, &ci->sinks.accretion, t_sink_accretion);
       }
       if (with_black_holes && bcount_i > 0) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
@@ -2857,6 +2872,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         t_sink_merger =
             scheduler_addtask(sched, task_type_sub_pair,
                               task_subtype_sink_merger, flags, 0, ci, cj);
+        t_sink_accretion =
+            scheduler_addtask(sched, task_type_sub_pair,
+                              task_subtype_sink_accretion, flags, 0, ci, cj);
       }
 
       /* The black hole feedback tasks */
@@ -2910,6 +2928,10 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         /* Merger */
         engine_addlink(e, &ci->sinks.merger, t_sink_merger);
         engine_addlink(e, &cj->sinks.merger, t_sink_merger);
+
+        /* Accretion */
+        engine_addlink(e, &ci->sinks.accretion, t_sink_accretion);
+        engine_addlink(e, &cj->sinks.accretion, t_sink_accretion);
       }
       if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
         engine_addlink(e, &ci->black_holes.density, t_bh_density);
