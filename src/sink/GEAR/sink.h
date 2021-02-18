@@ -149,8 +149,11 @@ INLINE static int sink_should_convert_to_sink(
     const struct sink_props* sink_props, const struct engine* e,
     const double dt_sink) {
   const float random_number =
-    random_unit_interval(p->id, e->ti_current, random_number_star_formation);
-  return random_number < 5e-4;
+      random_unit_interval(p->id, e->ti_current, random_number_star_formation);
+
+  const int converting = random_number < 5e-4;
+  if (converting) message("New sink");
+  return converting;
 }
 
 /**

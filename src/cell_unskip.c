@@ -2691,6 +2691,7 @@ int cell_unskip_sinks_tasks(struct cell *c, struct scheduler *s) {
       scheduler_activate(s, l->t);
 
     if (c->sinks.sink_in != NULL) scheduler_activate(s, c->sinks.sink_in);
+    if (c->sinks.ghost != NULL) scheduler_activate(s, c->sinks.ghost);
     if (c->sinks.sink_out != NULL) scheduler_activate(s, c->sinks.sink_out);
     if (c->kick1 != NULL) scheduler_activate(s, c->kick1);
     if (c->kick2 != NULL) scheduler_activate(s, c->kick2);

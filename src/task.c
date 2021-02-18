@@ -107,6 +107,7 @@ const char *taskID_names[task_type_count] = {
     "fof_self",
     "fof_pair",
     "sink_in",
+    "sink_ghost",
     "sink_out",
     "rt_in",
     "rt_out",
@@ -566,11 +567,14 @@ void task_unlock(struct task *t) {
         cell_gunlocktree(ci);
         cell_munlocktree(ci);
 #endif
-      } else if (subtype == task_subtype_sink_compute_formation ||
-                 subtype == task_subtype_sink_accretion) {
+      } else if (subtype == task_subtype_sink_compute_formation) {
         cell_sink_unlocktree(ci);
         cell_unlocktree(ci);
       } else if (subtype == task_subtype_sink_merger) {
+        cell_sink_unlocktree(ci);
+        cell_gunlocktree(ci);
+      } else if (subtype == task_subtype_sink_accretion) {
+        cell_unlocktree(ci);
         cell_sink_unlocktree(ci);
         cell_gunlocktree(ci);
       } else if ((subtype == task_subtype_stars_density) ||
@@ -608,8 +612,7 @@ void task_unlock(struct task *t) {
         cell_munlocktree(ci);
         cell_munlocktree(cj);
 #endif
-      } else if (subtype == task_subtype_sink_compute_formation ||
-                 subtype == task_subtype_sink_accretion) {
+      } else if (subtype == task_subtype_sink_compute_formation) {
         cell_sink_unlocktree(ci);
         cell_sink_unlocktree(cj);
         cell_unlocktree(ci);
@@ -617,6 +620,13 @@ void task_unlock(struct task *t) {
       } else if (subtype == task_subtype_sink_merger) {
         cell_sink_unlocktree(ci);
         cell_sink_unlocktree(cj);
+        cell_gunlocktree(ci);
+        cell_gunlocktree(cj);
+      } else if (subtype == task_subtype_sink_accretion) {
+        cell_sink_unlocktree(ci);
+        cell_sink_unlocktree(cj);
+        cell_unlocktree(ci);
+        cell_unlocktree(cj);
         cell_gunlocktree(ci);
         cell_gunlocktree(cj);
       } else if ((subtype == task_subtype_stars_density) ||
@@ -773,7 +783,8 @@ int task_lock(struct task *t) {
       break;
 
     case task_type_drift_sink:
-      cell_sink_locktree(ci);
+      if (ci->sinks.hold) return 0;
+      if (cell_sink_locktree(ci) != 0) return 0;
       break;
 
     case task_type_self:
@@ -797,13 +808,26 @@ int task_lock(struct task *t) {
           cell_sink_unlocktree(ci);
           return 0;
         }
-      } else if (subtype == task_subtype_sink_compute_formation ||
-                 subtype == task_subtype_sink_accretion) {
+      } else if (subtype == task_subtype_sink_compute_formation) {
         if (ci->sinks.hold) return 0;
         if (ci->hydro.hold) return 0;
         if (cell_sink_locktree(ci) != 0) return 0;
         if (cell_locktree(ci) != 0) {
           cell_sink_unlocktree(ci);
+          return 0;
+        }
+      } else if (subtype == task_subtype_sink_accretion) {
+        if (ci->sinks.hold) return 0;
+        if (ci->grav.phold) return 0;
+        if (ci->hydro.hold) return 0;
+        if (cell_sink_locktree(ci) != 0) return 0;
+        if (cell_locktree(ci) != 0) {
+          cell_sink_unlocktree(ci);
+          return 0;
+        }
+        if (cell_glocktree(ci) != 0) {
+          cell_sink_unlocktree(ci);
+          cell_unlocktree(ci);
           return 0;
         }
       } else if ((subtype == task_subtype_stars_density) ||
@@ -871,8 +895,7 @@ int task_lock(struct task *t) {
           return 0;
         }
 #endif
-      } else if (subtype == task_subtype_sink_compute_formation ||
-                 subtype == task_subtype_sink_accretion) {
+      } else if (subtype == task_subtype_sink_compute_formation) {
         /* Lock the sinks and the gas particles in both cells */
         if (ci->sinks.hold || cj->sinks.hold) return 0;
         if (ci->hydro.hold || cj->hydro.hold) return 0;
@@ -890,6 +913,42 @@ int task_lock(struct task *t) {
           cell_sink_unlocktree(ci);
           cell_sink_unlocktree(cj);
           cell_unlocktree(ci);
+          return 0;
+        }
+      } else if (subtype == task_subtype_sink_accretion) {
+        /* Lock the sinks and the gas particles in both cells */
+        if (ci->sinks.hold || cj->sinks.hold) return 0;
+        if (ci->hydro.hold || cj->hydro.hold) return 0;
+        if (ci->grav.phold || cj->grav.phold) return 0;
+        if (cell_sink_locktree(ci) != 0) return 0;
+        if (cell_sink_locktree(cj) != 0) {
+          cell_sink_unlocktree(ci);
+          return 0;
+        }
+        if (cell_locktree(ci) != 0) {
+          cell_sink_unlocktree(ci);
+          cell_sink_unlocktree(cj);
+          return 0;
+        }
+        if (cell_locktree(cj) != 0) {
+          cell_sink_unlocktree(ci);
+          cell_sink_unlocktree(cj);
+          cell_unlocktree(ci);
+          return 0;
+        }
+        if (cell_glocktree(ci) != 0) {
+          cell_sink_unlocktree(ci);
+          cell_sink_unlocktree(cj);
+          cell_unlocktree(ci);
+          cell_unlocktree(cj);
+          return 0;
+        }
+        if (cell_glocktree(cj) != 0) {
+          cell_sink_unlocktree(ci);
+          cell_sink_unlocktree(cj);
+          cell_unlocktree(ci);
+          cell_unlocktree(cj);
+          cell_gunlocktree(ci);
           return 0;
         }
       } else if (subtype == task_subtype_sink_merger) {
@@ -1705,6 +1764,7 @@ enum task_categories task_get_category(const struct task *t) {
 
         case task_subtype_sink_compute_formation:
         case task_subtype_sink_merger:
+        case task_subtype_sink_accretion:
           return task_category_sink;
 
         default:

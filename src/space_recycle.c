@@ -164,6 +164,7 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->black_holes.black_holes_in = NULL;
     c->black_holes.black_holes_out = NULL;
     c->sinks.sink_in = NULL;
+    c->sinks.ghost = NULL;
     c->sinks.sink_out = NULL;
     c->grav.drift = NULL;
     c->grav.drift_out = NULL;
