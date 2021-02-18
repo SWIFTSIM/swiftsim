@@ -2114,7 +2114,7 @@ esac
 # Feedback model
 AC_ARG_WITH([feedback],
    [AS_HELP_STRING([--with-feedback=<model>],
-      [Feedback model to use @<:@none, EAGLE, EAGLE-kinetic, GEAR default: none@:>@]
+      [Feedback model to use @<:@none, EAGLE, EAGLE-thermal, EAGLE-kinetic, GEAR default: none@:>@]
    )],
    [with_feedback="$withval"],
    [with_feedback="none"]
