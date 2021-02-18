@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_FEEDBACK_STRUCT_EAGLE_H
-#define SWIFT_FEEDBACK_STRUCT_EAGLE_H
+#ifndef SWIFT_FEEDBACK_STRUCT_EAGLE_KINETIC_H
+#define SWIFT_FEEDBACK_STRUCT_EAGLE_KINETIC_H
 
 #include "chemistry_struct.h"
 #include "rays_struct.h"
@@ -132,4 +132,4 @@ struct feedback_spart_data {
   struct ray_data_extra SNII_rays_ext_mirr[eagle_SNII_feedback_num_of_rays];
 };
 
-#endif /* SWIFT_FEEDBACK_STRUCT_EAGLE_H */
+#endif /* SWIFT_FEEDBACK_STRUCT_EAGLE_KINETIC_H */

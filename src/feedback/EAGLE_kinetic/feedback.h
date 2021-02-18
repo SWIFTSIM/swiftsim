@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_FEEDBACK_EAGLE_H
-#define SWIFT_FEEDBACK_EAGLE_H
+#ifndef SWIFT_FEEDBACK_EAGLE_KINETIC_H
+#define SWIFT_FEEDBACK_EAGLE_KINETIC_H
 
 #include "cosmology.h"
 #include "error.h"
@@ -330,4 +330,4 @@ INLINE static void feedback_write_flavour(struct feedback_props* feedback,
 }
 #endif  // HAVE_HDF5
 
-#endif /* SWIFT_FEEDBACK_EAGLE_H */
+#endif /* SWIFT_FEEDBACK_EAGLE_KINETIC_H */

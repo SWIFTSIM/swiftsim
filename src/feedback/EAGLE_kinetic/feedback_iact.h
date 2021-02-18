@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_EAGLE_FEEDBACK_IACT_H
-#define SWIFT_EAGLE_FEEDBACK_IACT_H
+#ifndef SWIFT_EAGLE_FEEDBACK_KINETIC_IACT_H
+#define SWIFT_EAGLE_FEEDBACK_KINETIC_IACT_H
 
 /* Local includes */
 #include "random.h"
@@ -509,4 +509,4 @@ runner_iact_nonsym_feedback_apply(const float r2, const float *dx,
   }
 }
 
-#endif /* SWIFT_EAGLE_FEEDBACK_IACT_H */
+#endif /* SWIFT_EAGLE_FEEDBACK_KINETIC_IACT_H */
