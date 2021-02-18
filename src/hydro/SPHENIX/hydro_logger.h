@@ -38,6 +38,11 @@ enum hydro_logger_fields {
   hydro_logger_field_internal_energies,
   hydro_logger_field_particle_ids,
   hydro_logger_field_densities,
+  /* Due to the low number of masks available,
+   * we group the fields together: pressure, entopries,
+   * viscosity and diffusion parameters, laplacian of the energy
+   * and the velocity divergence along its derivative.
+   */
   hydro_logger_field_secondary_fields,
   hydro_logger_field_count,
 };
