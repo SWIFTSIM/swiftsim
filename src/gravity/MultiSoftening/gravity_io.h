@@ -72,7 +72,6 @@ INLINE static void convert_gpart_vel(const struct engine* e,
   ret[2] *= cosmo->a_inv;
 }
 
-
 INLINE static void convert_gpart_soft(const struct engine* e,
                                       const struct gpart* gp, float* ret) {
 
