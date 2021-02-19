@@ -99,8 +99,6 @@ runner_iact_nonsym_sinks_accretion(const float r2, const float *dx,
                                    const struct part *restrict pj,
                                    const float a, const float H) {
 
-  message("Accretion");
-
 #ifdef DEBUG_INTERACTIONS_SINKS
   /* Update ngb counters */
   if (si->num_ngb_accretion < MAX_NUM_OF_NEIGHBOURS_SINKS)
