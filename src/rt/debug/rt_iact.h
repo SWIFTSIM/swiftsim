@@ -264,9 +264,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_gradient(
 __attribute__((always_inline)) INLINE static void
 runner_iact_nonsym_rt_gradient(float r2, const float *dx, float hi, float hj,
                                struct part *restrict pi,
-                               struct part *restrict pj, float a, float H) {
+                               struct part *restrict pj, float a, float H,
+                               unsigned long long cellID) {
 
-  rt_gradients_nonsym_collect(r2, dx, hi, hj, pi, pj);
+  rt_gradients_nonsym_collect(r2, dx, hi, hj, pi, pj, cellID);
 }
 
 #endif /* SWIFT_RT_IACT_DEBUG_H */
