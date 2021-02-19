@@ -193,6 +193,10 @@ INLINE static int sink_spawn_star(
     const struct cosmology* cosmo, const int with_cosmology,
     const struct phys_const* phys_const,
     const struct unit_system* restrict us) {
+  const float random_number =
+    random_unit_interval(sink->id, e->ti_current, random_number_star_formation);
+  return random_number < 1e-1;
+
   return 0;
 }
 
