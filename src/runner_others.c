@@ -281,7 +281,7 @@ void runner_do_sink_star_formation(struct runner *r, struct cell *c, int timer) 
  * @param timer 1 if the time is to be recorded.
  */
 void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
-
+  error("Should not be called");
   struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
   const struct star_formation *sf_props = e->star_formation;
