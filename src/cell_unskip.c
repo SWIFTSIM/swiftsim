@@ -2619,7 +2619,7 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
       if (c->hydro.rt_in != NULL) scheduler_activate(s, c->hydro.rt_in);
       if (c->hydro.rt_ghost1 != NULL) {
         if (e->step == 64) {
-          printf("Unskipping ghost1 cell %lld\n", c->cellID);
+          printf("Unskipping ghost1 cell %lld H: %d S: %d\n", c->cellID, c->hydro.count, c->stars.count);
         }
         scheduler_activate(s, c->hydro.rt_ghost1);
       }

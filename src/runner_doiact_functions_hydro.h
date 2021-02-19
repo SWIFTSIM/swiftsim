@@ -46,6 +46,12 @@ void DOPAIR1_NAIVE(struct runner *r, struct cell *restrict ci,
   const int with_cosmology = (e->policy & engine_policy_cosmology);
 #endif
 
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient pair1 %lld %lld\n", ci->cellID, cj->cellID);
+  fflush(stdout);
+#endif
+
   TIMER_TIC;
 
   /* Anything to do here? */
@@ -180,6 +186,12 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
   const double time_base = e->time_base;
   const integertime_t t_current = e->ti_current;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
+#endif
+
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient pair2 %lld %lld\n", ci->cellID, cj->cellID);
+  fflush(stdout);
 #endif
 
   TIMER_TIC;
@@ -331,6 +343,12 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
   const int with_cosmology = (e->policy & engine_policy_cosmology);
 #endif
 
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient self1  %lld\n", c->cellID);
+  fflush(stdout);
+#endif
+
   TIMER_TIC;
 
   /* Anything to do here? */
@@ -467,6 +485,12 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
   const double time_base = e->time_base;
   const integertime_t t_current = e->ti_current;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
+#endif
+
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient self2  %lld\n", c->cellID);
+  fflush(stdout);
 #endif
 
   TIMER_TIC;
@@ -1066,6 +1090,41 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
   const int with_cosmology = (e->policy & engine_policy_cosmology);
 #endif
 
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64) {
+    printf("called RT gradient pair1 %lld %lld; %d %d\n", ci->cellID, cj->cellID, ci->hydro.count, cj->hydro.count);
+    fflush(stdout);
+
+    if (cell_is_active_hydro(ci, e)) {
+      int count_nonzero = 0;
+      const int count_i = ci->hydro.count;
+      struct part *restrict parts_i = ci->hydro.parts;
+      for (int pid = 0; pid < count_i; pid++) {
+        struct part *restrict pi = &parts_i[pid];
+        if (!part_is_active(pi, e)) continue;
+        if (pi->rt_data.injection_done != 1)
+          count_nonzero += 1;
+      }
+      if (count_nonzero != 0)
+        error("Caught parts with injection_done != 0 in cell %lld: %d / %d",  ci->cellID, count_nonzero, ci->hydro.count);
+    }
+    if (cell_is_active_hydro(cj, e)) {
+      int count_nonzero = 0;
+      const int count_j = cj->hydro.count;
+      struct part *restrict parts_j = cj->hydro.parts;
+      for (int pjd = 0; pjd < count_j; pjd++) {
+        struct part *restrict pj = &parts_j[pjd];
+        if (!part_is_active(pj, e)) continue;
+        if (pj->rt_data.injection_done != 1)
+          count_nonzero += 1;
+      }
+      if (count_nonzero != 0)
+        error("Caught parts with injection_done != 0 in cell %lld: %d / %d",  cj->cellID, count_nonzero, cj->hydro.count);
+    }
+
+  }
+#endif
+
   TIMER_TIC;
 
   /* Get the cutoff shift. */
@@ -1318,6 +1377,12 @@ void DOPAIR1_BRANCH(struct runner *r, struct cell *ci, struct cell *cj) {
 
   const struct engine *restrict e = r->e;
 
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient pair1 branch %lld %lld\n", ci->cellID, cj->cellID);
+  fflush(stdout);
+#endif
+
   /* Anything to do here? */
   if (ci->hydro.count == 0 || cj->hydro.count == 0) return;
 
@@ -1416,6 +1481,12 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
   const double time_base = e->time_base;
   const integertime_t t_current = e->ti_current;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
+#endif
+
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient pair2 %lld %lld\n", ci->cellID, cj->cellID);
+  fflush(stdout);
 #endif
 
   TIMER_TIC;
@@ -1949,6 +2020,12 @@ void DOPAIR2_BRANCH(struct runner *r, struct cell *ci, struct cell *cj) {
 
   const struct engine *restrict e = r->e;
 
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient pair2 branch %lld %lld\n", ci->cellID, cj->cellID);
+  fflush(stdout);
+#endif
+
   /* Anything to do here? */
   if (ci->hydro.count == 0 || cj->hydro.count == 0) return;
 
@@ -2043,6 +2120,12 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
   const double time_base = e->time_base;
   const integertime_t t_current = e->ti_current;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
+#endif
+
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient self1  %lld\n", c->cellID);
+  fflush(stdout);
 #endif
 
   TIMER_TIC;
@@ -2248,6 +2331,12 @@ void DOSELF1_BRANCH(struct runner *r, struct cell *c) {
 
   const struct engine *restrict e = r->e;
 
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient branch self1  %lld\n", c->cellID);
+  fflush(stdout);
+#endif
+
   /* Anything to do here? */
   if (c->hydro.count == 0) return;
 
@@ -2285,6 +2374,12 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
   const double time_base = e->time_base;
   const integertime_t t_current = e->ti_current;
   const int with_cosmology = (e->policy & engine_policy_cosmology);
+#endif
+
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient self2  %lld\n", c->cellID);
+  fflush(stdout);
 #endif
 
   TIMER_TIC;
@@ -2462,6 +2557,12 @@ void DOSELF2_BRANCH(struct runner *r, struct cell *c) {
 
   const struct engine *restrict e = r->e;
 
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient branch self2  %lld\n", c->cellID);
+  fflush(stdout);
+#endif
+
   /* Anything to do here? */
   if (c->hydro.count == 0) return;
 
@@ -2501,6 +2602,12 @@ void DOSUB_PAIR1(struct runner *r, struct cell *ci, struct cell *cj,
 
   struct space *s = r->e->s;
   const struct engine *e = r->e;
+
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (e->step == 64)
+  printf("called RT gradient sub pair1 %lld %lld\n", ci->cellID, cj->cellID);
+  fflush(stdout);
+#endif
 
   TIMER_TIC;
 
@@ -2563,6 +2670,12 @@ void DOSUB_SELF1(struct runner *r, struct cell *ci, int gettimer) {
 
   TIMER_TIC;
 
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (r->e->step == 64)
+  printf("called RT gradient sub self1  %lld\n", ci->cellID);
+  fflush(stdout);
+#endif
+
   /* Should we even bother? */
   if (ci->hydro.count == 0 || !cell_is_active_hydro(ci, r->e)) return;
 
@@ -2604,6 +2717,12 @@ void DOSUB_SELF1(struct runner *r, struct cell *ci, int gettimer) {
  */
 void DOSUB_PAIR2(struct runner *r, struct cell *ci, struct cell *cj,
                  int gettimer) {
+
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (r->e->step == 64)
+  printf("called RT gradient sub pair2 %lld %lld\n", ci->cellID, cj->cellID);
+  fflush(stdout);
+#endif
 
   const struct engine *e = r->e;
   struct space *s = e->s;
@@ -2668,6 +2787,12 @@ void DOSUB_PAIR2(struct runner *r, struct cell *ci, struct cell *cj,
 void DOSUB_SELF2(struct runner *r, struct cell *ci, int gettimer) {
 
   TIMER_TIC;
+
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+  if (r->e->step == 64)
+  printf("called RT gradient sub self2  %lld\n", ci->cellID);
+  fflush(stdout);
+#endif
 
   /* Should we even bother? */
   if (ci->hydro.count == 0 || !cell_is_active_hydro(ci, r->e)) return;

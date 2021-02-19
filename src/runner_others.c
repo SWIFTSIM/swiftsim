@@ -924,6 +924,9 @@ void runner_do_rt_tchem(struct runner *r, struct cell *c, int timer) {
       /* Get a handle on the part. */
       struct part *restrict p = &parts[k];
 
+      /* Skip inhibited parts */
+      if (part_is_inhibited(p, e)) continue;
+
       if (part_is_active(p, e)) {
 
         /* Finish the force loop */

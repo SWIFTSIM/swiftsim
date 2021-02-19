@@ -1273,6 +1273,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
         /* non-implicit ghost 1 */
         c->hydro.rt_ghost1 = scheduler_addtask(
             s, task_type_rt_ghost1, task_subtype_none, 0, 0, c, NULL);
+        /* scheduler_addunlock(s, c->hydro.drift, c->hydro.rt_ghost1); */
 
         /* non-implicit ghost 2 */
         c->hydro.rt_ghost2 = scheduler_addtask(
@@ -2461,10 +2462,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
                               ci->hydro.super->black_holes.swallow_ghost_0);
         }
 
-        if (with_rt) {
-          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
-                              ci->hydro.super->hydro.rt_ghost1);
-        }
       }
 
       if (cj->nodeID == nodeID) {
