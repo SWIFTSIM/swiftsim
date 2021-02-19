@@ -2153,6 +2153,26 @@ case "$with_feedback" in
    ;;
 esac
 
+# For models using ray-based feedback, let the users set different numbers of rays
+AC_ARG_WITH([number-of-SNII-rays],
+	    [AS_HELP_STRING([--with-number-of-SNII-rays], [Number of rays to use for the SNII feedback (default: 1)])],
+	    [with_number_of_SNII_rays="$withval"],
+	    [with_number_of_SNII_rays="1"])
+AC_DEFINE_UNQUOTED([FEEDBACK_NR_RAYS_SNII], [$with_number_of_SNII_rays], [Number of rays to use for the SNII feedback])
+
+AC_ARG_WITH([number-of-SNIa-rays],
+	    [AS_HELP_STRING([--with-number-of-SNIa-rays], [Number of rays to use for the SNIa feedback (default: 1)])],
+	    [with_number_of_SNIa_rays="$withval"],
+	    [with_number_of_SNIa_rays="1"])
+AC_DEFINE_UNQUOTED([FEEDBACK_NR_RAYS_SNIa], [$with_number_of_SNIa_rays], [Number of rays to use for the SNIa feedback])
+
+AC_ARG_WITH([number-of-AGN-rays],
+	    [AS_HELP_STRING([--with-number-of-AGN-rays], [Number of rays to use for the AGN feedback (default: 50)])],
+	    [with_number_of_AGN_rays="$withval"],
+	    [with_number_of_AGN_rays="50"])
+AC_DEFINE_UNQUOTED([FEEDBACK_NR_RAYS_AGN], [$with_number_of_AGN_rays], [Number of rays to use for the AGN feedback])
+
+
 # Black hole model.
 AC_ARG_WITH([black-holes],
    [AS_HELP_STRING([--with-black-holes=<model>],
