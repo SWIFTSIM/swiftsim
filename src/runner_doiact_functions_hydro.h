@@ -116,7 +116,12 @@ void DOPAIR1_NAIVE(struct runner *r, struct cell *restrict ci,
       /* Hit or miss? */
       if (r2 < hig2 && pi_active) {
 
+        /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+        IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID);
+#else
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -134,7 +139,12 @@ void DOPAIR1_NAIVE(struct runner *r, struct cell *restrict ci,
         dx[1] = -dx[1];
         dx[2] = -dx[2];
 
+        /* IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+        IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, cj->cellID);
+#else
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -257,7 +267,12 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
 #endif
         } else if (pi_active) {
 
+          /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+          IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID);
+#else
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -274,7 +289,12 @@ void DOPAIR2_NAIVE(struct runner *r, struct cell *restrict ci,
           dx[1] = -dx[1];
           dx[2] = -dx[2];
 
+          /* IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+          IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, cj->cellID);
+#else
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -386,7 +406,12 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
 #endif
       } else if (doi) {
 
+        /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+        IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, c->cellID);
+#else
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -403,7 +428,12 @@ void DOSELF1_NAIVE(struct runner *r, struct cell *restrict c) {
         dx[1] = -dx[1];
         dx[2] = -dx[2];
 
+        /* IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+        IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, c->cellID);
+#else
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -514,7 +544,12 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
 #endif
       } else if (doi) {
 
+        /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+        IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, c->cellID);
+#else
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -531,7 +566,12 @@ void DOSELF2_NAIVE(struct runner *r, struct cell *restrict c) {
         dx[1] = -dx[1];
         dx[2] = -dx[2];
 
+        /* IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+        IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, c->cellID);
+#else
         IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -628,7 +668,12 @@ void DOPAIR_SUBSET_NAIVE(struct runner *r, struct cell *restrict ci,
       /* Hit or miss? */
       if (r2 < hig2) {
 
+        /* IACT_NONSYM(r2, dx, hi, pj->h, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+        IACT_NONSYM(r2, dx, hi, pj->h, pi, pj, a, H, ci->cellID);
+#else
         IACT_NONSYM(r2, dx, hi, pj->h, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, pj->h, pi, pj, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hi, pj->h, pi, pj, a, H);
@@ -732,7 +777,12 @@ void DOPAIR_SUBSET(struct runner *r, struct cell *restrict ci,
         /* Hit or miss? */
         if (r2 < hig2) {
 
+          /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+          IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID);
+#else
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -794,7 +844,12 @@ void DOPAIR_SUBSET(struct runner *r, struct cell *restrict ci,
         /* Hit or miss? */
         if (r2 < hig2) {
 
+          /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+          IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID);
+#else
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -947,7 +1002,12 @@ void DOSELF_SUBSET(struct runner *r, struct cell *restrict ci,
       /* Hit or miss? */
       if (r2 > 0.f && r2 < hig2) {
 
+        /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+        IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID);
+#else
         IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
         runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
         runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -1122,7 +1182,12 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
         /* Hit or miss? */
         if (r2 < hig2) {
 
+          /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+          IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID);
+#else
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -1216,7 +1281,12 @@ void DOPAIR1(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
         /* Hit or miss? */
         if (r2 < hjg2) {
 
+          /* IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+          IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, cj->cellID);
+#else
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -1265,10 +1335,10 @@ void DOPAIR1_BRANCH(struct runner *r, struct cell *ci, struct cell *cj) {
   /* Have the cells been sorted? */
   if (!(ci->hydro.sorted & (1 << sid)) ||
       ci->hydro.dx_max_sort_old > space_maxreldx * ci->dmin)
-    error("Interacting unsorted cells.");
+    message("Interacting unsorted cells.");
   if (!(cj->hydro.sorted & (1 << sid)) ||
       cj->hydro.dx_max_sort_old > space_maxreldx * cj->dmin)
-    error("Interacting unsorted cells.");
+    message("Interacting unsorted cells.");
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Pick-out the sorted lists. */
@@ -1529,7 +1599,12 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
         /* Hit or miss?
            (note that we will do the other condition in the reverse loop) */
         if (r2 < hig2) {
+          /* IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+          IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, cj->cellID);
+#else
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -1618,7 +1693,12 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
                                   t_current, cosmo, with_cosmology);
 #endif
           } else {
+            /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+            IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID);
+#else
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
             runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -1728,7 +1808,12 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
         /* Hit or miss?
            (note that we must avoid the r2 < hig2 cases we already processed) */
         if (r2 < hjg2 && r2 >= hig2) {
+          /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+          IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, ci->cellID);
+#else
           IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -1819,7 +1904,12 @@ void DOPAIR2(struct runner *r, struct cell *ci, struct cell *cj, const int sid,
                                   t_current, cosmo, with_cosmology);
 #endif
           } else {
+            /* IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+            IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, cj->cellID);
+#else
             IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
             runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -2020,7 +2110,12 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
         /* Hit or miss? */
         if (r2 < hj * hj * kernel_gamma2) {
 
+          /* IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+          IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, c->cellID);
+#else
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -2091,7 +2186,12 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
 #endif
           } else if (doi) {
 
+            /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+            IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H, c->cellID);
+#else
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
             runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);
@@ -2108,7 +2208,12 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
             dx[0] = -dx[0];
             dx[1] = -dx[1];
             dx[2] = -dx[2];
+            /* IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+            IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, c->cellID);
+#else
             IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
             runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -2247,7 +2352,12 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
         /* Hit or miss? */
         if (r2 < hig2 || r2 < hj * hj * kernel_gamma2) {
 
+          /* IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+          IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, c->cellID);
+#else
           IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
           runner_iact_nonsym_chemistry(r2, dx, hj, hi, pj, pi, a, H);
           runner_iact_nonsym_pressure_floor(r2, dx, hj, hi, pj, pi, a, H);
@@ -2312,7 +2422,12 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
                                   t_current, cosmo, with_cosmology);
 #endif
           } else {
+            /* IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H); */
+#if (FUNCTION_TASK_LOOP == TASK_LOOP_RT_GRADIENT)
+            IACT_NONSYM(r2, dx, hj, hi, pj, pi, a, H, c->cellID);
+#else
             IACT_NONSYM(r2, dx, hi, hj, pi, pj, a, H);
+#endif
 #if (FUNCTION_TASK_LOOP == TASK_LOOP_DENSITY)
             runner_iact_nonsym_chemistry(r2, dx, hi, hj, pi, pj, a, H);
             runner_iact_nonsym_pressure_floor(r2, dx, hi, hj, pi, pj, a, H);

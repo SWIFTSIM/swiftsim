@@ -2806,23 +2806,28 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
 
   if (c->nodeID == nodeID) {
 
-    if (cell_is_active_hydro(c, e)) {
-      for (struct link *l = c->hydro.rt_gradient; l != NULL; l = l->next) {
-        /* TODO: all the MPI checks */
-        /* I assume that everything necessary here is being done
-         * in the hydro part of this function */
-        scheduler_activate(s, l->t);
-      }
-      for (struct link *l = c->hydro.rt_transport; l != NULL; l = l->next) {
-        /* TODO: all the MPI checks */
-        /* I assume that everything necessary here is being done
-         * in the hydro part of this function */
-        scheduler_activate(s, l->t);
-      }
+    for (struct link *l = c->hydro.rt_gradient; l != NULL; l = l->next) {
+      /* TODO: all the MPI checks */
+      /* I assume that everything necessary here is being done
+       * in the hydro part of this function */
+      if (cell_is_active_hydro(l->t->ci, e)) scheduler_activate(s, l->t);
+    }
+    for (struct link *l = c->hydro.rt_transport; l != NULL; l = l->next) {
+      /* TODO: all the MPI checks */
+      /* I assume that everything necessary here is being done
+       * in the hydro part of this function */
+      if (cell_is_active_hydro(l->t->ci, e)) scheduler_activate(s, l->t);
+    }
 
+    if (cell_is_active_hydro(c, e)) {
       /* Unskip all the other task types */
       if (c->hydro.rt_in != NULL) scheduler_activate(s, c->hydro.rt_in);
-      if (c->hydro.rt_ghost1 != NULL) scheduler_activate(s, c->hydro.rt_ghost1);
+      if (c->hydro.rt_ghost1 != NULL) {
+        if (e->step == 64) {
+          printf("Unskipping ghost1 cell %lld\n", c->cellID);
+        }
+        scheduler_activate(s, c->hydro.rt_ghost1);
+      }
       if (c->hydro.rt_ghost2 != NULL) scheduler_activate(s, c->hydro.rt_ghost2);
       if (c->hydro.rt_transport_out != NULL)
         scheduler_activate(s, c->hydro.rt_transport_out);

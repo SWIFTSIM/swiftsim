@@ -46,7 +46,8 @@
 /* Import the gradient loop functions (if required). */
 #ifdef EXTRA_HYDRO_LOOP
 #define FUNCTION gradient
-#define FUNCTION_TASK_LOOP TASK_LOOP_GRADIENT
+/* #define FUNCTION_TASK_LOOP TASK_LOOP_GRADIENT */
+#define FUNCTION_TASK_LOOP task_loop_gradient
 #include "runner_doiact_functions_hydro.h"
 #undef FUNCTION
 #undef FUNCTION_TASK_LOOP
@@ -61,14 +62,14 @@
 
 /* Import the RT gradient loop functions */
 #define FUNCTION rt_gradient
-#define FUNCTION_TASK_LOOP TASK_LOOP_RT
+#define FUNCTION_TASK_LOOP TASK_LOOP_RT_GRADIENT
 #include "runner_doiact_functions_hydro.h"
 #undef FUNCTION
 #undef FUNCTION_TASK_LOOP
 
 /* Import the RT transport (force) loop functions. */
 #define FUNCTION rt_transport
-#define FUNCTION_TASK_LOOP TASK_LOOP_RT
+#define FUNCTION_TASK_LOOP TASK_LOOP_RT_TRANSPORT
 #include "runner_doiact_functions_hydro.h"
 #undef FUNCTION
 #undef FUNCTION_TASK_LOOP
