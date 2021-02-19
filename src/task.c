@@ -273,12 +273,9 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
           break;
 
         case task_subtype_sink_accretion:
+        case task_subtype_sink_merger:
         case task_subtype_sink_compute_formation:
           return task_action_all;
-
-        case task_subtype_sink_merger:
-          return task_action_sink;
-          break;
 
         case task_subtype_grav:
         case task_subtype_external_grav:
