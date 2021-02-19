@@ -140,6 +140,9 @@ INLINE static int sink_should_convert_to_sink(
     const struct part* p, const struct xpart* xp,
     const struct sink_props* sink_props, const struct engine* e,
     const double dt_sink) {
+  if (dt_sink == 0.)
+    return 0;
+
   const float random_number =
     random_unit_interval(p->id, e->ti_current, random_number_star_formation);
   return random_number < 5e-4;
@@ -188,6 +191,10 @@ INLINE static int sink_spawn_star(
     const struct cosmology* cosmo, const int with_cosmology,
     const struct phys_const* phys_const,
     const struct unit_system* restrict us) {
+  const float random_number =
+    random_unit_interval(sink->id, e->ti_current, random_number_star_formation);
+  return random_number < 1e-1;
+
   return 0;
 }
 
