@@ -128,7 +128,7 @@ INLINE static int sink_is_forming(
     const struct cooling_function_data* restrict cooling,
     const struct entropy_floor_properties* restrict entropy_floor) {
 
-  return 0;
+  return 1;
 }
 
 /**
@@ -151,9 +151,7 @@ INLINE static int sink_should_convert_to_sink(
   const float random_number =
       random_unit_interval(p->id, e->ti_current, random_number_star_formation);
 
-  const int converting = random_number < 5e-4;
-  if (converting) message("New sink");
-  return converting;
+  return random_number < 5e-4;
 }
 
 /**
