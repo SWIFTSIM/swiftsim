@@ -65,7 +65,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
   p->rt_data.calls_tot = 0;
   rt_init_part(p);
   rt_reset_part(p);
-  p->rt_data.injection_check = 1;
+  p->rt_data.injection_check = 0;
 }
 
 /**

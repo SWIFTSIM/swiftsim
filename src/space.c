@@ -781,21 +781,6 @@ void space_convert_rt_star_quantities_mapper(void *restrict map_data,
   }
 }
 
-void space_convert_rt_hydro_quantities_mapper(void *restrict map_data,
-                                              int count,
-                                              void *restrict extra_data) {
-#ifdef RT_DEBUG
-  struct part *restrict parts = (struct part *)map_data;
-  /* const struct engine *restrict e = (struct engine *)extra_data; */
-  /* const int with_cosmology = (e->policy & engine_policy_cosmology); */
-
-  for (int k = 0; k < count; k++) {
-    struct part *restrict p = &parts[k];
-    p->rt_data.injection_check += 1;
-  }
-#endif
-}
-
 /**
  * @brief Initializes values of radiative transfer data for particles
  * that needs to be set before the first actual step is done, but will
@@ -819,12 +804,6 @@ void space_convert_rt_quantities(struct space *s, int verbose) {
     threadpool_map(&s->e->threadpool, space_convert_rt_star_quantities_mapper,
                    s->sparts, s->nr_sparts, sizeof(struct spart),
                    threadpool_auto_chunk_size, /*extra_data=*/s->e);
-#ifdef RT_DEBUG
-  if (s->nr_parts > 0) /* hydro particle loop */
-    threadpool_map(&s->e->threadpool, space_convert_rt_hydro_quantities_mapper,
-                   s->parts, s->nr_parts, sizeof(struct part),
-                   threadpool_auto_chunk_size, /*extra_data=*/s->e);
-#endif
 
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
