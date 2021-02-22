@@ -107,6 +107,8 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
  *  E^{n+1} = E^n + dt * dE_* / dt. This function finalises
  *  the injection step.
  *
+ * @param p particle to work on
+ * @param props struct #rt_props that contains global RT properties
  */
 __attribute__((always_inline)) INLINE static void
 rt_injection_update_photon_density(struct part* restrict p,

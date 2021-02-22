@@ -2808,14 +2808,14 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
 
     for (struct link *l = c->hydro.rt_gradient; l != NULL; l = l->next) {
       /* TODO: all the MPI checks */
-      /* I assume that everything necessary here is being done
-       * in the hydro part of this function */
+      /* I assume that all hydro related subcell unskipping/activation necessary
+       * here is being done in the hydro part of cell_unskip */
       if (cell_is_active_hydro(l->t->ci, e)) scheduler_activate(s, l->t);
     }
     for (struct link *l = c->hydro.rt_transport; l != NULL; l = l->next) {
       /* TODO: all the MPI checks */
-      /* I assume that everything necessary here is being done
-       * in the hydro part of this function */
+      /* I assume that all hydro related subcell unskipping/activation necessary
+       * here is being done in the hydro part of cell_unskip */
       if (cell_is_active_hydro(l->t->ci, e)) scheduler_activate(s, l->t);
     }
 
@@ -2823,10 +2823,6 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
       /* Unskip all the other task types */
       if (c->hydro.rt_in != NULL) scheduler_activate(s, c->hydro.rt_in);
       if (c->hydro.rt_ghost1 != NULL) {
-        if (e->step == 64) {
-          printf("Unskipping ghost1 cell %lld H: %d S: %d\n", c->cellID,
-                 c->hydro.count, c->stars.count);
-        }
         scheduler_activate(s, c->hydro.rt_ghost1);
       }
       if (c->hydro.rt_ghost2 != NULL) scheduler_activate(s, c->hydro.rt_ghost2);

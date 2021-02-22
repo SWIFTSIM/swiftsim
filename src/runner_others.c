@@ -932,14 +932,14 @@ void runner_do_rt_tchem(struct runner *r, struct cell *c, int timer) {
       /* Skip inhibited parts */
       if (part_is_inhibited(p, e)) continue;
 
-      if (part_is_active(p, e)) {
+      /* Skip inactive parts */
+      if (!part_is_active(p, e)) continue;
 
-        /* Finish the force loop */
-        rt_finalise_transport(p);
+      /* Finish the force loop */
+      rt_finalise_transport(p);
 
-        /* And finally do thermochemistry */
-        rt_tchem(p);
-      }
+      /* And finally do thermochemistry */
+      rt_tchem(p);
     }
   }
 
