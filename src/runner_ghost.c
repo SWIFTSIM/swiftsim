@@ -1489,21 +1489,27 @@ void runner_do_rt_ghost1(struct runner *r, struct cell *c, int timer) {
     }
   } else {
 
-    if (e->step == 64) {
-      printf("Running ghost1 on cell %lld\n", c->cellID);
-      fflush(stdout);
-    }
-
     for (int pid = 0; pid < count; pid++) {
       struct part *restrict p = &(c->hydro.parts[pid]);
+
+      if (p->id == 1203808LL) {
+        printf("----------- CAUGHT %lld IN CELL %lld; %d %d %d\n", 
+                  p->id, c->cellID, part_is_inhibited(p, e), 
+                  part_is_active(p, e), p->rt_data.injection_done);
+      }
 
       /* Skip inhibited parts */
       if (part_is_inhibited(p, e)) continue;
 
-      if (part_is_active(p, e))
-        rt_injection_update_photon_density(p, e->rt_props);
+      if (!part_is_active(p, e)) continue;
+
+      rt_injection_update_photon_density(p, e->rt_props);
+
+      if (p->id == 1203808LL) {
+        printf("----------- CAUGHT %lld IN CELL %lld; %d\n", p->id, c->cellID, p->rt_data.injection_done);
+      }
     }
-  }
+  } 
 
   if (timer) TIMER_TOC(timer_do_rt_ghost1);
 }
@@ -1542,7 +1548,9 @@ void runner_do_rt_ghost2(struct runner *r, struct cell *c, int timer) {
       /* Skip inhibited parts */
       if (part_is_inhibited(p, e)) continue;
 
-      if (part_is_active(p, e)) rt_finalise_gradient(p);
+      if (!part_is_active(p, e)) continue;
+
+      rt_finalise_gradient(p);
     }
   }
 
