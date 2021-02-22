@@ -166,11 +166,9 @@ void io_prepare_output_fields(struct output_options* output_options,
 
     /* Default snapshot basename for this output selection */
     char basename[FILENAME_BUFFER_SIZE] = select_output_default_basename;
-    // sprintf(basename, "%s", select_output_default_basename);
 
     /* Default snapshot subdir name for this output selection */
     char subdir_name[FILENAME_BUFFER_SIZE] = select_output_default_subdir_name;
-    // sprintf(subdir_name, "%s", select_output_default_subdir_name);
 
     /* Initialise section-specific writing counters for each particle type.
      * If default is 'write', then we start from the total to deduct any fields
@@ -304,26 +302,20 @@ void io_prepare_output_fields(struct output_options* output_options,
     /* Also copy the output names */
     strcpy(output_options->basenames[section_id], basename);
     strcpy(output_options->subdir_names[section_id], subdir_name);
-    message("aa %s", output_options->basenames[section_id]);
-    message("bb %s", output_options->subdir_names[section_id]);
 
   } /* Ends loop over sections, for different output classes */
 
   /* Add field numbers for (possible) implicit `Default` output class */
   if (!have_default) {
-
-    // error("aa");
-
     const int default_id = output_options->select_output->sectionCount;
     for (int ptype = 0; ptype < swift_type_count; ptype++) {
-      message("%d %d", default_id, ptype_num_fields_total[ptype]);
       output_options->num_fields_to_write[default_id][ptype] =
           ptype_num_fields_total[ptype];
-      sprintf(output_options->basenames[default_id], "%s",
-              select_output_default_basename);
-      sprintf(output_options->subdir_names[default_id], "%s",
-              select_output_default_subdir_name);
     }
+    sprintf(output_options->basenames[default_id], "%s",
+            select_output_default_basename);
+    sprintf(output_options->subdir_names[default_id], "%s",
+            select_output_default_subdir_name);
   }
 }
 
