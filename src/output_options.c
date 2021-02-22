@@ -279,8 +279,6 @@ int output_options_get_num_fields_to_write(
     selection_id = output_options->select_output->sectionCount;
   }
 
-  message("name='%s' select_id=%d", selection_name, selection_id);
-
   return output_options->num_fields_to_write[selection_id][ptype];
 }
 
@@ -321,7 +319,7 @@ void output_options_get_basename(const struct output_options* output_options,
     sprintf(basename, "%s", output_options->basenames[selection_id]);
   }
 
-  /* If the default keyword is found, we use the name provided
+  /* If the default keyword is found, we use the subdir name provided
    * in the param file (not the select output!), aka. the argument
    * of the function. */
   if (strcmp(output_options->subdir_names[selection_id],
