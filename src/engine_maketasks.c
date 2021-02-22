@@ -2463,7 +2463,6 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
           scheduler_addunlock(sched, t_bh_swallow,
                               ci->hydro.super->black_holes.swallow_ghost_0);
         }
-
       }
 
       if (cj->nodeID == nodeID) {

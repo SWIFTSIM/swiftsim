@@ -1493,9 +1493,9 @@ void runner_do_rt_ghost1(struct runner *r, struct cell *c, int timer) {
       struct part *restrict p = &(c->hydro.parts[pid]);
 
       if (p->id == 1203808LL) {
-        printf("----------- CAUGHT %lld IN CELL %lld; %d %d %d\n", 
-                  p->id, c->cellID, part_is_inhibited(p, e), 
-                  part_is_active(p, e), p->rt_data.injection_done);
+        printf("----------- CAUGHT %lld IN CELL %lld; %d %d %d\n", p->id,
+               c->cellID, part_is_inhibited(p, e), part_is_active(p, e),
+               p->rt_data.injection_done);
       }
 
       /* Skip inhibited parts */
@@ -1506,10 +1506,11 @@ void runner_do_rt_ghost1(struct runner *r, struct cell *c, int timer) {
       rt_injection_update_photon_density(p, e->rt_props);
 
       if (p->id == 1203808LL) {
-        printf("----------- CAUGHT %lld IN CELL %lld; %d\n", p->id, c->cellID, p->rt_data.injection_done);
+        printf("----------- CAUGHT %lld IN CELL %lld; %d\n", p->id, c->cellID,
+               p->rt_data.injection_done);
       }
     }
-  } 
+  }
 
   if (timer) TIMER_TOC(timer_do_rt_ghost1);
 }

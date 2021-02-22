@@ -73,13 +73,13 @@ __attribute__((always_inline)) INLINE static void rt_gradients_collect(
  */
 __attribute__((always_inline)) INLINE static void rt_gradients_nonsym_collect(
     float r2, const float *dx, float hi, float hj, struct part *restrict pi,
-    struct part *restrict pj, unsigned long long cellID) {
+    struct part *restrict pj) {
 
   if (pi->rt_data.injection_done != 1)
     error(
         "Trying to do iact gradients when finalise "
-        "injection count is %d ID %lld, cellID %lld",
-        pi->rt_data.injection_done, pi->id, cellID);
+        "injection count is %d ID %lld",
+        pi->rt_data.injection_done, pi->id);
 
   if (pj->rt_data.injection_done != 1)
     message(
