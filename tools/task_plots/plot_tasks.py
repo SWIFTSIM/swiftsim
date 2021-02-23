@@ -166,7 +166,7 @@ TASKTYPES = [
     "drift_bpart",
     "drift_gpart",
     "drift_gpart_out",
-    "end_hydro_force",
+    "hydro_end_force",
     "kick1",
     "kick2",
     "timestep",
@@ -195,7 +195,7 @@ TASKTYPES = [
     "stars_resort",
     "bh_in",
     "bh_out",
-    "bh_density_ghost",
+    "bh_ghost",
     "bh_swallow_ghost1",
     "bh_swallow_ghost2",
     "bh_swallow_ghost3",
@@ -211,6 +211,7 @@ TASKTYPES = [
     "rt_ghost2",
     "rt_transport_out",
     "rt_tchem",
+    "count",
 ]
 
 SUBTYPES = [
@@ -235,7 +236,7 @@ SUBTYPES = [
     "spart",
     "stars_density",
     "stars_feedback",
-    "sf_count",
+    "sf_counts",
     "bpart_rho",
     "bpart_swallow",
     "bpart_feedback",
@@ -250,6 +251,7 @@ SUBTYPES = [
     "sink_accretion",
     "rt_gradient",
     "rt_transport",
+    "count",
 ]
 
 #  Task/subtypes of interest.
