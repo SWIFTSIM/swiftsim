@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Coypright (c) 2020 Loic Hausammann (loic.hausammann@epfl.ch)
+ * Coypright (c) 2021 Loic Hausammann (loic.hausammann@epfl.ch)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_DEFAULT_SINK_H
-#define SWIFT_DEFAULT_SINK_H
+#ifndef SWIFT_GEAR_SINK_H
+#define SWIFT_GEAR_SINK_H
 
 #include <float.h>
 
@@ -178,4 +178,4 @@ INLINE static void sink_copy_properties(
     const struct unit_system* restrict us,
     const struct cooling_function_data* restrict cooling) {}
 
-#endif /* SWIFT_DEFAULT_SINK_H */
+#endif /* SWIFT_GEAR_SINK_H */
