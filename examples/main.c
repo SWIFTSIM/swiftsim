@@ -1161,8 +1161,6 @@ int main(int argc, char *argv[]) {
                    with_gravity, with_sink, with_stars, with_black_holes,
                    with_cosmology, cleanup_h, cleanup_sqrt_a, cosmo.h, cosmo.a,
                    nr_threads, dry_run, remap_ids);
-
-    message("%ld neutrinos", Nnupart);
 #endif
 #endif
 
