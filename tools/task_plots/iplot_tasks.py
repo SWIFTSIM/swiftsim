@@ -169,6 +169,7 @@ TASKTYPES = [
     "stars_density_ghost",
     "stars_ghost_out",
     "stars_prep_ghost1",
+    "hydro_prep_ghost1",
     "stars_prep_ghost2",
     "stars_sort",
     "stars_resort",
