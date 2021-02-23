@@ -1523,6 +1523,8 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
 
 #ifdef WITH_MPI
   const int with_star_formation = e->policy & engine_policy_star_formation;
+  if (e->policy & engine_policy_sinks)
+    error("TODO");
 #endif
   int rebuild = 0;
 
