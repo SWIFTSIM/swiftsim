@@ -2019,14 +2019,31 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
       if ((ci_nodeID == nodeID && cj_nodeID == nodeID) &&
           (ci_active || cj_active)) {
         scheduler_activate(s, t);
+
+        if (cj_active && ci->hydro.prep1_ghost != NULL) {
+          /* If there are active sparts in cj, activate hydro ghost in ci */
+          scheduler_activate(s, ci->hydro.prep1_ghost);
+        }
+        if (ci_active && cj->hydro.prep1_ghost != NULL) {
+          /* If there are active sparts in ci, activate hydro ghost in cj */
+          scheduler_activate(s, cj->hydro.prep1_ghost);
+        }
       }
       /* Cells ci and cj are from different MPI domains */
       else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) && (cj_active)) {
         /* In task prepare1, we update gas so sparts must be on foreign node */
         scheduler_activate(s, t);
+        /* Activate glue hydro hydro ghost task in the cell that interacts with
+         * the cell having sparts */
+        if (ci->hydro.prep1_ghost != NULL)
+          scheduler_activate(s, ci->hydro.prep1_ghost);
       } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && (ci_active)) {
         /* In task prepare1, we update gas so sparts must be on foreign node */
         scheduler_activate(s, t);
+        /* Activate glue hydro hydro ghost task in the cell that interacts with
+         * the cell having sparts */
+        if (cj->hydro.prep1_ghost != NULL)
+          scheduler_activate(s, cj->hydro.prep1_ghost);
       }
     }
   }
@@ -2131,6 +2148,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
         scheduler_activate(s, c->stars.density_ghost);
       if (c->stars.prep1_ghost != NULL)
         scheduler_activate(s, c->stars.prep1_ghost);
+      if (c->hydro.prep1_ghost != NULL)
+        scheduler_activate(s, c->hydro.prep1_ghost);
       if (c->stars.prep2_ghost != NULL)
         scheduler_activate(s, c->stars.prep2_ghost);
       if (c->stars.stars_in != NULL) scheduler_activate(s, c->stars.stars_in);
