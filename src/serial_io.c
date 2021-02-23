@@ -1411,14 +1411,8 @@ void write_output_serial(struct engine* e,
                 gpart_group_data_written, Ntot, Ndm_neutrino, with_stf);
 
             /* Select the fields to write */
-            darkmatter_write_particles(gparts_written, list, &num_fields);
-            if (with_fof) {
-              num_fields += fof_write_gparts(gparts_written, list + num_fields);
-            }
-            if (with_stf) {
-              num_fields += velociraptor_write_gparts(gpart_group_data_written,
-                                                      list + num_fields);
-            }
+            io_select_dm_fields(gparts_written, gpart_group_data_written,
+                                with_fof, with_stf, e, &num_fields, list);
 
           } break;
 

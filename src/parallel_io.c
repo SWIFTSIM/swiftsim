@@ -1298,24 +1298,10 @@ void prepare_file(struct engine* e, const char* fileName,
         break;
 
       case swift_type_dark_matter:
-        io_select_dm_fields(NULL, NULL, with_fof, with_stf, e, &num_fields,
-                            list);
-        break;
-
       case swift_type_dark_matter_background:
+      case swift_type_neutrino:
         io_select_dm_fields(NULL, NULL, with_fof, with_stf, e, &num_fields,
                             list);
-        break;
-
-      case swift_type_neutrino:
-        darkmatter_write_particles(gparts, list, &num_fields);
-        if (with_fof) {
-          num_fields += fof_write_gparts(gparts, list + num_fields);
-        }
-        if (with_stf) {
-          num_fields += velociraptor_write_gparts(e->s->gpart_group_data,
-                                                  list + num_fields);
-        }
         break;
 
       case swift_type_sink:
@@ -1787,13 +1773,8 @@ void write_output_parallel(struct engine* e,
             gpart_group_data_written, Ntot, Ndm_neutrino, with_stf);
 
         /* Select the fields to write */
-        darkmatter_write_particles(gparts_written, list, &num_fields);
-        if (with_stf) {
-#ifdef HAVE_VELOCIRAPTOR
-          num_fields += velociraptor_write_gparts(gpart_group_data_written,
-                                                  list + num_fields);
-#endif
-        }
+        io_select_dm_fields(gparts_written, gpart_group_data_written, with_fof,
+                            with_stf, e, &num_fields, list);
 
       } break;
 
