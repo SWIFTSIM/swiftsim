@@ -585,8 +585,8 @@ void velociraptor_dump_orphan_particles(struct engine *e,
           convert_bpart_vel(e, bp, &vel[3 * offset]);
           ids[offset] = bparts[-gparts[i].id_or_neg_offset].id;
         } break;
-        case swift_type_dark_matter: {
-        case swift_type_dark_matter_background: {
+        case swift_type_dark_matter:
+        case swift_type_dark_matter_background:
         case swift_type_neutrino: {
           convert_gpart_pos(e, &gparts[i], &pos[3 * offset]);
           convert_gpart_vel(e, &gparts[i], &vel[3 * offset]);

@@ -208,12 +208,9 @@ void engine_config(int restart, int fof, struct engine *e,
 #endif
 
       if (e->nodeID == 0) {
-        message("The neutrino mass multiplier is %.5e eV / U_M",
-                neutrino_mass_mult);
-        message(
-            "The simulation particles correspond to a neutrino mass range"
-            " [%.4f, %.4f] eV",
-            min_max_mass[0], min_max_mass[1]);
+        message("Neutrino mass multiplier: %.5e eV / U_M", neutrino_mass_mult);
+        message("Neutrino simulation particle masses in range: [%.4f, %.4f] eV",
+                min_max_mass[0], min_max_mass[1]);
       }
     }
   }

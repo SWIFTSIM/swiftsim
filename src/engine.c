@@ -2967,10 +2967,9 @@ void engine_init(
   /* Initialize the neutrino mass conversion factor */
   if (Nnuparts > 0) {
     const double neutrino_volume = s->dim[0] * s->dim[1] * s->dim[2];
-    const double bare_mass_factor =
-        neutrino_mass_factor(cosmo, internal_units, physical_constants);
     e->neutrino_mass_conversion_factor =
-        e->total_nr_neutrino_gparts / neutrino_volume * bare_mass_factor;
+        neutrino_mass_factor(cosmo, internal_units, physical_constants,
+                             neutrino_volume, e->total_nr_neutrino_gparts);
   } else {
     e->neutrino_mass_conversion_factor = 0.f;
   }

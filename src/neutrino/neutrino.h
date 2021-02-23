@@ -23,12 +23,18 @@
 #define M_ZETA_3 1.2020569031595942853997
 
 /* Compute the ratio of macro particle mass in internal mass units to
- * the mass of one microscopic neutrino in eV. This factor still needs
- * needs to be multiplied by nr_nuparts / volume.
+ * the mass of one microscopic neutrino in eV.
+ *
+ * @param cosmo The #cosmology used for this run.
+ * @param internal_units The system of units used internally.
+ * @param physical_constants The #phys_const used for this run.
+ * @param volume The volume occupied by neutrino particles
+ * @param nr_nuparts The number of macro neutrino particles
  */
 INLINE static double neutrino_mass_factor(
     const struct cosmology *cosmo, const struct unit_system *internal_units,
-    const struct phys_const *physical_constants) {
+    const struct phys_const *physical_constants, double volume,
+    double nr_nuparts) {
   /* Some constants */
   const double k_b = physical_constants->const_boltzmann_k;
   const double hbar = physical_constants->const_planck_hbar;
@@ -48,7 +54,7 @@ INLINE static double neutrino_mass_factor(
   const double n = prefactor * pow(k_b * T_nu / (hbar * c), 3);
 
   /* Compute the conversion factor */
-  const double mass_factor = 1.0 / (flavours * n);
+  const double mass_factor = nr_nuparts / (flavours * n * volume);
 
   /* Convert to eV */
   const double mass_factor_eV = mass_factor / eV_mass;
