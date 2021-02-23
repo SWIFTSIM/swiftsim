@@ -182,13 +182,12 @@ void engine_config(int restart, int fof, struct engine *e,
     /* For diagnostics, collect the range of neutrino masses in eV */
     float neutrino_mass_min = FLT_MAX;
     float neutrino_mass_max = -FLT_MAX;
-    float neutrino_mass_mult = e->neutrino_mass_conversion_factor;
 
     if (e->s->nr_gparts > 0) {
       for (size_t k = 0; k < e->s->nr_gparts; k++) {
         if (e->s->gparts[k].type == swift_type_neutrino) {
           struct gpart *gp = &e->s->gparts[k];
-          float neutrino_mass = gp->mass * neutrino_mass_mult;
+          float neutrino_mass = gp->mass;
           if (neutrino_mass > neutrino_mass_max)
             neutrino_mass_max = neutrino_mass;
           if (neutrino_mass < neutrino_mass_min)
@@ -208,9 +207,10 @@ void engine_config(int restart, int fof, struct engine *e,
 #endif
 
       if (e->nodeID == 0) {
-        message("Neutrino mass multiplier: %.5e eV / U_M", neutrino_mass_mult);
+        float mass_mult = e->neutrino_mass_conversion_factor;
+        message("Neutrino mass multiplier: %.5e eV / U_M", mass_mult);
         message("Neutrino simulation particle masses in range: [%.4f, %.4f] eV",
-                min_max_mass[0], min_max_mass[1]);
+                min_max_mass[0] * mass_mult, min_max_mass[1] * mass_mult);
       }
     }
   }
