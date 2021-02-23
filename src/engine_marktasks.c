@@ -73,7 +73,10 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
   const int nodeID = e->nodeID;
   const int with_timestep_limiter = e->policy & engine_policy_timestep_limiter;
   const int with_timestep_sync = e->policy & engine_policy_timestep_sync;
-  const int with_star_formation = e->policy & engine_policy_star_formation;
+  const int with_sinks = e->policy & engine_policy_sinks;
+  const int with_stars = e->policy & engine_policy_stars;
+  const int with_star_formation = (e->policy & engine_policy_star_formation)
+    || (with_sinks && with_stars);
   const int with_feedback = e->policy & engine_policy_feedback;
   const int with_rt = e->policy & engine_policy_rt;
 

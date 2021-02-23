@@ -245,9 +245,15 @@ void runner_do_sink_star_formation(struct runner *r, struct cell *c, int timer) 
                               us)) {
 
           /* Create a new star */
-          struct spart *sp = cell_add_spart(e, c);
+          struct spart *sp = cell_spawn_new_spart_from_sink(e, c, s);
+          message("Spawning");
+          fflush(stdout);
+
           if (sp == NULL)
-            error("Run out of available star particles");
+            error("Run out of available star particles or gparts");
+
+          if (sp->time_bin != e->min_active_bin || sp->time_bin != sp->gpart->time_bin)
+            error("Failed to set time bin %i %i %i", sp->time_bin, sp->gpart->time_bin, e->min_active_bin);
 
           /* Copy the properties to the star particle */
           sink_copy_properties_to_star(s, sp, e, sink_props, cosmo, with_cosmology, phys_const,
@@ -281,7 +287,6 @@ void runner_do_sink_star_formation(struct runner *r, struct cell *c, int timer) 
  * @param timer 1 if the time is to be recorded.
  */
 void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
-  error("Should not be called");
   struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
   const struct star_formation *sf_props = e->star_formation;

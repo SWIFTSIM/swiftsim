@@ -2036,9 +2036,11 @@ void space_check_limiter_mapper(void *map_data, int nr_parts,
       error("Synchronized particle not treated! id=%lld synchronized=%d",
             parts[k].id, parts[k].limiter_data.to_be_synchronized);
 
-    if (parts[k].gpart != NULL)
-      if (parts[k].time_bin != parts[k].gpart->time_bin)
+    if (parts[k].gpart != NULL) {
+      if (parts[k].time_bin != parts[k].gpart->time_bin) {
         error("Gpart not on the same time-bin as part");
+      }
+    }
   }
 #else
   error("Calling debugging code without debugging flag activated.");
