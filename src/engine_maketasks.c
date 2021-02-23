@@ -824,7 +824,8 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
   struct scheduler *s = &e->sched;
   const int with_sinks = (e->policy & engine_policy_sinks);
   const int with_stars = (e->policy & engine_policy_stars);
-  const int with_star_formation = (e->policy & engine_policy_star_formation);
+  const int with_star_formation = (e->policy & engine_policy_star_formation) ||
+    (with_sinks && with_stars);
   const int with_timestep_limiter =
       (e->policy & engine_policy_timestep_limiter);
   const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
@@ -835,7 +836,7 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
   /* Are we at the top-level? */
   if (c->top == c && c->nodeID == e->nodeID) {
 
-    if ((with_star_formation || (with_sinks && with_stars)) && c->hydro.count > 0) {
+    if (with_star_formation && c->hydro.count > 0) {
       c->hydro.star_formation = scheduler_addtask(
           s, task_type_star_formation, task_subtype_none, 0, 0, c, NULL);
     }
@@ -1107,7 +1108,8 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
   const int with_sinks = (e->policy & engine_policy_sinks);
   const int with_feedback = (e->policy & engine_policy_feedback);
   const int with_cooling = (e->policy & engine_policy_cooling);
-  const int with_star_formation = (e->policy & engine_policy_star_formation);
+  const int with_star_formation = (e->policy & engine_policy_star_formation) ||
+    (with_sinks && with_stars);
   const int with_black_holes = (e->policy & engine_policy_black_holes);
   const int with_rt = (e->policy & engine_policy_rt);
 #ifdef WITH_LOGGER
@@ -1120,8 +1122,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
   if ((c->nodeID == e->nodeID) && (star_resort_cell == NULL) &&
       (c->depth == engine_star_resort_task_depth || c->hydro.super == c)) {
 
-    if (with_feedback && c->hydro.count > 0 &&
-        (with_star_formation || (with_sinks && with_stars))) {
+    if (with_feedback && c->hydro.count > 0 && with_star_formation) {
 
       /* Record this is the level where we re-sort */
       star_resort_cell = c;
@@ -1208,7 +1209,6 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
 
         if (with_stars && c->top->hydro.count > 0) {
           scheduler_addunlock(s, c->hydro.super->sinks.sink_out, c->top->hydro.star_formation);
-          scheduler_addunlock(s, c->top->hydro.star_formation, c->timestep);
         }
       }
 
@@ -1263,8 +1263,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
 #endif
         scheduler_addunlock(s, c->stars.stars_out, c->super->timestep);
 
-        if (with_feedback && c->hydro.count > 0 &&
-            (with_star_formation || (with_sinks && with_stars))) {
+        if (with_feedback && c->hydro.count > 0 && with_star_formation) {
           scheduler_addunlock(s, star_resort_cell->hydro.stars_resort,
                               c->stars.stars_in);
         }
@@ -1277,7 +1276,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
             scheduler_addtask(s, task_type_rt_in, task_subtype_none, 0,
                               /* implicit= */ 1, c, NULL);
         scheduler_addunlock(s, c->super->kick2, c->hydro.rt_in);
-        if (c->top->hydro.count > 0 && (with_star_formation || (with_sinks && with_stars)))
+        if (c->top->hydro.count > 0 && with_star_formation)
           scheduler_addunlock(s, c->top->hydro.star_formation, c->hydro.rt_in);
         if (with_feedback)
           scheduler_addunlock(s, c->stars.stars_out, c->hydro.rt_in);

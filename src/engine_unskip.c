@@ -290,7 +290,10 @@ void engine_do_unskip_mapper(void *map_data, int num_elements,
   struct cell *const cells_top = e->s->cells_top;
 
   /* What policies are we running? */
-  const int with_star_formation = e->policy & engine_policy_star_formation;
+  const int with_sinks = e->policy & engine_policy_sinks;
+  const int with_stars = e->policy & engine_policy_stars;
+  const int with_star_formation = (e->policy & engine_policy_star_formation) ||
+    (with_sinks && with_stars);
 
   /* The current chunk of active cells */
   const int *const local_cells = (int *)map_data;

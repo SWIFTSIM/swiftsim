@@ -171,7 +171,9 @@ INLINE static void sink_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling) {}
+    const struct cooling_function_data* restrict cooling) {
+  sink->spawn = 0;
+}
 
 /**
  * @brief Should the sink spawn a star particle?
@@ -191,9 +193,10 @@ INLINE static int sink_spawn_star(
     const struct cosmology* cosmo, const int with_cosmology,
     const struct phys_const* phys_const,
     const struct unit_system* restrict us) {
+  sink->spawn += 1;
   const float random_number =
-    random_unit_interval(sink->id, e->ti_current, random_number_star_formation);
-  return random_number < 1e-1;
+    random_unit_interval(sink->id, e->ti_current, random_number_star_formation + sink->spawn);
+  return random_number < 1e-2;
 
   return 0;
 }
