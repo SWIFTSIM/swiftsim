@@ -105,7 +105,8 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
     f_th = f_E_max - (f_E_max - f_E_min) / (1. + Z_term * n_term);
 
   } else {
-      error("Invalid SNII energy scaling model!");    
+    error("Invalid SNII energy scaling model!");
+    f_th = -1.;
   }
 
   return f_th;
@@ -519,24 +520,24 @@ void feedback_props_init(struct feedback_props* fp,
   fp->log10_SNII_max_mass_msun = log10(SNII_max_mass_msun);
 
   /* Properties of the energy fraction model */
-  char temp_var[32];
-  parser_get_param_string(
-      params, "EAGLEFeedback:SNII_energy_fraction_function", temp_var);
+  char energy_fraction[PARSER_MAX_LINE_SIZE];
+  parser_get_param_string(params, "EAGLEFeedback:SNII_energy_fraction_function",
+                          energy_fraction);
 
-  if (strcmp(temp_var, "EAGLE") == 0)
+  if (strcmp(energy_fraction, "EAGLE") == 0) {
     fp->SNII_energy_scaling = SNII_scaling_EAGLE;
-  else if (strcmp(temp_var, "Separable") == 0)
+  } else if (strcmp(energy_fraction, "Separable") == 0) {
     fp->SNII_energy_scaling = SNII_scaling_separable;
-  else if (strcmp(temp_var, "Independent") == 0) {
+  } else if (strcmp(energy_fraction, "Independent") == 0) {
     fp->SNII_energy_scaling = SNII_scaling_independent;
-    fp->SNII_delta_E_n =
-        parser_get_param_double(
-          params, "EAGLEFeedback:SNII_energy_fraction_delta_E_n");
+    fp->SNII_delta_E_n = parser_get_param_double(
+        params, "EAGLEFeedback:SNII_energy_fraction_delta_E_n");
+  } else {
+    error(
+        "Invalid value of "
+        "EAGLEFeedback:SNII_energy_fraction_function: '%s'",
+        energy_fraction);
   }
-  else
-    error("Invalid value of "
-          "EAGLEFeedback:SNII_energy_fraction_function: '%s'",
-          temp_var);
 
   fp->f_E_min =
       parser_get_param_double(params, "EAGLEFeedback:SNII_energy_fraction_min");
