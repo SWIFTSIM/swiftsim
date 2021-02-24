@@ -58,6 +58,8 @@ struct sink {
 
   int spawn;
 
+  integertime_t birth;
+
 #ifdef SWIFT_DEBUG_CHECKS
 
   /* Time of the last drift */

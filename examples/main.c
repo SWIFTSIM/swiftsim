@@ -1258,7 +1258,7 @@ int main(int argc, char *argv[]) {
     space_init(&s, params, &cosmo, dim, &hydro_properties, parts, gparts, sinks,
                sparts, bparts, Ngas, Ngpart, Nsink, Nspart, Nbpart, periodic,
                replicate, remap_ids, generate_gas_in_ics, with_hydro,
-               with_self_gravity, with_star_formation,
+               with_self_gravity, with_star_formation, with_sink,
                with_DM_background_particles, with_neutrinos, talking, dry_run,
                nr_nodes);
 

@@ -109,7 +109,7 @@ struct space {
   int with_star_formation;
 
   /*! Are we doing star formation through sink particles? */
-  int with_star_formation_sink;
+  int with_sink;
 
   /*! Are we running with some DM background particles? */
   int with_DM_background;
@@ -352,7 +352,7 @@ void space_init(struct space *s, struct swift_params *params,
                 struct bpart *bparts, size_t Npart, size_t Ngpart, size_t Nsink,
                 size_t Nspart, size_t Nbpart, int periodic, int replicate,
                 int remap_ids, int generate_gas_in_ics, int hydro, int gravity,
-                int star_formation, int star_formation_sink, int DM_background, int neutrinos,
+                int star_formation, int with_sink, int DM_background, int neutrinos,
                 int verbose, int dry_run, int nr_nodes);
 void space_sanitize(struct space *s);
 void space_map_cells_pre(struct space *s, int full,

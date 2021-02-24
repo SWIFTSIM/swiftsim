@@ -497,6 +497,8 @@ struct gpart *cell_add_gpart(struct engine *e, struct cell *c) {
         s->parts[-gparts[i + 1].id_or_neg_offset].gpart++;
       } else if (gparts[i + 1].type == swift_type_stars) {
         s->sparts[-gparts[i + 1].id_or_neg_offset].gpart++;
+      } else if (gparts[i + 1].type == swift_type_sink) {
+        s->sinks[-gparts[i + 1].id_or_neg_offset].gpart++;
       } else if (gparts[i + 1].type == swift_type_black_hole) {
         s->bparts[-gparts[i + 1].id_or_neg_offset].gpart++;
       }
@@ -1030,7 +1032,7 @@ struct sink *cell_convert_part_to_sink(struct engine *e, struct cell *c,
   struct gpart *gp = cell_convert_part_to_gpart(e, c, p, xp);
 
   /* Assign the ID back */
-  sp->id = gp->id_or_neg_offset;
+  sp->id = p->id;
   gp->type = swift_type_sink;
 
   /* Re-link things */
