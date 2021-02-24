@@ -173,6 +173,7 @@ INLINE static void sink_copy_properties(
     const struct unit_system* restrict us,
     const struct cooling_function_data* restrict cooling) {
   sink->spawn = 0;
+  sink->birth = e->ti_current;
 }
 
 /**

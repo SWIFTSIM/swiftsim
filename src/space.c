@@ -171,7 +171,7 @@ void space_reorder_extra_gparts_mapper(void *map_data, int num_cells,
 
   for (int ind = 0; ind < num_cells; ind++) {
     struct cell *c = &cells_top[local_cells[ind]];
-    cell_reorder_extra_gparts(c, s->parts, s->sparts);
+    cell_reorder_extra_gparts(c, s->parts, s->sparts, s->sinks);
   }
 }
 
@@ -736,10 +736,11 @@ void space_synchronize_particle_positions(struct space *s) {
                    s->bparts, s->nr_bparts, sizeof(struct bpart),
                    threadpool_auto_chunk_size, /*extra_data=*/NULL);
 
-  if (s->nr_gparts > 0 && s->nr_sinks > 0)
+  if (s->nr_gparts > 0 && s->nr_sinks > 0) {
     threadpool_map(&s->e->threadpool, space_synchronize_sink_positions_mapper,
                    s->sinks, s->nr_sinks, sizeof(struct sink),
                    threadpool_auto_chunk_size, /*extra_data=*/NULL);
+  }
 
   if (s->e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
@@ -998,7 +999,7 @@ void space_collect_mean_masses(struct space *s, int verbose) {
  * @param hydro flag whether we are doing hydro or not?
  * @param self_gravity flag whether we are doing gravity or not?
  * @param star_formation flag whether we are doing star formation or not?
- * @param star_formation_sink flag whether we are doing star formation through sink particles or not?
+ * @param with_sink flag whether we are doing sink particles or not?
  * @param DM_background Are we running with some DM background particles?
  * @param verbose Print messages to stdout or not.
  * @param dry_run If 1, just initialise stuff, don't do anything with the parts.
@@ -1016,7 +1017,7 @@ void space_init(struct space *s, struct swift_params *params,
                 struct bpart *bparts, size_t Npart, size_t Ngpart, size_t Nsink,
                 size_t Nspart, size_t Nbpart, int periodic, int replicate,
                 int remap_ids, int generate_gas_in_ics, int hydro,
-                int self_gravity, int star_formation, int star_formation_sink, int DM_background,
+                int self_gravity, int star_formation, int with_sink, int DM_background,
                 int neutrinos, int verbose, int dry_run, int nr_nodes) {
 
   /* Clean-up everything */
@@ -1030,7 +1031,7 @@ void space_init(struct space *s, struct swift_params *params,
   s->with_self_gravity = self_gravity;
   s->with_hydro = hydro;
   s->with_star_formation = star_formation;
-  s->with_star_formation_sink = star_formation_sink;
+  s->with_sink = with_sink;
   s->with_DM_background = DM_background;
   s->with_neutrinos = neutrinos;
   s->nr_parts = Npart;
@@ -1351,19 +1352,19 @@ void space_init(struct space *s, struct swift_params *params,
 #endif
 
   /* Do we want any spare particles for on the fly creation? */
-  if (!(star_formation || star_formation_sink) || !swift_star_formation_model_creates_stars) {
+  if (!(star_formation || with_sink) || !swift_star_formation_model_creates_stars) {
     space_extra_sparts = 0;
   }
 
   const int create_sparts = (star_formation && swift_star_formation_model_creates_stars) ||
-    star_formation_sink;
+    with_sink;
   if (create_sparts && space_extra_sparts == 0) {
     error(
         "Running with star formation but without spare star particles. "
         "Increase 'Scheduler:cell_extra_sparts'.");
   }
 
-  if (star_formation_sink && space_extra_gparts == 0) {
+  if (with_sink && space_extra_gparts == 0) {
     error(
           "Running with star formation from sink but without spare g-particles. "
           "Increase 'Scheduler:cell_extra_gparts'.");
@@ -2018,7 +2019,7 @@ void space_check_limiter_mapper(void *map_data, int nr_parts,
 
     if (parts[k].gpart != NULL) {
       if (parts[k].time_bin != parts[k].gpart->time_bin) {
-        error("Gpart not on the same time-bin as part");
+        error("Gpart not on the same time-bin as part %i %i", parts[k].time_bin, parts[k].gpart->time_bin);
       }
     }
   }

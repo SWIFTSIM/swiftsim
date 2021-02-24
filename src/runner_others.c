@@ -590,7 +590,6 @@ void runner_do_sink_formation(struct runner *r, struct cell *c) {
 
             dt_sink =
                 cosmology_get_delta_time(cosmo, ti_begin, ti_begin + ti_step);
-
           } else {
             dt_sink = get_timestep(p->time_bin, time_base);
           }
