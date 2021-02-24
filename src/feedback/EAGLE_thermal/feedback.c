@@ -529,7 +529,7 @@ void feedback_props_init(struct feedback_props* fp,
   /* Properties of the energy fraction model */
   char temp_var[32];
   parser_get_param_string(
-      params, "EAGLEFeedback:SNII_energy_scaling_function", temp_var);
+      params, "EAGLEFeedback:SNII_energy_fraction_function", temp_var);
 
   if (strcmp(temp_var, "EAGLE") == 0)
     fp->SNII_energy_scaling = SNII_scaling_EAGLE;
@@ -538,11 +538,12 @@ void feedback_props_init(struct feedback_props* fp,
   else if (strcmp(temp_var, "Independent") == 0) {
     fp->SNII_energy_scaling = SNII_scaling_independent;
     fp->SNII_delta_E_n =
-        parser_get_param_double(params, "EAGLEFeedback:SNII_delta_E_n");
+        parser_get_param_double(
+          params, "EAGLEFeedback:SNII_energy_fraction_delta_E_n");
   }
   else
     error("Invalid value of "
-          "EAGLEFeedback:SNII_energy_scaling_function: '%s'",
+          "EAGLEFeedback:SNII_energy_fraction_function: '%s'",
           temp_var);
 
   fp->f_E_min =
