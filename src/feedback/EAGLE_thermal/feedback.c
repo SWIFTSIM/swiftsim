@@ -57,7 +57,7 @@ double eagle_feedback_temperature_change(const struct spart* sp,
  * @param ngb_Z Metallicity (metal mass fraction) of the gas surrounding the
  * star.
  */
-double eagle_feedback_energy_fraction(struct spart* sp,
+double eagle_feedback_energy_fraction(const struct spart* sp,
                                       const struct feedback_props* props,
                                       const double ngb_nH_cgs,
                                       const double ngb_Z) {
