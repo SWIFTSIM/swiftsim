@@ -527,6 +527,24 @@ void feedback_props_init(struct feedback_props* fp,
   fp->log10_SNII_max_mass_msun = log10(SNII_max_mass_msun);
 
   /* Properties of the energy fraction model */
+  char temp_var[32];
+  parser_get_param_string(
+      params, "EAGLEFeedback:SNII_energy_scaling_function", temp_var);
+
+  if (strcmp(temp_var, "EAGLE") == 0)
+    fp->SNII_energy_scaling = SNII_scaling_EAGLE;
+  else if (strcmp(temp_var, "Separable") == 0)
+    fp->SNII_energy_scaling = SNII_scaling_separable;
+  else if (strcmp(temp_var, "Independent") == 0) {
+    fp->SNII_energy_scaling = SNII_scaling_independent;
+    fp->SNII_delta_E_n =
+        parser_get_param_double(params, "EAGLEFeedback:SNII_delta_E_n");
+  }
+  else
+    error("Invalid value of "
+          "EAGLEFeedback:SNII_energy_scaling_function: '%s'",
+          temp_var);
+
   fp->f_E_min =
       parser_get_param_double(params, "EAGLEFeedback:SNII_energy_fraction_min");
   fp->f_E_max =
