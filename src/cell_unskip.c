@@ -2022,12 +2022,11 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 
         /* If there are active sparts in cj, activate hydro ghost in ci */
         if (cj_active) {
-          if(ci->hydro.prep1_ghost != NULL)
-            scheduler_activate(s, ci->hydro.prep1_ghost);
+          scheduler_activate(s, ci->hydro.super->hydro.prep1_ghost);
         }
         /* If there are active sparts in ci, activate hydro ghost in cj */
-        else if (cj->hydro.prep1_ghost != NULL){
-          scheduler_activate(s, cj->hydro.prep1_ghost);
+        else {
+          scheduler_activate(s, cj->hydro.super->hydro.prep1_ghost);
         }
       }
       /* Cells ci and cj are from different MPI domains */

@@ -491,7 +491,7 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           if (ci_active_stars)
             scheduler_activate(s, cj->hydro.super->hydro.prep1_ghost);
           /* If there are active sparts in cj, activate hydro ghost in ci */
-          else
+          if (cj_active_stars)
             scheduler_activate(s, ci->hydro.super->hydro.prep1_ghost);
 
         } else if ((ci_nodeID == nodeID && cj_nodeID != nodeID) &&
