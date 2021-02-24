@@ -153,8 +153,6 @@ void cell_recursively_shift_gparts(struct cell *c,
  * time bin.
  */
 struct spart *cell_add_spart(struct engine *e, struct cell *const c) {
-  message("Adding spart");
-  fflush(stdout);
   /* Perform some basic consitency checks */
   if (c->nodeID != engine_rank) error("Adding spart on a foreign node");
   if (c->grav.ti_old_part != e->ti_current) error("Undrifted cell!");
@@ -421,8 +419,6 @@ struct sink *cell_add_sink(struct engine *e, struct cell *const c) {
  * time bin.
  */
 struct gpart *cell_add_gpart(struct engine *e, struct cell *c) {
-  message("Adding gpart");
-  fflush(stdout);
   /* Perform some basic consitency checks */
   if (c->nodeID != engine_rank) error("Adding gpart on a foreign node");
   if (c->grav.ti_old_part != e->ti_current) error("Undrifted cell!");
@@ -1008,8 +1004,6 @@ struct spart *cell_spawn_new_spart_from_part(struct engine *e, struct cell *c,
  */
 struct sink *cell_convert_part_to_sink(struct engine *e, struct cell *c,
                                        struct part *p, struct xpart *xp) {
-  message("Adding sink");
-  fflush(stdout);
   /* Quick cross-check */
   if (c->nodeID != e->nodeID)
     error("Can't remove a particle in a foreign cell.");
@@ -1063,7 +1057,6 @@ struct sink *cell_convert_part_to_sink(struct engine *e, struct cell *c,
   return sp;
 }
 
-
 /**
  * @brief Spawn a new #spart along with its related #gpart from a #sink.
  * The sink is not changed.
@@ -1076,7 +1069,7 @@ struct sink *cell_convert_part_to_sink(struct engine *e, struct cell *c,
  * velocity and time-bin as the original #sink.
  */
 struct spart *cell_spawn_new_spart_from_sink(struct engine *e, struct cell *c,
-                                         const struct sink *s) {
+                                             const struct sink *s) {
   /* Quick cross-check */
   if (c->nodeID != e->nodeID)
     error("Can't spawn a particle in a foreign cell.");

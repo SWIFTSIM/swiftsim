@@ -128,7 +128,7 @@ INLINE static int sink_is_forming(
     const struct cooling_function_data* restrict cooling,
     const struct entropy_floor_properties* restrict entropy_floor) {
 
-  return 1;
+  return 0;
 }
 
 /**
@@ -173,10 +173,7 @@ INLINE static void sink_copy_properties(
     const struct phys_const* phys_const,
     const struct hydro_props* restrict hydro_props,
     const struct unit_system* restrict us,
-    const struct cooling_function_data* restrict cooling) {
-  sink->spawn = 0;
-  sink->birth = e->ti_current;
-}
+    const struct cooling_function_data* restrict cooling) {}
 
 /**
  * @brief Should the sink spawn a star particle?
@@ -191,16 +188,12 @@ INLINE static void sink_copy_properties(
  * @param with_cosmology if we run with cosmology.
  * @param us The internal unit system.
  */
-INLINE static int sink_spawn_star(
-    struct sink* sink, const struct engine* e, const struct sink_props* sink_props,
-    const struct cosmology* cosmo, const int with_cosmology,
-    const struct phys_const* phys_const,
-    const struct unit_system* restrict us) {
-  sink->spawn += 1;
-  const float random_number =
-    random_unit_interval(sink->id, e->ti_current, random_number_star_formation + sink->spawn);
-  return random_number < 1e-2;
-
+INLINE static int sink_spawn_star(struct sink* sink, const struct engine* e,
+                                  const struct sink_props* sink_props,
+                                  const struct cosmology* cosmo,
+                                  const int with_cosmology,
+                                  const struct phys_const* phys_const,
+                                  const struct unit_system* restrict us) {
   return 0;
 }
 
@@ -220,10 +213,9 @@ INLINE static int sink_spawn_star(
  * @param us The internal unit system.
  */
 INLINE static void sink_copy_properties_to_star(
-    struct sink* sink, struct spart *sp, const struct engine* e, const struct sink_props* sink_props,
-    const struct cosmology* cosmo, const int with_cosmology,
-    const struct phys_const* phys_const,
-    const struct unit_system* restrict us) {
-}
+    struct sink* sink, struct spart* sp, const struct engine* e,
+    const struct sink_props* sink_props, const struct cosmology* cosmo,
+    const int with_cosmology, const struct phys_const* phys_const,
+    const struct unit_system* restrict us) {}
 
 #endif /* SWIFT_DEFAULT_SINK_H */
