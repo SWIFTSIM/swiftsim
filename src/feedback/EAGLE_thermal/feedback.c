@@ -48,7 +48,7 @@ double eagle_feedback_temperature_change(const struct spart* sp,
  *
  * Note that the fraction can be > 1.
  *
- * We use equation 7 of Schaye et al. 2015.
+ * This allows a choice of different f_th scaling functions.
  *
  * @param sp The #spart.
  * @param props The properties of the feedback model.
@@ -57,7 +57,7 @@ double eagle_feedback_temperature_change(const struct spart* sp,
  * @param ngb_Z Metallicity (metal mass fraction) of the gas surrounding the
  * star.
  */
-double eagle_feedback_energy_fraction(const struct spart* sp,
+double eagle_feedback_energy_fraction(struct spart* sp,
                                       const struct feedback_props* props,
                                       const double ngb_nH_cgs,
                                       const double ngb_Z) {
@@ -84,11 +84,39 @@ double eagle_feedback_energy_fraction(const struct spart* sp,
   const double Z = props->use_birth_Z_for_f_th ? Z_birth : ngb_Z;
 
   /* Calculate f_E */
-  const double Z_term = pow(max(Z, 1e-6) / Z_0, n_Z);
-  const double n_term = pow(nH / n_0, -n_n);
-  const double denonimator = 1. + Z_term * n_term;
+  const double Z_term = pow(max(Z, 1e-6) / Z_0, -n_Z);
+  const double n_term = pow(nH / n_0, n_n);
 
-  return f_E_min + (f_E_max - f_E_min) / denonimator;
+  /* Different behaviour for different scaling functions ahead */
+  double f_th;
+  if (props->SNII_energy_scaling == SNII_scaling_independent) {
+
+    /* Independent scaling of f_th with Z and n. Here, we have a second
+     * parameter for the max f_th increase due to density, delta_E_n. */
+    const double delta_E_n = props->SNII_delta_E_n;
+
+    f_th = (f_E_max - (f_E_max - f_E_min) / (1. + Z_term)) *
+           (delta_E_n - (delta_E_n - 1.) / (1. + n_term));
+
+  } else {
+
+    /* Scalings in which f_th varies between a fixed fE_min and fE_max */
+    double denominator;
+    if (props->SNII_energy_scaling == SNII_scaling_EAGLE) 
+      /* EAGLE model with a direct coupling between the Z and n scalings*/
+      denominator = 1. + Z_term * n_term;
+ 
+    else if (props->SNII_energy_scaling == SNII_scaling_separable)
+      /* Alternative model where the variations are separable */
+      denominator = (1. + Z_term) * (1. + n_term);
+
+    else
+      error("Invalid SNII energy scaling model!");
+
+    f_th = f_E_max - (f_E_max - f_E_min) / denominator;
+  }
+
+  return f_th;
 }
 
 /**
