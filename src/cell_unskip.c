@@ -2034,14 +2034,12 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
         /* In task prepare1, we update gas so sparts must be on foreign node */
         scheduler_activate(s, t);
         /* If there are active sparts in cj, activate hydro ghost in ci */
-        if (ci->hydro.prep1_ghost != NULL)
-          scheduler_activate(s, ci->hydro.prep1_ghost);
+        scheduler_activate(s, ci->hydro.super->hydro.prep1_ghost);
       } else if ((ci_nodeID != nodeID && cj_nodeID == nodeID) && (ci_active)) {
         /* In task prepare1, we update gas so sparts must be on foreign node */
         scheduler_activate(s, t);
         /* If there are active sparts in ci, activate hydro ghost in cj */
-        if (cj->hydro.prep1_ghost != NULL)
-          scheduler_activate(s, cj->hydro.prep1_ghost);
+        scheduler_activate(s, cj->hydro.super->hydro.prep1_ghost);
       }
     }
   }
