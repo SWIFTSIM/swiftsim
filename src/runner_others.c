@@ -185,7 +185,8 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
  * @param c cell
  * @param timer 1 if the time is to be recorded.
  */
-void runner_do_sink_star_formation(struct runner *r, struct cell *c, int timer) {
+void runner_do_sink_star_formation(struct runner *r, struct cell *c,
+                                   int timer) {
 
   struct engine *e = r->e;
   const struct cosmology *cosmo = e->cosmology;
@@ -241,23 +242,17 @@ void runner_do_sink_star_formation(struct runner *r, struct cell *c, int timer) 
 #endif
 
         /* Spawn as many sink as necessary */
-        while(sink_spawn_star(s, e, sink_props, cosmo, with_cosmology, phys_const,
-                              us)) {
+        while (sink_spawn_star(s, e, sink_props, cosmo, with_cosmology,
+                               phys_const, us)) {
 
           /* Create a new star */
           struct spart *sp = cell_spawn_new_spart_from_sink(e, c, s);
-          message("Spawning");
-          fflush(stdout);
-
           if (sp == NULL)
             error("Run out of available star particles or gparts");
 
-          if (sp->time_bin != e->min_active_bin || sp->time_bin != sp->gpart->time_bin)
-            error("Failed to set time bin %i %i %i", sp->time_bin, sp->gpart->time_bin, e->min_active_bin);
-
           /* Copy the properties to the star particle */
-          sink_copy_properties_to_star(s, sp, e, sink_props, cosmo, with_cosmology, phys_const,
-                                       us);
+          sink_copy_properties_to_star(s, sp, e, sink_props, cosmo,
+                                       with_cosmology, phys_const, us);
 
           /* Update the h_max */
           c->stars.h_max = max(c->stars.h_max, sp->h);
@@ -266,7 +261,6 @@ void runner_do_sink_star_formation(struct runner *r, struct cell *c, int timer) 
       }
     } /* Loop over the particles */
   }
-
 
   /* If we formed any stars, the star sorts are now invalid. We need to
    * re-compute them. */
@@ -279,8 +273,8 @@ void runner_do_sink_star_formation(struct runner *r, struct cell *c, int timer) 
 }
 
 /**
- * @brief Convert some hydro particles into stars depending on the star formation
- * model.
+ * @brief Convert some hydro particles into stars depending on the star
+ * formation model.
  *
  * @param r runner task
  * @param c cell
@@ -506,18 +500,17 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
   if (timer) TIMER_TOC(timer_do_star_formation);
 }
 
-
 /**
  * @brief Pick the correct star formation method depending on the simulation
  */
-void runner_do_star_formation_branch(struct runner *r, struct cell *c, int timer) {
+void runner_do_star_formation_branch(struct runner *r, struct cell *c,
+                                     int timer) {
   struct engine *e = r->e;
 
   /* Pick the star formation between the standard model and the sink one. */
   if (e->policy & engine_policy_sinks) {
     runner_do_sink_star_formation(r, c, timer);
-  }
-  else {
+  } else {
     runner_do_star_formation(r, c, timer);
   }
 }
