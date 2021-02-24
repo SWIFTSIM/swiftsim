@@ -736,11 +736,10 @@ void space_synchronize_particle_positions(struct space *s) {
                    s->bparts, s->nr_bparts, sizeof(struct bpart),
                    threadpool_auto_chunk_size, /*extra_data=*/NULL);
 
-  if (s->nr_gparts > 0 && s->nr_sinks > 0) {
+  if (s->nr_gparts > 0 && s->nr_sinks > 0)
     threadpool_map(&s->e->threadpool, space_synchronize_sink_positions_mapper,
                    s->sinks, s->nr_sinks, sizeof(struct sink),
                    threadpool_auto_chunk_size, /*extra_data=*/NULL);
-  }
 
   if (s->e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
@@ -1025,8 +1024,9 @@ void space_init(struct space *s, struct swift_params *params,
                 struct bpart *bparts, size_t Npart, size_t Ngpart, size_t Nsink,
                 size_t Nspart, size_t Nbpart, int periodic, int replicate,
                 int remap_ids, int generate_gas_in_ics, int hydro,
-                int self_gravity, int star_formation, int with_sink, int DM_background,
-                int neutrinos, int verbose, int dry_run, int nr_nodes) {
+                int self_gravity, int star_formation, int with_sink,
+                int DM_background, int neutrinos, int verbose, int dry_run,
+                int nr_nodes) {
 
   /* Clean-up everything */
   bzero(s, sizeof(struct space));
@@ -1360,12 +1360,13 @@ void space_init(struct space *s, struct swift_params *params,
 #endif
 
   /* Do we want any spare particles for on the fly creation? */
-  if (!(star_formation || with_sink) || !swift_star_formation_model_creates_stars) {
+  if (!(star_formation || with_sink) ||
+      !swift_star_formation_model_creates_stars) {
     space_extra_sparts = 0;
   }
 
-  const int create_sparts = (star_formation && swift_star_formation_model_creates_stars) ||
-    with_sink;
+  const int create_sparts =
+      (star_formation && swift_star_formation_model_creates_stars) || with_sink;
   if (create_sparts && space_extra_sparts == 0) {
     error(
         "Running with star formation but without spare star particles. "
@@ -1374,8 +1375,8 @@ void space_init(struct space *s, struct swift_params *params,
 
   if (with_sink && space_extra_gparts == 0) {
     error(
-          "Running with star formation from sink but without spare g-particles. "
-          "Increase 'Scheduler:cell_extra_gparts'.");
+        "Running with star formation from sink but without spare g-particles. "
+        "Increase 'Scheduler:cell_extra_gparts'.");
   }
 
   /* Build the cells recursively. */
@@ -2027,7 +2028,8 @@ void space_check_limiter_mapper(void *map_data, int nr_parts,
 
     if (parts[k].gpart != NULL) {
       if (parts[k].time_bin != parts[k].gpart->time_bin) {
-        error("Gpart not on the same time-bin as part %i %i", parts[k].time_bin, parts[k].gpart->time_bin);
+        error("Gpart not on the same time-bin as part %i %i", parts[k].time_bin,
+              parts[k].gpart->time_bin);
       }
     }
   }

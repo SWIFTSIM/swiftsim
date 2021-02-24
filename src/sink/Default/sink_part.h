@@ -21,8 +21,6 @@
 
 #include "timeline.h"
 
-
-#define swift_star_formation_model_creates_stars 1
 #define sink_need_unique_id 1
 
 /**
@@ -55,10 +53,6 @@ struct sink {
 
   /*! Particle time bin */
   timebin_t time_bin;
-
-  int spawn;
-
-  integertime_t birth;
 
 #ifdef SWIFT_DEBUG_CHECKS
 

@@ -35,6 +35,9 @@ struct cell_sinks {
 
   /* If we are not using sinks, compact as much of the unecessary variables
      into an anonymous union to save memory in the cell structure. */
+#ifdef SINK_NONE
+  union {
+#endif
 
     /*! Pointer to the #sink data. */
     struct sink *parts;
@@ -77,6 +80,10 @@ struct cell_sinks {
 
     /*! Values of dx_max before the drifts, used for sub-cell tasks. */
     float dx_max_part_old;
+
+#ifdef SINK_NONE
+  };
+#endif
 
   /*! Minimum end of (integer) time step in this cell for sink tasks. */
   integertime_t ti_end_min;
