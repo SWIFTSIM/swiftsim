@@ -547,10 +547,32 @@ void feedback_props_init(struct feedback_props* fp,
       parser_get_param_double(params, "EAGLEFeedback:SNII_energy_fraction_Z_0");
   fp->n_0_cgs = parser_get_param_double(
       params, "EAGLEFeedback:SNII_energy_fraction_n_0_H_p_cm3");
-  fp->n_n =
-      parser_get_param_double(params, "EAGLEFeedback:SNII_energy_fraction_n_n");
-  fp->n_Z =
-      parser_get_param_double(params, "EAGLEFeedback:SNII_energy_fraction_n_Z");
+
+  /* Indicies can either be included in the parameter file as powers,
+   * or as widths - but not both! The width and power are always related
+   * by the relation power = 1.0 / (ln(10) * width) */
+  double n_n = 0.0, n_Z = 0.0;
+
+  n_n = parser_get_opt_param_double(
+      params, "EAGLEFeedback:SNII_energy_fraction_n_n", FLT_MAX);
+
+  if (n_n == FLT_MAX) {
+    n_n = 1.0 / (parser_get_param_double(
+                     params, "EAGLEFeedback:SNII_energy_fraction_sigma_n") *
+                 log(10.0));
+  };
+
+  n_Z = parser_get_opt_param_double(
+      params, "EAGLEFeedback:SNII_energy_fraction_n_Z", FLT_MAX);
+
+  if (n_Z == FLT_MAX) {
+    n_Z = 1.0 / (parser_get_param_double(
+                     params, "EAGLEFeedback:SNII_energy_fraction_sigma_Z") *
+                 log(10.0));
+  };
+
+  fp->n_n = n_n;
+  fp->n_Z = n_Z;
 
   /* Check that it makes sense. */
   if (fp->f_E_max < fp->f_E_min) {
@@ -715,7 +737,12 @@ void feedback_props_init(struct feedback_props* fp,
    * mass bins used in IMF  */
   compute_ejecta(fp);
 
-  message("initialized stellar feedback");
+  message("Feedback model is EAGLE (%s)", energy_fraction);
+  message("Feedback energy fraction min=%f, max=%f", fp->f_E_min, fp->f_E_max);
+  message(
+      "Feedback energy fraction powers and pivot: n_n=%f, n_Z=%f, Z_0=%f, "
+      "n_0_cgs=%f",
+      fp->n_n, fp->n_Z, fp->Z_0, fp->n_0_cgs);
 }
 
 /**
