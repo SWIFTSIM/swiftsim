@@ -232,9 +232,10 @@ void engine_addtasks_send_hydro(struct engine *e, struct cell *ci,
 
       /* In stellar feedback, send gas parts only after they have finished their
        * hydro ghosts */
-      if (with_feedback)
+      if (with_feedback) {
         scheduler_addunlock(s, ci->super->hydro.prep1_ghost, t_prep1);
         scheduler_addunlock(s, t_prep1, ci->super->stars.prep2_ghost);
+      }
     }
 
     /* Add them to the local cell. */
