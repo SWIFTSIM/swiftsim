@@ -47,7 +47,7 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
   const float H = cosmo->H;
 
   /* Anything to do here? */
-  /* early exit checks are already done in DOSELF1_BRANCH_RT */
+  if (c->hydro.count == 0 || c->stars.count == 0) return;
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Drift the cell to the current timestep if needed. */
@@ -102,9 +102,31 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
       /* Check that particles have been drifted to the current time */
       if (pj->ti_drift != e->ti_current)
         error("Particle pj not drifted to current time");
-#endif
-#ifdef RT_DEBUG
-      if (r2 < hig2) rt_injection_timestep_debugging_check(si, pj, e);
+
+      if (r2 < hig2) {
+
+        const integertime_t ti_current = e->ti_current;
+        const integertime_t pti_end =
+            get_integer_time_end(ti_current, pj->time_bin);
+        const integertime_t sti_end =
+            get_integer_time_end(ti_current, si->time_bin);
+
+        if (sti_end < ti_current)
+          error(
+              "s-particle in an impossible time-zone! sp->ti_end=%lld "
+              "e->ti_current=%lld",
+              sti_end, ti_current);
+        if (pti_end < ti_current)
+          error(
+              "particle in an impossible time-zone! p->ti_end=%lld "
+              "e->ti_current=%lld",
+              pti_end, ti_current);
+        if (pti_end > sti_end)
+          message(
+              "WARNING: Got star that whose time step ends before the "
+              "interacting "
+              "hydro particle's time step ends. This needs to be dealt with.");
+      }
 #endif
 
       if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj, a, H);
@@ -186,8 +208,32 @@ void DOPAIR1_NONSYM_RT_NAIVE(struct runner *r, struct cell *ci,
       const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
 
 #ifdef RT_DEBUG
-      if (r2 < hig2) rt_injection_timestep_debugging_check(si, pj, e);
+      if (r2 < hig2) {
+
+        const integertime_t ti_current = e->ti_current;
+        const integertime_t pti_end =
+            get_integer_time_end(ti_current, pj->time_bin);
+        const integertime_t sti_end =
+            get_integer_time_end(ti_current, si->time_bin);
+
+        if (sti_end < ti_current)
+          error(
+              "s-particle in an impossible time-zone! sp->ti_end=%lld "
+              "e->ti_current=%lld",
+              sti_end, ti_current);
+        if (pti_end < ti_current)
+          error(
+              "particle in an impossible time-zone! p->ti_end=%lld "
+              "e->ti_current=%lld",
+              pti_end, ti_current);
+        if (pti_end > sti_end)
+          message(
+              "WARNING: Got star that whose time step ends before the "
+              "interacting "
+              "hydro particle's time step ends. This needs to be dealt with.");
+      }
 #endif
+
       if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj, a, H);
 
     } /* loop over the parts in cj. */
@@ -294,13 +340,37 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
           error("Particle spi not drifted to current time");
         if (pj->ti_drift != e->ti_current)
           error("Particle pj not drifted to current time");
+
+        if (r2 < hig2) {
+
+          const integertime_t ti_current = e->ti_current;
+          const integertime_t pti_end =
+              get_integer_time_end(ti_current, pj->time_bin);
+          const integertime_t sti_end =
+              get_integer_time_end(ti_current, spi->time_bin);
+
+          if (sti_end < ti_current)
+            error(
+                "s-particle in an impossible time-zone! sp->ti_end=%lld "
+                "e->ti_current=%lld",
+                sti_end, ti_current);
+          if (pti_end < ti_current)
+            error(
+                "particle in an impossible time-zone! p->ti_end=%lld "
+                "e->ti_current=%lld",
+                pti_end, ti_current);
+          if (pti_end > sti_end)
+            message(
+                "WARNING: Got star that whose time step ends before the "
+                "interacting "
+                "hydro particle's time step ends. This needs to be dealt "
+                "with.");
+        }
+
 #endif
 
         /* Hit or miss? */
         if (r2 < hig2) {
-#ifdef RT_DEBUG
-          rt_injection_timestep_debugging_check(spi, pj, e);
-#endif
           IACT_RT(r2, dx, hi, hj, spi, pj, a, H);
         }
       } /* loop over the parts in cj. */
@@ -375,14 +445,37 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
           error("Particle pi not drifted to current time");
         if (spj->ti_drift != e->ti_current)
           error("Particle spj not drifted to current time");
+
+        if (r2 < hjg2) {
+
+          const integertime_t ti_current = e->ti_current;
+          const integertime_t pti_end =
+              get_integer_time_end(ti_current, pi->time_bin);
+          const integertime_t sti_end =
+              get_integer_time_end(ti_current, spj->time_bin);
+
+          if (sti_end < ti_current)
+            error(
+                "s-particle in an impossible time-zone! sp->ti_end=%lld "
+                "e->ti_current=%lld",
+                sti_end, ti_current);
+          if (pti_end < ti_current)
+            error(
+                "particle in an impossible time-zone! p->ti_end=%lld "
+                "e->ti_current=%lld",
+                pti_end, ti_current);
+          if (pti_end > sti_end)
+            message(
+                "WARNING: Got star that whose time step ends before the "
+                "interacting "
+                "hydro particle's time step ends. This needs to be dealt "
+                "with.");
+        }
 #endif
 
         /* Hit or miss? */
         if (r2 < hjg2) {
 
-#ifdef RT_DEBUG
-          rt_injection_timestep_debugging_check(spj, pi, e);
-#endif
           IACT_RT(r2, dx, hj, hi, spj, pi, a, H);
         }
       } /* loop over the parts in ci. */

@@ -46,8 +46,7 @@
 /* Import the gradient loop functions (if required). */
 #ifdef EXTRA_HYDRO_LOOP
 #define FUNCTION gradient
-/* #define FUNCTION_TASK_LOOP TASK_LOOP_GRADIENT */
-#define FUNCTION_TASK_LOOP task_loop_gradient
+#define FUNCTION_TASK_LOOP TASK_LOOP_GRADIENT
 #include "runner_doiact_functions_hydro.h"
 #undef FUNCTION
 #undef FUNCTION_TASK_LOOP
