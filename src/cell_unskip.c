@@ -2791,7 +2791,6 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
   const int nodeID = e->nodeID;
   int rebuild = 0; /* TODO: implement rebuild conditions? */
 
-  /* Drift stars even if they aren't active */
   if (c->stars.drift != NULL) {
     if (rt_should_do_cell(c, e)) {
       cell_activate_drift_part(c, s);
