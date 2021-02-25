@@ -56,6 +56,17 @@ __attribute__((always_inline)) INLINE static float gravity_get_softening(
 }
 
 /**
+ * @brief Is this particle a neutrino?
+ *
+ * @param gp The #gpart.
+ * @return 1 if the #gpart is neutrino, 0 otherwise.
+ */
+__attribute__((always_inline)) INLINE static int gravity_is_neutrino(
+    const struct gpart* gp) {
+  return gp->neutrino_flag != 0;
+}
+
+/**
  * @brief Add a contribution to this particle's potential from the tree.
  *
  * @param gp The particle.

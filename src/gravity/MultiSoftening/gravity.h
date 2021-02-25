@@ -52,6 +52,17 @@ __attribute__((always_inline)) INLINE static float gravity_get_softening(
 }
 
 /**
+ * @brief Is this particle a neutrino?
+ *
+ * @param p The #gpart.
+ * @return 1 if the #gpart is neutrino, 0 otherwise.
+ */
+__attribute__((always_inline)) INLINE static int gravity_is_neutrino(
+    const struct gpart* gp) {
+  return gp->neutrino_flag != 0;
+}
+
+/**
  * @brief Add a contribution to this particle's potential from the tree.
  *
  * @param gp The particle.
@@ -296,7 +307,10 @@ __attribute__((always_inline)) INLINE static void gravity_predict_extra(
 
   switch (gp->type) {
     case swift_type_dark_matter:
-      gp->epsilon = grav_props->epsilon_DM_cur;
+      if (!gravity_is_neutrino(gp))
+        gp->epsilon = grav_props->epsilon_DM_cur;
+      else
+        gp->epsilon = grav_props->epsilon_nu_cur;
       break;
     case swift_type_sink:
       gp->epsilon = grav_props->epsilon_baryon_cur;
@@ -359,7 +373,10 @@ __attribute__((always_inline)) INLINE static void gravity_first_init_gpart(
 
   switch (gp->type) {
     case swift_type_dark_matter:
-      gp->epsilon = grav_props->epsilon_DM_cur;
+      if (!gravity_is_neutrino(gp))
+        gp->epsilon = grav_props->epsilon_DM_cur;
+      else
+        gp->epsilon = grav_props->epsilon_nu_cur;
       break;
     case swift_type_stars:
       gp->epsilon = grav_props->epsilon_baryon_cur;

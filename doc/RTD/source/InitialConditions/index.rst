@@ -169,6 +169,11 @@ need the following auxiliary items:
   **physical** internal energy per unit mass. This has the dimension of velocity
   squared.
 
+For ``PartType1`` (i.e. dark matter particles), you may optionally include the
+following:
+
++ ``NeutrinoFlags``, a byte that indicates whether the particle is hot dark
+  matter (1) or not (0).
   
 Note that for cosmological runs, all quantities have to be expressed in "h-free"
 dimensions. This means ``Mpc`` and not ``Mpc/h`` for instance. If the ICs have

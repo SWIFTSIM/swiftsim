@@ -91,7 +91,7 @@ INLINE static void darkmatter_read_particles(struct gpart* gparts,
                                              int* num_fields) {
 
   /* Say how much we want to read */
-  *num_fields = 4;
+  *num_fields = 5;
 
   /* List what we want to read */
   list[0] = io_make_input_field("Coordinates", DOUBLE, 3, COMPULSORY,
@@ -102,6 +102,8 @@ INLINE static void darkmatter_read_particles(struct gpart* gparts,
                                 gparts, mass);
   list[3] = io_make_input_field("ParticleIDs", ULONGLONG, 1, COMPULSORY,
                                 UNIT_CONV_NO_UNITS, gparts, id_or_neg_offset);
+  list[4] = io_make_input_field("NeutrinoFlags", CHAR, 1, OPTIONAL,
+                                UNIT_CONV_NO_UNITS, gparts, neutrino_flag);
 }
 
 /**
@@ -116,7 +118,7 @@ INLINE static void darkmatter_write_particles(const struct gpart* gparts,
                                               int* num_fields) {
 
   /* Say how much we want to write */
-  *num_fields = 5;
+  *num_fields = 6;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_gpart(
@@ -138,6 +140,10 @@ INLINE static void darkmatter_write_particles(const struct gpart* gparts,
   list[4] = io_make_output_field_convert_gpart(
       "Softenings", FLOAT, 1, UNIT_CONV_LENGTH, 1.f, gparts, convert_gpart_soft,
       "Co-moving Plummer-equivalent softening lengths of the particles.");
+
+  list[5] = io_make_output_field(
+      "NeutrinoFlags", CHAR, 1, UNIT_CONV_NO_UNITS, 0, gparts, neutrino_flag,
+      "Flag that indicates whether particle is hot dark matter");
 }
 
 #endif /* SWIFT_MULTI_SOFTENING_GRAVITY_IO_H */

@@ -815,7 +815,7 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
       const struct gpart *gp = &e->s->gparts[i];
       if (gp->type == swift_type_dark_matter &&
           gp->time_bin != time_bin_inhibited &&
-          gp->time_bin != time_bin_not_created) {
+          gp->time_bin != time_bin_not_created && !gravity_is_neutrino(gp)) {
         high_res_DM_mass = gp->mass;
         break;
       }
@@ -856,7 +856,7 @@ void velociraptor_invoke(struct engine *e, const int linked_with_snap) {
   for (size_t i = 0; i < e->s->nr_gparts; ++i) {
     const struct gpart *gp = &e->s->gparts[i];
     if (gp->time_bin != time_bin_inhibited &&
-        gp->time_bin != time_bin_not_created) {
+        gp->time_bin != time_bin_not_created && !gravity_is_neutrino(gp)) {
       DM_mass = gp->mass;
       break;
     }

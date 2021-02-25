@@ -266,6 +266,7 @@ struct engine {
   long long total_nr_sinks;
   long long total_nr_bparts;
   long long total_nr_DM_background_gparts;
+  long long total_nr_neutrino_gparts;
 
   /* Total numbers of cells (top-level and sub-cells) in the system. */
   long long total_nr_cells;
@@ -294,6 +295,9 @@ struct engine {
 
   /* Total mass in the simulation */
   double total_mass;
+
+  /* Conversion factor between microscopic neutrino mass (eV) and gpart mass */
+  double neutrino_mass_conversion_factor;
 
   /* The internal system of units */
   const struct unit_system *internal_units;
@@ -569,25 +573,23 @@ void engine_collect_end_of_step(struct engine *e, int apply);
 void engine_dump_snapshot(struct engine *e);
 void engine_run_on_dump(struct engine *e);
 void engine_init_output_lists(struct engine *e, struct swift_params *params);
-void engine_init(struct engine *e, struct space *s, struct swift_params *params,
-                 struct output_options *output_options, long long Ngas,
-                 long long Ngparts, long long Nsinks, long long Nstars,
-                 long long Nblackholes, long long Nbackground_gparts,
-                 int policy, int verbose, struct repartition *reparttype,
-                 const struct unit_system *internal_units,
-                 const struct phys_const *physical_constants,
-                 struct cosmology *cosmo, struct hydro_props *hydro,
-                 const struct entropy_floor_properties *entropy_floor,
-                 struct gravity_props *gravity, const struct stars_props *stars,
-                 const struct black_holes_props *black_holes,
-                 const struct sink_props *sinks,
-                 struct feedback_props *feedback, struct pm_mesh *mesh,
-                 const struct external_potential *potential,
-                 struct cooling_function_data *cooling_func,
-                 const struct star_formation *starform,
-                 const struct chemistry_global_data *chemistry,
-                 struct fof_props *fof_properties,
-                 struct los_props *los_properties);
+void engine_init(
+    struct engine *e, struct space *s, struct swift_params *params,
+    struct output_options *output_options, long long Ngas, long long Ngparts,
+    long long Nsinks, long long Nstars, long long Nblackholes,
+    long long Nbackground_gparts, long long Nneutrinos, int policy, int verbose,
+    struct repartition *reparttype, const struct unit_system *internal_units,
+    const struct phys_const *physical_constants, struct cosmology *cosmo,
+    struct hydro_props *hydro,
+    const struct entropy_floor_properties *entropy_floor,
+    struct gravity_props *gravity, const struct stars_props *stars,
+    const struct black_holes_props *black_holes, const struct sink_props *sinks,
+    struct feedback_props *feedback, struct pm_mesh *mesh,
+    const struct external_potential *potential,
+    struct cooling_function_data *cooling_func,
+    const struct star_formation *starform,
+    const struct chemistry_global_data *chemistry,
+    struct fof_props *fof_properties, struct los_props *los_properties);
 void engine_config(int restart, int fof, struct engine *e,
                    struct swift_params *params, int nr_nodes, int nodeID,
                    int nr_threads, int with_aff, int verbose,
@@ -633,6 +635,9 @@ int engine_marktasks(struct engine *e);
 
 /* Function prototypes, engine_split_particles.c. */
 void engine_split_gas_particles(struct engine *e);
+
+void engine_count_neutrinos(struct gpart *gparts, size_t nr_gparts,
+                            long long *N_neutrino, int verbose);
 
 #ifdef HAVE_SETAFFINITY
 cpu_set_t *engine_entry_affinity(void);

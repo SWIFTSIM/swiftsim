@@ -1216,16 +1216,23 @@ int main(int argc, char *argv[]) {
     N_total[swift_type_count] = Ngpart;
 #endif
 
+    /* Get the total number of neutrinos across all nodes */
+    long long N_neutrino = 0;
+    engine_count_neutrinos(gparts, Ngpart, &N_neutrino, /*verbose=*/1);
+#if defined(WITH_MPI)
+    MPI_Allreduce(MPI_IN_PLACE, &N_neutrino, 1, MPI_LONG_LONG_INT, MPI_SUM,
+                  MPI_COMM_WORLD);
+#endif
+
     if (myrank == 0)
       message(
           "Read %lld gas particles, %lld sink particles, %lld stars particles, "
-          "%lld black hole "
-          "particles, %lld DM particles and %lld DM background particles from "
-          "the ICs.",
+          "%lld black hole particles, %lld DM particles, and %lld DM background"
+          " particles, including %lld neutrino particles from the ICs.",
           N_total[swift_type_gas], N_total[swift_type_sink],
           N_total[swift_type_stars], N_total[swift_type_black_hole],
           N_total[swift_type_dark_matter],
-          N_total[swift_type_dark_matter_background]);
+          N_total[swift_type_dark_matter_background], N_neutrino);
 
     const int with_DM_particles = N_total[swift_type_dark_matter] > 0;
     const int with_baryon_particles =
@@ -1239,7 +1246,7 @@ int main(int argc, char *argv[]) {
         N_total[swift_type_dark_matter_background] > 0;
 
     /* Do we have neutrino particles? */
-    const int with_neutrinos = 0;  // no for now
+    const int with_neutrinos = N_neutrino > 0;
 
     /* Initialize the space with these data. */
     if (myrank == 0) clocks_gettime(&tic);
@@ -1263,10 +1270,10 @@ int main(int argc, char *argv[]) {
     /* Initialise the gravity properties */
     bzero(&gravity_properties, sizeof(struct gravity_props));
     if (with_self_gravity)
-      gravity_props_init(&gravity_properties, params, &prog_const, &cosmo,
-                         with_cosmology, with_external_gravity,
-                         with_baryon_particles, with_DM_particles,
-                         with_DM_background_particles, periodic, s.dim);
+      gravity_props_init(
+          &gravity_properties, params, &prog_const, &cosmo, with_cosmology,
+          with_external_gravity, with_baryon_particles, with_DM_particles,
+          with_neutrinos, with_DM_background_particles, periodic, s.dim);
 
     /* Initialise the external potential properties */
     bzero(&potential, sizeof(struct external_potential));
@@ -1312,6 +1319,13 @@ int main(int argc, char *argv[]) {
     N_total[swift_type_stars] = s.nr_sparts;
     N_total[swift_type_sink] = s.nr_sinks;
     N_total[swift_type_black_hole] = s.nr_bparts;
+#endif
+
+    /* Get the updated total number of neutrinos across all nodes */
+    engine_count_neutrinos(s.gparts, Ngpart, &N_neutrino, /*verbose=*/1);
+#if defined(WITH_MPI)
+    MPI_Allreduce(MPI_IN_PLACE, &N_neutrino, 1, MPI_LONG_LONG_INT, MPI_SUM,
+                  MPI_COMM_WORLD);
 #endif
 
     /* Say a few nice things about the space we just created. */
@@ -1388,8 +1402,8 @@ int main(int argc, char *argv[]) {
     engine_init(&e, &s, params, output_options, N_total[swift_type_gas],
                 N_total[swift_type_count], N_total[swift_type_sink],
                 N_total[swift_type_stars], N_total[swift_type_black_hole],
-                N_total[swift_type_dark_matter_background], engine_policies,
-                talking, &reparttype, &us, &prog_const, &cosmo,
+                N_total[swift_type_dark_matter_background], N_neutrino,
+                engine_policies, talking, &reparttype, &us, &prog_const, &cosmo,
                 &hydro_properties, &entropy_floor, &gravity_properties,
                 &stars_properties, &black_holes_properties, &sink_properties,
                 &feedback_properties, &mesh, &potential, &cooling_func,
@@ -1415,12 +1429,11 @@ int main(int argc, char *argv[]) {
                              N_total[swift_type_dark_matter_background];
       message(
           "Running on %lld gas particles, %lld sink particles, %lld stars "
-          "particles, "
-          "%lld black hole particles and %lld DM particles (%lld gravity "
-          "particles)",
+          "particles, %lld black hole particles and %lld DM particles, "
+          "including %lld neutrino particles (%lld gravity particles)",
           N_total[swift_type_gas], N_total[swift_type_sink],
           N_total[swift_type_stars], N_total[swift_type_black_hole], N_DM,
-          N_total[swift_type_count]);
+          N_neutrino, N_total[swift_type_count]);
       message(
           "from t=%.3e until t=%.3e with %d ranks, %d threads / rank and %d "
           "task queues / rank (dt_min=%.3e, dt_max=%.3e)...",

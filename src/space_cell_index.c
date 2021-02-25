@@ -279,7 +279,7 @@ void space_gparts_get_cell_index_mapper(void *map_data, int nr_gparts,
       ind[k] = index;
       cell_counts[index]++;
 
-      if (gp->type == swift_type_dark_matter) {
+      if (gp->type == swift_type_dark_matter && !gravity_is_neutrino(gp)) {
 
         /* Compute minimal mass */
         min_mass = min(min_mass, gp->mass);

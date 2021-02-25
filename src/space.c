@@ -864,7 +864,8 @@ void space_collect_sum_gpart_mass(void *restrict map_data, int count,
   double sum_DM = 0., sum_DM_background = 0.;
   long long count_DM = 0, count_DM_background = 0;
   for (int i = 0; i < count; ++i) {
-    if (gparts[i].type == swift_type_dark_matter) {
+    if (gparts[i].type == swift_type_dark_matter &&
+        !gravity_is_neutrino(&gparts[i])) {
       sum_DM += gparts[i].mass;
       count_DM++;
     }
@@ -1089,8 +1090,8 @@ void space_init(struct space *s, struct swift_params *params,
 
   /* Are we generating gas from the DM-only ICs? */
   if (generate_gas_in_ics) {
-    space_generate_gas(s, cosmo, hydro_properties, periodic, DM_background, dim,
-                       verbose);
+    space_generate_gas(s, cosmo, hydro_properties, periodic, DM_background,
+                       neutrinos, dim, verbose);
     parts = s->parts;
     gparts = s->gparts;
     Npart = s->nr_parts;
@@ -1655,7 +1656,8 @@ void space_remap_ids(struct space *s, int nr_nodes, int verbose) {
 void space_generate_gas(struct space *s, const struct cosmology *cosmo,
                         const struct hydro_props *hydro_properties,
                         const int periodic, const int with_background,
-                        const double dim[3], const int verbose) {
+                        const int with_neutrinos, const double dim[3],
+                        const int verbose) {
 
   /* Check that this is a sensible ting to do */
   if (!s->with_hydro)
@@ -1692,21 +1694,30 @@ void space_generate_gas(struct space *s, const struct cosmology *cosmo,
   const float splitting_mass_threshold =
       hydro_properties->particle_splitting_mass_threshold;
 
-  /* Start by counting the number of background and zoom DM particles */
+  /* Start by counting the number of background DM particles */
   size_t nr_background_gparts = 0;
   if (with_background) {
     for (size_t i = 0; i < current_nr_gparts; ++i)
       if (s->gparts[i].type == swift_type_dark_matter_background)
         ++nr_background_gparts;
   }
-  const size_t nr_zoom_gparts = current_nr_gparts - nr_background_gparts;
+  /* Next, count the number of neutrino particles (cannot be background) */
+  size_t nr_neutrino_gparts = 0;
+  if (with_neutrinos) {
+    for (size_t i = 0; i < current_nr_gparts; ++i)
+      if (gravity_is_neutrino(&s->gparts[i])) ++nr_neutrino_gparts;
+  }
+  /* The remaining particles are high resolution dark matter */
+  const size_t nr_zoom_gparts =
+      current_nr_gparts - nr_background_gparts - nr_neutrino_gparts;
 
   if (nr_zoom_gparts == 0)
     error("Can't generate gas from ICs if there are no high res. particles");
 
   /* New particle counts after replication */
   s->size_parts = s->nr_parts = nr_zoom_gparts;
-  s->size_gparts = s->nr_gparts = 2 * nr_zoom_gparts + nr_background_gparts;
+  s->size_gparts = s->nr_gparts =
+      2 * nr_zoom_gparts + nr_background_gparts + nr_neutrino_gparts;
 
   /* Allocate space for new particles */
   struct part *parts = NULL;
@@ -1735,8 +1746,9 @@ void space_generate_gas(struct space *s, const struct cosmology *cosmo,
   size_t j = 0;
   for (size_t i = 0; i < current_nr_gparts; ++i) {
 
-    /* For the background DM particles, just copy the data */
-    if (s->gparts[i].type == swift_type_dark_matter_background) {
+    /* For the background & neutrino DM particles, just copy the data */
+    if (s->gparts[i].type == swift_type_dark_matter_background ||
+        gravity_is_neutrino(&s->gparts[i])) {
 
       memcpy(&gparts[i], &s->gparts[i], sizeof(struct gpart));
 
@@ -1882,7 +1894,7 @@ void space_check_cosmology(struct space *s, const struct cosmology *cosmo,
     if (fabs(Omega_sim - Omega_cosmo) > 1e-3)
       error(
           "The matter content of the simulation does not match the cosmology "
-          "in the parameter file cosmo.Omega_m=%e Omega_particles=%e. Are you"
+          "in the parameter file cosmo.Omega_m=%e Omega_particles=%e. Are you "
           "running with neutrinos? Then account for cosmo.Omega_nu_0=%e too.",
           cosmo->Omega_m, Omega_sim, cosmo->Omega_nu_0);
   }

@@ -265,7 +265,7 @@ void fof_allocate(const struct space *s, const long long total_nr_DM_particles,
     const struct gpart *gp = &s->gparts[i];
     if (gp->type == swift_type_dark_matter &&
         gp->time_bin != time_bin_inhibited &&
-        gp->time_bin != time_bin_not_created) {
+        gp->time_bin != time_bin_not_created && !gravity_is_neutrino(gp)) {
       high_res_DM_mass = gp->mass;
       break;
     }

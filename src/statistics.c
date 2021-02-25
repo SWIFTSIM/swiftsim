@@ -556,6 +556,9 @@ void stats_collect_gpart_mapper(void *map_data, int nr_gparts,
         gp->type != swift_type_dark_matter_background)
       continue;
 
+    /* Ignore neutrinos */
+    if (gravity_is_neutrino(gp)) continue;
+
     /* Ignore non-existing particles */
     if (gp->time_bin == time_bin_inhibited ||
         gp->time_bin == time_bin_not_created)

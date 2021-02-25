@@ -69,6 +69,9 @@ struct gpart {
   /*! Type of the #gpart (DM, gas, star, ...) */
   enum part_type type;
 
+  /*! Flag that indicates whether particle is hot dark matter (eg neutrino) */
+  char neutrino_flag;
+
 #ifdef WITH_LOGGER
   /* Additional data for the particle logger */
   struct logger_part_data logger_data;
