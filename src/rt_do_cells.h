@@ -43,8 +43,13 @@
 __attribute__((always_inline)) INLINE static int rt_should_do_cell(
     const struct cell *c, const struct engine *e) {
 
+#ifdef RT_HYDRO_CONTROLLED_INJECTION
   return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) &&
           (c->stars.count > 0));
+#else
+  return ((cell_is_active_stars(c, e) && (c->hydro.count > 0)) &&
+          (c->stars.count > 0));
+#endif
 }
 
 /**
@@ -60,8 +65,13 @@ __attribute__((always_inline)) INLINE static int rt_should_do_cell(
 __attribute__((always_inline)) INLINE static int rt_should_do_cell_pair(
     const struct cell *ci, const struct cell *cj, const struct engine *e) {
 
+#ifdef RT_HYDRO_CONTROLLED_INJECTION
   return (cell_is_active_hydro(cj, e) && (cj->hydro.count > 0) &&
           (ci->stars.count > 0));
+#else
+  return (cell_is_active_stars(ci, e) && (ci->stars.count > 0) &&
+          (cj->hydro.count > 0));
+#endif
 }
 
 /**
@@ -77,7 +87,8 @@ __attribute__((always_inline)) INLINE static int rt_should_do_cell_pair(
  */
 __attribute__((always_inline)) INLINE static int rt_should_do_unskip_cell(
     const struct cell *c, const struct engine *e) {
-
+  /* whether it's hydro controlled or not, we need to check for hydro
+   * activity at the top level */
   return (cell_is_active_hydro(c, e) && (c->hydro.count > 0));
 }
 

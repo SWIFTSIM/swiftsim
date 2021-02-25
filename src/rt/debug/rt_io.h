@@ -114,7 +114,8 @@ INLINE static void rt_write_flavour(hid_t h_grp, const struct rt_props* rtp) {
 #ifndef RT_HYDRO_CONTROLLED_INJECTION
   io_write_attribute_s(h_grp, "RT Scheme", RT_IMPLEMENTATION);
 #else
-  io_write_attribute_s(h_grp, "RT Scheme", RT_IMPLEMENTATION", hydro controlled injection");
+  io_write_attribute_s(h_grp, "RT Scheme",
+                       RT_IMPLEMENTATION ", hydro controlled injection");
 #endif
 
 #endif

@@ -124,13 +124,11 @@
 #undef FUNCTION
 
 /* Import radiative transfer loop functions. */
-#ifdef RT_HYDRO_CONTROLLED_INJECTION
 #define FUNCTION inject
+#define FUNCTION_TASK_LOOP TASK_LOOP_RT_INJECT
 #include "runner_doiact_rt.h"
 #undef FUNCTION
-#else
-#error "not implemented yet"
-#endif
+#undef FUNCTION_TASK_LOOP
 
 /* Import the RT gradient loop functions */
 #define FUNCTION rt_gradient
