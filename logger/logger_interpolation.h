@@ -216,11 +216,7 @@ interpolate_quintic_double_float_ND(const double t_before,
     if (periodic) {
       /* We suppose that only 1 wrapping is enough
          otherwise something really bad happened */
-      if (x[i] < 0.) {
-        x[i] += params->box_size[i];
-      } else if (x[i] >= params->box_size[i]) {
-        x[i] -= params->box_size[i];
-      }
+      box_wrap(x[i], 0, params->box_size[i]);
 
 #ifdef SWIFT_DEBUG_CHECKS
       /* Check if the periodic box is correctly applied */
