@@ -234,6 +234,7 @@ void engine_addtasks_send_hydro(struct engine *e, struct cell *ci,
        * hydro ghosts */
       if (with_feedback)
         scheduler_addunlock(s, ci->super->hydro.prep1_ghost, t_prep1);
+        scheduler_addunlock(s, t_prep1, ci->super->stars.prep2_ghost);
     }
 
     /* Add them to the local cell. */
@@ -576,16 +577,16 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
     for (struct link *l = c->stars.density; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_rho, l->t);
     }
+    if (with_feedback) {
+      /* Receive gas parts after everything is finished in prep1 loop */
+      for (struct link *l = c->stars.prepare1; l != NULL; l = l->next) {
+        scheduler_addunlock(s, l->t, t_prep1);
+      }
 
-    /* Receive gas parts after everyting is finished in prep1 loop */
-    for (struct link *l = c->stars.prepare1; l != NULL; l = l->next) {
-      scheduler_addunlock(s, l->t, t_prep1);
-    }
-
-    /* Start updating stars in prep2 only after the updated gas parts have been
-     * received */
-    for (struct link *l = c->stars.prepare2; l != NULL; l = l->next) {
-      scheduler_addunlock(s, t_prep1, l->t);
+      /* Start updating stars in prep2 only after the updated gas parts have been received */
+      for (struct link *l = c->stars.prepare2; l != NULL; l = l->next) {
+        scheduler_addunlock(s, t_prep1, l->t);
+      }
     }
 
     /* Make sure the part have been received before the BHs compute their
@@ -2617,7 +2618,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       } else /*(ci->nodeID != nodeID) */ {
         if (with_feedback) {
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
-                              t_star_feedback);
+                              t_star_prep1);
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
@@ -2772,7 +2773,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       } else /*(cj->nodeID != nodeID) */ {
         if (with_feedback) {
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
-                              t_star_feedback);
+                              t_star_prep1);
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
@@ -3376,7 +3377,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
         if (with_feedback) {
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
-                              t_star_feedback);
+                              t_star_prep1);
         }
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
@@ -3528,7 +3529,7 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       } else /* cj->nodeID != nodeID */ {
         if (with_feedback) {
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
-                              t_star_feedback);
+                              t_star_prep1);
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
