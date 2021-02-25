@@ -51,7 +51,8 @@ INLINE static double neutrino_mass_factor(
   }
 
   /* Compute the comoving number density per flavour */
-  const double n = prefactor * pow(k_b * T_nu / (hbar * c), 3);
+  const double kThc = k_b * T_nu / (hbar * c);
+  const double n = prefactor * kThc * kThc * kThc;
 
   /* Compute the conversion factor */
   const double mass_factor = nr_nuparts / (flavours * n * volume);
