@@ -238,11 +238,11 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
                            with_cosmology, e->cosmology, e->hydro_properties,
                            e->cooling_func, e->time);
         rt_init_part(p);
-#ifdef RT_HYDRO_CONTROLLED_INJECTION
-        /* If the stars decide when to inject the gas, we mustn't
-         * reset the RT data every hydro drift */
-        rt_reset_part(p);
-#endif
+        if (e->rt_props->hydro_controlled_injection)
+          /* If the stars decide when to inject the gas, we mustn't reset the 
+           * RT data every hydro drift lest they be erased before they're 
+           * applied */
+          rt_reset_part(p);
 
         /* Update the maximal active smoothing length in the cell */
         cell_h_max_active = max(cell_h_max_active, p->h);
