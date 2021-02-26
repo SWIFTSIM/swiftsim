@@ -788,14 +788,9 @@ __attribute__((always_inline)) INLINE static void black_holes_prepare_feedback(
     const double boost_ratio = n_H / props->boost_n_h_star;
 
     double boost_factor = 1.;
-    if (props->boost_alpha_only) {
-      boost_factor = props->boost_alpha;
-    } else {
-
-      /* Booth & Schaye (2009), eq. 4 */
-      if (n_H > props->boost_n_h_star) {
-        boost_factor = pow(boost_ratio, props->boost_beta);
-      }
+    /* Booth & Schaye (2009), eq. 4 */
+    if (n_H > props->boost_n_h_star) {
+      boost_factor = pow(boost_ratio, props->boost_beta);
     }
     Bondi_rate *= boost_factor;
     bp->accretion_boost_factor = boost_factor;

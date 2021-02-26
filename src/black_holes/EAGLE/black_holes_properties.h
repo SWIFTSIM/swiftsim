@@ -103,9 +103,6 @@ struct black_holes_props {
   /*! Switch for the Booth & Schaye 2009 model */
   int with_boost_factor;
 
-  /*! Lowest value of the boost of the Booth & Schaye 2009 model */
-  float boost_alpha;
-
   /*! Power law slope for the boost of the Booth & Schaye 2009 model */
   float boost_beta;
 
@@ -362,7 +359,6 @@ INLINE static void black_holes_props_init(struct black_holes_props *bp,
       parser_get_param_int(params, "EAGLEAGN:with_boost_factor");
 
   if (bp->with_boost_factor) {
-    bp->boost_alpha = parser_get_param_float(params, "EAGLEAGN:boost_alpha");
     bp->boost_beta = parser_get_param_float(params, "EAGLEAGN:boost_beta");
 
     /* Load the density in cgs and convert to internal units */

@@ -22,8 +22,6 @@
 
 /* Local includes. */
 #include "../EAGLE/enrichment.h"
-#include "../EAGLE/imf.h"
-#include "../EAGLE/interpolate.h"
 #include "../EAGLE/yield_tables.h"
 #include "hydro_properties.h"
 #include "inline.h"
@@ -158,7 +156,6 @@ INLINE static void compute_SNII_feedback(
     }
 
     /* Properties of the model (all in internal units) */
-    const double delta_T = 2.;
     const double E_SNe = feedback_props->E_SNII;
     const double f_E =
         eagle_feedback_energy_fraction(sp, feedback_props, ngb_nH_cgs, ngb_Z);
@@ -234,8 +231,6 @@ INLINE static void compute_SNII_feedback(
       E_kinetic = ngb_gas_mass / ngb_gas_N * delta_v * delta_v *
                   number_of_kin_SN_events;
     } else {
-      *dZ = 0.f;
-    }
 
       /* Special case: we need to adjust the kinetic energy irrespective of
        * the desired delta v to ensure we inject all the available SN energy. */
