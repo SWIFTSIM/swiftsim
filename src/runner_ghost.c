@@ -1208,9 +1208,9 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 
 #endif /* EXTRA_HYDRO_LOOP */
 
-#ifndef RT_HYDRO_CONTROLLED_INJECTION
-            rt_reset_part(p);
-#endif
+            /* if stars push radiation onto gas, we reset RT data now, not
+             * in hydro drifts. */
+            if (!e->rt_props->hydro_controlled_injection) rt_reset_part(p);
 
             /* Ok, we are done with this particle */
             continue;
@@ -1370,9 +1370,9 @@ void runner_do_ghost(struct runner *r, struct cell *c, int timer) {
 
 #endif /* EXTRA_HYDRO_LOOP */
 
-#ifndef RT_HYDRO_CONTROLLED_INJECTION
-        rt_reset_part(p);
-#endif
+        /* if stars push radiation onto gas, we reset RT data now, not
+         * in hydro drifts. */
+        if (!e->rt_props->hydro_controlled_injection) rt_reset_part(p);
       }
 
       /* We now need to treat the particles whose smoothing length had not

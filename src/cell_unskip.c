@@ -29,7 +29,7 @@
 #include "active.h"
 #include "engine.h"
 #include "feedback.h"
-#include "rt_do_cells.h"
+#include "rt_active.h"
 #include "space_getsid.h"
 
 extern int engine_star_resort_task_depth;

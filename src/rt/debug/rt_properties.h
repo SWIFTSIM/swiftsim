@@ -19,8 +19,6 @@
 #ifndef SWIFT_RT_PROPERTIES_DEBUG_H
 #define SWIFT_RT_PROPERTIES_DEBUG_H
 
-#include "rt.h"
-
 /**
  * @file src/rt/debug/rt_properties.h
  * @brief Main header file for the debug radiative transfer scheme properties.
@@ -33,6 +31,10 @@ struct rt_props {
   /* Do extended tests where we assume that all parts
    * have spart neighbours? */
   int do_all_parts_have_stars_checks;
+
+  /* Are we running with hydro or star controlled injection?
+   * This is added to avoid #ifdef macros as far as possible */
+  int hydro_controlled_injection;
 };
 
 /**
@@ -68,6 +70,12 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
 
   rtp->do_all_parts_have_stars_checks =
       parser_get_opt_param_int(params, "DebugRT:all_parts_have_stars", 0);
+
+#ifdef RT_HYDRO_CONTROLLED_INJECTION
+  rtp->hydro_controlled_injection = 1;
+#else
+  rtp->hydro_controlled_injection = 0;
+#endif
 
   /* After initialisation, print params to screen */
   rt_props_print(rtp);
