@@ -335,7 +335,6 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
       t_ti = scheduler_addtask(s, task_type_send, task_subtype_tend_spart,
                                ci->mpi.tag, 0, ci, cj);
 
-
 #ifdef EXTRA_STAR_LOOPS
       /* The first send_stars task should unlock prep1 ghost */
       scheduler_addunlock(s, t_density, ci->hydro.super->stars.prep1_ghost);
@@ -343,11 +342,13 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
       /* Prep2 ghost before second send */
       scheduler_addunlock(s, ci->hydro.super->stars.prep2_ghost, t_prep2);
 
-      /* The second send_stars task should unlock the super_cell's "end of star block" task task. */
+      /* The second send_stars task should unlock the super_cell's "end of star
+       * block" task task. */
       scheduler_addunlock(s, t_prep2, ci->hydro.super->stars.stars_out);
 #else
 
-      /* The send_stars task should unlock the super_cell's "end of star block" task. */
+      /* The send_stars task should unlock the super_cell's "end of star block"
+       * task. */
       scheduler_addunlock(s, t_density, ci->hydro.super->stars.stars_out);
 #endif
 
@@ -547,7 +548,7 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
 #ifdef EXTRA_STAR_LOOPS
     if (with_feedback) {
       t_prep1 = scheduler_addtask(s, task_type_recv, task_subtype_part_prep1,
-                                    c->mpi.tag, 0, c, NULL);
+                                  c->mpi.tag, 0, c, NULL);
     }
 #endif
   }
@@ -609,7 +610,8 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
         scheduler_addunlock(s, l->t, t_prep1);
       }
 
-      /* Start updating stars in prep2 only after the updated gas parts have been received */
+      /* Start updating stars in prep2 only after the updated gas parts have
+       * been received */
       for (struct link *l = c->stars.prepare2; l != NULL; l = l->next) {
         scheduler_addunlock(s, t_prep1, l->t);
       }
@@ -733,7 +735,7 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
       scheduler_addunlock(s, t_prep2, l->t);
       scheduler_addunlock(s, l->t, t_ti);
     }
-#else 
+#else
 
     /* Start updating local gas only after sparts have been received */
     for (struct link *l = c->stars.feedback; l != NULL; l = l->next) {
@@ -742,7 +744,6 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
     }
 
 #endif
-
   }
 
   /* Recurse? */
