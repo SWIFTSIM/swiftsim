@@ -2660,8 +2660,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
       } else /*(ci->nodeID != nodeID) */ {
         if (with_feedback) {
+#ifdef EXTRA_STAR_LOOPS
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
                               t_star_prep1);
+#else
+          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
+                              t_star_feedback);
+#endif
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
@@ -2815,8 +2820,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 
       } else /*(cj->nodeID != nodeID) */ {
         if (with_feedback) {
+#ifdef EXTRA_STAR_LOOPS
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                               t_star_prep1);
+#else
+          scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
+                              t_star_feedback);
+#endif
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
@@ -3419,8 +3429,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
       } else /* ci->nodeID != nodeID */ {
 
         if (with_feedback) {
+#ifdef EXTRA_STAR_LOOPS
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
                               t_star_prep1);
+#else
+          scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
+                              t_star_feedback);
+#endif
         }
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
@@ -3571,8 +3586,13 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
         }
       } else /* cj->nodeID != nodeID */ {
         if (with_feedback) {
+#ifdef EXTRA_STAR_LOOPS
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                               t_star_prep1);
+#else
+          scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
+                              t_star_feedback);
+#endif
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
