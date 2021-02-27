@@ -2069,7 +2069,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
           /* Is the foreign cell active and will need stuff from us? */
           scheduler_activate_send(s, cj->mpi.send, task_subtype_xv, ci_nodeID);
           scheduler_activate_send(s, cj->mpi.send, task_subtype_rho, ci_nodeID);
-          scheduler_activate_send(s, cj->mpi.send, task_subtype_part_prep1, ci_nodeID);
+          scheduler_activate_send(s, cj->mpi.send, task_subtype_part_prep1,
+                                  ci_nodeID);
 
           /* Drift the cell which will be sent; note that not all sent
              particles will be drifted, only those that are needed. */
@@ -2105,7 +2106,8 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
           /* Is the foreign cell active and will need stuff from us? */
           scheduler_activate_send(s, ci->mpi.send, task_subtype_xv, cj_nodeID);
           scheduler_activate_send(s, ci->mpi.send, task_subtype_rho, cj_nodeID);
-          scheduler_activate_send(s, ci->mpi.send, task_subtype_part_prep1, cj_nodeID);
+          scheduler_activate_send(s, ci->mpi.send, task_subtype_part_prep1,
+                                  cj_nodeID);
 
           /* Drift the cell which will be sent; note that not all sent
              particles will be drifted, only those that are needed. */

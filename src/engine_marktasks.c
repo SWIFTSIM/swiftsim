@@ -942,7 +942,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           }
 
           if (ci_active_stars) {
-            scheduler_activate_recv(s, ci->mpi.recv, task_subtype_spart_density);
+            scheduler_activate_recv(s, ci->mpi.recv,
+                                    task_subtype_spart_density);
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_spart_prep2);
 
             /* If the foreign cell is active, we want its ti_end values. */
@@ -982,7 +983,8 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           }
 
           if (cj_active_stars) {
-            scheduler_activate_recv(s, cj->mpi.recv, task_subtype_spart_density);
+            scheduler_activate_recv(s, cj->mpi.recv,
+                                    task_subtype_spart_density);
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_spart_prep2);
 
             /* If the foreign cell is active, we want its ti_end values. */
