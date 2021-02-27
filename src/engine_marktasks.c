@@ -854,13 +854,17 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           if (cj_active_stars) {
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_xv);
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_rho);
+#ifdef EXTRA_STAR_LOOPS
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_part_prep1);
+#endif
 
             /* If the local cell is active, more stuff will be needed. */
             scheduler_activate_send(s, cj->mpi.send, task_subtype_spart_density,
                                     ci_nodeID);
+#ifdef EXTRA_STAR_LOOPS
             scheduler_activate_send(s, cj->mpi.send, task_subtype_spart_prep2,
                                     ci_nodeID);
+#endif
             cell_activate_drift_spart(cj, s);
 
             /* If the local cell is active, send its ti_end values. */
@@ -871,7 +875,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           if (ci_active_stars) {
             scheduler_activate_recv(s, ci->mpi.recv,
                                     task_subtype_spart_density);
+#ifdef EXTRA_STAR_LOOPS
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_spart_prep2);
+#endif
 
             /* If the foreign cell is active, we want its ti_end values. */
             scheduler_activate_recv(s, ci->mpi.recv, task_subtype_tend_spart);
@@ -881,8 +887,10 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                                     ci_nodeID);
             scheduler_activate_send(s, cj->mpi.send, task_subtype_rho,
                                     ci_nodeID);
+#ifdef EXTRA_STAR_LOOPS
             scheduler_activate_send(s, cj->mpi.send, task_subtype_part_prep1,
                                     ci_nodeID);
+#endif
 
             /* Drift the cell which will be sent; note that not all sent
                particles will be drifted, only those that are needed. */
@@ -895,13 +903,17 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           if (ci_active_stars) {
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_xv);
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_rho);
+#ifdef EXTRA_STAR_LOOPS
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_part_prep1);
+#endif
 
             /* If the local cell is active, more stuff will be needed. */
             scheduler_activate_send(s, ci->mpi.send, task_subtype_spart_density,
                                     cj_nodeID);
+#ifdef EXTRA_STAR_LOOPS
             scheduler_activate_send(s, ci->mpi.send, task_subtype_spart_prep2,
                                     cj_nodeID);
+#endif
             cell_activate_drift_spart(ci, s);
 
             /* If the local cell is active, send its ti_end values. */
@@ -912,7 +924,9 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
           if (cj_active_stars) {
             scheduler_activate_recv(s, cj->mpi.recv,
                                     task_subtype_spart_density);
+#ifdef EXTRA_STAR_LOOPS
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_spart_prep2);
+#endif
 
             /* If the foreign cell is active, we want its ti_end values. */
             scheduler_activate_recv(s, cj->mpi.recv, task_subtype_tend_spart);
@@ -922,8 +936,10 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
                                     cj_nodeID);
             scheduler_activate_send(s, ci->mpi.send, task_subtype_rho,
                                     cj_nodeID);
+#ifdef EXTRA_STAR_LOOPS
             scheduler_activate_send(s, ci->mpi.send, task_subtype_part_prep1,
                                     cj_nodeID);
+#endif
 
             /* Drift the cell which will be sent; note that not all sent
                particles will be drifted, only those that are needed. */
