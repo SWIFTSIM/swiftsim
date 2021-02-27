@@ -189,10 +189,12 @@ void engine_addtasks_send_hydro(struct engine *e, struct cell *ci,
                                       ci->mpi.tag, 0, ci, cj);
       }
 
+#ifdef EXTRA_STAR_LOOPS
       if (with_feedback) {
         t_prep1 = scheduler_addtask(s, task_type_send, task_subtype_part_prep1,
                                     ci->mpi.tag, 0, ci, cj);
       }
+#endif
 
 #ifdef EXTRA_HYDRO_LOOP
 
@@ -230,12 +232,14 @@ void engine_addtasks_send_hydro(struct engine *e, struct cell *ci,
       scheduler_addunlock(s, ci->super->timestep, t_ti);
       if (with_limiter) scheduler_addunlock(s, ci->super->timestep, t_limiter);
 
+#ifdef EXTRA_STAR_LOOPS
       /* In stellar feedback, send gas parts only after they have finished their
        * hydro ghosts */
       if (with_feedback) {
-        scheduler_addunlock(s, ci->super->hydro.prep1_ghost, t_prep1);
-        scheduler_addunlock(s, t_prep1, ci->super->stars.prep2_ghost);
+        scheduler_addunlock(s, ci->hydro.super->hydro.prep1_ghost, t_prep1);
+        scheduler_addunlock(s, t_prep1, ci->hydro.super->stars.prep2_ghost);
       }
+#endif
     }
 
     /* Add them to the local cell. */
@@ -246,7 +250,9 @@ void engine_addtasks_send_hydro(struct engine *e, struct cell *ci,
 #endif
     engine_addlink(e, &ci->mpi.send, t_ti);
     if (with_limiter) engine_addlink(e, &ci->mpi.send, t_limiter);
+#ifdef EXTRA_STAR_LOOPS
     if (with_feedback) engine_addlink(e, &ci->mpi.send, t_prep1);
+#endif
   }
 
   /* Recurse? */
@@ -320,6 +326,7 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
       t_density =
           scheduler_addtask(s, task_type_send, task_subtype_spart_density,
                             ci->mpi.tag, 0, ci, cj);
+
       t_prep2 = scheduler_addtask(s, task_type_send, task_subtype_spart_prep2,
                                   ci->mpi.tag, 0, ci, cj);
 
@@ -524,10 +531,13 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
       t_limiter = scheduler_addtask(s, task_type_recv, task_subtype_limiter,
                                     c->mpi.tag, 0, c, NULL);
     }
+
+#ifdef EXTRA_STAR_LOOPS
     if (with_feedback) {
       t_prep1 = scheduler_addtask(s, task_type_recv, task_subtype_part_prep1,
                                     c->mpi.tag, 0, c, NULL);
     }
+#endif
   }
 
   if (t_xv != NULL) {
@@ -538,7 +548,9 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
 #endif
     engine_addlink(e, &c->mpi.recv, t_ti);
     if (with_limiter) engine_addlink(e, &c->mpi.recv, t_limiter);
+#ifdef EXTRA_STAR_LOOPS
     if (with_feedback) engine_addlink(e, &c->mpi.recv, t_prep1);
+#endif
 
     /* Add dependencies. */
     if (c->hydro.sorts != NULL) {
@@ -578,6 +590,7 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
     for (struct link *l = c->stars.density; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_rho, l->t);
     }
+#ifdef EXTRA_STAR_LOOPS
     if (with_feedback) {
       /* Receive gas parts after everything is finished in prep1 loop */
       for (struct link *l = c->stars.prepare1; l != NULL; l = l->next) {
@@ -589,7 +602,7 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
         scheduler_addunlock(s, t_prep1, l->t);
       }
     }
-
+#endif
     /* Make sure the part have been received before the BHs compute their
      * accretion rates (depends on particles' rho). */
     for (struct link *l = c->black_holes.density; l != NULL; l = l->next) {
