@@ -343,10 +343,9 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
       scheduler_addunlock(s, ci->hydro.super->stars.prep2_ghost, t_prep2);
 
       /* The second send_stars task should unlock the super_cell's "end of star
-       * block" task task. */
+       * block" task. */
       scheduler_addunlock(s, t_prep2, ci->hydro.super->stars.stars_out);
 #else
-
       /* The send_stars task should unlock the super_cell's "end of star block"
        * task. */
       scheduler_addunlock(s, t_density, ci->hydro.super->stars.stars_out);
@@ -719,7 +718,6 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
     }
 
 #ifdef EXTRA_STAR_LOOPS
-
     /* Start updating local gas only after sparts have been received */
     for (struct link *l = c->stars.prepare1; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_density, l->t);
@@ -736,13 +734,11 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
       scheduler_addunlock(s, l->t, t_ti);
     }
 #else
-
     /* Start updating local gas only after sparts have been received */
     for (struct link *l = c->stars.feedback; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_density, l->t);
       scheduler_addunlock(s, l->t, t_ti);
     }
-
 #endif
   }
 
