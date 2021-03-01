@@ -35,6 +35,14 @@ struct rt_props {
   /* Are we running with hydro or star controlled injection?
    * This is added to avoid #ifdef macros as far as possible */
   int hydro_controlled_injection;
+
+  /* radiation emitted by stars this step. This is not really a property, 
+   * but a placeholder to sum up a global variable */
+  int radiation_emitted_this_step;
+
+  /* radiation absorbed by gas this step. This is not really a property, 
+   * but a placeholder to sum up a global variable */
+  int radiation_absorbed_this_step;
 };
 
 /**

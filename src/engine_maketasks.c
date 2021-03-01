@@ -1411,11 +1411,6 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
          * gets skipped */
         scheduler_addunlock(s, c->super->kick2, c->hydro.rt_ghost1);
 
-        if (e->rt_props->hydro_controlled_injection)
-          /* RT related data gets reset in the drifts/ghosts because the related
-           * quantities are vectorial. So we need a dependency here. */
-          scheduler_addunlock(s, c->hydro.drift, c->hydro.rt_ghost1);
-
         /* non-implicit ghost 2 */
         c->hydro.rt_ghost2 = scheduler_addtask(
             s, task_type_rt_ghost2, task_subtype_none, 0, 0, c, NULL);

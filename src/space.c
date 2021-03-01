@@ -781,6 +781,25 @@ void space_convert_rt_star_quantities_mapper(void *restrict map_data,
   }
 }
 
+void space_convert_rt_hydro_quantities_mapper(void *restrict map_data,
+                                             int count,
+                                             void *restrict extra_data) {
+
+  struct part *restrict parts = (struct part *)map_data;
+  const struct engine *restrict e = (struct engine *)extra_data;
+
+  /* the reset here is only necessary when using hydro controlled injection.
+   * Otherwise, we don't reset what ghosts have done in zeroth step. */
+  if (!e->rt_props->hydro_controlled_injection) return;
+
+  for (int k = 0; k < count; k++) {
+
+    struct part *restrict p = &parts[k];
+    rt_reset_part(p);
+
+  }
+}
+
 /**
  * @brief Initializes values of radiative transfer data for particles
  * that needs to be set before the first actual step is done, but will
@@ -800,6 +819,10 @@ void space_convert_rt_quantities(struct space *s, int verbose) {
 
   const ticks tic = getticks();
 
+  if (s->nr_parts > 0) /* particle loop */
+    threadpool_map(&s->e->threadpool, space_convert_rt_hydro_quantities_mapper,
+                   s->parts, s->nr_parts, sizeof(struct part),
+                   threadpool_auto_chunk_size, /*extra_data=*/s->e);
   if (s->nr_sparts > 0) /* star particle loop */
     threadpool_map(&s->e->threadpool, space_convert_rt_star_quantities_mapper,
                    s->sparts, s->nr_sparts, sizeof(struct spart),

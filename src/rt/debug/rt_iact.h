@@ -47,12 +47,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
   struct rt_part_data *restrict pd = &(pj->rt_data);
 
   sd->iact_hydro_inject += 1;
-  sd->calls_tot += 1;
-  sd->calls_per_step += 1;
+  sd->radiation_emitted_tot += 1;
 
   pd->iact_stars_inject += 1;
-  pd->calls_tot += 1;
-  pd->calls_per_step += 1;
+  pd->radiation_received_tot += 1;
 }
 
 /**
@@ -92,8 +90,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
         "rt_finalise_gradient count is %d",
         pi->rt_data.gradients_done);
 
-  pi->rt_data.calls_tot += 1;
-  pi->rt_data.calls_per_step += 1;
   pi->rt_data.calls_iact_transport += 1;
 
   if (mode == 1) {
@@ -115,8 +111,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
           "rt_finalise_gradient count is %d",
           pj->rt_data.gradients_done);
 
-    pj->rt_data.calls_tot += 1;
-    pj->rt_data.calls_per_step += 1;
     pj->rt_data.calls_iact_transport += 1;
   }
 
