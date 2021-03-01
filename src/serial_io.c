@@ -535,7 +535,6 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
   hid_t h_file = 0, h_grp = 0;
   /* GADGET has only cubic boxes (in cosmological mode) */
   double boxSize[3] = {0.0, -1.0, -1.0};
-  /* GADGET has 6 particle types. We only keep the type 0 & 1 for now*/
   long long numParticles[swift_type_count] = {0};
   long long numParticles_highWord[swift_type_count] = {0};
   size_t N[swift_type_count] = {0};
@@ -593,7 +592,7 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
           num_files);
 
     /* Read the relevant information and print status */
-    int flag_entropy_temp[6];
+    int flag_entropy_temp[swift_type_count];
     io_read_attribute(h_grp, "Flag_Entropy_ICs", INT, flag_entropy_temp);
     *flag_entropy = flag_entropy_temp[0];
     io_read_attribute(h_grp, "BoxSize", DOUBLE, boxSize);

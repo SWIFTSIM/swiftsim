@@ -815,7 +815,7 @@ void read_ic_parallel(char* fileName, const struct unit_system* internal_units,
         num_files);
 
   /* Read the relevant information and print status */
-  int flag_entropy_temp[6];
+  int flag_entropy_temp[swift_type_count];
   io_read_attribute(h_grp, "Flag_Entropy_ICs", INT, flag_entropy_temp);
   *flag_entropy = flag_entropy_temp[0];
   io_read_attribute(h_grp, "BoxSize", DOUBLE, boxSize);
