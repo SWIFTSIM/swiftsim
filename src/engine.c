@@ -84,6 +84,7 @@
 #include "profiler.h"
 #include "proxy.h"
 #include "restart.h"
+#include "rt.h"
 #include "runner.h"
 #include "sink_properties.h"
 #include "sort_part.h"
@@ -2406,6 +2407,11 @@ void engine_step(struct engine *e) {
   if (e->policy & engine_policy_logger) {
     engine_check_for_index_dump(e);
   }
+#endif
+
+#if defined(SWIFT_DEBUG_CHECKS) && defined(RT_DEBUG)
+  /* if we're running the debug RT scheme, do some checks every step */
+  rt_debugging_checks_end_of_step(e, e->verbose);
 #endif
 
   TIMER_TOC2(timer_step);

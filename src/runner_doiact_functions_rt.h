@@ -26,6 +26,7 @@
    runner_iact_FUNCTION. */
 
 #include "rt_active.h"
+#include "rt.h"
 #include "runner_doiact_rt.h"
 
 /**

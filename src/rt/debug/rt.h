@@ -19,6 +19,7 @@
 #ifndef SWIFT_RT_DEBUG_H
 #define SWIFT_RT_DEBUG_H
 
+#include "rt_debugging.h"
 #include "rt_properties.h"
 #include "rt_stellar_emission_rate.h"
 #include "rt_thermochemistry.h"
@@ -44,8 +45,7 @@ __attribute__((always_inline)) INLINE static void rt_init_part(
 __attribute__((always_inline)) INLINE static void rt_reset_part(
     struct part* restrict p) {
 
-  p->rt_data.calls_per_step = 0;
-  p->rt_data.iact_stars_inject = 0;
+  p->rt_data.iact_stars_inject = 0; /* reset this here as well to test that you're resetting it at the correct place! */
   p->rt_data.calls_iact_gradient = 0;
   p->rt_data.calls_iact_transport = 0;
   p->rt_data.injection_check = 0;
@@ -62,10 +62,9 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
 __attribute__((always_inline)) INLINE static void rt_first_init_part(
     struct part* restrict p) {
 
-  p->rt_data.calls_tot = 0;
   rt_init_part(p);
   rt_reset_part(p);
-  p->rt_data.injection_check = 0;
+  p->rt_data.radiation_received_tot = 0;
 }
 
 /**
@@ -85,8 +84,7 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
     struct spart* restrict sp) {
 
   /* reset everything */
-  sp->rt_data.calls_per_step = 0;
-  sp->rt_data.iact_hydro_inject = 0;
+  sp->rt_data.iact_hydro_inject = 0; /* reset this here as well to test that you're resetting it at the correct place! */
   sp->rt_data.emission_rate_set = 0;
   sp->rt_data.injection_check = 0;
 }
@@ -97,9 +95,9 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
 __attribute__((always_inline)) INLINE static void rt_first_init_spart(
     struct spart* restrict sp) {
 
-  sp->rt_data.calls_tot = 0;
   rt_init_spart(sp);
   rt_reset_spart(sp);
+  sp->rt_data.radiation_emitted_tot = 0;
 }
 
 /**
@@ -118,8 +116,6 @@ rt_injection_update_photon_density(struct part* restrict p,
     error("called ghost1 when injection check count is %d; ID=%lld",
           p->rt_data.injection_check, p->id);
   p->rt_data.injection_done += 1;
-  p->rt_data.calls_tot += 1;
-  p->rt_data.calls_per_step += 1;
 }
 
 /**
@@ -149,8 +145,6 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
 
   /* first reset old values */
   rt_reset_spart(sp);
-  sp->rt_data.calls_tot += 1;
-  sp->rt_data.calls_per_step += 1;
 
   /* now get the emission rates */
   double star_age_begin_of_step = star_age - dt;
@@ -228,37 +222,4 @@ __attribute__((always_inline)) INLINE static void rt_tchem(
 
   rt_do_thermochemistry(p);
 }
-
-/**
- * @brief This function is intended for debugging purposes only. It is called
- * during the self injection tasks, (regardless whether the particle actually
- * has neighbours to interact with) and intended to mark star or gas particles
- * to have been called during the step so further checks can be performed
- * further down the task system.
- *
- * @param p Hydro particle.
- */
-__attribute__((always_inline)) INLINE static void
-rt_debugging_check_injection_part(struct part* restrict p,
-                                  struct rt_props* props) {
-
-  if (props->do_all_parts_have_stars_checks) p->rt_data.injection_check += 1;
-}
-
-/**
- * @brief This function is intended for debugging purposes only. It is called
- * during the self injection tasks, (regardless whether the particle actually
- * has neighbours to interact with) and intended to mark star or gas particles
- * to have been called during the step so further checks can be performed
- * further down the task system.
- *
- * @param s Star particle.
- */
-__attribute__((always_inline)) INLINE static void
-rt_debugging_check_injection_spart(struct spart* restrict s,
-                                   struct rt_props* props) {
-
-  if (props->do_all_parts_have_stars_checks) s->rt_data.injection_check += 1;
-}
-
 #endif /* SWIFT_RT_DEBUG_H */
