@@ -758,6 +758,12 @@ void space_convert_rt_star_quantities_mapper(void *restrict map_data,
 
     struct spart *restrict sp = &sparts[k];
 
+#ifdef SWIFT_DEBUG_CHECKS
+    /* reset star values so some injection debugging checks can pass on the
+     * first time step as well */
+    rt_init_spart(sp);
+#endif
+
     /* get star's age and time step for stellar emission rates */
     const integertime_t ti_begin =
         get_integer_time_begin(e->ti_current - 1, sp->time_bin);
@@ -786,18 +792,16 @@ void space_convert_rt_hydro_quantities_mapper(void *restrict map_data,
                                              void *restrict extra_data) {
 
   struct part *restrict parts = (struct part *)map_data;
-  const struct engine *restrict e = (struct engine *)extra_data;
 
-  /* the reset here is only necessary when using hydro controlled injection.
-   * Otherwise, we don't reset what ghosts have done in zeroth step. */
-  if (!e->rt_props->hydro_controlled_injection) return;
+  /* We gotta do the reset here after the zeroth step, otherwise we
+   * inject too much radiation into the gas regardless of whether
+   * we have star or hydro controlled injection. */
 
   for (int k = 0; k < count; k++) {
-
     struct part *restrict p = &parts[k];
     rt_reset_part(p);
-
   }
+
 }
 
 /**
@@ -808,9 +812,6 @@ void space_convert_rt_hydro_quantities_mapper(void *restrict map_data,
  * from the start, not only after the stellar particle has been active.
  * This function requires that the time bins for star particles have
  * been set already and is called after the 0-th time step.
- * TODO MLADEN: this is only for the injection version where
- * hydro particles "pull" radiation from stars. Shouldn't be
- * necessary for feedback like model.
  *
  * @param s The #space.
  * @param verbose Are we talkative?
@@ -819,10 +820,14 @@ void space_convert_rt_quantities(struct space *s, int verbose) {
 
   const ticks tic = getticks();
 
-  if (s->nr_parts > 0) /* particle loop */
+#ifdef SWIFT_DEBUG_CHECKS
+  /* Particle loop. If we have debugging checks, reset hydro particle 
+   * values so some injection tests will pass on the first step as well */
+  if (s->nr_parts > 0) 
     threadpool_map(&s->e->threadpool, space_convert_rt_hydro_quantities_mapper,
                    s->parts, s->nr_parts, sizeof(struct part),
                    threadpool_auto_chunk_size, /*extra_data=*/s->e);
+#endif
   if (s->nr_sparts > 0) /* star particle loop */
     threadpool_map(&s->e->threadpool, space_convert_rt_star_quantities_mapper,
                    s->sparts, s->nr_sparts, sizeof(struct spart),

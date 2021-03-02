@@ -252,6 +252,29 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               feedback_reset_feedback(sp, feedback_props);
             }
 
+            if (with_rt) {
+
+              rt_reset_spart(sp);
+
+              /* Get particle time-step */
+              double dt_star;
+              if (with_cosmology) {
+
+                /* get star's age and time step for stellar emission rates */
+                const integertime_t ti_begin = get_integer_time_begin(e->ti_current - 1, sp->time_bin);
+                const integertime_t ti_step = get_integer_timestep(sp->time_bin);
+                dt_star = cosmology_get_delta_time(e->cosmology, ti_begin, ti_begin + ti_step);
+
+              } else {
+                dt_star = get_timestep(sp->time_bin, e->time_base);
+              }
+
+              /* Calculate age of the star at current time */
+              const double star_age_end_of_step = stars_compute_age(sp, e->cosmology, e->time, with_cosmology);
+
+              rt_compute_stellar_emission_rate(sp, e->time, star_age_end_of_step, dt_star);
+            }
+
             /* Ok, we are done with this particle */
             continue;
           }
@@ -394,6 +417,8 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
         }
 
         if (with_rt) {
+
+          rt_reset_spart(sp);
 
           /* Get particle time-step */
           double dt_star;

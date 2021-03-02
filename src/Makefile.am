@@ -283,6 +283,7 @@ nobase_noinst_HEADERS += rt/none/rt_io.h
 nobase_noinst_HEADERS += rt/none/rt_properties.h 
 nobase_noinst_HEADERS += rt/none/rt_struct.h
 nobase_noinst_HEADERS += rt/debug/rt.h  
+nobase_noinst_HEADERS += rt/debug/rt_debugging.h 
 nobase_noinst_HEADERS += rt/debug/rt_gradients.h 
 nobase_noinst_HEADERS += rt/debug/rt_iact.h 
 nobase_noinst_HEADERS += rt/debug/rt_io.h 

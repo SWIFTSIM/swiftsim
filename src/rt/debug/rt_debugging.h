@@ -44,7 +44,7 @@ static void rt_debugging_end_of_step_stars_mapper(void *restrict map_data,
     injection_sum += sp->rt_data.iact_hydro_inject;
     sp->rt_data.iact_hydro_inject = 0;
   }
-  atomic_add(&e->rt_props->radiation_absorbed_this_step, injection_sum);
+  atomic_add(&e->rt_props->radiation_emitted_this_step, injection_sum);
 }
 
 /**
@@ -63,7 +63,7 @@ static void rt_debugging_end_of_step_hydro_mapper(void *restrict map_data,
     injection_sum += p->rt_data.iact_stars_inject;
     p->rt_data.iact_stars_inject = 0;
   }
-  atomic_add(&e->rt_props->radiation_emitted_this_step, injection_sum);
+  atomic_add(&e->rt_props->radiation_absorbed_this_step, injection_sum);
 }
 
 /**
