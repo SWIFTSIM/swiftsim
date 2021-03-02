@@ -56,6 +56,13 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.gradients_done = 0;
   p->rt_data.transport_done = 0;
   p->rt_data.thermochem_done = 0;
+
+  if (p->id == 2272){
+    printf("resetting %12lld\n", p->id);
+    fflush(stdout);
+  }
+
+  p->rt_data.called_in_ghost += 1;
 }
 
 /**
@@ -67,6 +74,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
   rt_init_part(p);
   rt_reset_part(p);
   p->rt_data.radiation_received_tot = 0;
+  p->rt_data.called_in_ghost = 0;
 }
 
 /**

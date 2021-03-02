@@ -1532,6 +1532,13 @@ void runner_do_rt_ghost1(struct runner *r, struct cell *c, int timer) {
       /* Skip inactive parts */
       if (!part_is_active(p, e)) continue;
 
+
+  if (p->rt_data.iact_stars_inject != p->rt_data.radiation_received_tot){
+    printf("cell %18lld part %12lld has iact %12d tot %12d\n", c->cellID, p->id, p->rt_data.iact_stars_inject, p->rt_data.radiation_received_tot);
+    fflush(stdout);
+  }
+
+
       rt_injection_update_photon_density(p, e->rt_props);
     }
   }

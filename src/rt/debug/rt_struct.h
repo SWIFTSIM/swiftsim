@@ -40,6 +40,8 @@ struct rt_part_data {
   int gradients_done;  /* finalised computing gradients? */
   int transport_done;  /* transport step done? */
   int thermochem_done; /* thermochemistry done? */
+
+  int called_in_ghost;
 };
 
 /* Additional RT data in star particle struct */
