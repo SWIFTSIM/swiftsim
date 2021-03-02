@@ -35,7 +35,9 @@ __attribute__((always_inline)) INLINE static void rt_init_part(
 /**
  * @brief Reset of the RT hydro particle data not related to the density.
  * Note: during initalisation (space_init), rt_reset_part and rt_init_part
- * are both called individually.
+ * are both called individually. Also, if debugging checks are active, an
+ * extra call to rt_reset_part is made in space_convert_rt_quantities() after
+ * the zeroth time step is finished.
  */
 __attribute__((always_inline)) INLINE static void rt_reset_part(
     struct part* restrict p) {}
@@ -57,7 +59,9 @@ __attribute__((always_inline)) INLINE static void rt_init_spart(
 /**
  * @brief Reset of the RT star particle data not related to the density.
  * Note: during initalisation (space_init), rt_reset_spart and rt_init_spart
- * are both called individually.
+ * are both called individually. Also, if debugging checks are active, an
+ * extra call to rt_reset_spart is made in space_convert_rt_quantities() after
+ * the zeroth time step is finished.
  */
 __attribute__((always_inline)) INLINE static void rt_reset_spart(
     struct spart* restrict sp) {}
