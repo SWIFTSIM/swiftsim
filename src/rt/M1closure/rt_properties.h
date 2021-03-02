@@ -33,7 +33,6 @@ struct rt_props {
   /* Are we running with hydro or star controlled injection?
    * This is added to avoid #ifdef macros as far as possible */
   int hydro_controlled_injection;
-
 };
 
 /**

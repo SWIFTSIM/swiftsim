@@ -78,7 +78,8 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
  * @param p The #part.
  * @param n The number of pieces to split into.
  */
-__attribute__((always_inline)) INLINE static void rt_split_part(struct part *p, double n) {}
+__attribute__((always_inline)) INLINE static void rt_split_part(struct part* p,
+                                                                double n) {}
 
 /**
  * @brief Update the photon number of a particle, i.e. compute

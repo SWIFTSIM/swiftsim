@@ -39,10 +39,16 @@ __attribute__((always_inline)) INLINE static void rt_gradients_collect(
     struct part *restrict pj) {
 
   if (pi->rt_data.injection_done != 1)
-    error( "Trying to do symmetric iact gradient when finalise injection count is %d ID %lld", pi->rt_data.injection_done, pi->id);
+    error(
+        "Trying to do symmetric iact gradient when finalise injection count is "
+        "%d ID %lld",
+        pi->rt_data.injection_done, pi->id);
 
   if (pj->rt_data.injection_done != 1)
-    error( "Trying to do symmetric iact gradient when finalise injection count is %d ID %lld", pj->rt_data.injection_done, pj->id);
+    error(
+        "Trying to do symmetric iact gradient when finalise injection count is "
+        "%d ID %lld",
+        pj->rt_data.injection_done, pj->id);
 
   pi->rt_data.calls_iact_gradient += 1;
 
@@ -64,7 +70,10 @@ __attribute__((always_inline)) INLINE static void rt_gradients_nonsym_collect(
     struct part *restrict pj) {
 
   if (pi->rt_data.injection_done != 1)
-    error( "Trying to do nonsym iact gradients when finalise injection count is %d ID %lld", pi->rt_data.injection_done, pi->id);
+    error(
+        "Trying to do nonsym iact gradients when finalise injection count is "
+        "%d ID %lld",
+        pi->rt_data.injection_done, pi->id);
 
   pi->rt_data.calls_iact_gradient += 1;
 }

@@ -62,9 +62,10 @@ INLINE static int rt_write_particles(const struct part* parts,
   list[6] = io_make_output_field(
       "RTThermochemistryDone", INT, 1, UNIT_CONV_NO_UNITS, 0, parts,
       rt_data.thermochem_done, "How many times rt_tchem was called");
-  list[7] = io_make_output_field("RTRadReceivedTot", INT, 1, UNIT_CONV_NO_UNITS,
-                                 0, parts, rt_data.radiation_received_tot,
-                                 "Radiation received by this part during its lifetime");
+  list[7] = io_make_output_field(
+      "RTRadReceivedTot", INT, 1, UNIT_CONV_NO_UNITS, 0, parts,
+      rt_data.radiation_received_tot,
+      "Radiation received by this part during its lifetime");
 
   return 8;
 }
@@ -85,9 +86,10 @@ INLINE static int rt_write_stars(const struct spart* sparts,
                            sparts, rt_data.emission_rate_set,
                            "Stellar photon "
                            "emission rates set?");
-  list[2] = io_make_output_field("RTRadEmittedTot", INT, 1, UNIT_CONV_NO_UNITS,
-                                 0, sparts, rt_data.radiation_emitted_tot,
-                                 "Total radiation emitted during the lifetime of this star");
+  list[2] = io_make_output_field(
+      "RTRadEmittedTot", INT, 1, UNIT_CONV_NO_UNITS, 0, sparts,
+      rt_data.radiation_emitted_tot,
+      "Total radiation emitted during the lifetime of this star");
 
   return 3;
 }
@@ -102,7 +104,8 @@ INLINE static void rt_write_flavour(hid_t h_grp, const struct rt_props* rtp) {
 #if defined(HAVE_HDF5)
 
   if (rtp->hydro_controlled_injection) {
-    io_write_attribute_s(h_grp, "RT Scheme", RT_IMPLEMENTATION", hydro controlled injection");
+    io_write_attribute_s(h_grp, "RT Scheme",
+                         RT_IMPLEMENTATION ", hydro controlled injection");
   } else {
     io_write_attribute_s(h_grp, "RT Scheme", RT_IMPLEMENTATION);
   }
