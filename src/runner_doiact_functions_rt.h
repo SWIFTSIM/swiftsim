@@ -25,8 +25,8 @@
    and runner_dosub_FUNCTION calling the pairwise interaction function
    runner_iact_FUNCTION. */
 
-#include "rt_active.h"
 #include "rt.h"
+#include "rt_active.h"
 #include "runner_doiact_rt.h"
 
 /**
@@ -134,10 +134,6 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
 #endif
 
       if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj, a, H);
-      if ((r2 < hig2) && (pj->id == 2272LL)) {
-        printf("caught %12lld in iact self %12d %12d\n", pj->id, pj->rt_data.iact_stars_inject, pj->rt_data.radiation_received_tot ); 
-        fflush(stdout); 
-      }
     }
   }
 

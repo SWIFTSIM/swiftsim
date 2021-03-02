@@ -34,8 +34,8 @@
  */
 
 /**
- * @brief Pick whether we need to check whether an spart is active depending 
- * on which version of injection we are using. This is done here to minimize 
+ * @brief Pick whether we need to check whether an spart is active depending
+ * on which version of injection we are using. This is done here to minimize
  * #ifdef macros throughout this file.
  *
  * Returns 1 if spart is active.
@@ -44,7 +44,7 @@
  * @param e the engine
  */
 __attribute__((always_inline)) INLINE static int rt_is_spart_active_in_loop(
-struct spart* restrict sp, const struct engine* e) {
+    struct spart *restrict sp, const struct engine *e) {
 
 #ifdef RT_HYDRO_CONTROLLED_INJECTION
   return 1; /* ignore stellar activity when gas pulls radiation from stars */
@@ -54,8 +54,8 @@ struct spart* restrict sp, const struct engine* e) {
 }
 
 /**
- * @brief Pick whether we need to check whether a part is active depending 
- * on which version of injection we are using. This is done here to minimize 
+ * @brief Pick whether we need to check whether a part is active depending
+ * on which version of injection we are using. This is done here to minimize
  * #ifdef macros throughout this file.
  *
  * Returns 1 if spart is active.
@@ -64,7 +64,7 @@ struct spart* restrict sp, const struct engine* e) {
  * @param e the engine
  */
 __attribute__((always_inline)) INLINE static int rt_is_part_active_in_loop(
-struct part* restrict p, const struct engine* e) {
+    struct part *restrict p, const struct engine *e) {
 
 #ifdef RT_HYDRO_CONTROLLED_INJECTION
   return part_is_active(p, e);

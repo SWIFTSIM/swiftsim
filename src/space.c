@@ -787,8 +787,8 @@ void space_convert_rt_star_quantities_mapper(void *restrict map_data,
 }
 
 void space_convert_rt_hydro_quantities_mapper(void *restrict map_data,
-                                             int count,
-                                             void *restrict extra_data) {
+                                              int count,
+                                              void *restrict extra_data) {
 
   struct part *restrict parts = (struct part *)map_data;
 
@@ -796,18 +796,17 @@ void space_convert_rt_hydro_quantities_mapper(void *restrict map_data,
     struct part *restrict p = &parts[k];
     rt_reset_part(p);
   }
-
 }
 
 /**
  * @brief Initializes values of radiative transfer data for particles
  * that needs to be set before the first actual step is done, but will
  * be reset in forthcoming steps when the corresponding particle is
- * active. 
- * In hydro controlled injection, in particular we need the stellar 
- * emisison rates to be set from the start, not only after the stellar 
- * particle has been active. This function requires that the time bins 
- * for star particles have been set already and is called after the 
+ * active.
+ * In hydro controlled injection, in particular we need the stellar
+ * emisison rates to be set from the start, not only after the stellar
+ * particle has been active. This function requires that the time bins
+ * for star particles have been set already and is called after the
  * zeroth time step.
  * In either star controlled injection or hydro controlled injection,
  * for the debug RT scheme some data fields need to be reset after the
@@ -827,14 +826,14 @@ void space_convert_rt_quantities(struct space *s, int verbose) {
 
   const ticks tic = getticks();
 
-  if (s->nr_parts > 0) 
+  if (s->nr_parts > 0)
     /* Particle loop. Reset hydro particle values so we don't inject too much
      * radiation into the gas */
     threadpool_map(&s->e->threadpool, space_convert_rt_hydro_quantities_mapper,
                    s->parts, s->nr_parts, sizeof(struct part),
                    threadpool_auto_chunk_size, /*extra_data=*/s->e);
 
-  if (s->nr_sparts > 0) 
+  if (s->nr_sparts > 0)
     /* Star particle loop. Hydro controlled injection requires star particles
      * to have their emission rated computed and ready for interactions. */
     threadpool_map(&s->e->threadpool, space_convert_rt_star_quantities_mapper,

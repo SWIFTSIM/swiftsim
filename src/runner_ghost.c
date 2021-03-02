@@ -261,18 +261,23 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               if (with_cosmology) {
 
                 /* get star's age and time step for stellar emission rates */
-                const integertime_t ti_begin = get_integer_time_begin(e->ti_current - 1, sp->time_bin);
-                const integertime_t ti_step = get_integer_timestep(sp->time_bin);
-                dt_star = cosmology_get_delta_time(e->cosmology, ti_begin, ti_begin + ti_step);
+                const integertime_t ti_begin =
+                    get_integer_time_begin(e->ti_current - 1, sp->time_bin);
+                const integertime_t ti_step =
+                    get_integer_timestep(sp->time_bin);
+                dt_star = cosmology_get_delta_time(e->cosmology, ti_begin,
+                                                   ti_begin + ti_step);
 
               } else {
                 dt_star = get_timestep(sp->time_bin, e->time_base);
               }
 
               /* Calculate age of the star at current time */
-              const double star_age_end_of_step = stars_compute_age(sp, e->cosmology, e->time, with_cosmology);
+              const double star_age_end_of_step =
+                  stars_compute_age(sp, e->cosmology, e->time, with_cosmology);
 
-              rt_compute_stellar_emission_rate(sp, e->time, star_age_end_of_step, dt_star);
+              rt_compute_stellar_emission_rate(sp, e->time,
+                                               star_age_end_of_step, dt_star);
             }
 
             /* Ok, we are done with this particle */
@@ -1531,13 +1536,6 @@ void runner_do_rt_ghost1(struct runner *r, struct cell *c, int timer) {
 
       /* Skip inactive parts */
       if (!part_is_active(p, e)) continue;
-
-
-  if (p->rt_data.iact_stars_inject != p->rt_data.radiation_received_tot){
-    printf("cell %18lld part %12lld has iact %12d tot %12d\n", c->cellID, p->id, p->rt_data.iact_stars_inject, p->rt_data.radiation_received_tot);
-    fflush(stdout);
-  }
-
 
       rt_injection_update_photon_density(p, e->rt_props);
     }

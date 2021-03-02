@@ -47,7 +47,9 @@ __attribute__((always_inline)) INLINE static void rt_init_part(
 __attribute__((always_inline)) INLINE static void rt_reset_part(
     struct part* restrict p) {
 
-  p->rt_data.iact_stars_inject = 0; /* reset this here as well to test that you're resetting it at the correct place! */
+  p->rt_data.iact_stars_inject =
+      0; /* reset this here as well to test that you're resetting it at the
+            correct place! */
   p->rt_data.calls_iact_gradient = 0;
   p->rt_data.calls_iact_transport = 0;
   p->rt_data.injection_check = 0;
@@ -56,13 +58,6 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.gradients_done = 0;
   p->rt_data.transport_done = 0;
   p->rt_data.thermochem_done = 0;
-
-  if (p->id == 2272){
-    printf("resetting %12lld\n", p->id);
-    fflush(stdout);
-  }
-
-  p->rt_data.called_in_ghost += 1;
 }
 
 /**
@@ -74,7 +69,6 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
   rt_init_part(p);
   rt_reset_part(p);
   p->rt_data.radiation_received_tot = 0;
-  p->rt_data.called_in_ghost = 0;
 }
 
 /**
@@ -97,7 +91,9 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
     struct spart* restrict sp) {
 
   /* reset everything */
-  sp->rt_data.iact_hydro_inject = 0; /* reset this here as well to test that you're resetting it at the correct place! */
+  sp->rt_data.iact_hydro_inject =
+      0; /* reset this here as well to test that you're resetting it at the
+            correct place! */
   sp->rt_data.emission_rate_set = 0;
   sp->rt_data.injection_check = 0;
 }
@@ -119,7 +115,8 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
  * @param p The #part.
  * @param n The number of pieces to split into.
  */
-__attribute__((always_inline)) INLINE static void rt_split_part(struct part *p, double n) {}
+__attribute__((always_inline)) INLINE static void rt_split_part(struct part* p,
+                                                                double n) {}
 
 /**
  * @brief Update the photon number of a particle, i.e. compute
