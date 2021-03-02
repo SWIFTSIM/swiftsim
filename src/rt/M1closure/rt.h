@@ -73,6 +73,14 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
     struct spart* restrict sp) {}
 
 /**
+ * @brief Split the RT data of a particle into n pieces
+ *
+ * @param p The #part.
+ * @param n The number of pieces to split into.
+ */
+__attribute__((always_inline)) INLINE static void rt_split_part(struct part *p, double n) {}
+
+/**
  * @brief Update the photon number of a particle, i.e. compute
  *  E^{n+1} = E^n + dt * dE_* / dt. This function finalises
  *  the injection step.
