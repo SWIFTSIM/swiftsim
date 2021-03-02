@@ -711,7 +711,9 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
 #endif
     if (c->stars.sorts != NULL) {
       scheduler_addunlock(s, t_density, c->stars.sorts);
+#ifdef EXTRA_STAR_LOOPS
       scheduler_addunlock(s, c->stars.sorts, t_prep2);
+#endif
     }
 
     /* Receive stars after the density loop */
