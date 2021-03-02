@@ -709,8 +709,10 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
 #ifdef SWIFT_DEBUG_CHECKS
     if (c->nodeID == e->nodeID) error("Local cell!");
 #endif
-    if (c->stars.sorts != NULL)
+    if (c->stars.sorts != NULL) {
       scheduler_addunlock(s, t_density, c->stars.sorts);
+      scheduler_addunlock(s, c->stars.sorts, t_prep2);
+    }
 
     /* Receive stars after the density loop */
     for (struct link *l = c->stars.density; l != NULL; l = l->next) {
@@ -721,6 +723,7 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
     /* Start updating local gas only after sparts have been received */
     for (struct link *l = c->stars.prepare1; l != NULL; l = l->next) {
       scheduler_addunlock(s, t_density, l->t);
+      scheduler_addunlock(s, l->t, t_prep2);
     }
 
     /* Receive stars for the second time after the prep2 loop */
