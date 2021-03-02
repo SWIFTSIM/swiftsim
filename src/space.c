@@ -757,12 +757,7 @@ void space_convert_rt_star_quantities_mapper(void *restrict map_data,
   for (int k = 0; k < scount; k++) {
 
     struct spart *restrict sp = &sparts[k];
-
-#ifdef SWIFT_DEBUG_CHECKS
-    /* reset star values so some injection debugging checks can pass on the
-     * first time step as well */
-    rt_init_spart(sp);
-#endif
+    rt_reset_spart(sp);
 
     /* get star's age and time step for stellar emission rates */
     const integertime_t ti_begin =
@@ -793,10 +788,6 @@ void space_convert_rt_hydro_quantities_mapper(void *restrict map_data,
 
   struct part *restrict parts = (struct part *)map_data;
 
-  /* We gotta do the reset here after the zeroth step, otherwise we
-   * inject too much radiation into the gas regardless of whether
-   * we have star or hydro controlled injection. */
-
   for (int k = 0; k < count; k++) {
     struct part *restrict p = &parts[k];
     rt_reset_part(p);
@@ -820,14 +811,16 @@ void space_convert_rt_quantities(struct space *s, int verbose) {
 
   const ticks tic = getticks();
 
-#ifdef SWIFT_DEBUG_CHECKS
+  message("============== resetting RT quantities");
+
+/* #ifdef SWIFT_DEBUG_CHECKS */
   /* Particle loop. If we have debugging checks, reset hydro particle 
    * values so some injection tests will pass on the first step as well */
   if (s->nr_parts > 0) 
     threadpool_map(&s->e->threadpool, space_convert_rt_hydro_quantities_mapper,
                    s->parts, s->nr_parts, sizeof(struct part),
                    threadpool_auto_chunk_size, /*extra_data=*/s->e);
-#endif
+/* #endif */
   if (s->nr_sparts > 0) /* star particle loop */
     threadpool_map(&s->e->threadpool, space_convert_rt_star_quantities_mapper,
                    s->sparts, s->nr_sparts, sizeof(struct spart),

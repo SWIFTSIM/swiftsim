@@ -40,9 +40,17 @@ struct rt_props {
    * but a placeholder to sum up a global variable */
   int radiation_emitted_this_step;
 
+  /* total radiation emitted by stars. This is not really a property, 
+   * but a placeholder to sum up a global variable */
+  int radiation_emitted_tot;
+
   /* radiation absorbed by gas this step. This is not really a property, 
    * but a placeholder to sum up a global variable */
   int radiation_absorbed_this_step;
+
+  /* total radiation absorbed by gas. This is not really a property, 
+   * but a placeholder to sum up a global variable */
+  int radiation_absorbed_tot;
 };
 
 /**

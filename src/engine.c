@@ -2393,7 +2393,14 @@ void engine_step(struct engine *e) {
 
   if (e->ti_end_min == e->ti_current && e->ti_end_min < max_nr_timesteps)
     error("Obtained a time-step of size 0");
+
+#ifdef RT_DEBUG
+  /* if we're running the debug RT scheme, do some checks every step */
+  if (e->policy & engine_policy_rt)
+    rt_debugging_checks_end_of_step(e, e->verbose);
 #endif
+
+#endif /* def SWIFT_DEBUG_CHECKS */
 
   /********************************************************/
   /* OK, we are done with the regular stuff. Time for i/o */
@@ -2407,11 +2414,6 @@ void engine_step(struct engine *e) {
   if (e->policy & engine_policy_logger) {
     engine_check_for_index_dump(e);
   }
-#endif
-
-#if defined(SWIFT_DEBUG_CHECKS) && defined(RT_DEBUG)
-  /* if we're running the debug RT scheme, do some checks every step */
-  rt_debugging_checks_end_of_step(e, e->verbose);
 #endif
 
   TIMER_TOC2(timer_step);
