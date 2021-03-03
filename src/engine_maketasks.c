@@ -359,6 +359,13 @@ void engine_addtasks_send_stars(struct engine *e, struct cell *ci,
 
       /* Send new time-steps after timestep tasks */
       scheduler_addunlock(s, ci->super->timestep, t_ti);
+
+      if (with_star_formation && ci->hydro.count > 0) {
+        scheduler_addunlock(s, t_sf_counts, t_density);
+#ifdef EXTRA_STAR_LOOPS
+        scheduler_addunlock(s, t_sf_counts, t_prep2);
+#endif
+      }
     }
 
     engine_addlink(e, &ci->mpi.send, t_density);
@@ -693,6 +700,9 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
 
       /* Receive the stars only once the counts have been received */
       scheduler_addunlock(s, t_sf_counts, t_density);
+#ifdef EXTRA_STAR_LOOPS
+      scheduler_addunlock(s, t_sf_counts, t_prep2);
+#endif
     }
   }
 
