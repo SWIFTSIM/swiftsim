@@ -798,6 +798,11 @@ void engine_allocate_foreign_particles(struct engine *e) {
                        spart_align,
                        sizeof(struct spart) * s->size_sparts_foreign) != 0)
       error("Failed to allocate foreign spart data.");
+    bzero(s->sparts_foreign, s->size_sparts_foreign * sizeof(struct spart));
+    for (size_t i = 0; i < s->size_sparts_foreign; ++i) {
+      s->sparts_foreign[i].time_bin = time_bin_not_created;
+      s->sparts_foreign[i].id = -43;
+    }
   }
 
   /* Allocate space for the foreign particles we will receive */
