@@ -42,7 +42,7 @@ struct rt_props {
 
   /* total radiation emitted by stars. This is not really a property,
    * but a placeholder to sum up a global variable */
-  int radiation_emitted_tot;
+  unsigned long long radiation_emitted_tot;
 
   /* radiation absorbed by gas this step. This is not really a property,
    * but a placeholder to sum up a global variable */
@@ -50,7 +50,7 @@ struct rt_props {
 
   /* total radiation absorbed by gas. This is not really a property,
    * but a placeholder to sum up a global variable */
-  int radiation_absorbed_tot;
+  unsigned long long radiation_absorbed_tot;
 };
 
 /**

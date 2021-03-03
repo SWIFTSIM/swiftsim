@@ -63,7 +63,7 @@ INLINE static int rt_write_particles(const struct part* parts,
       "RTThermochemistryDone", INT, 1, UNIT_CONV_NO_UNITS, 0, parts,
       rt_data.thermochem_done, "How many times rt_tchem was called");
   list[7] = io_make_output_field(
-      "RTRadReceivedTot", INT, 1, UNIT_CONV_NO_UNITS, 0, parts,
+      "RTRadReceivedTot", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0, parts,
       rt_data.radiation_received_tot,
       "Radiation received by this part during its lifetime");
 
@@ -87,7 +87,7 @@ INLINE static int rt_write_stars(const struct spart* sparts,
                            "Stellar photon "
                            "emission rates set?");
   list[2] = io_make_output_field(
-      "RTRadEmittedTot", INT, 1, UNIT_CONV_NO_UNITS, 0, sparts,
+      "RTRadEmittedTot", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0, sparts,
       rt_data.radiation_emitted_tot,
       "Total radiation emitted during the lifetime of this star");
 
