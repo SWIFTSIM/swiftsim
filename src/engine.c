@@ -84,7 +84,8 @@
 #include "profiler.h"
 #include "proxy.h"
 #include "restart.h"
-#include "rt.h"
+/* #include "rt_io.h" */
+#include "rt_properties.h"
 #include "runner.h"
 #include "sink_properties.h"
 #include "sort_part.h"
@@ -3346,6 +3347,7 @@ void engine_struct_dump(struct engine *e, FILE *stream) {
   cooling_struct_dump(e->cooling_func, stream);
   starformation_struct_dump(e->star_formation, stream);
   feedback_struct_dump(e->feedback_props, stream);
+  rt_struct_dump(e->rt_props, stream);
   black_holes_struct_dump(e->black_holes_properties, stream);
   sink_struct_dump(e->sink_properties, stream);
   chemistry_struct_dump(e->chemistry, stream);
@@ -3461,6 +3463,11 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
       (struct feedback_props *)malloc(sizeof(struct feedback_props));
   feedback_struct_restore(feedback_properties, stream);
   e->feedback_props = feedback_properties;
+
+  struct rt_props *rt_properties =
+      (struct rt_props *)malloc(sizeof(struct rt_props));
+  rt_struct_restore(rt_properties, stream);
+  e->rt_props = rt_properties;
 
   struct black_holes_props *black_holes_properties =
       (struct black_holes_props *)malloc(sizeof(struct black_holes_props));

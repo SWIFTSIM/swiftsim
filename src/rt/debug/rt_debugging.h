@@ -101,6 +101,14 @@ rt_debugging_checks_end_of_step(struct engine *e, int verbose) {
                    s->sparts, s->nr_sparts, sizeof(struct spart),
                    threadpool_auto_chunk_size, /*extra_data=*/e);
 
+  message(
+      "\n"
+      "  This step: star emission %12d; gas absorption %12d\n"
+      "Since start: star emission %12d; gas absorption %12d",
+      e->rt_props->radiation_emitted_this_step,
+      e->rt_props->radiation_absorbed_this_step,
+      e->rt_props->radiation_emitted_tot, e->rt_props->radiation_absorbed_tot);
+
   /* Have we accidentally invented or deleted some radiation somewhere? */
   if ((e->rt_props->radiation_emitted_this_step !=
        e->rt_props->radiation_absorbed_this_step) ||

@@ -19,6 +19,8 @@
 #ifndef SWIFT_RT_NONE_H
 #define SWIFT_RT_NONE_H
 
+#include "rt_properties.h"
+
 /**
  * @file src/rt/none/rt.h
  * @brief Main header file for no radiative transfer scheme.

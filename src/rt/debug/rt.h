@@ -20,7 +20,6 @@
 #define SWIFT_RT_DEBUG_H
 
 #include "rt_debugging.h"
-#include "rt_properties.h"
 #include "rt_stellar_emission_rate.h"
 #include "rt_thermochemistry.h"
 
