@@ -551,28 +551,41 @@ void feedback_props_init(struct feedback_props* fp,
   /* Indicies can either be included in the parameter file as powers,
    * or as widths - but not both! The width and power are always related
    * by the relation power = 1.0 / (ln(10) * width) */
-  double n_n = 0.0, n_Z = 0.0;
 
-  n_n = parser_get_opt_param_double(
-      params, "EAGLEFeedback:SNII_energy_fraction_n_n", FLT_MAX);
+  int n_n_exists =
+      parser_does_param_exist(params, "EAGLEFeedback:SNII_energy_fraction_n_n");
+  int n_Z_exists =
+      parser_does_param_exist(params, "EAGLEFeedback:SNII_energy_fraction_n_Z");
+  int s_n_exists = parser_does_param_exist(
+      params, "EAGLEFeedback:SNII_energy_fraction_sigma_n");
+  int s_Z_exists = parser_does_param_exist(
+      params, "EAGLEFeedback:SNII_energy_fraction_sigma_Z");
 
-  if (n_n == FLT_MAX) {
-    n_n = 1.0 / (parser_get_param_double(
-                     params, "EAGLEFeedback:SNII_energy_fraction_sigma_n") *
-                 log(10.0));
-  };
+  if (n_n_exists && s_n_exists) {
+    error("Cannot specify both n_n and sigma_n in SNII energy fraction.");
+  }
 
-  n_Z = parser_get_opt_param_double(
-      params, "EAGLEFeedback:SNII_energy_fraction_n_Z", FLT_MAX);
+  if (n_Z_exists && s_Z_exists) {
+    error("Cannot specify both n_Z and sigma_Z in SNII energy fraction.");
+  }
 
-  if (n_Z == FLT_MAX) {
-    n_Z = 1.0 / (parser_get_param_double(
-                     params, "EAGLEFeedback:SNII_energy_fraction_sigma_Z") *
-                 log(10.0));
-  };
+  if (n_n_exists) {
+    fp->n_n = parser_get_param_double(params,
+                                      "EAGLEFeedback:SNII_energy_fraction_n_n");
+  } else {
+    fp->n_n = 1.0 / (M_LN10 *
+                     parser_get_param_double(
+                         params, "EAGLEFeedback:SNII_energy_fraction_sigma_n"));
+  }
 
-  fp->n_n = n_n;
-  fp->n_Z = n_Z;
+  if (n_Z_exists) {
+    fp->n_Z = parser_get_param_double(params,
+                                      "EAGLEFeedback:SNII_energy_fraction_n_Z");
+  } else {
+    fp->n_Z = 1.0 / (M_LN10 *
+                     parser_get_param_double(
+                         params, "EAGLEFeedback:SNII_energy_fraction_sigma_Z"));
+  }
 
   /* Check that it makes sense. */
   if (fp->f_E_max < fp->f_E_min) {
