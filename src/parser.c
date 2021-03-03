@@ -529,7 +529,9 @@ static void parse_section_param(char *line, int *isFirstParam,
 
 /**
  * @brief Checks whether a parameter is currently present in the params
- *structure.
+ *        structure. Do not use this function to test if a parameter exists,
+ *        and then provide an optional value instead. That can be achieved
+ *        using the parser_get_opt_param_TYPE functions.
  *
  * @param params Structure that holds the parameters
  * @param name Name of the parameter to be found
