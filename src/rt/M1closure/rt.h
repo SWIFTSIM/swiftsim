@@ -19,6 +19,8 @@
 #ifndef SWIFT_RT_M1_H
 #define SWIFT_RT_M1_H
 
+#include "rt_properties.h"
+
 /**
  * @file src/rt/M1closure/rt.h
  * @brief Main header file for the M1 Closure radiative transfer scheme.

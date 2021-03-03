@@ -102,4 +102,32 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
   }
 }
 
+/**
+ * @brief Write an RT properties struct to the given FILE as a
+ * stream of bytes.
+ *
+ * @param props the struct
+ * @param stream the file stream
+ */
+__attribute__((always_inline)) INLINE static void rt_struct_dump(
+    const struct rt_props* props, FILE* stream) {
+
+  restart_write_blocks((void*)props, sizeof(struct rt_props), 1, stream,
+                       "RT props", "RT properties struct");
+}
+
+/**
+ * @brief Restore an RT properties struct from the given FILE as
+ * a stream of bytes.
+ *
+ * @param props the struct
+ * @param stream the file stream
+ */
+__attribute__((always_inline)) INLINE static void rt_struct_restore(
+    struct rt_props* props, FILE* stream) {
+
+  restart_read_blocks((void*)props, sizeof(struct rt_props), 1, stream, NULL,
+                      "RT properties struct");
+}
+
 #endif /* SWIFT_RT_PROPERTIES_DEBUG_H */
