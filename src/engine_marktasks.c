@@ -50,6 +50,7 @@
 #include "cycle.h"
 #include "debug.h"
 #include "error.h"
+#include "feedback.h"
 #include "proxy.h"
 #include "rt_do_cells.h"
 #include "timers.h"
