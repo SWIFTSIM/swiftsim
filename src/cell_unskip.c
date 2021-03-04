@@ -28,6 +28,7 @@
 /* Local headers. */
 #include "active.h"
 #include "engine.h"
+#include "feedback.h"
 #include "rt_do_cells.h"
 #include "space_getsid.h"
 
