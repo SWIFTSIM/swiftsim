@@ -542,6 +542,8 @@ void part_verify_links(struct part *parts, struct gpart *gparts,
 MPI_Datatype part_mpi_type;
 MPI_Datatype xpart_mpi_type;
 MPI_Datatype gpart_mpi_type;
+MPI_Datatype gpart_send_mpi_type;
+MPI_Datatype gpart_recv_mpi_type;
 MPI_Datatype spart_mpi_type;
 MPI_Datatype bpart_mpi_type;
 MPI_Datatype lospart_mpi_type;
@@ -572,6 +574,29 @@ void part_create_mpi_types(void) {
       MPI_Type_commit(&gpart_mpi_type) != MPI_SUCCESS) {
     error("Failed to create MPI type for gparts.");
   }
+
+  struct gpart gp;
+  const int lengths[4] = {sizeof(gp.x),        /* pos */
+                          sizeof(gp.mass),     /* mass */
+                          sizeof(gp.time_bin), /* bin */
+                          sizeof(gp.type)};    /* type */
+  const int offsets[4] = {
+      ((char *)&gp.x - (char *)&gp) / sizeof(char),        /* pos */
+      ((char *)&gp.mass - (char *)&gp) / sizeof(char),     /* mass */
+      ((char *)&gp.time_bin - (char *)&gp) / sizeof(char), /* bin */
+      ((char *)&gp.type - (char *)&gp) / sizeof(char)};    /* type */
+
+  if (MPI_Type_indexed(4, lengths, offsets, MPI_BYTE, &gpart_send_mpi_type) !=
+          MPI_SUCCESS ||
+      MPI_Type_commit(&gpart_send_mpi_type) != MPI_SUCCESS) {
+    error("Failed to create MPI type for sending foreign gparts.");
+  }
+
+  if (MPI_Type_contiguous(sizeof(struct gpart_foreign) / sizeof(unsigned char),
+                          MPI_BYTE, &gpart_recv_mpi_type) != MPI_SUCCESS ||
+      MPI_Type_commit(&gpart_recv_mpi_type) != MPI_SUCCESS) {
+    error("Failed to create MPI type for receiving foreign gparts.");
+  }
   if (MPI_Type_contiguous(sizeof(struct spart) / sizeof(unsigned char),
                           MPI_BYTE, &spart_mpi_type) != MPI_SUCCESS ||
       MPI_Type_commit(&spart_mpi_type) != MPI_SUCCESS) {
@@ -589,6 +614,8 @@ void part_free_mpi_types(void) {
   MPI_Type_free(&part_mpi_type);
   MPI_Type_free(&xpart_mpi_type);
   MPI_Type_free(&gpart_mpi_type);
+  MPI_Type_free(&gpart_send_mpi_type);
+  MPI_Type_free(&gpart_recv_mpi_type);
   MPI_Type_free(&spart_mpi_type);
   MPI_Type_free(&bpart_mpi_type);
   MPI_Type_free(&lospart_mpi_type);
