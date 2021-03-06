@@ -1229,14 +1229,27 @@ void runner_dopair_grav_pp(struct runner *r, struct cell *ci, struct cell *cj,
   const int allow_multipole_j = allow_mpole && cj->grav.count > 1;
 
   /* Fill the caches */
-  gravity_cache_populate(e->max_active_bin, allow_multipole_j, periodic, dim,
-                         ci_cache, ci->grav.parts, gcount_i, gcount_padded_i,
-                         shift_i, CoM_j, cj->grav.multipole, ci,
-                         e->gravity_properties);
-  gravity_cache_populate(e->max_active_bin, allow_multipole_i, periodic, dim,
-                         cj_cache, cj->grav.parts, gcount_j, gcount_padded_j,
-                         shift_j, CoM_i, ci->grav.multipole, cj,
-                         e->gravity_properties);
+  if (ci->nodeID == e->nodeID) {
+    gravity_cache_populate(e->max_active_bin, allow_multipole_j, periodic, dim,
+                           ci_cache, ci->grav.parts, gcount_i, gcount_padded_i,
+                           shift_i, CoM_j, cj->grav.multipole, ci,
+                           e->gravity_properties);
+  } else {
+    gravity_cache_populate_foreign(
+        periodic, dim, ci_cache, ci->grav.parts_foreign, gcount_i,
+        gcount_padded_i, shift_i, ci, e->gravity_properties);
+  }
+
+  if (cj->nodeID == e->nodeID) {
+    gravity_cache_populate(e->max_active_bin, allow_multipole_i, periodic, dim,
+                           cj_cache, cj->grav.parts, gcount_j, gcount_padded_j,
+                           shift_j, CoM_i, ci->grav.multipole, cj,
+                           e->gravity_properties);
+  } else {
+    gravity_cache_populate_foreign(
+        periodic, dim, cj_cache, cj->grav.parts_foreign, gcount_j,
+        gcount_padded_j, shift_j, cj, e->gravity_properties);
+  }
 
   /* Can we use the Newtonian version or do we need the truncated one ? */
   if (!periodic) {
@@ -1730,6 +1743,7 @@ void runner_doself_grav_pp(struct runner *r, struct cell *c) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (c->grav.count == 0) error("Doing self gravity on an empty cell !");
+  if (c->nodeID != e->nodeID) error("Running on foreign cell!");
 #endif
 
   /* Anything to do here? */

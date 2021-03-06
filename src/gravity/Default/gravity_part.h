@@ -119,4 +119,19 @@ struct gpart {
 #endif
 };
 
+struct gpart_foreign {
+
+  /*! Particle position. */
+  double x[3];
+
+  /*! Particle mass. */
+  float mass;
+
+  /*! Time-step length */
+  timebin_t time_bin;
+
+  /*! Type of the #gpart (DM, gas, star, ...) */
+  enum part_type type;
+};
+
 #endif /* SWIFT_DEFAULT_GRAVITY_PART_H */
