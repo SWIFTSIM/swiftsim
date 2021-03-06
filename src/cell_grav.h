@@ -96,9 +96,6 @@ struct cell_grav {
   /*! Spin lock for various uses (#multipole case). */
   swift_lock_type mlock;
 
-  /*! Spin lock for star formation use. */
-  swift_lock_type star_formation_lock;
-
   /*! Nr of #gpart in this cell. */
   int count;
 

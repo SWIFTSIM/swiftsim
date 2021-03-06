@@ -419,6 +419,9 @@ struct sink *cell_add_sink(struct engine *e, struct cell *const c) {
  * time bin.
  */
 struct gpart *cell_add_gpart(struct engine *e, struct cell *c) {
+
+  error("Not implemented in this model");
+
   /* Perform some basic consitency checks */
   if (c->nodeID != engine_rank) error("Adding gpart on a foreign node");
   if (c->grav.ti_old_part != e->ti_current) error("Undrifted cell!");
@@ -457,7 +460,7 @@ struct gpart *cell_add_gpart(struct engine *e, struct cell *c) {
   }
 
   /* Lock the top-level cell as we are going to operate on it */
-  lock_lock(&top->grav.star_formation_lock);
+  //lock_lock(&top->grav.star_formation_lock);
 
   /* Are there any extra particles left? */
   if (top->grav.count == top->grav.count_total) {
@@ -465,8 +468,8 @@ struct gpart *cell_add_gpart(struct engine *e, struct cell *c) {
     message("We ran out of free gravity particles!");
 
     /* Release the local lock before exiting. */
-    if (lock_unlock(&top->grav.star_formation_lock) != 0)
-      error("Failed to unlock the top-level cell.");
+    //if (lock_unlock(&top->grav.star_formation_lock) != 0)
+    //  error("Failed to unlock the top-level cell.");
 
     atomic_inc(&e->forcerebuild);
     return NULL;
@@ -516,8 +519,8 @@ struct gpart *cell_add_gpart(struct engine *e, struct cell *c) {
   top2->grav.ti_old_part = e->ti_current;
 
   /* Release the lock */
-  if (lock_unlock(&top->grav.star_formation_lock) != 0)
-    error("Failed to unlock the top-level cell.");
+  /* if (lock_unlock(&top->grav.star_formation_lock) != 0) */
+  /*   error("Failed to unlock the top-level cell."); */
 
   /* We now have an empty gpart as the first particle in that cell */
   struct gpart *gp = &c->grav.parts[0];
