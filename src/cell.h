@@ -302,17 +302,6 @@ struct pcell_sf {
     float dx_max_part;
 
   } stars;
-
-  /*! Grav. variables */
-  struct {
-
-    /* Distance by which the gpart pointer has moved since the last rebuild */
-    ptrdiff_t delta_from_rebuild;
-
-    /* Number of particles in the cell */
-    int count;
-
-  } grav;
 };
 
 /**

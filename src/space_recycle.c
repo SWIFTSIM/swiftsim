@@ -183,7 +183,6 @@ void space_rebuild_recycle_mapper(void *map_data, int num_elements,
     c->hydro.parts = NULL;
     c->hydro.xparts = NULL;
     c->grav.parts = NULL;
-    c->grav.parts_rebuild = NULL;
     c->sinks.parts = NULL;
     c->stars.parts = NULL;
     c->stars.parts_rebuild = NULL;

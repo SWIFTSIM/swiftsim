@@ -37,9 +37,6 @@ struct cell_grav {
   /*! Pointer to the #gpart data. */
   struct gpart *parts;
 
-  /*! Pointer to the #spart data at rebuild time. */
-  struct gpart *parts_rebuild;
-
   /*! This cell's multipole. */
   struct gravity_tensors *multipole;
 

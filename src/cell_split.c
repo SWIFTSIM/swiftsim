@@ -458,7 +458,6 @@ void cell_split(struct cell *c, const ptrdiff_t parts_offset,
     c->progeny[k]->grav.count = bucket_count[k];
     c->progeny[k]->grav.count_total = c->progeny[k]->grav.count;
     c->progeny[k]->grav.parts = &c->grav.parts[bucket_offset[k]];
-    c->progeny[k]->grav.parts_rebuild = c->progeny[k]->grav.parts;
   }
 }
 
