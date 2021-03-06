@@ -470,12 +470,18 @@ INLINE static void gravity_cache_populate_all_mpole(
  * This function obviously omits the padded values in the cache.
  *
  * @param c The #gravity_cache to read from.
+ * @param cell The #cell.
  * @param gparts The #gpart array to write to.
  * @param gcount The number of particles to write.
  */
 INLINE static void gravity_cache_write_back(const struct gravity_cache *c,
+                                            const struct cell *cell,
                                             struct gpart *restrict gparts,
                                             const int gcount) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (cell->nodeID != engine_rank) error("Writing back to foreign particles!");
+#endif
 
   /* Make the compiler understand we are in happy vectorization land */
   swift_declare_aligned_ptr(float, a_x, c->a_x, SWIFT_CACHE_ALIGNMENT);

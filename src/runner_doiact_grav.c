@@ -345,7 +345,7 @@ static INLINE void runner_dopair_grav_pp_full_no_cache(
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
   lock_lock(&ci->grav.plock);
 #endif
-  gravity_cache_write_back(cache_i, ci->grav.parts, gcount_i);
+  gravity_cache_write_back(cache_i, ci, ci->grav.parts, gcount_i);
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
   if (lock_unlock(&ci->grav.plock) != 0) error("Error unlocking cell");
 #endif
@@ -544,7 +544,7 @@ static INLINE void runner_dopair_grav_pp_truncated_no_cache(
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
   lock_lock(&ci->grav.plock);
 #endif
-  gravity_cache_write_back(cache_i, ci->grav.parts, gcount_i);
+  gravity_cache_write_back(cache_i, ci, ci->grav.parts, gcount_i);
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
   if (lock_unlock(&ci->grav.plock) != 0) error("Error unlocking cell");
 #endif
@@ -1359,7 +1359,7 @@ void runner_dopair_grav_pp(struct runner *r, struct cell *ci, struct cell *cj,
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
     lock_lock(&ci->grav.plock);
 #endif
-    gravity_cache_write_back(ci_cache, ci->grav.parts, gcount_i);
+    gravity_cache_write_back(ci_cache, ci, ci->grav.parts, gcount_i);
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
     if (lock_unlock(&ci->grav.plock) != 0) error("Error unlocking cell");
 #endif
@@ -1370,7 +1370,7 @@ void runner_dopair_grav_pp(struct runner *r, struct cell *ci, struct cell *cj,
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
     lock_lock(&cj->grav.plock);
 #endif
-    gravity_cache_write_back(cj_cache, cj->grav.parts, gcount_j);
+    gravity_cache_write_back(cj_cache, cj, cj->grav.parts, gcount_j);
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
     if (lock_unlock(&cj->grav.plock) != 0) error("Error unlocking cell");
 #endif
@@ -1795,7 +1795,7 @@ void runner_doself_grav_pp(struct runner *r, struct cell *c) {
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
   lock_lock(&c->grav.plock);
 #endif
-  gravity_cache_write_back(ci_cache, c->grav.parts, gcount);
+  gravity_cache_write_back(ci_cache, c, c->grav.parts, gcount);
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
   if (lock_unlock(&c->grav.plock) != 0) error("Error unlocking cell");
 #endif
@@ -2116,7 +2116,7 @@ void runner_dopair_recursive_grav_pm(struct runner *r, struct cell *ci,
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
     lock_lock(&ci->grav.plock);
 #endif
-    gravity_cache_write_back(ci_cache, ci->grav.parts, gcount_i);
+    gravity_cache_write_back(ci_cache, ci, ci->grav.parts, gcount_i);
 #ifndef SWIFT_TASKS_WITHOUT_ATOMICS
     if (lock_unlock(&ci->grav.plock) != 0) error("Error unlocking cell");
 #endif
