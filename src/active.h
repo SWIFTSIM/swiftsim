@@ -469,10 +469,22 @@ __attribute__((always_inline)) INLINE static int part_is_inhibited(
  *
  * @param gp The #gpart.
  * @param e The #engine containing information about the current time.
- * @return 1 if the #part is inhibited, 0 otherwise.
+ * @return 1 if the #gpart is inhibited, 0 otherwise.
  */
 __attribute__((always_inline)) INLINE static int gpart_is_inhibited(
     const struct gpart *gp, const struct engine *e) {
+  return gp->time_bin == time_bin_inhibited;
+}
+
+/**
+ * @brief Has this foreign gravity particle been inhibited?
+ *
+ * @param gp The #gpart_part.
+ * @param e The #engine containing information about the current time.
+ * @return 1 if the #gpart_foreign is inhibited, 0 otherwise.
+ */
+__attribute__((always_inline)) INLINE static int gpart_foreign_is_inhibited(
+    const struct gpart_foreign *gp, const struct engine *e) {
   return gp->time_bin == time_bin_inhibited;
 }
 
@@ -481,7 +493,7 @@ __attribute__((always_inline)) INLINE static int gpart_is_inhibited(
  *
  * @param sp The #spart.
  * @param e The #engine containing information about the current time.
- * @return 1 if the #part is inhibited, 0 otherwise.
+ * @return 1 if the #spart is inhibited, 0 otherwise.
  */
 __attribute__((always_inline)) INLINE static int spart_is_inhibited(
     const struct spart *sp, const struct engine *e) {
@@ -505,7 +517,7 @@ __attribute__((always_inline)) INLINE static int sink_is_inhibited(
  *
  * @param bp The #bpart.
  * @param e The #engine containing information about the current time.
- * @return 1 if the #part is inhibited, 0 otherwise.
+ * @return 1 if the #bpart is inhibited, 0 otherwise.
  */
 __attribute__((always_inline)) INLINE static int bpart_is_inhibited(
     const struct bpart *bp, const struct engine *e) {
