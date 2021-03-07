@@ -578,10 +578,10 @@ void part_create_mpi_types(void) {
   struct gpart gpl;
   struct gpart_foreign gpf;
 
-  const int lengths_l[4] = {sizeof(gpl.x),        /* pos */
-                            sizeof(gpl.mass),     /* mass */
-                            sizeof(gpl.time_bin), /* bin */
-                            3 * sizeof(gpl.type)};
+  const int lengths_l[4] = {sizeof(gpl.x),         /* pos */
+                            sizeof(gpl.mass),      /* mass */
+                            sizeof(gpl.time_bin),  /* bin */
+                            3 * sizeof(gpl.type)}; /* type  + padding */
 
   const int offsets_l[4] = {
       ((char *)&gpl.x - (char *)&gpl) / sizeof(char),        /* pos */
@@ -589,29 +589,20 @@ void part_create_mpi_types(void) {
       ((char *)&gpl.time_bin - (char *)&gpl) / sizeof(char), /* bin */
       ((char *)&gpl.type - (char *)&gpl) / sizeof(char)};    /* type */
 
-  message("%d %d %d %d", lengths_l[0], lengths_l[1], lengths_l[2],
-          lengths_l[3]);
-  message("%d %d %d %d", offsets_l[0], offsets_l[1], offsets_l[2],
-          offsets_l[3]);
-
   if (MPI_Type_indexed(4, lengths_l, offsets_l, MPI_BYTE,
                        &gpart_send_mpi_type) != MPI_SUCCESS ||
       MPI_Type_commit(&gpart_send_mpi_type) != MPI_SUCCESS) {
     error("Failed to create MPI type for sending foreign gparts.");
   }
+  if (MPI_Type_create_resized(gpart_send_mpi_type, 0, sizeof(struct gpart),
+                              &gpart_send_mpi_type) != MPI_SUCCESS) {
+    error("Failed to resize MPI type for sending foreign gparts.");
+  }
 
-  MPI_Type_create_resized(gpart_send_mpi_type, 0, sizeof(struct gpart),
-                          &gpart_send_mpi_type);
-
-  long int lb, extent;
-  MPI_Type_get_extent(gpart_send_mpi_type, &lb, &extent);
-
-  message("lb=%ld extent=%ld", lb, extent);
-
-  const int lengths_f[4] = {sizeof(gpf.x),        /* pos */
-                            sizeof(gpf.mass),     /* mass */
-                            sizeof(gpf.time_bin), /* bin */
-                            3 * sizeof(gpf.type)};
+  const int lengths_f[4] = {sizeof(gpf.x),         /* pos */
+                            sizeof(gpf.mass),      /* mass */
+                            sizeof(gpf.time_bin),  /* bin */
+                            3 * sizeof(gpf.type)}; /* type  + padding */
 
   const int offsets_f[4] = {
       ((char *)&gpf.x - (char *)&gpf) / sizeof(char),        /* pos */
@@ -619,15 +610,15 @@ void part_create_mpi_types(void) {
       ((char *)&gpf.time_bin - (char *)&gpf) / sizeof(char), /* bin */
       ((char *)&gpf.type - (char *)&gpf) / sizeof(char)};    /* type */
 
-  message("%d %d %d %d", lengths_f[0], lengths_f[1], lengths_f[2],
-          lengths_f[3]);
-  message("%d %d %d %d", offsets_f[0], offsets_f[1], offsets_f[2],
-          offsets_f[3]);
-
   if (MPI_Type_indexed(4, lengths_f, offsets_f, MPI_BYTE,
                        &gpart_recv_mpi_type) != MPI_SUCCESS ||
       MPI_Type_commit(&gpart_recv_mpi_type) != MPI_SUCCESS) {
     error("Failed to create MPI type for receiving foreign gparts.");
+  }
+  if (MPI_Type_create_resized(gpart_recv_mpi_type, 0,
+                              sizeof(struct gpart_foreign),
+                              &gpart_recv_mpi_type) != MPI_SUCCESS) {
+    error("Failed to resize MPI type for receiving foreign gparts.");
   }
 
   if (MPI_Type_contiguous(sizeof(struct spart) / sizeof(unsigned char),
