@@ -2080,7 +2080,7 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
           count = t->ci->grav.count;
           size = count * sizeof(struct gpart);
           type = gpart_recv_mpi_type;
-          buff = t->ci->grav.parts;
+          buff = t->ci->grav.parts_foreign;
 
         } else if (t->subtype == task_subtype_spart) {
 
