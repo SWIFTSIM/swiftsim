@@ -591,7 +591,10 @@ void *runner_main(void *data) {
           runner_do_cooling(r, t->ci, 1);
           break;
         case task_type_star_formation:
-          runner_do_star_formation_branch(r, t->ci, 1);
+          runner_do_star_formation(r, t->ci, 1);
+          break;
+        case task_type_star_formation_sink:
+          runner_do_star_formation_sink(r, t->ci, 1);
           break;
         case task_type_stars_resort:
           runner_do_stars_resort(r, t->ci, 1);

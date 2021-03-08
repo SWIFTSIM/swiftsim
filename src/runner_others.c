@@ -185,7 +185,7 @@ void runner_do_cooling(struct runner *r, struct cell *c, int timer) {
  * @param c cell
  * @param timer 1 if the time is to be recorded.
  */
-void runner_do_sink_star_formation(struct runner *r, struct cell *c,
+void runner_do_star_formation_sink(struct runner *r, struct cell *c,
                                    int timer) {
 
   struct engine *e = r->e;
@@ -219,7 +219,7 @@ void runner_do_sink_star_formation(struct runner *r, struct cell *c,
         struct cell *restrict cp = c->progeny[k];
 
         /* Do the recursion */
-        runner_do_sink_star_formation(r, cp, 0);
+        runner_do_star_formation_sink(r, cp, 0);
 
         /* Update the h_max */
         c->stars.h_max = max(c->stars.h_max, cp->stars.h_max);
@@ -498,21 +498,6 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
   }
 
   if (timer) TIMER_TOC(timer_do_star_formation);
-}
-
-/**
- * @brief Pick the correct star formation method depending on the simulation
- */
-void runner_do_star_formation_branch(struct runner *r, struct cell *c,
-                                     int timer) {
-  struct engine *e = r->e;
-
-  /* Pick the star formation between the standard model and the sink one. */
-  if (e->policy & engine_policy_sinks) {
-    runner_do_sink_star_formation(r, c, timer);
-  } else {
-    runner_do_star_formation(r, c, timer);
-  }
 }
 
 /**
