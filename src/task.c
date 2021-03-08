@@ -87,6 +87,7 @@ const char *taskID_names[task_type_count] = {
     "star_formation",
     "star_formation_in",
     "star_formation_out",
+    "star_formation_sink",
     "logger",
     "stars_in",
     "stars_out",
@@ -226,6 +227,7 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
       break;
 
     case task_type_star_formation:
+    case task_type_star_formation_sink:
     case task_type_sink_formation:
       return task_action_all;
 
@@ -674,6 +676,12 @@ void task_unlock(struct task *t) {
       cell_gunlocktree(ci);
       break;
 
+    case task_type_star_formation_sink:
+      cell_sink_unlocktree(ci);
+      cell_sunlocktree(ci);
+      cell_gunlocktree(ci);
+      break;
+
     case task_type_sink_formation:
       cell_unlocktree(ci);
       cell_sink_unlocktree(ci);
@@ -1040,6 +1048,21 @@ int task_lock(struct task *t) {
       }
       if (cell_glocktree(ci) != 0) {
         cell_unlocktree(ci);
+        cell_sunlocktree(ci);
+        return 0;
+      }
+      break;
+
+    case task_type_star_formation_sink:
+      /* Lock the gas, gravity and star particles */
+      if (ci->sinks.hold || ci->stars.hold || ci->grav.phold) return 0;
+      if (cell_sink_locktree(ci) != 0) return 0;
+      if (cell_slocktree(ci) != 0) {
+        cell_sink_unlocktree(ci);
+        return 0;
+      }
+      if (cell_glocktree(ci) != 0) {
+        cell_sink_unlocktree(ci);
         cell_sunlocktree(ci);
         return 0;
       }
@@ -1602,6 +1625,7 @@ enum task_categories task_get_category(const struct task *t) {
       return task_category_cooling;
 
     case task_type_star_formation:
+    case task_type_star_formation_sink:
       return task_category_star_formation;
 
     case task_type_sink_formation:

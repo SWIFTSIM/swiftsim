@@ -110,6 +110,34 @@ void cell_activate_star_formation_tasks(struct cell *c, struct scheduler *s,
 }
 
 /**
+ * @brief Activate the star formation task from the sink as well as the resorting of stars
+ *
+ * Must be called at the top-level in the tree (where the SF task is...)
+ *
+ * @param c The (top-level) #cell.
+ * @param s The #scheduler.
+ * @param with_feedback Are we running with feedback?
+ */
+void cell_activate_star_formation_sink_tasks(struct cell *c, struct scheduler *s,
+                                             const int with_feedback) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (c->depth != 0) error("Function should be called at the top-level only");
+#endif
+
+  /* Have we already unskipped that task? */
+  if (c->hydro.star_formation_sink->skip == 0) return;
+
+  /* Activate the star formation task */
+  scheduler_activate(s, c->hydro.star_formation_sink);
+
+  /* Activate the star resort tasks at whatever level they are */
+  if (with_feedback) {
+    cell_activate_star_resort_tasks(c, s);
+  }
+}
+
+/**
  * @brief Activate the sink formation task.
  *
  * Must be called at the top-level in the tree (where the SF task is...)
@@ -1778,6 +1806,9 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
     if (c->top->hydro.star_formation != NULL) {
       cell_activate_star_formation_tasks(c->top, s, with_feedback);
     }
+    if (c->top->hydro.star_formation_sink != NULL) {
+      cell_activate_star_formation_sink_tasks(c->top, s, with_feedback);
+    }
   }
 
   return rebuild;
@@ -1942,7 +1973,7 @@ int cell_unskip_gravity_tasks(struct cell *c, struct scheduler *s) {
  * @param c the #cell.
  * @param s the #scheduler.
  * @param with_star_formation Are we running with star formation switched on?
- * @param with_star_formation Are we running with star formation based on sink
+ * @param with_star_formation_sink Are we running with star formation based on sink
  * switched on?
  *
  * @return 1 If the space needs rebuilding. 0 otherwise.
@@ -2154,6 +2185,12 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
         (cj != NULL) && (cell_is_active_stars(cj, e) ||
                          (with_star_formation && cell_is_active_hydro(cj, e)));
 
+#ifdef SWIFT_DEBUG_CHECKS
+    if (with_star_formation_sink) {
+      error("TODO");
+    }
+#endif
+
     if (t->type == task_type_self && ci_active) {
       scheduler_activate(s, t);
     }
@@ -2203,6 +2240,12 @@ int cell_unskip_stars_tasks(struct cell *c, struct scheduler *s,
 #else
     const int ci_nodeID = nodeID;
     const int cj_nodeID = nodeID;
+#endif
+
+#ifdef SWIFT_DEBUG_CHECKS
+    if (with_star_formation_sink) {
+      error("TODO");
+    }
 #endif
 
     const int ci_active = cell_is_active_stars(ci, e) ||
