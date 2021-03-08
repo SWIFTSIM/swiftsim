@@ -699,6 +699,7 @@ void engine_addtasks_recv_stars(struct engine *e, struct cell *c,
     if (with_star_formation && c->hydro.count > 0) {
 
       /* Receive the stars only once the counts have been received */
+      scheduler_addunlock(s, t_sf_counts, c->stars.sorts);
       scheduler_addunlock(s, t_sf_counts, t_density);
 #ifdef EXTRA_STAR_LOOPS
       scheduler_addunlock(s, t_sf_counts, t_prep2);
@@ -2675,10 +2676,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 #ifdef EXTRA_STAR_LOOPS
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
                               t_star_prep1);
-#else
+#endif
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
                               t_star_feedback);
-#endif
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
@@ -2835,10 +2835,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 #ifdef EXTRA_STAR_LOOPS
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                               t_star_prep1);
-#else
+#endif
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                               t_star_feedback);
-#endif
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
@@ -3444,10 +3443,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 #ifdef EXTRA_STAR_LOOPS
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
                               t_star_prep1);
-#else
+#endif
           scheduler_addunlock(sched, ci->hydro.super->stars.sorts,
                               t_star_feedback);
-#endif
         }
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
 
@@ -3601,10 +3599,9 @@ void engine_make_extra_hydroloop_tasks_mapper(void *map_data, int num_elements,
 #ifdef EXTRA_STAR_LOOPS
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                               t_star_prep1);
-#else
+#endif
           scheduler_addunlock(sched, cj->hydro.super->stars.sorts,
                               t_star_feedback);
-#endif
         }
 
         if (with_black_holes && (bcount_i > 0 || bcount_j > 0)) {
