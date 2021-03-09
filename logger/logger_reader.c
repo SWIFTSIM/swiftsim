@@ -37,9 +37,10 @@
  * @param reader The #logger_reader.
  * @param basename The basename of the logger files.
  * @param verbose The verbose level.
+ * @param number_threads The number of threads to use.
  */
 void logger_reader_init(struct logger_reader *reader, const char *basename,
-                        int verbose) {
+                        int verbose, int number_threads) {
   if (verbose > 1) message("Initializing the reader.");
 
   /* Set the variable to the default values */
@@ -52,7 +53,7 @@ void logger_reader_init(struct logger_reader *reader, const char *basename,
 
   /* Initialize the reader variables. */
   reader->verbose = verbose;
-  logger_parameters_init(&reader->params, reader);
+  logger_parameters_init(&reader->params, reader, number_threads);
 
   /* Generate the logfile filename */
   char logfile_name[STRING_SIZE];
@@ -813,8 +814,7 @@ void logger_reader_read_all_particles_single_type(
 
   /* Create the threadpool */
   struct threadpool tp;
-  // TODO use parameter file
-  threadpool_init(&tp, 6);
+  threadpool_init(&tp, reader->params.number_threads);
 
   /* Read the particles */
   threadpool_map(&tp, logger_reader_read_all_particles_single_type_mapper, NULL,
