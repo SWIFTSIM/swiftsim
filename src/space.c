@@ -1387,6 +1387,11 @@ void space_init(struct space *s, struct swift_params *params,
         "Running with star formation from sink but without spare g-particles. "
         "Increase 'Scheduler:cell_extra_gparts'.");
   }
+  if (with_sink && space_extra_sinks == 0) {
+    error(
+          "Running with star formation from sink but without spare sink-particles. "
+          "Increase 'Scheduler:cell_extra_sinks'.");
+  }
 
   /* Build the cells recursively. */
   if (!dry_run) space_regrid(s, verbose);
