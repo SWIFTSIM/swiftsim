@@ -44,7 +44,7 @@ INLINE static void sink_props_init(struct sink_props *sp,
                                    const struct cosmology *cosmo) {
 
   sp->cut_off_radius =
-      parser_get_param_float(params, "DefaultSink:cut_off_radius");
+      parser_get_param_float(params, "GEARSink:cut_off_radius");
 }
 
 /**
