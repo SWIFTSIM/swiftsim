@@ -111,7 +111,8 @@ void cell_activate_star_formation_tasks(struct cell *c, struct scheduler *s,
 }
 
 /**
- * @brief Activate the star formation task from the sink as well as the resorting of stars
+ * @brief Activate the star formation task from the sink as well as the
+ * resorting of stars
  *
  * Must be called at the top-level in the tree (where the SF task is...)
  *
@@ -119,7 +120,8 @@ void cell_activate_star_formation_tasks(struct cell *c, struct scheduler *s,
  * @param s The #scheduler.
  * @param with_feedback Are we running with feedback?
  */
-void cell_activate_star_formation_sink_tasks(struct cell *c, struct scheduler *s,
+void cell_activate_star_formation_sink_tasks(struct cell *c,
+                                             struct scheduler *s,
                                              const int with_feedback) {
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -1974,8 +1976,8 @@ int cell_unskip_gravity_tasks(struct cell *c, struct scheduler *s) {
  * @param c the #cell.
  * @param s the #scheduler.
  * @param with_star_formation Are we running with star formation switched on?
- * @param with_star_formation_sink Are we running with star formation based on sink
- * switched on?
+ * @param with_star_formation_sink Are we running with star formation based on
+ * sink switched on?
  *
  * @return 1 If the space needs rebuilding. 0 otherwise.
  */

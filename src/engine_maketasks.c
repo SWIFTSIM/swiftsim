@@ -974,7 +974,6 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
         (c->hydro.count > 0 || c->sinks.count > 0)) {
       c->hydro.star_formation_sink = scheduler_addtask(
           s, task_type_star_formation_sink, task_subtype_none, 0, 0, c, NULL);
-
     }
 
     /* hydro.sink_formation plays the role of a ghost => always created */
@@ -1030,7 +1029,8 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
       /* Subgrid tasks: star formation from sinks */
       if (with_star_formation_sink &&
           (c->hydro.count > 0 || c->sinks.count > 0)) {
-        scheduler_addunlock(s, kick2_or_logger, c->top->hydro.star_formation_sink);
+        scheduler_addunlock(s, kick2_or_logger,
+                            c->top->hydro.star_formation_sink);
         scheduler_addunlock(s, c->top->hydro.star_formation_sink, c->timestep);
       }
 
@@ -1276,7 +1276,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
       star_resort_cell = c;
 
       c->hydro.stars_resort = scheduler_addtask(
-                                                s, task_type_stars_resort, task_subtype_none, 0, 0, c, NULL);
+          s, task_type_stars_resort, task_subtype_none, 0, 0, c, NULL);
 
       scheduler_addunlock(s, c->top->hydro.star_formation,
                           c->hydro.stars_resort);
@@ -1359,8 +1359,8 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
                               /* implicit = */ 1, c, NULL);
 
         c->sinks.ghost =
-          scheduler_addtask(s, task_type_sink_ghost, task_subtype_none, 0,
-                            /* implicit = */ 1, c, NULL);
+            scheduler_addtask(s, task_type_sink_ghost, task_subtype_none, 0,
+                              /* implicit = */ 1, c, NULL);
 
         c->sinks.sink_out =
             scheduler_addtask(s, task_type_sink_out, task_subtype_none, 0,
@@ -1468,7 +1468,8 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
         /* Star formation from sinks */
         if (with_star_formation_sink &&
             (c->top->hydro.count > 0 || c->top->sinks.count > 0))
-          scheduler_addunlock(s, c->top->hydro.star_formation_sink, c->hydro.rt_in);
+          scheduler_addunlock(s, c->top->hydro.star_formation_sink,
+                              c->hydro.rt_in);
         if (with_feedback)
           scheduler_addunlock(s, c->stars.stars_out, c->hydro.rt_in);
 
