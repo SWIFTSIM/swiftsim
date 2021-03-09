@@ -14,4 +14,5 @@ then
     ./getIC.sh $filename
 fi
 
-../../swift --hydro --sinks --external-gravity --self-gravity --threads=8 isolated_galaxy.yml 2>&1 | tee output.log
+../../swift --hydro --sinks --stars --self-gravity --threads=8 isolated_galaxy.yml
+# 2>&1 | tee output.log
