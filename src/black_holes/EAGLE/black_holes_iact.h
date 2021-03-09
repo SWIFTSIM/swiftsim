@@ -281,10 +281,6 @@ runner_iact_nonsym_bh_gas_swallow(
 
   float wi;
 
-  /* Get r and 1/r. */
-  const float r_inv = 1.0f / sqrtf(r2);
-  const float r = r2 * r_inv;
-
   /* Compute the kernel function; note that r cannot be optimised
    * to r2 / sqrtf(r2) because of 1 / 0 behaviour. */
   const float r = sqrtf(r2);
