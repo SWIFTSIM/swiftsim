@@ -977,10 +977,9 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
 
     }
 
-    if (with_sinks && c->hydro.count > 0) {
-      c->hydro.sink_formation = scheduler_addtask(
-          s, task_type_sink_formation, task_subtype_none, 0, 0, c, NULL);
-    }
+    /* hydro.sink_formation plays the role of a ghost => always created */
+    c->hydro.sink_formation = scheduler_addtask(
+        s, task_type_sink_formation, task_subtype_none, 0, 0, c, NULL);
   }
 
   /* Are we in a super-cell ? */
@@ -1031,8 +1030,8 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
       /* Subgrid tasks: star formation from sinks */
       if (with_star_formation_sink &&
           (c->hydro.count > 0 || c->sinks.count > 0)) {
-        scheduler_addunlock(s, kick2_or_logger, c->top->hydro.star_formation);
-        scheduler_addunlock(s, c->top->hydro.star_formation, c->timestep);
+        scheduler_addunlock(s, kick2_or_logger, c->top->hydro.star_formation_sink);
+        scheduler_addunlock(s, c->top->hydro.star_formation_sink, c->timestep);
       }
 
       /* Time-step limiter */

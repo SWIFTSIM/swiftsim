@@ -198,7 +198,7 @@ INLINE static int sink_spawn_star(struct sink* sink, const struct engine* e,
                                   const struct phys_const* phys_const,
                                   const struct unit_system* restrict us) {
   const float random_number =
-    random_unit_interval(p->id, e->ti_current, random_number_star_formation);
+    random_unit_interval(sink->id, e->ti_current, random_number_star_formation);
 
   return random_number < 1e-3;
 }
@@ -222,6 +222,9 @@ INLINE static void sink_copy_properties_to_star(
     struct sink* sink, struct spart* sp, const struct engine* e,
     const struct sink_props* sink_props, const struct cosmology* cosmo,
     const int with_cosmology, const struct phys_const* phys_const,
-    const struct unit_system* restrict us) {}
+    const struct unit_system* restrict us) {
+
+  sp->h = sink->r_cut;
+}
 
 #endif /* SWIFT_GEAR_SINK_H */
