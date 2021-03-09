@@ -460,7 +460,7 @@ struct gpart *cell_add_gpart(struct engine *e, struct cell *c) {
   }
 
   /* Lock the top-level cell as we are going to operate on it */
-  //lock_lock(&top->grav.star_formation_lock);
+  // lock_lock(&top->grav.star_formation_lock);
 
   /* Are there any extra particles left? */
   if (top->grav.count == top->grav.count_total) {
@@ -468,7 +468,7 @@ struct gpart *cell_add_gpart(struct engine *e, struct cell *c) {
     message("We ran out of free gravity particles!");
 
     /* Release the local lock before exiting. */
-    //if (lock_unlock(&top->grav.star_formation_lock) != 0)
+    // if (lock_unlock(&top->grav.star_formation_lock) != 0)
     //  error("Failed to unlock the top-level cell.");
 
     atomic_inc(&e->forcerebuild);
