@@ -97,6 +97,11 @@ struct cell_hydro {
     /*! Task for cooling */
     struct task *cooling;
 
+    /*! Task for sorting the stars again after a SF event */
+    struct task *stars_resort;
+
+    union {
+
     /*! Task for star formation */
     struct task *star_formation;
 
@@ -105,11 +110,6 @@ struct cell_hydro {
 
     /*! Task for sink formation */
     struct task *sink_formation;
-
-    /*! Task for sorting the stars again after a SF event */
-    struct task *stars_resort;
-
-    union {
 
       /*! Radiative transfer ghost in task */
       struct task *rt_in;
