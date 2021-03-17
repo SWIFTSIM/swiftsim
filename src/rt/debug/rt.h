@@ -253,4 +253,14 @@ __attribute__((always_inline)) INLINE static void rt_tchem(
 
   rt_do_thermochemistry(p);
 }
+
+/**
+ * @brief Clean the allocated memory.
+ *
+ * @param props the #rt_props.
+ */
+__attribute__((always_inline)) INLINE static void rt_clean(struct rt_props* props) {
+
+  free(props);
+}
 #endif /* SWIFT_RT_DEBUG_H */
