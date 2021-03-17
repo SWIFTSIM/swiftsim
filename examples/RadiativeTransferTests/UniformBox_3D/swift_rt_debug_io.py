@@ -33,30 +33,6 @@ class RTGasData(object):
 
         self.RadiationAbsorbedTot = None
 
-        #  self.RTCalls_this_step = None
-        #  self.RTTotalCalls = None
-
-        #  self.neighbours_grad = None
-        #  self.neighcells_grad = None
-        #  self.nneigh_grad = None
-        #  self.neighbours_transport = None
-        #  self.neighcells_transport = None
-        #  self.nneigh_transport = None
-        #  self.this_cell = None
-
-        #  self.hydro_neighbours_grad = None
-        #  self.hydro_neighcells_grad = None
-        #  self.hydro_nneigh_grad = None
-        #  self.hydro_neighbours_transport = None
-        #  self.hydro_neighcells_transport = None
-        #  self.hydro_nneigh_transport = None
-        #  self.hydro_this_cell = None
-
-        #  self.h_grad = None
-        #  self.h_transport = None
-        #  self.h_hydro_grad = None
-        #  self.h_force = None
-
         return
 
 
@@ -75,9 +51,6 @@ class RTStarData(object):
         self.EmissionRateSet = None
 
         self.RadiationEmittedTot = None
-
-        #  self.RTCalls_this_step = None
-        #  self.RTTotalCalls = None
 
         return
 
