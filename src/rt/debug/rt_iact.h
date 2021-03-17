@@ -50,8 +50,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
   sd->radiation_emitted_tot += 1ULL;
 
   pd->iact_stars_inject += 1;
-  pd->radiation_received_tot += 1ULL;
-
+  pd->radiation_absorbed_tot += 1ULL;
 }
 
 /**

@@ -37,16 +37,16 @@ static void rt_debugging_end_of_step_stars_mapper(void *restrict map_data,
   struct spart *restrict sparts = (struct spart *)map_data;
   const struct engine *restrict e = (struct engine *)extra_data;
 
-  int injection_sum = 0;
-  int injection_sum_tot = 0;
+  int emission_sum = 0;
+  unsigned long long emission_sum_tot = 0;
   for (int k = 0; k < scount; k++) {
     struct spart *restrict sp = &sparts[k];
-    injection_sum += sp->rt_data.iact_hydro_inject;
-    injection_sum_tot += sp->rt_data.radiation_emitted_tot;
-    /* sp->rt_data.iact_hydro_inject = 0; */
+    emission_sum += sp->rt_data.iact_hydro_inject;
+    emission_sum_tot += sp->rt_data.radiation_emitted_tot;
+    sp->rt_data.iact_hydro_inject = 0;
   }
-  atomic_add(&e->rt_props->radiation_emitted_this_step, injection_sum);
-  atomic_add(&e->rt_props->radiation_emitted_tot, injection_sum_tot);
+  atomic_add(&e->rt_props->radiation_emitted_this_step, emission_sum);
+  atomic_add(&e->rt_props->radiation_emitted_tot, emission_sum_tot);
 }
 
 /**
@@ -59,16 +59,17 @@ static void rt_debugging_end_of_step_hydro_mapper(void *restrict map_data,
   struct part *restrict parts = (struct part *)map_data;
   const struct engine *restrict e = (struct engine *)extra_data;
 
-  int injection_sum = 0;
-  int injection_sum_tot = 0;
+  int absorption_sum = 0;
+  unsigned long long absorption_sum_tot = 0;
   for (int k = 0; k < count; k++) {
     struct part *restrict p = &parts[k];
-    injection_sum += p->rt_data.iact_stars_inject;
-    injection_sum_tot += p->rt_data.radiation_received_tot;
-    /* p->rt_data.iact_stars_inject = 0; */
+    absorption_sum += p->rt_data.iact_stars_inject;
+    absorption_sum_tot += p->rt_data.radiation_absorbed_tot;
+    /* Reset all values here in case particles won't be active next step */
+    p->rt_data.iact_stars_inject = 0;
   }
-  atomic_add(&e->rt_props->radiation_absorbed_this_step, injection_sum);
-  atomic_add(&e->rt_props->radiation_absorbed_tot, injection_sum_tot);
+  atomic_add(&e->rt_props->radiation_absorbed_this_step, absorption_sum);
+  atomic_add(&e->rt_props->radiation_absorbed_tot, absorption_sum_tot);
 }
 
 /**
@@ -81,7 +82,6 @@ static void rt_debugging_end_of_step_hydro_mapper(void *restrict map_data,
  */
 __attribute__((always_inline)) INLINE static void
 rt_debugging_checks_end_of_step(struct engine *e, int verbose) {
-  /* TODO: abusing verbose here */
 
   const ticks tic = getticks();
   struct space *s = e->s;
@@ -93,89 +93,35 @@ rt_debugging_checks_end_of_step(struct engine *e, int verbose) {
   e->rt_props->radiation_absorbed_this_step = 0ULL;
   e->rt_props->radiation_absorbed_tot = 0ULL;
 
-  if (s->nr_parts > 0) /* particle loop */
+  /* hydro particle loop */
+  if (s->nr_parts > 0)
     threadpool_map(&e->threadpool, rt_debugging_end_of_step_hydro_mapper,
                    s->parts, s->nr_parts, sizeof(struct part),
                    threadpool_auto_chunk_size, /*extra_data=*/e);
-  if (s->nr_sparts > 0) /* star particle loop */
+
+  /* star particle loop */
+  if (s->nr_sparts > 0)
     threadpool_map(&e->threadpool, rt_debugging_end_of_step_stars_mapper,
                    s->sparts, s->nr_sparts, sizeof(struct spart),
                    threadpool_auto_chunk_size, /*extra_data=*/e);
 
-  unsigned int absorption_sum = 0;
-  unsigned long long absorption_sum_tot = 0;
-  for (size_t k = 0; k < s->nr_parts; k++) {
-    struct part *restrict p = &s->parts[k];
-    absorption_sum += p->rt_data.iact_stars_inject;
-    absorption_sum_tot += p->rt_data.radiation_received_tot;
-    if (verbose) p->rt_data.iact_stars_inject = 0;
-  }
-
-  unsigned int emission_sum = 0;
-  unsigned long long emission_sum_tot = 0;
-  for (size_t k = 0; k < s->nr_sparts; k++) {
-    struct spart *restrict sp = &s->sparts[k];
-    emission_sum += sp->rt_data.iact_hydro_inject;
-    emission_sum_tot += sp->rt_data.radiation_emitted_tot;
-    if (verbose) sp->rt_data.iact_hydro_inject = 0;
-  }
-
-  message(
-      "\n"
-      "CALL %d\n"
-      "parts: %12ld; sparts: %12ld\n"
-      "  This step: star emission %12u/%12u; gas absorption %12u/%12u\n"
-      "Since start: star emission %12llu/%12llu; gas absorption %12llu/%12llu",
-      verbose, 
-      s->nr_parts, s->nr_sparts, 
-      e->rt_props->radiation_emitted_this_step, emission_sum,
-      e->rt_props->radiation_absorbed_this_step, absorption_sum, 
-      e->rt_props->radiation_emitted_tot, emission_sum_tot,
-      e->rt_props->radiation_absorbed_tot, absorption_sum_tot
-      );
-  fflush(stdout);
-
   /* Have we accidentally invented or deleted some radiation somewhere? */
-  /* if ((e->rt_props->radiation_emitted_this_step != */
-  /*      e->rt_props->radiation_absorbed_this_step) || */
-  /*     (e->rt_props->radiation_emitted_tot != */
-  /*      e->rt_props->radiation_absorbed_tot)) */
-  /*   error( */
-        /* "Emitted and absorbed radiation vary.\n"); */
-        /* "  This step: star emission %12d; gas absorption %12d\n" */
-        /* "Since start: star emission %12d; gas absorption %12d", */
-        /* e->rt_props->radiation_emitted_this_step, */
-        /* e->rt_props->radiation_absorbed_this_step, */
-        /* e->rt_props->radiation_emitted_tot, */
-        /* e->rt_props->radiation_absorbed_tot); */
-  fflush(stdout);
-
-  if (e->step == 185) error("ending here");
+  if ((e->rt_props->radiation_emitted_this_step !=
+       e->rt_props->radiation_absorbed_this_step) ||
+      (e->rt_props->radiation_emitted_tot !=
+       e->rt_props->radiation_absorbed_tot))
+    error(
+        "Emitted and absorbed radiation vary.\n"
+        "  This step: star emission %12d; gas absorption %12d\n"
+        "Since start: star emission %12lld; gas absorption %12lld",
+        e->rt_props->radiation_emitted_this_step,
+        e->rt_props->radiation_absorbed_this_step,
+        e->rt_props->radiation_emitted_tot,
+        e->rt_props->radiation_absorbed_tot);
 
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
             clocks_getunit());
-
-
-  if (!verbose && e->step==184){
-    /* dump particle file */
-
-    FILE *soutfilep = fopen("spart_dump.txt", "w");
-
-    for (size_t k = 0; k < s->nr_sparts; k++) {
-      struct spart *restrict sp = &s->sparts[k];
-      fprintf(soutfilep, "%18lld %12d\n", sp->id, sp->rt_data.iact_hydro_inject);
-    }
-    fclose(soutfilep);
-
-    FILE *poutfilep = fopen("part_dump.txt", "w");
-
-    for (size_t k = 0; k < s->nr_parts; k++) {
-      struct part *restrict p = &s->parts[k];
-      fprintf(poutfilep, "%18lld %12d\n", p->id, p->rt_data.iact_stars_inject);
-    }
-    fclose(poutfilep);
-  }
 }
 
 /**

@@ -2306,17 +2306,8 @@ void engine_step(struct engine *e) {
 
   /* Start all the tasks. */
   TIMER_TIC;
-#ifdef RT_DEBUG
-  /* if we're running the debug RT scheme, do some checks every step */
-  if (e->policy & engine_policy_rt)
-    rt_debugging_checks_end_of_step(e, 1);
-#endif
   engine_launch(e, "tasks");
-#ifdef RT_DEBUG
-  /* if we're running the debug RT scheme, do some checks every step */
-  if (e->policy & engine_policy_rt)
-    rt_debugging_checks_end_of_step(e, 0);
-#endif
+
   TIMER_TOC(timer_runners);
 
   /* Now record the CPU times used by the tasks. */
@@ -2388,6 +2379,11 @@ void engine_step(struct engine *e) {
   space_check_unskip_flags(e->s);
 #endif
 
+#if defined(SWIFT_DEBUG_CHECKS) && defined RT_DEBUG
+  /* if we're running the debug RT scheme, do some checks after every step */
+  if (e->policy & engine_policy_rt) rt_debugging_checks_end_of_step(e, 0);
+#endif
+
   /* Collect information about the next time-step */
   engine_collect_end_of_step(e, 1);
   e->forcerebuild = e->collect_group1.forcerebuild;
@@ -2403,12 +2399,6 @@ void engine_step(struct engine *e) {
 
   if (e->ti_end_min == e->ti_current && e->ti_end_min < max_nr_timesteps)
     error("Obtained a time-step of size 0");
-
-/* #ifdef RT_DEBUG */
-/*   [> if we're running the debug RT scheme, do some checks every step <] */
-/*   if (e->policy & engine_policy_rt) */
-/*     rt_debugging_checks_end_of_step(e, e->verbose); */
-/* #endif */
 
 #endif /* def SWIFT_DEBUG_CHECKS */
 

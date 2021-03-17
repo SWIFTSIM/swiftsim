@@ -46,8 +46,9 @@ __attribute__((always_inline)) INLINE static void rt_init_part(
 __attribute__((always_inline)) INLINE static void rt_reset_part(
     struct part* restrict p) {
 
-  /* reset this here as well to test that you're resetting it at the correct place! */
-  p->rt_data.iact_stars_inject = 0; 
+  /* reset this here as well as in the rt_debugging_checks_end_of_step()
+   * routine to test task dependencies are done right */
+  p->rt_data.iact_stars_inject = 0;
 
   p->rt_data.calls_iact_gradient = 0;
   p->rt_data.calls_iact_transport = 0;
@@ -67,7 +68,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
 
   rt_init_part(p);
   rt_reset_part(p);
-  p->rt_data.radiation_received_tot = 0;
+  p->rt_data.radiation_absorbed_tot = 0ULL;
 }
 
 /**
@@ -91,7 +92,8 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
 
   /* reset everything */
 
-  /* reset this here as well to test that you're resetting it at the correct place! */
+  /* reset this here as well as in the rt_debugging_checks_end_of_step()
+   * routine to test task dependencies are done right */
   sp->rt_data.iact_hydro_inject = 0;
 
   sp->rt_data.emission_rate_set = 0;
@@ -106,7 +108,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
 
   rt_init_spart(sp);
   rt_reset_spart(sp);
-  sp->rt_data.radiation_emitted_tot = 0;
+  sp->rt_data.radiation_emitted_tot = 0ULL;
 }
 
 /**
