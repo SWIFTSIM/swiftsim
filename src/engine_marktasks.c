@@ -1348,8 +1348,11 @@ void engine_marktasks_mapper(void *map_data, int num_elements,
     }
 
     /* Radiative transfer implicit tasks */
-    else if (t->type == task_type_rt_in ||
-             t->type == task_type_rt_transport_out ||
+    else if (t->type == task_type_rt_in) {
+      if (rt_should_do_unskip_cell(t->ci, e)) scheduler_activate(s, t);
+    }
+
+    else if ( t->type == task_type_rt_transport_out ||
              t->type == task_type_rt_out) {
       if (cell_is_active_hydro(t->ci, e)) scheduler_activate(s, t);
     }
