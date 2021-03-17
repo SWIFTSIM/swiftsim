@@ -46,9 +46,9 @@ __attribute__((always_inline)) INLINE static void rt_init_part(
 __attribute__((always_inline)) INLINE static void rt_reset_part(
     struct part* restrict p) {
 
-  p->rt_data.iact_stars_inject =
-      0; /* reset this here as well to test that you're resetting it at the
-            correct place! */
+  /* reset this here as well to test that you're resetting it at the correct place! */
+  p->rt_data.iact_stars_inject = 0; 
+
   p->rt_data.calls_iact_gradient = 0;
   p->rt_data.calls_iact_transport = 0;
   p->rt_data.injection_check = 0;
@@ -90,9 +90,10 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
     struct spart* restrict sp) {
 
   /* reset everything */
-  sp->rt_data.iact_hydro_inject =
-      0; /* reset this here as well to test that you're resetting it at the
-            correct place! */
+
+  /* reset this here as well to test that you're resetting it at the correct place! */
+  sp->rt_data.iact_hydro_inject = 0;
+
   sp->rt_data.emission_rate_set = 0;
   sp->rt_data.injection_check = 0;
 }
