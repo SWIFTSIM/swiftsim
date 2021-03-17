@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-#--------------------------------------------------
+# --------------------------------------------------
 # 'Module' containing RT I/O routines for the RT
 # debugging scheme
-#--------------------------------------------------
+# --------------------------------------------------
 
 
 import os
@@ -43,7 +43,7 @@ class RTGasData(object):
         #  self.neighcells_transport = None
         #  self.nneigh_transport = None
         #  self.this_cell = None
- 
+
         #  self.hydro_neighbours_grad = None
         #  self.hydro_neighcells_grad = None
         #  self.hydro_nneigh_grad = None
@@ -103,9 +103,8 @@ class Rundata(object):
 
     def __init__(self):
         self.hydro_controlled_injection = False
-        
-        return
 
+        return
 
 
 def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
@@ -143,40 +142,42 @@ def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
     ls = os.listdir()
     hdf5files = []
     for f in ls:
-        if f.startswith(prefix+"_") and f.endswith(".hdf5"):
+        if f.startswith(prefix + "_") and f.endswith(".hdf5"):
             hdf5files.append(f)
 
     if len(hdf5files) == 0:
-        raise IOError("No "+prefix+"_XXXX.hdf5 files found in this directory")
+        raise IOError("No " + prefix + "_XXXX.hdf5 files found in this directory")
 
     hdf5files.sort()
 
-
-    #--------------------------------------
+    # --------------------------------------
     # Get global data from first snapshot
-    #--------------------------------------
+    # --------------------------------------
 
     rundata = Rundata()
     firstfile = hdf5files[0]
-    F = h5py.File(firstfile, 'r')
+    F = h5py.File(firstfile, "r")
 
     try:
         scheme = str(F["SubgridScheme"].attrs["RT Scheme"])
     except KeyError:
-        print("These tests only work for the debug RT scheme. Compile swift --with-rt=debug")
+        print(
+            "These tests only work for the debug RT scheme. Compile swift --with-rt=debug"
+        )
         F.close()
         quit()
 
     if "debug" not in scheme:
-        raise ValueError("These tests only work for the debug RT scheme. Compile swift --with-rt=debug")
+        raise ValueError(
+            "These tests only work for the debug RT scheme. Compile swift --with-rt=debug"
+        )
 
     if "hydro controlled" in scheme:
         rundata.hydro_controlled_injection = True
     F.close()
 
-
     for f in hdf5files:
-        snapnrstr = f[len(prefix)+1:len(prefix)+5]
+        snapnrstr = f[len(prefix) + 1 : len(prefix) + 5]
         snapnr = int(snapnrstr)
 
         if skip_snap_zero and snapnr == 0:
@@ -187,10 +188,10 @@ def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
         newsnap = RTSnapData()
         newsnap.snapnr = snapnr
 
-        F = h5py.File(f, 'r')
+        F = h5py.File(f, "r")
         newsnap.boxsize = F["Header"].attrs["BoxSize"]
         newsnap.ncells = F["Cells"]
-        Gas = F['PartType0']
+        Gas = F["PartType0"]
         ids = Gas["ParticleIDs"][:]
         inds = np.argsort(ids)
 
@@ -208,8 +209,7 @@ def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
 
         newsnap.gas.RadiationAbsorbedTot = Gas["RTRadAbsorbedTot"][:][inds]
 
-
-        Stars = F['PartType4']
+        Stars = F["PartType4"]
         ids = Stars["ParticleIDs"][:]
         inds = np.argsort(ids)
 
