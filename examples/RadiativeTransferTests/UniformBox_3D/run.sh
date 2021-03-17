@@ -17,4 +17,4 @@ fi
 echo "running sanity checks"
 python3 ./rt_sanity_checks.py
 echo "running checks for uniform box test"
-python3 ./rt_uniform_checks.py
+python3 ./rt_uniform_box_checks.py
