@@ -586,11 +586,6 @@ int main(int argc, char *argv[]) {
         "(even if configured --with-feedback=none)");
   }
 
-#ifndef STARS_GEAR
-  /* Temporary, this dependency will be removed later */
-  error(
-      "Error: Cannot use radiative transfer without GEAR star model for now\n");
-#endif
 #ifdef WITH_MPI
   /* Temporary, this will be removed in due time */
   error("Error: Cannot use radiative transfer with MPI\n");
