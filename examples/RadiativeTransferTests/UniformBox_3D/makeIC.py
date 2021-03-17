@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-#---------------------------------------------------------------------
-# Create a uniform grid of hydro particles and a smaller box of 
+# ---------------------------------------------------------------------
+# Create a uniform grid of hydro particles and a smaller box of
 # star particles in the center of the box. The main idea here is that
 # there are some hydro particles that have no star neighbours.
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
 from swiftsimio import Writer
 from swiftsimio.units import cosmo_units
@@ -29,19 +29,19 @@ ds = 0.2 * boxsize / n_s
 
 # Generate hydro coordinates
 for i in range(n_p):
-    x = (i+0.5)*dx
+    x = (i + 0.5) * dx
     for j in range(n_p):
-        y = (j+0.5)*dx
+        y = (j + 0.5) * dx
         for k in range(n_p):
             z = (k + 0.5) * dx
             xp.append(np.array([x, y, z], dtype=np.float))
 
 # Generate star coordinates
-for i in range(n_s): 
+for i in range(n_s):
     # factor 0.52 below: shift particles a bit so they don't overlap with hydro
-    x = 0.4 * boxsize + (i+0.52)*ds
+    x = 0.4 * boxsize + (i + 0.52) * ds
     for j in range(n_s):
-        y = 0.4 * boxsize + (j + 0.52)*ds
+        y = 0.4 * boxsize + (j + 0.52) * ds
         for k in range(n_s):
             z = 0.4 * boxsize + (k + 0.52) * ds
             xs.append(np.array([x, y, z], dtype=np.float))
@@ -60,7 +60,7 @@ w.stars.coordinates = xs
 
 # Random velocities from 0 to 1 km/s
 w.gas.velocities = np.zeros(xp.shape) * (unyt.km / unyt.s)
-w.stars.velocities = np.zeros(xs.shape)* (unyt.km / unyt.s)
+w.stars.velocities = np.zeros(xs.shape) * (unyt.km / unyt.s)
 
 # Generate uniform masses as 10^6 solar masses for each particle
 w.gas.masses = np.ones(xp.shape[0], dtype=float) * (1e6 * unyt.msun)
