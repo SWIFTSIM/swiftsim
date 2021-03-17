@@ -1398,7 +1398,7 @@ void engine_make_hierarchical_tasks_hydro(struct engine *e, struct cell *c,
         if (with_feedback)
           scheduler_addunlock(s, c->stars.stars_out, c->hydro.rt_in);
         /* TODO: check/add dependencies from Loic's new sink SF tasks */
- 
+
         /* RT ghost out task */
         c->hydro.rt_out =
             scheduler_addtask(s, task_type_rt_out, task_subtype_none, 0,

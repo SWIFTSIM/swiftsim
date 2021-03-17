@@ -131,10 +131,11 @@ __attribute__((always_inline)) INLINE static int rt_should_do_unskip_cell(
     const struct cell *c, const struct engine *e) {
   /* whether it's hydro controlled or not, we need to check for hydro
    * activity at the top level. We also need to check for star activity
-   * so we can activate the rt_in implicit tasks to catch dependencies 
-   * before the injection and not be overwritten by work in star density 
+   * so we can activate the rt_in implicit tasks to catch dependencies
+   * before the injection and not be overwritten by work in star density
    * ghosts. */
-  return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) || cell_is_active_stars(c, e));
+  return ((cell_is_active_hydro(c, e) && (c->hydro.count > 0)) ||
+          cell_is_active_stars(c, e));
 }
 
 #endif /* SWIFT_RT_ACTIVE_H */

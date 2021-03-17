@@ -2910,7 +2910,7 @@ int cell_unskip_rt_tasks(struct cell *c, struct scheduler *s) {
 
     /* You need to pay attention to stars as well when unskipping rt_in
      * to gather dependencies from the feedback loop */
-    if (rt_should_do_unskip_cell(c, e)){
+    if (rt_should_do_unskip_cell(c, e)) {
       if (c->hydro.rt_in != NULL) scheduler_activate(s, c->hydro.rt_in);
     }
 

@@ -63,9 +63,9 @@ INLINE static int rt_write_particles(const struct part* parts,
       "RTThermochemistryDone", INT, 1, UNIT_CONV_NO_UNITS, 0, parts,
       rt_data.thermochem_done, "How many times rt_tchem was called");
   list[7] = io_make_output_field(
-      "RTRadReceivedTot", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0, parts,
-      rt_data.radiation_received_tot,
-      "Radiation received by this part during its lifetime");
+      "RTRadAbsorbedTot", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0, parts,
+      rt_data.radiation_absorbed_tot,
+      "Radiation absorbed by this part during its lifetime");
 
   return 8;
 }
