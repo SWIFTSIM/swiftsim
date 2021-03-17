@@ -84,6 +84,20 @@ __attribute__((always_inline)) INLINE static void rt_split_part(struct part* p,
                                                                 double n) {}
 
 /**
+ * @brief Exception handle a hydro part not having any neighbours in ghost task
+ *
+ * @param p The #part.
+ */
+__attribute__((always_inline)) INLINE static void rt_part_has_no_neighbours(struct part* p) {};
+
+/**
+ * @brief Exception handle a star part not having any neighbours in ghost task
+ *
+ * @param p The #part.
+ */
+__attribute__((always_inline)) INLINE static void rt_spart_has_no_neighbours(struct spart* sp) {};
+
+/**
  * @brief Update the photon number of a particle, i.e. compute
  *  E^{n+1} = E^n + dt * dE_* / dt. This function finalises
  *  the injection step.
