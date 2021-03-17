@@ -258,22 +258,6 @@ def check_all_stars_is_equal(snapdata):
                 if break_on_diff:
                     quit()
 
-        # Calls to star interactions
-        #  prev = snapdata[compare.snapnr - 2]
-        #  if (ref.stars.RTCalls_this_step != compare.stars.RTCalls_this_step - prev.stars.RTCalls_this_step).any():
-        #  if (ref.stars.RTCalls_this_step != compare.stars.RTCalls_this_step).any():
-        #      print("- Comparing stars", ref.snapnr, "->", compare.snapnr)
-        #      print("--- Calls to stars interactions vary")
-        #
-        #      if print_diffs:
-        #          for i in range(npart):
-        #              if ref.stars.RTCalls_this_step[i] != compare.stars.RTCalls_this_step[i]:
-        #              #  if ref.stars.RTCalls_this_step[i] != compare.stars.RTCalls_this_step[i] - prev.stars.RTCalls_this_step[i]:
-        #                  print("-----", ref.stars.IDs[i], ref.stars.RTCalls_this_step[i], compare.stars.RTCalls_this_step[i])
-        #
-        #      if break_on_diff:
-        #          quit()
-
     return
 
 
