@@ -2307,7 +2307,6 @@ void engine_step(struct engine *e) {
   /* Start all the tasks. */
   TIMER_TIC;
   engine_launch(e, "tasks");
-
   TIMER_TOC(timer_runners);
 
   /* Now record the CPU times used by the tasks. */
@@ -2399,8 +2398,7 @@ void engine_step(struct engine *e) {
 
   if (e->ti_end_min == e->ti_current && e->ti_end_min < max_nr_timesteps)
     error("Obtained a time-step of size 0");
-
-#endif /* def SWIFT_DEBUG_CHECKS */
+#endif
 
   /********************************************************/
   /* OK, we are done with the regular stuff. Time for i/o */
