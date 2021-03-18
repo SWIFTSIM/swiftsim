@@ -255,12 +255,10 @@ __attribute__((always_inline)) INLINE static void rt_tchem(
 }
 
 /**
- * @brief Clean the allocated memory.
+ * @brief Clean the allocated memory inside the RT properties struct.
  *
  * @param props the #rt_props.
  */
-__attribute__((always_inline)) INLINE static void rt_clean(struct rt_props* props) {
+__attribute__((always_inline)) INLINE static void rt_clean(struct rt_props* props) {}
 
-  free(props);
-}
 #endif /* SWIFT_RT_DEBUG_H */
