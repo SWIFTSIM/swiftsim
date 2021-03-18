@@ -150,12 +150,10 @@ __attribute__((always_inline)) INLINE static void rt_tchem(
     struct part* restrict p) {}
 
 /**
- * @brief Clean the allocated memory.
+ * @brief Clean the allocated memory inside the RT properties struct.
  *
  * @param props the #rt_props.
  */
-__attribute__((always_inline)) INLINE static void rt_clean(struct rt_props* props) {
+__attribute__((always_inline)) INLINE static void rt_clean(struct rt_props* props) {}
 
-  free(props);
-}
 #endif /* SWIFT_RT_M1_H */
