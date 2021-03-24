@@ -143,8 +143,8 @@ static void engine_dumper_init(struct engine *e) {
  */
 void engine_config(int restart, int fof, struct engine *e,
                    struct swift_params *params, int nr_nodes, int nodeID,
-                   int nr_task_threads, int nr_pool_threads, int with_aff, 
-		   int verbose, const char *restart_file) {
+                   int nr_task_threads, int nr_pool_threads, int with_aff,
+                   int verbose, const char *restart_file) {
 
   /* Store the values and initialise global fields. */
   e->nodeID = nodeID;

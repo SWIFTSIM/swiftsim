@@ -299,14 +299,16 @@ int main(int argc, char *argv[]) {
                  handle_cmdparam, (intptr_t)&cmdps, 0),
       OPT_BOOLEAN('r', "restart", &restart, "Continue using restart files.",
                   NULL, 0, 0),
-      OPT_INTEGER('t', "threads", &nr_threads,
-                  "The number of task threads to use on each MPI rank. Defaults to "
-                  "1 if not specified.",
-                  NULL, 0, 0),
+      OPT_INTEGER(
+          't', "threads", &nr_threads,
+          "The number of task threads to use on each MPI rank. Defaults to "
+          "1 if not specified.",
+          NULL, 0, 0),
       OPT_INTEGER(0, "pool-threads", &nr_pool_threads,
-		  "The number of threads to use on each MPI rank for the threadpool operations. "
-		  "Defaults to the numbers of task threads if not specified.",
-		  NULL, 0, 0),
+                  "The number of threads to use on each MPI rank for the "
+                  "threadpool operations. "
+                  "Defaults to the numbers of task threads if not specified.",
+                  NULL, 0, 0),
       OPT_INTEGER('T', "timers", &with_verbose_timers,
                   "Print timers every time-step.", NULL, 0, 0),
       OPT_INTEGER('v', "verbose", &verbose,
@@ -364,7 +366,7 @@ int main(int argc, char *argv[]) {
     with_cooling = 1;
     with_feedback = 1;
   }
-  
+
   /* Deal with thread numbers */
   if (nr_pool_threads == -1) nr_pool_threads = nr_threads;
 
