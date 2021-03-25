@@ -110,6 +110,8 @@ static INLINE void tracers_after_timestep(
       xp->tracers_data.maximum_temperature_time = time;
     }
   }
+
+  if (temperature > 1e12) error("Problematic temperature reached!");
 }
 
 /**
