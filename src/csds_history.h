@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_LOGGER_HISTORY_H
-#define SWIFT_LOGGER_HISTORY_H
+#ifndef SWIFT_CSDS_HISTORY_H
+#define SWIFT_CSDS_HISTORY_H
 
 #include "../config.h"
 
@@ -29,7 +29,7 @@
 #include "lock.h"
 #include "part_type.h"
 
-#if defined(WITH_LOGGER)
+#if defined(WITH_CSDS)
 
 /* Forward declaration */
 struct xpart;
@@ -44,7 +44,7 @@ struct swift_params;
  * @brief Contains the information concerning
  * a particle for the index files.
  */
-struct logger_index_data {
+struct csds_index_data {
   /* Id of the particle. */
   int64_t id;
 
@@ -56,7 +56,7 @@ struct logger_index_data {
  * @brief Structure dealing with the changes in the number
  * of particles (e.g. creation, deletion, transformation).
  */
-struct logger_history {
+struct csds_history {
 
   /* Number of elements currently stored */
   uint64_t size;
@@ -65,22 +65,22 @@ struct logger_history {
   size_t capacity;
 
   /* Buffer containing the particles */
-  struct logger_index_data *data;
+  struct csds_index_data *data;
 
   /*! Spin lock for logging events. */
   swift_lock_type lock;
 };
 
-void logger_history_init(struct logger_history *hist);
-void logger_history_reset(struct logger_history *hist);
-void logger_history_free(struct logger_history *hist);
-void logger_history_log(struct logger_history *hist, const long long id,
+void csds_history_init(struct csds_history *hist);
+void csds_history_reset(struct csds_history *hist);
+void csds_history_free(struct csds_history *hist);
+void csds_history_log(struct csds_history *hist, const long long id,
                         const uint64_t last_offset);
-void logger_history_write(struct logger_history *hist, struct engine *e,
+void csds_history_write(struct csds_history *hist, struct engine *e,
                           FILE *f);
 
-void logger_history_dump(const struct logger_history *hist, FILE *stream);
-void logger_history_restore(struct logger_history *hist, FILE *stream);
+void csds_history_dump(const struct csds_history *hist, FILE *stream);
+void csds_history_restore(struct csds_history *hist, FILE *stream);
 
-#endif  // WITH_LOGGER
-#endif  // SWIFT_LOGGER_HISTORY_H
+#endif  // WITH_CSDS
+#endif  // SWIFT_CSDS_HISTORY_H

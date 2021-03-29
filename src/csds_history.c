@@ -18,59 +18,59 @@
  ******************************************************************************/
 
 /* Include header */
-#include "logger_history.h"
+#include "csds_history.h"
 
 /* Standard includes */
 #include <string.h>
 
 /* Local include */
-#include "logger_io.h"
+#include "csds_io.h"
 #include "part.h"
 
-#if defined(WITH_LOGGER)
+#if defined(WITH_CSDS)
 
-#define LOGGER_HISTORY_INIT_SIZE 1024
+#define CSDS_HISTORY_INIT_SIZE 1024
 
 /**
  * @brief Initialize the structure for the first time.
  *
- * @param hist The #logger_history.
+ * @param hist The #csds_history.
  */
-void logger_history_init(struct logger_history *hist) {
+void csds_history_init(struct csds_history *hist) {
 
   /* Set the counters to their initial value */
   hist->size = 0;
-  hist->capacity = LOGGER_HISTORY_INIT_SIZE;
+  hist->capacity = CSDS_HISTORY_INIT_SIZE;
   lock_init(&hist->lock);
 
-  hist->data = (struct logger_index_data *)swift_malloc(
-      "logger_history",
-      sizeof(struct logger_index_data) * LOGGER_HISTORY_INIT_SIZE);
+  hist->data = (struct csds_index_data *)swift_malloc(
+      "csds_history",
+      sizeof(struct csds_index_data) * CSDS_HISTORY_INIT_SIZE);
   if (hist->data == NULL) {
-    error("Failed to allocate memory for the logger_history.");
+    error("Failed to allocate memory for the csds_history.");
   }
 }
 
 /**
  * @brief Reset the structure (for example just after a dump).
  *
- * @param hist The #logger_history.
+ * @param hist The #csds_history.
  * @param params The #swift_params.
  * @param already_allocated Are the data already allocated? (Need to free it?)
  */
-void logger_history_reset(struct logger_history *hist) {
+void csds_history_reset(struct csds_history *hist) {
 
-  swift_free("logger_history", hist->data);
+  swift_free("csds_history", hist->data);
 
-  logger_history_init(hist);
+  csds_history_init(hist);
 }
 
 /**
  * @brief Free the structure (e.g. just before exiting).
  *
- * @param hist The #logger_history.
+ * @param hist The #csds_history.
  */
-void logger_history_free(struct logger_history *hist) {
+void csds_history_free(struct csds_history *hist) {
   /* Set the counters to 0 */
   hist->size = 0;
   hist->capacity = 0;
@@ -78,18 +78,18 @@ void logger_history_free(struct logger_history *hist) {
 
   /* Free the memory */
   if (hist->data != NULL) {
-    swift_free("logger_history", hist->data);
+    swift_free("csds_history", hist->data);
     hist->data = NULL;
   }
 }
 
 /**
- * @brief Log a the particle information into the #logger_history.
+ * @brief Log a the particle information into the #csds_history.
  *
- * @param hist The #logger_history.
+ * @param hist The #csds_history.
  * @param data The data from the particle.
  */
-void logger_history_log(struct logger_history *hist, const long long id,
+void csds_history_log(struct csds_history *hist, const long long id,
                         const uint64_t last_offset) {
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -99,7 +99,7 @@ void logger_history_log(struct logger_history *hist, const long long id,
         "Are you trying to log a gpart linked to another type of particles?");
   }
 #endif
-  const struct logger_index_data data = {id, last_offset};
+  const struct csds_index_data data = {id, last_offset};
 
   /* Lock the history */
   lock_lock(&hist->lock);
@@ -107,19 +107,19 @@ void logger_history_log(struct logger_history *hist, const long long id,
   /* Check if enough space is left */
   if (hist->size == hist->capacity) {
     /* Compute the previous amount of memory */
-    const size_t memsize = sizeof(struct logger_index_data) * hist->capacity;
+    const size_t memsize = sizeof(struct csds_index_data) * hist->capacity;
 
     /* Increase the capacity of the array */
     hist->capacity *= 2;
 
     /* Allocate the new array and copy the content of the previous one */
-    struct logger_index_data *tmp =
-        (struct logger_index_data *)swift_malloc("logger_history", 2 * memsize);
+    struct csds_index_data *tmp =
+        (struct csds_index_data *)swift_malloc("csds_history", 2 * memsize);
 
     memcpy(tmp, hist->data, memsize);
 
     /* Free the previous array and switch the pointers */
-    swift_free("logger_history", hist->data);
+    swift_free("csds_history", hist->data);
     hist->data = tmp;
   }
 
@@ -131,17 +131,17 @@ void logger_history_log(struct logger_history *hist, const long long id,
 
   /* Unlock the history. */
   if (lock_unlock(&hist->lock) != 0)
-    error("Impossible to unlock logger history.");
+    error("Impossible to unlock CSDS history.");
 }
 
 /**
  * @brief Write the history into an index file.
  *
- * @param hist The #logger_history.
+ * @param hist The #csds_history.
  * @param e The #engine.
  * @param f The file where to write the history.
  */
-void logger_history_write(struct logger_history *hist, struct engine *e,
+void csds_history_write(struct csds_history *hist, struct engine *e,
                           FILE *f) {
   /* Generate the structures for writing the index file */
   const int num_fields = 2;
@@ -154,32 +154,32 @@ void logger_history_write(struct logger_history *hist, struct engine *e,
 
   write_index_array(e, f, list, num_fields, hist->size);
 
-  /* Reset the logger history */
-  logger_history_reset(hist);
+  /* Reset the csds history */
+  csds_history_reset(hist);
 }
 
-void logger_history_dump(const struct logger_history *hist, FILE *stream) {
-  restart_write_blocks((void *)hist, sizeof(struct logger_history), 1, stream,
-                       "logger_history", "logger_history");
+void csds_history_dump(const struct csds_history *hist, FILE *stream) {
+  restart_write_blocks((void *)hist, sizeof(struct csds_history), 1, stream,
+                       "csds_history", "csds_history");
 
   if (hist->size != 0)
-    restart_write_blocks((void *)hist->data, sizeof(struct logger_index_data),
-                         hist->size, stream, "logger_history_data",
-                         "logger_history_data");
+    restart_write_blocks((void *)hist->data, sizeof(struct csds_index_data),
+                         hist->size, stream, "csds_history_data",
+                         "csds_history_data");
 }
 
-void logger_history_restore(struct logger_history *hist, FILE *stream) {
-  restart_read_blocks((void *)hist, sizeof(struct logger_history), 1, stream,
-                      NULL, "logger_history");
+void csds_history_restore(struct csds_history *hist, FILE *stream) {
+  restart_read_blocks((void *)hist, sizeof(struct csds_history), 1, stream,
+                      NULL, "csds_history");
 
-  hist->data = malloc(hist->capacity * sizeof(struct logger_index_data));
+  hist->data = malloc(hist->capacity * sizeof(struct csds_index_data));
   if (hist->data == NULL) {
-    error("Failed to allocate array for logger history");
+    error("Failed to allocate array for CSDS history");
   }
 
   if (hist->size != 0)
-    restart_read_blocks((void *)hist->data, sizeof(struct logger_index_data),
-                        hist->size, stream, NULL, "logger_history_data");
+    restart_read_blocks((void *)hist->data, sizeof(struct csds_index_data),
+                        hist->size, stream, NULL, "csds_history_data");
 }
 
-#endif  // WITH_LOGGER
+#endif  // WITH_CSDS

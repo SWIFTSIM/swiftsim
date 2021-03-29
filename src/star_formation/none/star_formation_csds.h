@@ -16,74 +16,77 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_NONE_STARS_LOGGER_H
-#define SWIFT_NONE_STARS_LOGGER_H
+#ifndef SWIFT_STAR_FORMATION_NONE_STAR_FORMATION_CSDS_H
+#define SWIFT_STAR_FORMATION_NONE_STAR_FORMATION_CSDS_H
 
-#ifdef WITH_LOGGER
+#include "csds_io.h"
 
-#include "logger_io.h"
+#ifdef WITH_CSDS
 
-/**
+/*
  * List of all possible mask.
- * Outside the module, only stars_logger_field_count is used.
+ * Outside the module, only star_formation_csds_field_count is used.
  */
-enum stars_logger_fields {
-  stars_logger_field_count,
+enum star_formation_csds_fields_spart {
+  star_formation_csds_field_count = 0,
 };
 
 /* Name of each possible mask. */
-extern const char *stars_logger_field_names[stars_logger_field_count];
+extern const char
+    *star_formation_csds_field_names[star_formation_csds_field_count];
 
 /**
- * @brief Initialize the logger.
+ * @brief Initialize the csds for the #spart.
  *
  * WARNING: The order should be the same in all the functions and
- * #stars_logger_fields!
+ * #star_formation_csds_fields_spart!
  *
  * @param mask_data Data for each type of mask.
  *
  * @return Number of masks used.
  */
-INLINE static int stars_logger_writer_populate_mask_data(
+INLINE static int star_formation_csds_writer_populate_mask_data(
     struct mask_data *mask_data) {
-  return 0;
+  return star_formation_csds_field_count;
 }
 
 /**
- * @brief Generates the mask and compute the size of the record.
+ * @brief Generates the mask and compute the size of the record for the #spart.
  *
  * WARNING: The order should be the same in all the functions and
- * #stars_logger_fields!
+ * #star_formation_csds_fields_spart!
  *
- * @param masks The list of masks (same order than in #stars_logger_init).
- * @param part The #spart that will be written.
+ * @param masks The list of masks (same order than in
+ * #star_formation_csds_writer_populate_mask_data_spart).
+ * @param spart The #spart that will be written.
  * @param write_all Are we forcing to write all the fields?
  *
  * @param buffer_size (out) The requested size for the buffer.
  * @param mask (out) The mask that will be written.
  */
-INLINE static void stars_logger_compute_size_and_mask(
-    const struct mask_data *masks, const struct spart *part,
+INLINE static void star_formation_csds_compute_size_and_mask(
+    const struct mask_data *masks, const struct spart *spart,
     const int write_all, size_t *buffer_size, unsigned int *mask) {}
 
 /**
- * @brief Write a particle to the logger.
+ * @brief Write a #spart to the csds.
  *
  * WARNING: The order should be the same in all the functions and
- * #stars_logger_fields!
+ * #hydro_csds_fields_spart!
  *
- * @param masks The list of masks (same order than in #stars_logger_init).
- * @param p The #spart to write.
+ * @param masks The list of masks (same order than in
+ * #star_formation_csds_writer_populate_mask_data_spart).
+ * @param sp The #spart to write.
  * @param mask The mask to use for this record.
  * @param buff The buffer where to write the particle.
  *
  * @return The buffer after the data.
  */
-INLINE static char *stars_logger_write_particle(
-    const struct mask_data *mask_data, const struct spart *p,
+INLINE static char *star_formation_csds_write_sparticle(
+    const struct mask_data *mask_data, const struct spart *sp,
     unsigned int *mask, char *buff) {
-  return NULL;
+  return buff;
 }
 
-#endif /* WITH_LOGGER */
-#endif /* SWIFT_NONE_STARS_LOGGER_H */
+#endif  // WITH_CSDS
+#endif  // SWIFT_STAR_FORMATION_NONE_STAR_FORMATION_CSDS_H

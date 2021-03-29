@@ -16,31 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_CHEMISTRY_LOGGER_H
-#define SWIFT_CHEMISTRY_LOGGER_H
 
-/* Config parameters. */
 #include "../config.h"
 
-/* Local includes */
-#include "align.h"
-#include "logger.h"
-#include "part_type.h"
-#include "timeline.h"
+#ifdef WITH_CSDS
 
-/* Import the right function */
-#if defined(CHEMISTRY_NONE)
-#include "./chemistry/none/chemistry_logger.h"
-#elif defined(CHEMISTRY_GEAR)
-#include "./chemistry/GEAR/chemistry_logger.h"
-#elif defined(CHEMISTRY_GEAR_DIFFUSION)
-#error TODO
-#elif defined(CHEMISTRY_QLA)
-#error TODO
-#elif defined(CHEMISTRY_EAGLE)
-#error TODO
-#else
-#error "Invalid choice of chemistry function."
+#include "hydro_csds.h"
+
+const char *hydro_csds_field_names[hydro_csds_field_count] = {
+    "Coordinates",      "Velocities", "Accelerations", "Masses",
+    "SmoothingLengths", "Entropies",  "ParticleIDs",   "Densities"};
+
 #endif
-
-#endif /* SWIFT_CHEMISTRY_LOGGER_H */

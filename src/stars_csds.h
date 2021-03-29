@@ -16,16 +16,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
+#ifndef SWIFT_STARS_CSDS_H
+#define SWIFT_STARS_CSDS_H
 
+/* Include config */
 #include "../config.h"
 
-#ifdef WITH_LOGGER
+/* Local includes */
+#include "./const.h"
+#include "align.h"
+#include "csds.h"
+#include "part_type.h"
+#include "timeline.h"
 
-#include "stars_logger.h"
+/* Load the correct star type */
+#if defined(STARS_NONE)
+#error TODO
+#elif defined(STARS_BASIC)
+#include "./stars/Basic/stars_csds.h"
+#elif defined(STARS_EAGLE)
+#error TODO
+#elif defined(STARS_GEAR)
+#include "./stars/GEAR/stars_csds.h"
+#else
+#error "Invalid choice of star model"
+#endif
 
-const char *stars_logger_field_names[stars_logger_field_count] = {
-    "Coordinates",      "Velocities",  "Accelerations",     "Masses",
-    "SmoothingLengths", "ParticleIDs", "BirthScaleFactors",
-};
-
-#endif  // WITH_LOGGER
+#endif /* SWIFT_STARS_CSDS_H */

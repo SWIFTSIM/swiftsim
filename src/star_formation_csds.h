@@ -16,22 +16,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
+#ifndef SWIFT_STAR_FORMATION_PARTICLE_CSDS_H
+#define SWIFT_STAR_FORMATION_PARTICLE_CSDS_H
 
+/* Config parameters. */
 #include "../config.h"
 
-#ifdef WITH_LOGGER
-
-/* Include the particles */
+/* Local includes */
 #include "align.h"
-#include "hydro_part.h"
+#include "csds.h"
+#include "part_type.h"
+#include "timeline.h"
 
-/* Include the header */
-#include "hydro_logger.h"
+/* Import the right function */
+#if defined(STAR_FORMATION_NONE)
+#include "./star_formation/none/star_formation_csds.h"
+#elif defined(STAR_FORMATION_QLA)
+#error TODO
+#elif defined(STAR_FORMATION_EAGLE)
+#error TODO
+#elif defined(STAR_FORMATION_GEAR)
+#include "./star_formation/GEAR/star_formation_csds.h"
+#else
+#error "Invalid choice of star formation law"
+#endif
 
-const char *hydro_logger_field_names[hydro_logger_field_count] = {
-    "Coordinates", "Velocities",       "Accelerations",
-    "Masses",      "SmoothingLengths", "InternalEnergies",
-    "ParticleIDs", "Densities",        "SecondaryFields",
-};
-
-#endif  // WITH_LOGGER
+#endif /* SWIFT_STAR_FORMATION_PARTICLE_CSDS_H */

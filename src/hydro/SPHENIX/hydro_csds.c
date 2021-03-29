@@ -19,17 +19,19 @@
 
 #include "../config.h"
 
-#ifdef WITH_LOGGER
+#ifdef WITH_CSDS
 
-#include "chemistry_logger.h"
+/* Include the particles */
+#include "align.h"
+#include "hydro_part.h"
 
-const char
-    *chemistry_logger_field_names_part[chemistry_logger_field_part_count] = {
-        "ChemistryHydro",
+/* Include the header */
+#include "hydro_csds.h"
+
+const char *hydro_csds_field_names[hydro_csds_field_count] = {
+    "Coordinates", "Velocities",       "Accelerations",
+    "Masses",      "SmoothingLengths", "InternalEnergies",
+    "ParticleIDs", "Densities",        "SecondaryFields",
 };
-const char
-    *chemistry_logger_field_names_spart[chemistry_logger_field_spart_count] = {
-        "MetalMassFractions",
-};
 
-#endif  // WITH_LOGGER
+#endif  // WITH_CSDS

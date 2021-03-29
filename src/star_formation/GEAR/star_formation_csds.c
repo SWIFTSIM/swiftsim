@@ -19,11 +19,14 @@
 
 #include "../config.h"
 
-#ifdef WITH_LOGGER
+#ifdef WITH_CSDS
 
-#include "star_formation_particle_logger.h"
+#include "star_formation_csds.h"
 
+/* Name of each possible mask. */
 const char
-    *star_formation_logger_field_names[star_formation_logger_field_count] = {};
+    *star_formation_csds_field_names[star_formation_csds_field_count] = {
+        "StarFormation",
+};
 
-#endif  // WITH_LOGGER
+#endif  // WITH_CSDS

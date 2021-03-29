@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_LOGGER_IO_H
-#define SWIFT_LOGGER_IO_H
+#ifndef SWIFT_CSDS_IO_H
+#define SWIFT_CSDS_IO_H
 
 /* Config parameters. */
 #include "../config.h"
 
-#ifdef WITH_LOGGER
+#ifdef WITH_CSDS
 
 /* Includes. */
 #include "engine.h"
@@ -75,7 +75,7 @@ void write_index_array(const struct engine* e, FILE* f, struct io_props* props,
  *
  * @return The new mask_data.
  */
-INLINE static struct mask_data logger_create_mask_entry(const char* name,
+INLINE static struct mask_data csds_create_mask_entry(const char* name,
                                                         int size) {
   struct mask_data mask;
   /* Copy the fields */
@@ -96,7 +96,7 @@ INLINE static struct mask_data logger_create_mask_entry(const char* name,
  *
  * @return The mask of the current field.
  */
-INLINE static size_t logger_add_field_to_mask(struct mask_data mask_data,
+INLINE static size_t csds_add_field_to_mask(struct mask_data mask_data,
                                               size_t* buffer_size) {
 
   *buffer_size += mask_data.size;
@@ -105,12 +105,12 @@ INLINE static size_t logger_add_field_to_mask(struct mask_data mask_data,
 
 /**
  * @brief Check if a field should be written according to the mask set in
- * #logger_add_field_to_mask.
+ * #csds_add_field_to_mask.
  *
  * @param mask_data The mask_data corresponding to the current field.
  * @param mask The mask used for the current record.
  */
-INLINE static int logger_should_write_field(struct mask_data mask_data,
+INLINE static int csds_should_write_field(struct mask_data mask_data,
                                             unsigned int* mask) {
 
   const int test = mask_data.mask & *mask;
@@ -121,8 +121,8 @@ INLINE static int logger_should_write_field(struct mask_data mask_data,
   return test;
 }
 
-void logger_write_index_file(struct logger_writer* log, struct engine* e);
-void logger_write_description(struct logger_writer* log, struct engine* e);
+void csds_write_index_file(struct csds_writer* log, struct engine* e);
+void csds_write_description(struct csds_writer* log, struct engine* e);
 
 /**
  * @brief Specifies which particle fields to write to a dataset
@@ -143,7 +143,7 @@ __attribute__((always_inline)) INLINE static int hydro_write_index(
                            parts, id, "Field not used");
   list[1] =
       io_make_output_field("Offset", UINT64, 1, UNIT_CONV_NO_UNITS, 0.f, xparts,
-                           logger_data.last_offset, "Field not used");
+                           csds_data.last_offset, "Field not used");
 
   return 2;
 }
@@ -165,7 +165,7 @@ __attribute__((always_inline)) INLINE static int darkmatter_write_index(
                            gparts, id_or_neg_offset, "Field not used");
   list[1] =
       io_make_output_field("Offset", UINT64, 1, UNIT_CONV_NO_UNITS, 0.f, gparts,
-                           logger_data.last_offset, "Field not used");
+                           csds_data.last_offset, "Field not used");
 
   return 2;
 }
@@ -187,11 +187,11 @@ __attribute__((always_inline)) INLINE static int stars_write_index(
                            sparts, id, "Field not used");
   list[1] =
       io_make_output_field("Offset", UINT64, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
-                           logger_data.last_offset, "Field not used");
+                           csds_data.last_offset, "Field not used");
 
   return 2;
 }
 
 #endif
 
-#endif /* SWIFT_LOGGER_IO_H */
+#endif /* SWIFT_CSDS_IO_H */

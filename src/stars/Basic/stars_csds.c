@@ -19,12 +19,13 @@
 
 #include "../config.h"
 
-#ifdef WITH_LOGGER
+#ifdef WITH_CSDS
 
-#include "gravity_logger.h"
+#include "stars_csds.h"
 
-const char *gravity_logger_field_names[gravity_logger_field_count] = {
-    "Coordinates", "Velocities", "Accelerations", "Masses", "ParticleIDs",
+const char *stars_csds_field_names[stars_csds_field_count] = {
+    "Coordinates", "Velocities",       "Accelerations",
+    "Masses",      "SmoothingLengths", "ParticleIDs",
 };
 
-#endif  // WITH_LOGGER
+#endif  // WITH_CSDS

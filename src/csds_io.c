@@ -21,7 +21,7 @@
 /* Config parameters. */
 #include "../config.h"
 
-#if defined(WITH_LOGGER)
+#if defined(WITH_CSDS)
 
 /* Some standard headers. */
 #include "common_io.h"
@@ -37,7 +37,7 @@
 #include <unistd.h>
 
 /* This object's header. */
-#include "logger_io.h"
+#include "csds_io.h"
 
 /* Local includes. */
 #include "chemistry_io.h"
@@ -132,7 +132,7 @@ void write_index_array(const struct engine* e, FILE* f, struct io_props* props,
  * @param e The #engine.
  * @param f The opened file to use.
  */
-void logger_write_history(struct logger_history* history, struct engine* e,
+void csds_write_history(struct csds_history* history, struct engine* e,
                           FILE* f) {
 
   /* Write the number of particles. */
@@ -144,14 +144,14 @@ void logger_write_history(struct logger_history* history, struct engine* e,
 
   /* Write the data */
   for (int i = 0; i < swift_type_count; i++) {
-    logger_history_write(&history[i], e, f);
+    csds_history_write(&history[i], e, f);
   }
 }
 
 /**
- * @brief Writes a logger index file
+ * @brief Writes a csds index file
  *
- * @param log The #logger_writer.
+ * @param log The #csds_writer.
  * @param e The engine containing all the system.
  *
  * Creates an output file and writes the offset and id of particles
@@ -165,7 +165,7 @@ void logger_write_history(struct logger_history* history, struct engine* e,
  * Calls #error() if an error occurs.
  *
  */
-void logger_write_index_file(struct logger_writer* log, struct engine* e) {
+void csds_write_index_file(struct csds_writer* log, struct engine* e) {
 
   const int with_DM_background = e->s->with_DM_background;
 
@@ -212,7 +212,7 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
   snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s_%04i_%04i.index",
-           e->logger->base_name, engine_rank, log->index_file_number);
+           e->csds->base_name, engine_rank, log->index_file_number);
   log->index_file_number++;
 
   /* Open file (include reading for mmap) */
@@ -384,7 +384,7 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
 
     if (num_fields != 2) {
       error(
-          "The code expects only two fields per particle type for the logger");
+          "The code expects only two fields per particle type for the CSDS");
     }
 
     /* Write ids */
@@ -401,10 +401,10 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
   }
 
   /* Write the particles created */
-  logger_write_history(log->history_new, e, f);
+  csds_write_history(log->history_new, e, f);
 
   /* Write the particles removed */
-  logger_write_history(log->history_removed, e, f);
+  csds_write_history(log->history_removed, e, f);
 
   /* Close file */
   fclose(f);
@@ -413,10 +413,10 @@ void logger_write_index_file(struct logger_writer* log, struct engine* e) {
 /**
  * @brief Write the parameters into a yaml file.
  *
- * @params log The #logger.
+ * @params log The #csds.
  * @params e The #engine.
  */
-void logger_write_description(struct logger_writer* log, struct engine* e) {
+void csds_write_description(struct csds_writer* log, struct engine* e) {
 
   /* Only the master writes the description */
   if (e->nodeID != 0) {
@@ -425,7 +425,7 @@ void logger_write_description(struct logger_writer* log, struct engine* e) {
 
   /* File name */
   char fileName[FILENAME_BUFFER_SIZE];
-  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s.yml", e->logger->base_name);
+  snprintf(fileName, FILENAME_BUFFER_SIZE, "%.100s.yml", e->csds->base_name);
 
   /* Open file */
   FILE* f = NULL;
@@ -481,4 +481,4 @@ void logger_write_description(struct logger_writer* log, struct engine* e) {
   fclose(f);
 }
 
-#endif /* WITH_LOGGER */
+#endif /* WITH_CSDS */

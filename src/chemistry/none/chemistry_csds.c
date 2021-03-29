@@ -19,13 +19,13 @@
 
 #include "../config.h"
 
-#ifdef WITH_LOGGER
+#ifdef WITH_CSDS
 
-#include "stars_logger.h"
+#include "chemistry_csds.h"
 
-const char *stars_logger_field_names[stars_logger_field_count] = {
-    "Coordinates", "Velocities",       "Accelerations",
-    "Masses",      "SmoothingLengths", "ParticleIDs",
-};
+const char
+    *chemistry_csds_field_names_part[chemistry_csds_field_part_count] = {};
+const char *
+    chemistry_csds_field_names_spart[chemistry_csds_field_spart_count] = {};
 
-#endif  // WITH_LOGGER
+#endif  // WITH_CSDS
