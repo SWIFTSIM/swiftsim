@@ -16,17 +16,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
+#ifndef SWIFT_CHEMISTRY_CSDS_H
+#define SWIFT_CHEMISTRY_CSDS_H
 
+/* Config parameters. */
 #include "../config.h"
 
-#ifdef WITH_LOGGER
+/* Local includes */
+#include "align.h"
+#include "csds.h"
+#include "part_type.h"
+#include "timeline.h"
 
-#include "star_formation_particle_logger.h"
+/* Import the right function */
+#if defined(CHEMISTRY_NONE)
+#include "./chemistry/none/chemistry_csds.h"
+#elif defined(CHEMISTRY_GEAR)
+#include "./chemistry/GEAR/chemistry_csds.h"
+#elif defined(CHEMISTRY_GEAR_DIFFUSION)
+#error TODO
+#elif defined(CHEMISTRY_QLA)
+#error TODO
+#elif defined(CHEMISTRY_EAGLE)
+#error TODO
+#else
+#error "Invalid choice of chemistry function."
+#endif
 
-/* Name of each possible mask. */
-const char
-    *star_formation_logger_field_names[star_formation_logger_field_count] = {
-        "StarFormation",
-};
-
-#endif  // WITH_LOGGER
+#endif /* SWIFT_CHEMISTRY_CSDS_H */

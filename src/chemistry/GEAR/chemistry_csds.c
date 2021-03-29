@@ -16,26 +16,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_GRAVITY_LOGGER_H
-#define SWIFT_GRAVITY_LOGGER_H
 
-/* Config parameters. */
 #include "../config.h"
 
-/* Local headers. */
-#include "./const.h"
-#include "align.h"
-#include "logger.h"
-#include "part_type.h"
-#include "timeline.h"
+#ifdef WITH_CSDS
 
-/* Import the right functions */
-#if defined(DEFAULT_GRAVITY)
-#error TODO
-#elif defined(MULTI_SOFTENING_GRAVITY)
-#include "./gravity/MultiSoftening/gravity_logger.h"
-#else
-#error "Invalid choice of gravity variant"
-#endif
+#include "chemistry_csds.h"
 
-#endif /* SWIFT_GRAVITY_LOGGER_H */
+const char
+    *chemistry_csds_field_names_part[chemistry_csds_field_part_count] = {
+        "ChemistryHydro",
+};
+const char
+    *chemistry_csds_field_names_spart[chemistry_csds_field_spart_count] = {
+        "MetalMassFractions",
+};
+
+#endif  // WITH_CSDS

@@ -16,29 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_STAR_FORMATION_PARTICLE_LOGGER_H
-#define SWIFT_STAR_FORMATION_PARTICLE_LOGGER_H
 
-/* Config parameters. */
 #include "../config.h"
 
-/* Local includes */
-#include "align.h"
-#include "logger.h"
-#include "part_type.h"
-#include "timeline.h"
+#ifdef WITH_CSDS
 
-/* Import the right function */
-#if defined(STAR_FORMATION_NONE)
-#include "./star_formation/none/star_formation_particle_logger.h"
-#elif defined(STAR_FORMATION_QLA)
-#error TODO
-#elif defined(STAR_FORMATION_EAGLE)
-#error TODO
-#elif defined(STAR_FORMATION_GEAR)
-#include "./star_formation/GEAR/star_formation_particle_logger.h"
-#else
-#error "Invalid choice of star formation law"
-#endif
+#include "stars_csds.h"
 
-#endif /* SWIFT_STAR_FORMATION_PARTICLE_LOGGER_H */
+const char *stars_csds_field_names[stars_csds_field_count] = {
+    "Coordinates",      "Velocities",  "Accelerations",     "Masses",
+    "SmoothingLengths", "ParticleIDs", "BirthScaleFactors",
+};
+
+#endif  // WITH_CSDS

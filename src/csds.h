@@ -17,12 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_LOGGER_H
-#define SWIFT_LOGGER_H
+#ifndef SWIFT_CSDS_H
+#define SWIFT_CSDS_H
 
 #include "../config.h"
 
-#ifdef WITH_LOGGER
+#ifdef WITH_CSDS
 
 /* Includes. */
 #include "align.h"
@@ -30,7 +30,7 @@
 #include "dump.h"
 #include "error.h"
 #include "inline.h"
-#include "logger_history.h"
+#include "csds_history.h"
 #include "timeline.h"
 #include "units.h"
 
@@ -40,25 +40,25 @@ struct gpart;
 struct part;
 struct engine;
 
-#define logger_major_version 1
-#define logger_minor_version 1
+#define csds_major_version 1
+#define csds_minor_version 2
 /* Size of the strings. */
-#define logger_string_length 200
+#define csds_string_length 200
 
 /*
  * The two following defines need to correspond to the list's order
- * in logger_init_masks.
+ * in csds_init_masks.
  */
 /* Index of the special flags in the list of masks */
-#define logger_index_special_flags 0
+#define csds_index_special_flags 0
 /* Index of the timestamp in the list of masks */
-#define logger_index_timestamp 1
+#define csds_index_timestamp 1
 
 /**
- * Logger entries contain messages representing the particle data at a given
+ * Csds entries contain messages representing the particle data at a given
  * point in time during the simulation.
  *
- * The logger messages always start with an 8-byte header structured as
+ * The csds messages always start with an 8-byte header structured as
  * follows:
  *
  *   data: [ mask |                     offset                     ]
@@ -92,25 +92,25 @@ struct engine;
  * indicated that this is the first message for the given particle/timestamp.
  */
 
-enum logger_special_flags {
-  logger_flag_none = 0,        /* No flag */
-  logger_flag_change_type = 1, /* Flag for a change of particle type */
-  logger_flag_mpi_enter, /* Flag for a particle received from another  MPI rank
+enum csds_special_flags {
+  csds_flag_none = 0,        /* No flag */
+  csds_flag_change_type = 1, /* Flag for a change of particle type */
+  csds_flag_mpi_enter, /* Flag for a particle received from another  MPI rank
                           */
-  logger_flag_mpi_exit,  /* Flag for a particle sent to another MPI rank */
-  logger_flag_delete,    /* Flag for a deleted particle */
-  logger_flag_create,    /* Flag for a created particle */
+  csds_flag_mpi_exit,  /* Flag for a particle sent to another MPI rank */
+  csds_flag_delete,    /* Flag for a deleted particle */
+  csds_flag_create,    /* Flag for a created particle */
 } __attribute__((packed));
 
 /**
- * @brief structure containing global data for the particle logger.
+ * @brief structure containing global data for the particle csds.
  */
-struct logger_writer {
+struct csds_writer {
   /* Number of particle updates between log entries. */
   short int delta_step;
 
-  /* Logger basename. */
-  char base_name[logger_string_length];
+  /* Csds basename. */
+  char base_name[csds_string_length];
 
   struct {
     /* The total memory fraction reserved for the index files. */
@@ -124,10 +124,10 @@ struct logger_writer {
   int index_file_number;
 
   /* History of the new particles since the last index file. */
-  struct logger_history history_new[swift_type_count];
+  struct csds_history history_new[swift_type_count];
 
   /* History of the particles removed since the last index file. */
-  struct logger_history history_removed[swift_type_count];
+  struct csds_history history_removed[swift_type_count];
 
   /* Maximal number of particle stored in the history. */
   size_t maximal_size_history;
@@ -136,7 +136,7 @@ struct logger_writer {
    * logfile). */
   struct dump dump;
 
-  /* timestamp offset for logger. */
+  /* timestamp offset for csds. */
   size_t timestamp_offset;
 
   /* scaling factor when buffer is too small. */
@@ -146,9 +146,9 @@ struct logger_writer {
   int max_record_size;
 
   /* Description of all the fields that can be written. */
-  struct mask_data *logger_mask_data;
+  struct mask_data *csds_mask_data;
 
-  /* Pointer to the variable logger_mask_data for each module. */
+  /* Pointer to the variable csds_mask_data for each module. */
   struct {
     /* pointer for the hydro */
     struct mask_data *hydro;
@@ -169,8 +169,8 @@ struct logger_writer {
     struct mask_data *star_formation;
   } mask_data_pointers;
 
-  /* Number of elements in logger_mask_data. */
-  int logger_count_mask;
+  /* Number of elements in csds_mask_data. */
+  int csds_count_mask;
 
   /* Maximum size for a hydro record. */
   int max_size_record_part;
@@ -184,7 +184,7 @@ struct logger_writer {
 } SWIFT_STRUCT_ALIGN;
 
 /* required structure for each particle type. */
-struct logger_part_data {
+struct csds_part_data {
   /* Number of particle updates since last output. */
   int steps_since_last_output;
 
@@ -193,50 +193,50 @@ struct logger_part_data {
 };
 
 /* Function prototypes. */
-void logger_log_all_particles(struct logger_writer *log,
+void csds_log_all_particles(struct csds_writer *log,
                               const struct engine *e);
-void logger_log_part(struct logger_writer *log, const struct part *p,
+void csds_log_part(struct csds_writer *log, const struct part *p,
                      struct xpart *xp, const struct engine *e,
                      const int log_all_fields,
-                     const enum logger_special_flags flag, const int flag_data);
-void logger_log_parts(struct logger_writer *log, const struct part *p,
+                     const enum csds_special_flags flag, const int flag_data);
+void csds_log_parts(struct csds_writer *log, const struct part *p,
                       struct xpart *xp, int count, const struct engine *e,
                       const int log_all_fields,
-                      const enum logger_special_flags flag,
+                      const enum csds_special_flags flag,
                       const int flag_data);
-void logger_log_spart(struct logger_writer *log, struct spart *p,
+void csds_log_spart(struct csds_writer *log, struct spart *p,
                       const struct engine *e, const int log_all_fields,
-                      const enum logger_special_flags flag,
+                      const enum csds_special_flags flag,
                       const int flag_data);
-void logger_log_sparts(struct logger_writer *log, struct spart *sp, int count,
+void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
                        const struct engine *e, const int log_all_fields,
-                       const enum logger_special_flags flag,
+                       const enum csds_special_flags flag,
                        const int flag_data);
-void logger_log_gpart(struct logger_writer *log, struct gpart *p,
+void csds_log_gpart(struct csds_writer *log, struct gpart *p,
                       const struct engine *e, const int log_all_fields,
-                      const enum logger_special_flags flag,
+                      const enum csds_special_flags flag,
                       const int flag_data);
-void logger_log_gparts(struct logger_writer *log, struct gpart *gp, int count,
+void csds_log_gparts(struct csds_writer *log, struct gpart *gp, int count,
                        const struct engine *e, const int log_all_fields,
-                       const enum logger_special_flags flag,
+                       const enum csds_special_flags flag,
                        const int flag_data);
-void logger_init(struct logger_writer *log, const struct engine *e,
+void csds_init(struct csds_writer *log, const struct engine *e,
                  struct swift_params *params);
-void logger_free(struct logger_writer *log);
-void logger_log_timestamp(struct logger_writer *log, integertime_t t,
+void csds_free(struct csds_writer *log);
+void csds_log_timestamp(struct csds_writer *log, integertime_t t,
                           double time, size_t *offset);
-void logger_ensure_size(struct logger_writer *log, size_t total_nr_parts,
+void csds_ensure_size(struct csds_writer *log, size_t total_nr_parts,
                         size_t total_nr_gparts, size_t total_nr_sparts);
-void logger_write_file_header(struct logger_writer *log);
+void csds_write_file_header(struct csds_writer *log);
 
-int logger_read_part(const struct logger_writer *log, struct part *p,
+int csds_read_part(const struct csds_writer *log, struct part *p,
                      size_t *offset, const char *buff);
-int logger_read_gpart(const struct logger_writer *log, struct gpart *p,
+int csds_read_gpart(const struct csds_writer *log, struct gpart *p,
                       size_t *offset, const char *buff);
-int logger_read_timestamp(const struct logger_writer *log, integertime_t *t,
+int csds_read_timestamp(const struct csds_writer *log, integertime_t *t,
                           double *time, size_t *offset, const char *buff);
-void logger_struct_dump(const struct logger_writer *log, FILE *stream);
-void logger_struct_restore(struct logger_writer *log, FILE *stream);
+void csds_struct_dump(const struct csds_writer *log, FILE *stream);
+void csds_struct_restore(struct csds_writer *log, FILE *stream);
 
 /**
  * @brief Generate the data for the special flags.
@@ -244,17 +244,17 @@ void logger_struct_restore(struct logger_writer *log, FILE *stream);
  * @param flag The special flag to use.
  * @param flag_data The data to write in the record.
  */
-INLINE static uint32_t logger_pack_flags_and_data(
-    enum logger_special_flags flag, int flag_data) {
+INLINE static uint32_t csds_pack_flags_and_data(
+    enum csds_special_flags flag, int flag_data) {
 #ifdef SWIFT_DEBUG_CHECKS
   if (flag & 0xFFFFFF00) {
     error(
-        "The special flag in the particle logger cannot be larger than 1 "
+        "The special flag in the particle CSDS cannot be larger than 1 "
         "byte.");
   }
   if (flag_data & ~0xFFFFFF) {
     error(
-        "The data for the special flag in the particle logger cannot be larger "
+        "The data for the special flag in the particle CSDS cannot be larger "
         "than 3 bytes.");
   }
 #endif
@@ -262,30 +262,30 @@ INLINE static uint32_t logger_pack_flags_and_data(
 }
 
 /**
- * @brief Initialize the logger data for a particle.
+ * @brief Initialize the csds data for a particle.
  *
- * @param logger The #logger_part_data.
+ * @param csds The #csds_part_data.
  */
-INLINE static void logger_part_data_init(struct logger_part_data *logger) {
-  logger->last_offset = 0;
-  logger->steps_since_last_output = INT_MAX;
+INLINE static void csds_part_data_init(struct csds_part_data *csds) {
+  csds->last_offset = 0;
+  csds->steps_since_last_output = INT_MAX;
 }
 
 /**
  * @brief Should this particle write its data now ?
  *
- * @param logger_data The #logger_part_data of a particle.
- * @param log The #logger_writer.
+ * @param csds_data The #csds_part_data of a particle.
+ * @param log The #csds_writer.
  *
  * @return 1 if the particle should be writen, 0 otherwise.
  */
-__attribute__((always_inline)) INLINE static int logger_should_write(
-    const struct logger_part_data *logger_data,
-    const struct logger_writer *log) {
+__attribute__((always_inline)) INLINE static int csds_should_write(
+    const struct csds_part_data *csds_data,
+    const struct csds_writer *log) {
 
-  return (logger_data->steps_since_last_output > log->delta_step);
+  return (csds_data->steps_since_last_output > log->delta_step);
 }
 
-#endif /* WITH_LOGGER */
+#endif /* WITH_CSDS */
 
-#endif /* SWIFT_LOGGER_H */
+#endif /* SWIFT_CSDS_H */

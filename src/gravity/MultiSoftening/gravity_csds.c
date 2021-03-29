@@ -16,43 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_HYDRO_LOGGER_H
-#define SWIFT_HYDRO_LOGGER_H
 
-/* Config parameters. */
 #include "../config.h"
 
-/* Local includes */
-#include "align.h"
-#include "logger.h"
-#include "part_type.h"
-#include "timeline.h"
+#ifdef WITH_CSDS
 
-/* Import the right function */
-#if defined(MINIMAL_SPH)
-#error TODO
-#elif defined(GADGET2_SPH)
-#include "./hydro/Gadget2/hydro_logger.h"
-#elif defined(HOPKINS_PE_SPH)
-#error TODO
-#elif defined(HOPKINS_PU_SPH)
-#error TODO
-#elif defined(HOPKINS_PU_SPH_MONAGHAN)
-#error TODO
-#elif defined(PHANTOM_SPH)
-#error TODO
-#elif defined(GIZMO_MFV_SPH) || defined(GIZMO_MFM_SPH)
-#error TODO
-#elif defined(SHADOWFAX_SPH)
-#error TODO
-#elif defined(PLANETARY_SPH)
-#error TODO
-#elif defined(SPHENIX_SPH)
-#include "./hydro/SPHENIX/hydro_logger.h"
-#elif defined(ANARCHY_PU_SPH)
-#error TODO
-#else
-#error "Invalid choice of SPH variant"
-#endif
+#include "gravity_csds.h"
 
-#endif /* SWIFT_HYDRO_LOGGER_H */
+const char *gravity_csds_field_names[gravity_csds_field_count] = {
+    "Coordinates", "Velocities", "Accelerations", "Masses", "ParticleIDs",
+};
+
+#endif  // WITH_CSDS
