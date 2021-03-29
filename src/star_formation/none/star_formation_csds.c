@@ -21,7 +21,7 @@
 
 #ifdef WITH_CSDS
 
-#include "star_formation_particle_csds.h"
+#include "star_formation_csds.h"
 
 const char
     *star_formation_csds_field_names[star_formation_csds_field_count] = {};
