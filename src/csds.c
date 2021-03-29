@@ -1015,7 +1015,7 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (e->nodeID == 0) {
-    message("The csds contains the following masks:");
+    message("The CSDS contains the following masks:");
     for (int i = 0; i < log->csds_count_mask; i++) {
       message("%20s:\t mask=%03u\t size=%i", log->csds_mask_data[i].name,
               log->csds_mask_data[i].mask, log->csds_mask_data[i].size);
