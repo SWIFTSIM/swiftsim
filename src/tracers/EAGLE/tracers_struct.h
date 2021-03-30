@@ -49,6 +49,10 @@ struct tracers_xpart_data {
   /*! Density of the gas at the last AGN feedback event
    * (physical internal units) */
   float density_at_last_AGN_feedback_event;
+  
+  /*! Entropy of the gas at the last AGN feedback event
+   * (physical internal units) */
+  float entropy_at_last_AGN_feedback_event;
 
   /*! Total amount of AGN feedback energy received by this particle
    * (physical units) */
