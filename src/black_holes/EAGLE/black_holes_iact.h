@@ -673,7 +673,7 @@ runner_iact_nonsym_bh_gas_feedback(
     if (num_of_energy_inj_received_by_gas > 0) {
         
       /* Save gas density and entropy before feedback */
-      tracers_before_black_holes_feedback(pj, xpj);
+      tracers_before_black_holes_feedback(pj, xpj, cosmo->a);
 
       /* Compute new energy per unit mass of this particle
        * The energy the particle receives is proportional to the number of rays
