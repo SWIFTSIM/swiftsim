@@ -137,10 +137,10 @@ static INLINE void tracers_first_init_xpart(
   xp->tracers_data.hit_by_AGN_feedback = 0;
   xp->tracers_data.AGN_feedback_energy = 0.f;
   
-  xp->tracers_data.density_before_last_AGN_feedback_event = -1.f
-  xp->tracers_data.entropy_before_last_AGN_feedback_event = -1.f
-  xp->tracers_data.density_at_last_AGN_feedback_event = -1.f
-  xp->tracers_data.entropy_at_last_AGN_feedback_event = -1.f
+  xp->tracers_data.density_before_last_AGN_feedback_event = -1.f;
+  xp->tracers_data.entropy_before_last_AGN_feedback_event = -1.f;
+  xp->tracers_data.density_at_last_AGN_feedback_event = -1.f;
+  xp->tracers_data.entropy_at_last_AGN_feedback_event = -1.f;
 
   xp->tracers_data.last_AGN_injection_scale_factor = -1.f;
   xp->tracers_data.density_at_last_AGN_feedback_event = -1.f;
