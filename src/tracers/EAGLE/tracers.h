@@ -135,6 +135,12 @@ static INLINE void tracers_first_init_xpart(
   xp->tracers_data.hit_by_SNII_feedback = 0;
   xp->tracers_data.hit_by_AGN_feedback = 0;
   xp->tracers_data.AGN_feedback_energy = 0.f;
+  
+  xp->tracers_data.density_before_last_AGN_feedback_event = -1.f
+  xp->tracers_data.entropy_before_last_AGN_feedback_event = -1.f
+  xp->tracers_data.density_at_last_AGN_feedback_event = -1.f
+  xp->tracers_data.entropy_at_last_AGN_feedback_event = -1.f
+
   xp->tracers_data.last_AGN_injection_scale_factor = -1.f;
   xp->tracers_data.density_at_last_AGN_feedback_event = -1.f;
 }
@@ -148,6 +154,27 @@ static INLINE void tracers_first_init_xpart(
 static INLINE void tracers_after_feedback(struct xpart *xp) {
 
   xp->tracers_data.hit_by_SNII_feedback++;
+}
+
+/**
+ * @brief Update the particles' tracer data with values before an AGN feedback
+ * event. Note: this function is called in `black_holes_iact.h` before the
+ * particle data are updated.
+ *
+ * @param p Pointer to the basic particle data.
+ * @param xp The extended particle data.
+ * (internal physical units)
+ */
+static INLINE void tracers_before_black_holes_feedback(
+    const struct part *p, 
+    struct xpart *xp) {
+
+  xp->tracers_data.density_before_last_AGN_feedback_event =
+      hydro_get_physical_density(p);
+
+  xp->tracers_data.entropy_before_last_AGN_feedback_event =
+      hydro_get_physical_entropy(p);
+
 }
 
 /**
