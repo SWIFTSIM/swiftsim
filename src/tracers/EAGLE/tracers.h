@@ -176,7 +176,7 @@ static INLINE void tracers_before_black_holes_feedback(
       (scale_factor * scale_factor * scale_factor);
 
   xp->tracers_data.entropy_before_last_AGN_feedback_event =
-      hydro_get_comoving_entropy(p) *
+      hydro_get_comoving_entropy(p, xp) *
       (scale_factor * scale_factor);
 
 }
@@ -206,7 +206,7 @@ static INLINE void tracers_after_black_holes_feedback(
       (scale_factor * scale_factor * scale_factor);
 
   xp->tracers_data.entropy_at_last_AGN_feedback_event =
-      hydro_get_comoving_entropy(p) *
+      hydro_get_comoving_entropy(p, xp) *
       (scale_factor * scale_factor);
 
   xp->tracers_data.hit_by_AGN_feedback++;
