@@ -671,7 +671,7 @@ runner_iact_nonsym_bh_gas_feedback(
     /* If the number of received rays is non-zero, inject
      * AGN energy in thermal form */
     if (num_of_energy_inj_received_by_gas > 0) {
-        
+
       /* Save gas density and entropy before feedback */
       tracers_before_black_holes_feedback(pj, xpj, cosmo->a);
 

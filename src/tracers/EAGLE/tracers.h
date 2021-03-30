@@ -136,7 +136,7 @@ static INLINE void tracers_first_init_xpart(
   xp->tracers_data.hit_by_SNII_feedback = 0;
   xp->tracers_data.hit_by_AGN_feedback = 0;
   xp->tracers_data.AGN_feedback_energy = 0.f;
-  
+
   xp->tracers_data.density_before_last_AGN_feedback_event = -1.f;
   xp->tracers_data.entropy_before_last_AGN_feedback_event = -1.f;
   xp->tracers_data.density_at_last_AGN_feedback_event = -1.f;
@@ -167,18 +167,14 @@ static INLINE void tracers_after_feedback(struct xpart *xp) {
  * (internal physical units)
  */
 static INLINE void tracers_before_black_holes_feedback(
-    const struct part *p, 
-    struct xpart *xp,
-    const float scale_factor) {
+    const struct part *p, struct xpart *xp, const float scale_factor) {
 
   xp->tracers_data.density_before_last_AGN_feedback_event =
       hydro_get_comoving_density(p) /
       (scale_factor * scale_factor * scale_factor);
 
   xp->tracers_data.entropy_before_last_AGN_feedback_event =
-      hydro_get_comoving_entropy(p, xp) *
-      (scale_factor * scale_factor);
-
+      hydro_get_comoving_entropy(p, xp) * (scale_factor * scale_factor);
 }
 
 /**
@@ -206,8 +202,7 @@ static INLINE void tracers_after_black_holes_feedback(
       (scale_factor * scale_factor * scale_factor);
 
   xp->tracers_data.entropy_at_last_AGN_feedback_event =
-      hydro_get_comoving_entropy(p, xp) *
-      (scale_factor * scale_factor);
+      hydro_get_comoving_entropy(p, xp) * (scale_factor * scale_factor);
 
   xp->tracers_data.hit_by_AGN_feedback++;
   xp->tracers_data.AGN_feedback_energy += delta_energy;

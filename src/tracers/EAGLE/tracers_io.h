@@ -100,23 +100,23 @@ __attribute__((always_inline)) INLINE static int tracers_write_particles(
       "Physical density (not subgrid) of the gas fetched before the last AGN "
       "feedback event that hit the particles. -1 if the particles have never "
       "been heated.");
-      
+
   list[6] = io_make_output_field(
-      "EntropiesBeforeLastAGNEvent", FLOAT, 1, UNIT_CONV_ENTROPY_PER_UNIT_MASS, 0.f, 
-      xparts, tracers_data.entropy_before_last_AGN_feedback_event,
+      "EntropiesBeforeLastAGNEvent", FLOAT, 1, UNIT_CONV_ENTROPY_PER_UNIT_MASS,
+      0.f, xparts, tracers_data.entropy_before_last_AGN_feedback_event,
       "Physical entropy (not subgrid) per unit mass of the gas fetched before "
       "the last AGN feedback event that hit the particles. -1 if the particles "
       "have never been heated.");
-  
+
   list[7] = io_make_output_field(
       "DensitiesAtLastAGNEvent", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, xparts,
       tracers_data.density_at_last_AGN_feedback_event,
       "Physical density (not subgrid) of the gas at the last AGN feedback "
       "event that hit the particles. -1 if the particles have never been "
       "heated.");
-      
+
   list[8] = io_make_output_field(
-      "EntropiesAtLastAGNEvent", FLOAT, 1, UNIT_CONV_ENTROPY_PER_UNIT_MASS, 0.f, 
+      "EntropiesAtLastAGNEvent", FLOAT, 1, UNIT_CONV_ENTROPY_PER_UNIT_MASS, 0.f,
       xparts, tracers_data.entropy_at_last_AGN_feedback_event,
       "Physical entropy (not subgrid) per unit mass of the gas at the last AGN "
       "feedback event that hit the particles. -1 if the particles have never "
@@ -185,19 +185,22 @@ __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
       sparts, tracers_data.AGN_feedback_energy,
       "Total amount of thermal energy from AGN feedback events received by the "
       "particles when the particle was still a gas particle.");
-      
+
   list[5] = io_make_output_field(
       "DensitiesBeforeLastAGNEvent", FLOAT, 1, UNIT_CONV_DENSITY, 0.f, sparts,
       tracers_data.density_before_last_AGN_feedback_event,
-      "Physical density (not subgrid) of the gas fetched before the last AGN feedback "
+      "Physical density (not subgrid) of the gas fetched before the last AGN "
+      "feedback "
       "event that hit the particles when they were still gas particles. -1 if "
       "the particles have never been heated.");
-      
+
   list[6] = io_make_output_field(
-      "EntropiesBeforeLastAGNEvent", FLOAT, 1, UNIT_CONV_ENTROPY_PER_UNIT_MASS, 0.f, 
-      sparts, tracers_data.entropy_before_last_AGN_feedback_event,
-      "Physical entropy (not subgrid) per unit mass of the gas fetched before the last AGN "
-      "feedback event that hit the particles when they were still gas particles."
+      "EntropiesBeforeLastAGNEvent", FLOAT, 1, UNIT_CONV_ENTROPY_PER_UNIT_MASS,
+      0.f, sparts, tracers_data.entropy_before_last_AGN_feedback_event,
+      "Physical entropy (not subgrid) per unit mass of the gas fetched before "
+      "the last AGN "
+      "feedback event that hit the particles when they were still gas "
+      "particles."
       " -1 if the particles have never been heated.");
 
   list[7] = io_make_output_field(
@@ -206,12 +209,13 @@ __attribute__((always_inline)) INLINE static int tracers_write_sparticles(
       "Physical density (not subgrid) of the gas at the last AGN feedback "
       "event that hit the particles when they were still gas particles. -1 if "
       "the particles have never been heated.");
-      
+
   list[8] = io_make_output_field(
-      "EntropiesAtLastAGNEvent", FLOAT, 1, UNIT_CONV_ENTROPY_PER_UNIT_MASS, 0.f, 
+      "EntropiesAtLastAGNEvent", FLOAT, 1, UNIT_CONV_ENTROPY_PER_UNIT_MASS, 0.f,
       sparts, tracers_data.entropy_at_last_AGN_feedback_event,
       "Physical entropy (not subgrid) per unit mass of the gas at the last AGN "
-      "feedback event that hit the particles when they were still gas particles."
+      "feedback event that hit the particles when they were still gas "
+      "particles."
       " -1 if the particles have never been heated.");
 
   if (with_cosmology) {
