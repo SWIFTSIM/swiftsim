@@ -173,8 +173,9 @@ static INLINE void tracers_before_black_holes_feedback(
       hydro_get_comoving_density(p) /
       (scale_factor * scale_factor * scale_factor);
 
+  /* Physical entropy (NB entropy has no scale-factor dependence) */
   xp->tracers_data.entropy_before_last_AGN_feedback_event =
-      hydro_get_comoving_entropy(p, xp) * (scale_factor * scale_factor);
+      hydro_get_comoving_entropy(p, xp);
 }
 
 /**
@@ -201,8 +202,9 @@ static INLINE void tracers_after_black_holes_feedback(
       hydro_get_comoving_density(p) /
       (scale_factor * scale_factor * scale_factor);
 
+  /* Physical entropy (NB entropy has no scale-factor dependence) */
   xp->tracers_data.entropy_at_last_AGN_feedback_event =
-      hydro_get_comoving_entropy(p, xp) * (scale_factor * scale_factor);
+      hydro_get_comoving_entropy(p, xp);
 
   xp->tracers_data.hit_by_AGN_feedback++;
   xp->tracers_data.AGN_feedback_energy += delta_energy;
