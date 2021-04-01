@@ -546,7 +546,7 @@ void cosmology_init_tables(struct cosmology *c) {
 
   /* Retrieve some constants */
   const double a_begin = c->a_begin;
-  const double a_end   = c->a_end;
+  const double a_end = c->a_end;
 
   /* Allocate memory for the interpolation tables */
   if (swift_memalign("cosmo.table", (void **)&c->drift_fac_interp_table,
