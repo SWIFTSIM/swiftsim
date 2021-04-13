@@ -1436,8 +1436,8 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
                          const size_t num_groups_local,
                          const size_t num_groups_prev,
                          size_t *restrict num_on_node,
-                         size_t *restrict first_on_node, double *group_mass,
-                         double *group_centre_of_mass) {
+                         size_t *restrict first_on_node,
+                         double *restrict group_mass) {
 
   const size_t nr_gparts = s->nr_gparts;
   struct gpart *gparts = s->gparts;
@@ -1734,6 +1734,9 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
   free(fof_mass_recv);
 #else
 
+  const int periodic = s->periodic;
+  const double dim[3] = {s->dim[0], s->dim[1], s->dim[2]};
+
   /* Increment the group mass for groups above min_group_size. */
   threadpool_map(&s->e->threadpool, fof_calc_group_mass_mapper, gparts,
                  nr_gparts, sizeof(struct gpart), threadpool_auto_chunk_size,
@@ -1743,6 +1746,7 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
   long long *max_part_density_index = props->max_part_density_index;
   float *max_part_density = props->max_part_density;
   double *centre_of_mass = props->group_centre_of_mass;
+  double *first_position = props->group_first_position;
 
   /* Loop over particles, compute CoM and find the densest particle in each
    * group. */
@@ -1758,7 +1762,22 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
 
       /* Compute the centre of mass */
       const double mass = gparts[i].mass;
-      const double x[3] = {gparts[i].x[0], gparts[i].x[1], gparts[i].x[2]};
+      double x[3] = {gparts[i].x[0], gparts[i].x[1], gparts[i].x[2]};
+
+      /* Record the first particle of this group that we encounter
+       * so we can use it as reference frame for the centre of mass calculation
+       */
+      if (first_position[index * 3 + 0] == (double)(-FLT_MAX)) {
+        first_position[index * 3 + 0] = x[0];
+        first_position[index * 3 + 1] = x[1];
+        first_position[index * 3 + 2] = x[2];
+      }
+
+      if (periodic) {
+        x[0] = nearest(x[0] - first_position[index * 3 + 0], dim[0]);
+        x[1] = nearest(x[1] - first_position[index * 3 + 1], dim[1]);
+        x[2] = nearest(x[2] - first_position[index * 3 + 2], dim[2]);
+      }
 
       centre_of_mass[index * 3 + 0] += mass * x[0];
       centre_of_mass[index * 3 + 1] += mass * x[1];
@@ -2052,6 +2071,7 @@ void fof_dump_group_data(const struct fof_props *props,
   size_t *group_size = props->group_size;
   double *group_mass = props->group_mass;
   double *group_centre_of_mass = props->group_centre_of_mass;
+  double *group_first_position = props->group_first_position;
   const long long *max_part_density_index = props->max_part_density_index;
   const float *max_part_density = props->max_part_density;
 
@@ -2068,9 +2088,20 @@ void fof_dump_group_data(const struct fof_props *props,
     const long long part_id = max_part_density_index[i] >= 0
                                   ? parts[max_part_density_index[i]].id
                                   : -1;
-    const double CoM[3] = {group_centre_of_mass[i * 3 + 0] / group_mass[i],
-                           group_centre_of_mass[i * 3 + 1] / group_mass[i],
-                           group_centre_of_mass[i * 3 + 2] / group_mass[i]};
+
+    /* Centre of mass, including possible box wrapping */
+    double CoM[3] = {group_centre_of_mass[i * 3 + 0] / group_mass[i],
+                     group_centre_of_mass[i * 3 + 1] / group_mass[i],
+                     group_centre_of_mass[i * 3 + 2] / group_mass[i]};
+    if (s->periodic) {
+      CoM[0] =
+          box_wrap(CoM[0] + group_first_position[i * 3 + 0], 0., s->dim[0]);
+      CoM[1] =
+          box_wrap(CoM[1] + group_first_position[i * 3 + 1], 0., s->dim[1]);
+      CoM[2] =
+          box_wrap(CoM[2] + group_first_position[i * 3 + 2], 0., s->dim[2]);
+    }
+
 #ifdef WITH_MPI
     fprintf(file, "  %8zu %12zu %12e %12e %12e %12e %12e %24lld %24lld\n",
             (size_t)gparts[group_offset - node_offset].fof_data.group_id,
@@ -2945,10 +2976,17 @@ void fof_search_tree(struct fof_props *props,
   if (swift_memalign("fof_group_centre_of_mass",
                      (void **)&props->group_centre_of_mass, 32,
                      num_groups_local * 3 * sizeof(double)) != 0)
-    error("Failed to allocate list of group masses for FOF search.");
+    error("Failed to allocate list of group CoM for FOF search.");
+  if (swift_memalign("fof_group_first_position",
+                     (void **)&props->group_first_position, 32,
+                     num_groups_local * 3 * sizeof(double)) != 0)
+    error("Failed to allocate list of group first positions for FOF search.");
 
   bzero(props->group_mass, num_groups_local * sizeof(double));
   bzero(props->group_centre_of_mass, num_groups_local * 3 * sizeof(double));
+  for (size_t i = 0; i < num_groups_local; i++) {
+    props->group_first_position[i] = -FLT_MAX;
+  }
 
   /* Allocate and initialise arrays to identify the densest gas particle. */
   if (seed_black_holes) {
@@ -2976,17 +3014,15 @@ void fof_search_tree(struct fof_props *props,
 
   const ticks tic_seeding = getticks();
 
-  double *group_mass = props->group_mass;
-  double *group_centre_of_mass = props->group_centre_of_mass;
 #ifdef WITH_MPI
   fof_calc_group_mass(props, s, seed_black_holes, num_groups_local,
-                      num_groups_prev, num_on_node, first_on_node, group_mass,
-                      group_centre_of_mass);
+                      num_groups_prev, num_on_node, first_on_node,
+                      props->group_mass);
   free(num_on_node);
   free(first_on_node);
 #else
   fof_calc_group_mass(props, s, seed_black_holes, num_groups_local, 0, NULL,
-                      NULL, group_mass, group_centre_of_mass);
+                      NULL, props->group_mass);
 #endif
 
   if (verbose)
@@ -3012,6 +3048,7 @@ void fof_search_tree(struct fof_props *props,
   swift_free("fof_group_size", props->group_size);
   swift_free("fof_group_mass", props->group_mass);
   swift_free("fof_group_centre_of_mass", props->group_centre_of_mass);
+  swift_free("fof_group_first_position", props->group_first_position);
   if (seed_black_holes) {
     swift_free("fof_max_part_density_index", props->max_part_density_index);
     swift_free("fof_max_part_density", props->max_part_density);

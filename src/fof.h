@@ -102,8 +102,11 @@ struct fof_props {
   /*! Mass of the group a given gpart belongs to. */
   double *group_mass;
 
-  /*! Mass of the group a given gpart belongs to. */
+  /*! Centre of mass of the group a given gpart belongs to. */
   double *group_centre_of_mass;
+
+  /*! Position of the first particle of a given group. */
+  double *group_first_position;
 
   /*! Index of the part with the maximal density of each group. */
   long long *max_part_density_index;
