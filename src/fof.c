@@ -2074,12 +2074,12 @@ void fof_dump_group_data(const struct fof_props *props,
   const long long *max_part_density_index = props->max_part_density_index;
   const float *max_part_density = props->max_part_density;
 
-  fprintf(file, "# %8s %12s %12s %12s %18s %18s %12s\n", "Group ID",
-          "Group Size", "Group Mass", "Max Density", "Max Density Index",
-          "Particle ID", "Particle Density");
+  fprintf(file, "# %8s %12s %12s %12s %24s %24s \n", "Group ID", "Group Size",
+          "Group Mass", "Max Density", "Max Density Local Index",
+          "Particle ID");
   fprintf(file,
           "#-------------------------------------------------------------------"
-          "-------------\n");
+          "------------------------------\n");
 
   for (int i = 0; i < num_groups; i++) {
 
@@ -2088,12 +2088,12 @@ void fof_dump_group_data(const struct fof_props *props,
                                   ? parts[max_part_density_index[i]].id
                                   : -1;
 #ifdef WITH_MPI
-    fprintf(file, "  %8zu %12zu %12e %12e %18lld %18lld\n",
+    fprintf(file, "  %8zu %12zu %12e %12e %24lld %24lld\n",
             (size_t)gparts[group_offset - node_offset].fof_data.group_id,
             group_size[group_offset - node_offset], group_mass[i],
             max_part_density[i], max_part_density_index[i], part_id);
 #else
-    fprintf(file, "  %8zu %12zu %12e %12e %18lld %18lld\n",
+    fprintf(file, "  %8zu %12zu %12e %12e %24lld %24lld\n",
             (size_t)gparts[group_offset].fof_data.group_id,
             group_size[group_offset], group_mass[i], max_part_density[i],
             max_part_density_index[i], part_id);
@@ -2105,7 +2105,7 @@ void fof_dump_group_data(const struct fof_props *props,
     const long long part_id = max_part_density_index[i] >= 0
                                   ? parts[max_part_density_index[i]].id
                                   : -1;
-    fprintf(file, "  %8zu %12zu %12e %12e %18lld %18lld\n", 0UL, 0UL, 0., 0.,
+    fprintf(file, "  %8zu %12zu %12e %12e %24lld %24lld\n", 0UL, 0UL, 0., 0.,
             0LL, part_id);
   }
 
