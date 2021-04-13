@@ -1734,26 +1734,37 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
   free(fof_mass_recv);
 #else
 
-  /* Allocate and initialise the densest particle array. */
-
-  /* Direct pointers to the arrays */
-  long long *max_part_density_index = props->max_part_density_index;
-  float *max_part_density = props->max_part_density;
-
   /* Increment the group mass for groups above min_group_size. */
   threadpool_map(&s->e->threadpool, fof_calc_group_mass_mapper, gparts,
                  nr_gparts, sizeof(struct gpart), threadpool_auto_chunk_size,
                  (struct space *)s);
 
-  /* Loop over particles and find the densest particle in each group. */
+  /* Direct pointers to the arrays */
+  long long *max_part_density_index = props->max_part_density_index;
+  float *max_part_density = props->max_part_density;
+  double *centre_of_mass = props->group_centre_of_mass;
+
+  /* Loop over particles, compute CoM and find the densest particle in each
+   * group. */
   /* JSW TODO: Parallelise with threadpool*/
   for (size_t i = 0; i < nr_gparts; i++) {
+
+    if (gparts[i].time_bin == time_bin_inhibited) continue;
 
     const size_t index = gparts[i].fof_data.group_id - group_id_offset;
 
     /* Only check groups above the minimum mass threshold. */
     if (gparts[i].fof_data.group_id != group_id_default) {
 
+      /* Compute the centre of mass */
+      const double mass = gparts[i].mass;
+      const double x[3] = {gparts[i].x[0], gparts[i].x[1], gparts[i].x[2]};
+
+      centre_of_mass[index * 3 + 0] += mass * x[0];
+      centre_of_mass[index * 3 + 1] += mass * x[1];
+      centre_of_mass[index * 3 + 2] += mass * x[2];
+
+      /* Check haloes above the seeding threshold */
       if (group_mass[index] > seed_halo_mass) {
 
         /* Find the densest gas particle.
@@ -2037,12 +2048,13 @@ void fof_dump_group_data(const struct fof_props *props,
   struct part *parts = s->parts;
   size_t *group_size = props->group_size;
   double *group_mass = props->group_mass;
+  double *group_centre_of_mass = props->group_centre_of_mass;
   const long long *max_part_density_index = props->max_part_density_index;
   const float *max_part_density = props->max_part_density;
 
-  fprintf(file, "# %8s %12s %12s %12s %24s %24s \n", "Group ID", "Group Size",
-          "Group Mass", "Max Density", "Max Density Local Index",
-          "Particle ID");
+  fprintf(file, "# %8s %12s %12s %12s %12s %12s %12s %24s %24s \n", "Group ID",
+          "Group Size", "Group Mass", "CoM_x", "CoM_y", "CoM_z", "Max Density",
+          "Max Density Local Index", "Particle ID");
   fprintf(file,
           "#-------------------------------------------------------------------"
           "------------------------------\n");
@@ -2053,16 +2065,20 @@ void fof_dump_group_data(const struct fof_props *props,
     const long long part_id = max_part_density_index[i] >= 0
                                   ? parts[max_part_density_index[i]].id
                                   : -1;
+    const double CoM[3] = {group_centre_of_mass[i * 3 + 0] / group_mass[i],
+                           group_centre_of_mass[i * 3 + 1] / group_mass[i],
+                           group_centre_of_mass[i * 3 + 2] / group_mass[i]};
 #ifdef WITH_MPI
-    fprintf(file, "  %8zu %12zu %12e %12e %24lld %24lld\n",
+    fprintf(file, "  %8zu %12zu %12e %12e %12e %12e %12e %24lld %24lld\n",
             (size_t)gparts[group_offset - node_offset].fof_data.group_id,
-            group_size[group_offset - node_offset], group_mass[i],
-            max_part_density[i], max_part_density_index[i], part_id);
+            group_size[group_offset - node_offset], group_mass[i], CoM[0],
+            CoM[1], CoM[2], max_part_density[i], max_part_density_index[i],
+            part_id);
 #else
-    fprintf(file, "  %8zu %12zu %12e %12e %24lld %24lld\n",
+    fprintf(file, "  %8zu %12zu %12e %12e %12e %12e %12e %24lld %24lld\n",
             (size_t)gparts[group_offset].fof_data.group_id,
-            group_size[group_offset], group_mass[i], max_part_density[i],
-            max_part_density_index[i], part_id);
+            group_size[group_offset], group_mass[i], CoM[0], CoM[1], CoM[2],
+            max_part_density[i], max_part_density_index[i], part_id);
 #endif
   }
 
