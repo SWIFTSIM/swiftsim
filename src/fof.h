@@ -102,6 +102,9 @@ struct fof_props {
   /*! Mass of the group a given gpart belongs to. */
   double *group_mass;
 
+  /*! Mass of the group a given gpart belongs to. */
+  double *group_centre_of_mass;
+
   /*! Index of the part with the maximal density of each group. */
   long long *max_part_density_index;
 
@@ -120,8 +123,7 @@ struct fof_props {
   /*! The links between pairs of particles on this node and a foreign
    * node */
   struct fof_mpi *group_links;
-
-} SWIFT_STRUCT_ALIGN;
+};
 
 /* Store group size and offset into array. */
 struct group_length {
