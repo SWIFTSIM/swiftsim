@@ -866,7 +866,7 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
     /* Time when the relativistic drift correction is below 1% for all nu's */
     if (c->N_nu > 0 && M_eV_min > 0.) {
       const double five_sigma_velocity = 20.0 * c->T_nu_0_eV / M_eV_min;
-      const double approx_treshold = 0.14249; // 1.0 / sqrt(1 + x^2) = 0.99
+      const double approx_treshold = 0.14249;  // 1.0 / sqrt(1 + x^2) = 0.99
       c->a_nu_nr = five_sigma_velocity / approx_treshold;
     } else {
       c->a_nu_nr = 0.;
