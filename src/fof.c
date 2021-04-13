@@ -1764,32 +1764,35 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
       centre_of_mass[index * 3 + 1] += mass * x[1];
       centre_of_mass[index * 3 + 2] += mass * x[2];
 
-      /* Check haloes above the seeding threshold */
-      if (group_mass[index] > seed_halo_mass) {
+      if (seed_black_holes) {
 
-        /* Find the densest gas particle.
-         * Account for groups that already have a black hole and groups that
-         * contain no gas. */
-        if (gparts[i].type == swift_type_gas &&
-            max_part_density_index[index] != fof_halo_has_black_hole) {
+        /* Check haloes above the seeding threshold */
+        if (group_mass[index] > seed_halo_mass) {
 
-          const size_t gas_index = -gparts[i].id_or_neg_offset;
-          const float rho_com = hydro_get_comoving_density(&parts[gas_index]);
+          /* Find the densest gas particle.
+           * Account for groups that already have a black hole and groups that
+           * contain no gas. */
+          if (gparts[i].type == swift_type_gas &&
+              max_part_density_index[index] != fof_halo_has_black_hole) {
 
-          /* Update index if a denser gas particle is found. */
-          if (rho_com > max_part_density[index]) {
-            max_part_density_index[index] = gas_index;
-            max_part_density[index] = rho_com;
+            const size_t gas_index = -gparts[i].id_or_neg_offset;
+            const float rho_com = hydro_get_comoving_density(&parts[gas_index]);
+
+            /* Update index if a denser gas particle is found. */
+            if (rho_com > max_part_density[index]) {
+              max_part_density_index[index] = gas_index;
+              max_part_density[index] = rho_com;
+            }
           }
-        }
-        /* If there is already a black hole in the group we don't need to create
-           a new one. */
-        else if (gparts[i].type == swift_type_black_hole) {
-          max_part_density_index[index] = fof_halo_has_black_hole;
-        }
+          /* If there is already a black hole in the group we don't need to
+             create a new one. */
+          else if (gparts[i].type == swift_type_black_hole) {
+            max_part_density_index[index] = fof_halo_has_black_hole;
+          }
 
-      } else {
-        max_part_density_index[index] = fof_halo_has_too_low_mass;
+        } else {
+          max_part_density_index[index] = fof_halo_has_too_low_mass;
+        }
       }
     }
   }
