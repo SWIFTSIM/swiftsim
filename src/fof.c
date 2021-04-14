@@ -1479,27 +1479,6 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
         /* Update group mass */
         group_mass[index] += gparts[i].mass;
 
-        /* Also accumulate the densest gas particle and its index */
-        if (gparts[i].type == swift_type_gas &&
-            max_part_density_index[index] != fof_halo_has_black_hole) {
-
-          const size_t gas_index = -gparts[i].id_or_neg_offset;
-          const float rho_com = hydro_get_comoving_density(&parts[gas_index]);
-
-          /* Update index if a denser gas particle is found. */
-          if (rho_com > max_part_density[index]) {
-            max_part_density_index[index] = gas_index;
-            max_part_density[index] = rho_com;
-          }
-
-        } else if (gparts[i].type == swift_type_black_hole) {
-
-          /* If there is already a black hole in the fragment we don't need to
-           create a new one. */
-          max_part_density_index[index] = fof_halo_has_black_hole;
-          max_part_density[index] = 0.f;
-        }
-
       } else {
 
         /* The root is *not* local */
@@ -1607,6 +1586,53 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
     const size_t index =
         gparts[local_root_index].fof_data.group_id - local_group_offset;
     group_mass[index] += fof_mass_recv[i].group_mass;
+  }
+
+  /* Loop over particles, densest particle in each *local* group.
+   * We can do this now as we eventually have the total group mass */
+  for (size_t i = 0; i < nr_gparts; i++) {
+
+    if (gparts[i].time_bin == time_bin_inhibited) continue;
+
+    /* Only check groups above the minimum mass threshold. */
+    if (gparts[i].fof_data.group_id != group_id_default) {
+
+      const size_t root = fof_find_global(i, group_index, nr_gparts);
+
+      if (is_local(root, nr_gparts)) {
+
+        const size_t index =
+            gparts[i].fof_data.group_id - group_id_offset - num_groups_prev;
+
+        /* Check haloes above the seeding threshold */
+        if (group_mass[index] > seed_halo_mass) {
+
+          /* Find the densest gas particle.
+           * Account for groups that already have a black hole and groups that
+           * contain no gas. */
+          if (gparts[i].type == swift_type_gas &&
+              max_part_density_index[index] != fof_halo_has_black_hole) {
+
+            const size_t gas_index = -gparts[i].id_or_neg_offset;
+            const float rho_com = hydro_get_comoving_density(&parts[gas_index]);
+
+            /* Update index if a denser gas particle is found. */
+            if (rho_com > max_part_density[index]) {
+              max_part_density_index[index] = gas_index;
+              max_part_density[index] = rho_com;
+            }
+          }
+          /* If there is already a black hole in the group we don't need to
+             create a new one. */
+          else if (gparts[i].type == swift_type_black_hole) {
+            max_part_density_index[index] = fof_halo_has_black_hole;
+          }
+
+        } else {
+          max_part_density_index[index] = fof_halo_has_too_low_mass;
+        }
+      }
+    }
   }
 
   /* For each received global root, look up the group ID we assigned and find
