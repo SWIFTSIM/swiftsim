@@ -1458,16 +1458,20 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
   hashmap_t map;
   hashmap_init(&map);
 
-  /* JSW TODO: Parallelise with threadpool*/
+  /* Collect information about the local particles and update the local AND
+   * foreign group fragments */
   for (size_t i = 0; i < nr_gparts; i++) {
+
+    if (gparts[i].time_bin == time_bin_inhibited) continue;
 
     /* Check if the particle is in a group above the threshold. */
     if (gparts[i].fof_data.group_id != group_id_default) {
 
       const size_t root = fof_find_global(i, group_index, nr_gparts);
 
-      /* Increment the mass of groups that are local */
       if (is_local(root, nr_gparts)) {
+
+        /* The root is local */
 
         const size_t index =
             gparts[i].fof_data.group_id - group_id_offset - num_groups_prev;
@@ -1475,85 +1479,63 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
         /* Update group mass */
         group_mass[index] += gparts[i].mass;
 
-      }
-      /* Add mass fragments of groups that have a foreign root to a hash table.
-       */
-      else {
+        /* Also accumulate the densest gas particle and its index */
+        if (gparts[i].type == swift_type_gas &&
+            max_part_density_index[index] != fof_halo_has_black_hole) {
 
-        hashmap_value_t *data = hashmap_get(&map, (hashmap_key_t)root);
+          const size_t gas_index = -gparts[i].id_or_neg_offset;
+          const float rho_com = hydro_get_comoving_density(&parts[gas_index]);
 
-        if (data != NULL) {
-          data->value_dbl += gparts[i].mass;
-
-          /* Find the densest gas particle.
-           * Account for groups that already have a black hole and groups that
-           * contain no gas. */
-          if (gparts[i].type == swift_type_gas &&
-              data->value_st != fof_halo_has_black_hole) {
-
-            const size_t gas_index = -gparts[i].id_or_neg_offset;
-            const float rho_com = hydro_get_comoving_density(&parts[gas_index]);
-
-            /* Update index if a denser gas particle is found. */
-            if (rho_com > data->value_flt) {
-              data->value_flt = rho_com;
-              data->value_st = gas_index;
-            }
+          /* Update index if a denser gas particle is found. */
+          if (rho_com > max_part_density[index]) {
+            max_part_density_index[index] = gas_index;
+            max_part_density[index] = rho_com;
           }
-          /* If there is already a black hole in the group we don't need to
-             create a new one. */
-          else if (gparts[i].type == swift_type_black_hole) {
-            data->value_st = fof_halo_has_black_hole;
-            data->value_flt = 0.f;
-          }
-        } else
-          error("Couldn't find key (%zu) or create new one.", root);
-      }
-    }
-  }
 
-  /* Loop over particles and find the densest particle in each group. */
-  /* JSW TODO: Parallelise with threadpool*/
-  for (size_t i = 0; i < nr_gparts; i++) {
+        } else if (gparts[i].type == swift_type_black_hole) {
 
-    /* Only check groups above the minimum size and mass threshold. */
-    if (gparts[i].fof_data.group_id != group_id_default) {
-
-      size_t root = fof_find_global(i, group_index, nr_gparts);
-
-      /* Increment the mass of groups that are local */
-      if (is_local(root, nr_gparts)) {
-
-        const size_t index =
-            gparts[i].fof_data.group_id - group_id_offset - num_groups_prev;
-
-        /* Only seed groups above the mass threshold. */
-        if (group_mass[index] > seed_halo_mass) {
-
-          /* Find the densest gas particle.
-           * Account for groups that already have a black hole and groups that
-           * contain no gas. */
-          if (gparts[i].type == swift_type_gas &&
-              max_part_density_index[index] != fof_halo_has_black_hole) {
-
-            const size_t gas_index = -gparts[i].id_or_neg_offset;
-            const float rho_com = hydro_get_comoving_density(&parts[gas_index]);
-
-            /* Update index if a denser gas particle is found. */
-            if (rho_com > max_part_density[index]) {
-              max_part_density_index[index] = gas_index;
-              max_part_density[index] = rho_com;
-            }
-          }
-          /* If there is already a black hole in the group we don't need to
-             create a new one. */
-          else if (gparts[i].type == swift_type_black_hole) {
-            max_part_density_index[index] = fof_halo_has_black_hole;
-          }
+          /* If there is already a black hole in the fragment we don't need to
+           create a new one. */
+          max_part_density_index[index] = fof_halo_has_black_hole;
+          max_part_density[index] = 0.f;
         }
-      }
-    }
-  }
+
+      } else {
+
+        /* The root is *not* local */
+
+        /* Get the root in the foreign hashmap (create if necessary) */
+        hashmap_value_t *const data = hashmap_get(&map, (hashmap_key_t)root);
+        if (data == NULL)
+          error("Couldn't find key (%zu) or create new one.", root);
+
+        /* Add mass fragments of groups */
+        data->value_dbl += gparts[i].mass;
+
+        /* Also accumulate the densest gas particle and its index */
+        if (gparts[i].type == swift_type_gas &&
+            data->value_st != fof_halo_has_black_hole) {
+
+          const size_t gas_index = -gparts[i].id_or_neg_offset;
+          const float rho_com = hydro_get_comoving_density(&parts[gas_index]);
+
+          /* Update index if a denser gas particle is found. */
+          if (rho_com > data->value_flt) {
+            data->value_flt = rho_com;
+            data->value_st = gas_index;
+          }
+
+        } else if (gparts[i].type == swift_type_black_hole) {
+
+          /* If there is already a black hole in the fragment we don't need to
+           create a new one. */
+          data->value_st = fof_halo_has_black_hole;
+          data->value_flt = 0.f;
+        }
+
+      } /* Foreign root */
+    }   /* Particle is in a group */
+  }     /* Loop over particles */
 
   size_t nsend = map.size;
   struct fof_mass_send_hashmap hashmap_mass_send = {NULL, 0};
@@ -1573,8 +1555,10 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
 
   nsend = hashmap_mass_send.nsend;
 
+#ifdef SWIFT_DEBUG_CHECKS
   if (nsend != map.size)
     error("No. of mass fragments to send != elements in hash table.");
+#endif
 
   hashmap_free(&map);
 
@@ -1584,8 +1568,7 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
         compare_fof_final_mass_global_root);
 
   /* Determine how many entries go to each node */
-  int *sendcount = (int *)malloc(nr_nodes * sizeof(int));
-  for (int i = 0; i < nr_nodes; i += 1) sendcount[i] = 0;
+  int *sendcount = (int *)calloc(nr_nodes, sizeof(int));
   int dest = 0;
   for (size_t i = 0; i < nsend; i += 1) {
     while ((fof_mass_send[i].global_root >=
@@ -1612,36 +1595,40 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
 
   /* For each received global root, look up the group ID we assigned and
    * increment the group mass */
-  for (size_t i = 0; i < nrecv; i += 1) {
+  for (size_t i = 0; i < nrecv; i++) {
+#ifdef SWIFT_DEBUG_CHECKS
     if ((fof_mass_recv[i].global_root < node_offset) ||
         (fof_mass_recv[i].global_root >= node_offset + nr_gparts)) {
       error("Received global root index out of range!");
     }
-    group_mass[gparts[fof_mass_recv[i].global_root - node_offset]
-                   .fof_data.group_id -
-               group_id_offset - num_groups_prev] +=
-        fof_mass_recv[i].group_mass;
+#endif
+    const size_t local_root_index = fof_mass_recv[i].global_root - node_offset;
+    const size_t local_group_offset = group_id_offset + num_groups_prev;
+    const size_t index =
+        gparts[local_root_index].fof_data.group_id - local_group_offset;
+    group_mass[index] += fof_mass_recv[i].group_mass;
   }
 
   /* For each received global root, look up the group ID we assigned and find
    * the global maximum gas density */
   for (size_t i = 0; i < nrecv; i++) {
 
-    const int offset =
-        gparts[fof_mass_recv[i].global_root - node_offset].fof_data.group_id -
-        group_id_offset - num_groups_prev;
+    const size_t local_root_index = fof_mass_recv[i].global_root - node_offset;
+    const size_t local_group_offset = group_id_offset + num_groups_prev;
+    const size_t index =
+        gparts[local_root_index].fof_data.group_id - local_group_offset;
 
     /* Only seed groups above the mass threshold. */
-    if (group_mass[offset] > seed_halo_mass) {
+    if (group_mass[index] > seed_halo_mass) {
 
       /* Only check groups that don't already contain a black hole. */
-      if (max_part_density_index[offset] != fof_halo_has_black_hole) {
+      if (max_part_density_index[index] != fof_halo_has_black_hole) {
 
         /* Find the densest particle in each group using the densest particle
          * from each group fragment. */
-        if (fof_mass_recv[i].max_part_density > max_part_density[offset]) {
-          max_part_density[offset] = fof_mass_recv[i].max_part_density;
-          max_part_density_index[offset] =
+        if (fof_mass_recv[i].max_part_density > max_part_density[index]) {
+          max_part_density[index] = fof_mass_recv[i].max_part_density;
+          max_part_density_index[index] =
               fof_mass_recv[i].max_part_density_index;
         }
       }
@@ -1649,36 +1636,38 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
          new one. */
       else if (fof_mass_recv[i].max_part_density_index ==
                fof_halo_has_black_hole) {
-        max_part_density_index[offset] = fof_halo_has_black_hole;
+        max_part_density_index[index] = fof_halo_has_black_hole;
       }
     } else {
-      max_part_density_index[offset] = fof_halo_has_no_gas;
+      max_part_density_index[index] = fof_halo_has_too_low_mass;
     }
   }
 
   /* For each received global root, look up the group ID we assigned and send
    * the global maximum gas density index back */
   for (size_t i = 0; i < nrecv; i++) {
+
+#ifdef SWIFT_DEBUG_CHECKS
     if ((fof_mass_recv[i].global_root < node_offset) ||
         (fof_mass_recv[i].global_root >= node_offset + nr_gparts)) {
       error("Received global root index out of range!");
     }
-
-    const int offset =
-        gparts[fof_mass_recv[i].global_root - node_offset].fof_data.group_id -
-        group_id_offset - num_groups_prev;
+#endif
+    const size_t local_root_index = fof_mass_recv[i].global_root - node_offset;
+    const size_t local_group_offset = group_id_offset + num_groups_prev;
+    const size_t index =
+        gparts[local_root_index].fof_data.group_id - local_group_offset;
 
     /* If the densest particle found locally is not the global max, make sure we
      * don't seed two black holes. */
-    /* If the local index has been set to a foreign index then we don't need to
-     * seed a black hole locally. */
-    if (max_part_density_index[offset] ==
+    if (max_part_density_index[index] ==
         fof_mass_recv[i].max_part_density_index) {
-      max_part_density_index[offset] = fof_halo_has_black_hole;
-    }
-    /* The densest particle is on the same node as the global root so we don't
+      /* If the local index has been set to a foreign index then we don't need
+       * to seed a black hole locally. */
+      max_part_density_index[index] = fof_halo_has_black_hole;
+    } else {
+      /* The densest particle is on the same node as the global root so we don't
        need to seed a black hole on the other node. */
-    else {
       fof_mass_recv[i].max_part_density_index = fof_halo_has_black_hole;
     }
   }
@@ -2121,8 +2110,8 @@ void fof_dump_group_data(const struct fof_props *props,
     const long long part_id = max_part_density_index[i] >= 0
                                   ? parts[max_part_density_index[i]].id
                                   : -1;
-    fprintf(file, "  %8zu %12zu %12e %12e %24lld %24lld\n", 0UL, 0UL, 0., 0.,
-            0LL, part_id);
+    fprintf(file, "  %8zu %12zu %12e %12e %12e %12e %12e %24lld %24lld\n",
+	    0UL, 0UL, 0., 0., 0., 0., 0., 0LL, part_id);
   }
 
   fclose(file);
