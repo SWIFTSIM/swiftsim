@@ -649,8 +649,7 @@ static INLINE void runner_dopair_grav_pp_full(
 #ifdef SWIFT_DEBUG_CHECKS
       /* The gravity_cache are sometimes allocated with more
          place than required => flag with mass=0 */
-      if (gparts_j[pjd].time_bin == time_bin_not_created &&
-          mass_j != 0.f) {
+      if (gparts_j[pjd].time_bin == time_bin_not_created && mass_j != 0.f) {
         error("Found an extra gpart in the gravity interaction");
       }
       if (gparts_i[pid].time_bin == time_bin_not_created &&
@@ -819,8 +818,7 @@ static INLINE void runner_dopair_grav_pp_truncated(
           ci_cache->m[pid] != 0.) {
         error("Found an extra gpart in the gravity interaction");
       }
-      if (gparts_j[pjd].time_bin == time_bin_not_created &&
-          mass_j != 0.) {
+      if (gparts_j[pjd].time_bin == time_bin_not_created && mass_j != 0.) {
         error("Found an extra gpart in the gravity interaction");
       }
 
@@ -1555,8 +1553,7 @@ static INLINE void runner_doself_grav_pp_full(
           ci_cache->m[pid] != 0.) {
         error("Found an extra gpart in the gravity interaction");
       }
-      if (gparts[pjd].time_bin == time_bin_not_created &&
-          mass_j != 0.) {
+      if (gparts[pjd].time_bin == time_bin_not_created && mass_j != 0.) {
         error("Found an extra gpart in the gravity interaction");
       }
 
@@ -1704,8 +1701,7 @@ static INLINE void runner_doself_grav_pp_truncated(
           ci_cache->m[pid] != 0.) {
         error("Found an extra gpart in the gravity interaction");
       }
-      if (gparts[pjd].time_bin == time_bin_not_created &&
-          mass_j != 0.) {
+      if (gparts[pjd].time_bin == time_bin_not_created && mass_j != 0.) {
         error("Found an extra gpart in the gravity interaction");
       }
 
