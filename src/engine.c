@@ -1282,11 +1282,6 @@ void engine_rebuild(struct engine *e, const int repartitioned,
   if (e->policy & engine_policy_self_gravity) {
     long long counter = 0;
 
-    long long counter_2 = 0;
-    for(int i = 0; i < e->s->nr_cells; i++) {
-      counter_2 += e->s->cells_top[i].grav.count;
-    }
-
     for (int i = 0; i < e->s->nr_cells; ++i) {
       const struct gravity_tensors *m = &e->s->multipoles_top[i];
       counter += m->m_pole.num_gpart;
