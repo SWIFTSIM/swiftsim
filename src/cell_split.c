@@ -460,6 +460,11 @@ void cell_split(struct cell *c, const ptrdiff_t parts_offset,
     c->progeny[k]->grav.parts = &c->grav.parts[bucket_offset[k]];
     c->progeny[k]->grav.parts_rebuild = c->progeny[k]->grav.parts;
   }
+
+  int gparts_count = 0;
+  for (int k = 0; k < 8; k++) {
+    gparts_count += bucket_count[k];
+  }
 }
 
 /**

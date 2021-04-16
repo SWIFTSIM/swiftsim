@@ -25,6 +25,12 @@
 INLINE static void convert_gpart_pos(const struct engine* e,
                                      const struct gpart* gp, double ret[3]) {
 
+#ifdef SWIFT_DEBUG_CHECKS
+  if (gp->time_bin == time_bin_not_created) {
+    error("Found an extra particle in IO.");
+  }
+#endif
+
   const struct space* s = e->s;
   if (s->periodic) {
     ret[0] = box_wrap(gp->x[0], 0.0, s->dim[0]);
@@ -39,6 +45,11 @@ INLINE static void convert_gpart_pos(const struct engine* e,
 
 INLINE static void convert_gpart_vel(const struct engine* e,
                                      const struct gpart* gp, float ret[3]) {
+#ifdef SWIFT_DEBUG_CHECKS
+  if (gp->time_bin == time_bin_not_created) {
+    error("Found an extra particle in IO.");
+  }
+#endif
 
   const int with_cosmology = (e->policy & engine_policy_cosmology);
   const struct cosmology* cosmo = e->cosmology;
@@ -74,6 +85,11 @@ INLINE static void convert_gpart_vel(const struct engine* e,
 
 INLINE static void convert_gpart_soft(const struct engine* e,
                                       const struct gpart* gp, float* ret) {
+#ifdef SWIFT_DEBUG_CHECKS
+  if (gp->time_bin == time_bin_not_created) {
+    error("Found an extra particle in IO.");
+  }
+#endif
 
   ret[0] = kernel_gravity_softening_plummer_equivalent_inv *
            gravity_get_softening(gp, e->gravity_properties);
