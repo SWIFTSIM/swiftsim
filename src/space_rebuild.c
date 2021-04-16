@@ -864,7 +864,6 @@ void space_rebuild(struct space *s, int repartitioned, int verbose) {
         gp->x[2] < c->loc[2] || gp->x[2] > c->loc[2] + c->width[2])
       error("gpart not sorted into the right top-level cell!");
   }
-
 #endif /* SWIFT_DEBUG_CHECKS */
 
   /* Extract the cell counts from the sorted indices. Deduct the extra

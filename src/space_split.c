@@ -732,16 +732,6 @@ void space_split(struct space *s, int verbose) {
                  s->nr_local_cells_with_particles, sizeof(int),
                  threadpool_auto_chunk_size, s);
 
-  size_t counter = 0;
-  for(int i = 0; i < s->nr_cells; i++) {
-    counter += s->cells_top[i].grav.count;
-  }
-
-  size_t counter2 = 0;
-  for(int i = 0; i < s->nr_local_cells_with_particles; i++) {
-    counter2 += s->cells_top[s->local_cells_with_particles_top[i]].grav.count;
-  }
-
   if (verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
             clocks_getunit());

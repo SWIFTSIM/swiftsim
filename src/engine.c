@@ -1235,7 +1235,6 @@ void engine_rebuild(struct engine *e, const int repartitioned,
       (long long)(e->s->nr_sparts - e->s->nr_extra_sparts),
       (long long)(e->s->nr_sinks - e->s->nr_extra_sinks),
       (long long)(e->s->nr_bparts - e->s->nr_extra_bparts)};
-
 #ifdef WITH_MPI
   MPI_Allreduce(MPI_IN_PLACE, num_particles, 5, MPI_LONG_LONG, MPI_SUM,
                 MPI_COMM_WORLD);
@@ -1293,8 +1292,7 @@ void engine_rebuild(struct engine *e, const int repartitioned,
       counter += m->m_pole.num_gpart;
     }
     if (counter != e->total_nr_gparts)
-      error("Total particles in multipoles inconsistent with engine %lli %lli %lli",
-            counter, e->total_nr_gparts, counter_2);
+      error("Total particles in multipoles inconsistent with engine");
   }
 #endif
 
