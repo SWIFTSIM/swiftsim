@@ -1711,8 +1711,8 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
     if (periodic) {
       fragment_centre_of_mass[0] = nearest(
           fragment_centre_of_mass[0] - first_position[3 * index + 0], dim[0]);
-      fragment_centre_of_mass[0] = nearest(
-          fragment_centre_of_mass[0] - first_position[3 * index + 1], dim[1]);
+      fragment_centre_of_mass[1] = nearest(
+          fragment_centre_of_mass[1] - first_position[3 * index + 1], dim[1]);
       fragment_centre_of_mass[2] = nearest(
           fragment_centre_of_mass[2] - first_position[3 * index + 2], dim[2]);
     }
