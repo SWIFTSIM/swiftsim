@@ -1554,7 +1554,7 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
 
   /* Allocate and initialise a mass array. */
   if (posix_memalign((void **)&hashmap_mass_send.mass_send, 32,
-                     nsend * sizeof(struct fof_mass_send_hashmap)) != 0)
+                     nsend * sizeof(struct fof_final_mass)) != 0)
     error("Failed to allocate list of group masses for FOF search.");
 
   hashmap_mass_send.nsend = 0;
@@ -1824,6 +1824,7 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
   free(recvoffset);
   free(fof_mass_send);
   free(fof_mass_recv);
+
 #else
 
   /* Increment the group mass for groups above min_group_size. */
