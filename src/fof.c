@@ -1421,6 +1421,12 @@ void fof_unpack_group_mass_mapper(hashmap_key_t key, hashmap_value_t *value,
   /* Store elements from hash table in array. */
   mass_send[*nsend].global_root = key;
   mass_send[(*nsend)].group_mass = value->value_dbl;
+  mass_send[(*nsend)].first_position[0] = value->value_array2_dbl[0];
+  mass_send[(*nsend)].first_position[1] = value->value_array2_dbl[1];
+  mass_send[(*nsend)].first_position[2] = value->value_array2_dbl[2];
+  mass_send[(*nsend)].centre_of_mass[0] = value->value_array_dbl[0];
+  mass_send[(*nsend)].centre_of_mass[1] = value->value_array_dbl[1];
+  mass_send[(*nsend)].centre_of_mass[2] = value->value_array_dbl[2];
   mass_send[(*nsend)].max_part_density_index = value->value_st;
   mass_send[(*nsend)++].max_part_density = value->value_flt;
 }
@@ -1445,6 +1451,8 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
   const size_t group_id_offset = props->group_id_offset;
   const size_t group_id_default = props->group_id_default;
   const double seed_halo_mass = props->seed_halo_mass;
+  const int periodic = s->periodic;
+  const double dim[3] = {s->dim[0], s->dim[1], s->dim[2]};
 
 #ifdef WITH_MPI
   size_t *group_index = props->group_index;
@@ -1453,6 +1461,8 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
   /* Direct pointers to the arrays */
   long long *max_part_density_index = props->max_part_density_index;
   float *max_part_density = props->max_part_density;
+  double *centre_of_mass = props->group_centre_of_mass;
+  double *first_position = props->group_first_position;
 
   /* Start the hash map */
   hashmap_t map;
@@ -1488,8 +1498,31 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
         if (data == NULL)
           error("Couldn't find key (%zu) or create new one.", root);
 
+        /* Compute the centre of mass */
+        const double mass = gparts[i].mass;
+        double x[3] = {gparts[i].x[0], gparts[i].x[1], gparts[i].x[2]};
+
         /* Add mass fragments of groups */
-        data->value_dbl += gparts[i].mass;
+        data->value_dbl += mass;
+
+        /* Record the first particle of this fragment that we encounter so we
+         * we can use it as reference frame for the centre of mass calculation
+         */
+        if (data->value_array2_dbl[0] == (double)(-FLT_MAX)) {
+          data->value_array2_dbl[0] = gparts[i].x[0];
+          data->value_array2_dbl[1] = gparts[i].x[1];
+          data->value_array2_dbl[2] = gparts[i].x[2];
+        }
+
+        if (periodic) {
+          x[0] = nearest(x[0] - data->value_array2_dbl[0], dim[0]);
+          x[1] = nearest(x[1] - data->value_array2_dbl[1], dim[1]);
+          x[2] = nearest(x[2] - data->value_array2_dbl[2], dim[2]);
+        }
+
+        data->value_array_dbl[0] += mass * x[0];
+        data->value_array_dbl[1] += mass * x[1];
+        data->value_array_dbl[2] += mass * x[2];
 
         /* Also accumulate the densest gas particle and its index */
         if (gparts[i].type == swift_type_gas &&
@@ -1604,6 +1637,28 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
         const size_t index =
             gparts[i].fof_data.group_id - group_id_offset - num_groups_prev;
 
+        /* Compute the centre of mass */
+        const double mass = gparts[i].mass;
+        double x[3] = {gparts[i].x[0], gparts[i].x[1], gparts[i].x[2]};
+
+        /* Record the first particle of this group that we encounter so we
+         * can use it as reference frame for the centre of mass calculation */
+        if (first_position[index * 3 + 0] == (double)(-FLT_MAX)) {
+          first_position[index * 3 + 0] = x[0];
+          first_position[index * 3 + 1] = x[1];
+          first_position[index * 3 + 2] = x[2];
+        }
+
+        if (periodic) {
+          x[0] = nearest(x[0] - first_position[index * 3 + 0], dim[0]);
+          x[1] = nearest(x[1] - first_position[index * 3 + 1], dim[1]);
+          x[2] = nearest(x[2] - first_position[index * 3 + 2], dim[2]);
+        }
+
+        centre_of_mass[index * 3 + 0] += mass * x[0];
+        centre_of_mass[index * 3 + 1] += mass * x[1];
+        centre_of_mass[index * 3 + 2] += mass * x[2];
+
         /* Check haloes above the seeding threshold */
         if (group_mass[index] > seed_halo_mass) {
 
@@ -1643,6 +1698,28 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
     const size_t local_group_offset = group_id_offset + num_groups_prev;
     const size_t index =
         gparts[local_root_index].fof_data.group_id - local_group_offset;
+
+    double fragment_mass = fof_mass_recv[i].group_mass;
+    double fragment_centre_of_mass[3] = {
+        fof_mass_recv[i].centre_of_mass[0] / fof_mass_recv[i].group_mass,
+        fof_mass_recv[i].centre_of_mass[1] / fof_mass_recv[i].group_mass,
+        fof_mass_recv[i].centre_of_mass[2] / fof_mass_recv[i].group_mass};
+    fragment_centre_of_mass[0] += fof_mass_recv[i].first_position[0];
+    fragment_centre_of_mass[1] += fof_mass_recv[i].first_position[1];
+    fragment_centre_of_mass[2] += fof_mass_recv[i].first_position[2];
+
+    if (periodic) {
+      fragment_centre_of_mass[0] = nearest(
+          fragment_centre_of_mass[0] - first_position[3 * index + 0], dim[0]);
+      fragment_centre_of_mass[0] = nearest(
+          fragment_centre_of_mass[0] - first_position[3 * index + 1], dim[1]);
+      fragment_centre_of_mass[2] = nearest(
+          fragment_centre_of_mass[2] - first_position[3 * index + 2], dim[2]);
+    }
+
+    centre_of_mass[index * 3 + 0] += fragment_mass * fragment_centre_of_mass[0];
+    centre_of_mass[index * 3 + 1] += fragment_mass * fragment_centre_of_mass[1];
+    centre_of_mass[index * 3 + 2] += fragment_mass * fragment_centre_of_mass[2];
 
     /* Only seed groups above the mass threshold. */
     if (group_mass[index] > seed_halo_mass) {
@@ -1749,9 +1826,6 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
   free(fof_mass_recv);
 #else
 
-  const int periodic = s->periodic;
-  const double dim[3] = {s->dim[0], s->dim[1], s->dim[2]};
-
   /* Increment the group mass for groups above min_group_size. */
   threadpool_map(&s->e->threadpool, fof_calc_group_mass_mapper, gparts,
                  nr_gparts, sizeof(struct gpart), threadpool_auto_chunk_size,
@@ -1779,9 +1853,8 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
       const double mass = gparts[i].mass;
       double x[3] = {gparts[i].x[0], gparts[i].x[1], gparts[i].x[2]};
 
-      /* Record the first particle of this group that we encounter
-       * so we can use it as reference frame for the centre of mass calculation
-       */
+      /* Record the first particle of this group that we encounter so we
+       * can use it as reference frame for the centre of mass calculation */
       if (first_position[index * 3 + 0] == (double)(-FLT_MAX)) {
         first_position[index * 3 + 0] = x[0];
         first_position[index * 3 + 1] = x[1];

@@ -146,6 +146,8 @@ struct fof_final_index {
 struct fof_final_mass {
   size_t global_root;
   double group_mass;
+  double first_position[3];
+  double centre_of_mass[3];
   long long max_part_density_index;
   float max_part_density;
 } SWIFT_STRUCT_ALIGN;
