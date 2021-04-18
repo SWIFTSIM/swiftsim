@@ -350,6 +350,7 @@ struct engine {
 
   /* FOF information */
   int run_fof;
+  int dump_catalogue_when_seeding;
 
   /* Statistics information */
   double a_first_statistics;

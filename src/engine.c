@@ -1375,7 +1375,7 @@ int engine_prepare(struct engine *e) {
     engine_drift_all(e, /*drift_mpole=*/0);
     drifted_all = 1;
 
-    engine_fof(e, /*dump_results=*/0, /*seed_black_holes=*/1);
+    engine_fof(e, e->dump_catalogue_when_seeding, /*seed_black_holes=*/1);
   }
 
   /* Perform particle splitting. Only if there is a rebuild coming and no
@@ -2179,6 +2179,7 @@ void engine_step(struct engine *e) {
     if (e->ti_end_min > e->ti_next_fof && e->ti_next_fof > 0) {
       e->run_fof = 1;
     }
+    if (e->step == 3) e->run_fof = 1;
   }
 
 #ifdef WITH_LOGGER
@@ -2838,6 +2839,8 @@ void engine_init(
       parser_get_opt_param_int(params, "Snapshots:invoke_stf", 0);
   e->snapshot_invoke_fof =
       parser_get_opt_param_int(params, "Snapshots:invoke_fof", 0);
+  e->dump_catalogue_when_seeding =
+      parser_get_opt_param_int(params, "FOF:dump_catalogue_when_seeding", 0);
   e->snapshot_units = (struct unit_system *)malloc(sizeof(struct unit_system));
   units_init_default(e->snapshot_units, params, "Snapshots", internal_units);
   e->snapshot_output_count = 0;
