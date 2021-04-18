@@ -1872,35 +1872,32 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
       centre_of_mass[index * 3 + 1] += mass * x[1];
       centre_of_mass[index * 3 + 2] += mass * x[2];
 
-      if (seed_black_holes) {
+      /* Check haloes above the seeding threshold */
+      if (group_mass[index] > seed_halo_mass) {
 
-        /* Check haloes above the seeding threshold */
-        if (group_mass[index] > seed_halo_mass) {
+        /* Find the densest gas particle.
+         * Account for groups that already have a black hole and groups that
+         * contain no gas. */
+        if (gparts[i].type == swift_type_gas &&
+            max_part_density_index[index] != fof_halo_has_black_hole) {
 
-          /* Find the densest gas particle.
-           * Account for groups that already have a black hole and groups that
-           * contain no gas. */
-          if (gparts[i].type == swift_type_gas &&
-              max_part_density_index[index] != fof_halo_has_black_hole) {
+          const size_t gas_index = -gparts[i].id_or_neg_offset;
+          const float rho_com = hydro_get_comoving_density(&parts[gas_index]);
 
-            const size_t gas_index = -gparts[i].id_or_neg_offset;
-            const float rho_com = hydro_get_comoving_density(&parts[gas_index]);
-
-            /* Update index if a denser gas particle is found. */
-            if (rho_com > max_part_density[index]) {
-              max_part_density_index[index] = gas_index;
-              max_part_density[index] = rho_com;
-            }
+          /* Update index if a denser gas particle is found. */
+          if (rho_com > max_part_density[index]) {
+            max_part_density_index[index] = gas_index;
+            max_part_density[index] = rho_com;
           }
-          /* If there is already a black hole in the group we don't need to
-             create a new one. */
-          else if (gparts[i].type == swift_type_black_hole) {
-            max_part_density_index[index] = fof_halo_has_black_hole;
-          }
-
-        } else {
-          max_part_density_index[index] = fof_halo_has_too_low_mass;
         }
+        /* If there is already a black hole in the group we don't need to
+           create a new one. */
+        else if (gparts[i].type == swift_type_black_hole) {
+          max_part_density_index[index] = fof_halo_has_black_hole;
+        }
+
+      } else {
+        max_part_density_index[index] = fof_halo_has_too_low_mass;
       }
     }
   }
@@ -3102,27 +3099,23 @@ void fof_search_tree(struct fof_props *props,
   }
 
   /* Allocate and initialise arrays to identify the densest gas particle. */
-  if (seed_black_holes) {
+  if (swift_memalign("fof_max_part_density_index",
+                     (void **)&props->max_part_density_index, 32,
+                     num_groups_local * sizeof(long long)) != 0)
+    error(
+        "Failed to allocate list of max group density indices for FOF "
+        "search.");
 
-    if (swift_memalign("fof_max_part_density_index",
-                       (void **)&props->max_part_density_index, 32,
-                       num_groups_local * sizeof(long long)) != 0)
-      error(
-          "Failed to allocate list of max group density indices for FOF "
-          "search.");
+  if (swift_memalign("fof_max_part_density", (void **)&props->max_part_density,
+                     32, num_groups_local * sizeof(float)) != 0)
+    error("Failed to allocate list of max group densities for FOF search.");
 
-    if (swift_memalign("fof_max_part_density",
-                       (void **)&props->max_part_density, 32,
-                       num_groups_local * sizeof(float)) != 0)
-      error("Failed to allocate list of max group densities for FOF search.");
+  /* No densest particle found so far */
+  bzero(props->max_part_density, num_groups_local * sizeof(float));
 
-    /* No densest particle found so far */
-    bzero(props->max_part_density, num_groups_local * sizeof(float));
-
-    /* Start by assuming that the haloes have no gas */
-    for (size_t i = 0; i < num_groups_local; i++) {
-      props->max_part_density_index[i] = fof_halo_has_no_gas;
-    }
+  /* Start by assuming that the haloes have no gas */
+  for (size_t i = 0; i < num_groups_local; i++) {
+    props->max_part_density_index[i] = fof_halo_has_no_gas;
   }
 
   const ticks tic_seeding = getticks();
@@ -3162,10 +3155,8 @@ void fof_search_tree(struct fof_props *props,
   swift_free("fof_group_mass", props->group_mass);
   swift_free("fof_group_centre_of_mass", props->group_centre_of_mass);
   swift_free("fof_group_first_position", props->group_first_position);
-  if (seed_black_holes) {
-    swift_free("fof_max_part_density_index", props->max_part_density_index);
-    swift_free("fof_max_part_density", props->max_part_density);
-  }
+  swift_free("fof_max_part_density_index", props->max_part_density_index);
+  swift_free("fof_max_part_density", props->max_part_density);
   props->group_index = NULL;
   props->group_size = NULL;
   props->group_mass = NULL;
