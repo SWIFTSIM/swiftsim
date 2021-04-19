@@ -1420,15 +1420,17 @@ void fof_unpack_group_mass_mapper(hashmap_key_t key, hashmap_value_t *value,
 
   /* Store elements from hash table in array. */
   mass_send[*nsend].global_root = key;
-  mass_send[(*nsend)].group_mass = value->value_dbl;
-  mass_send[(*nsend)].first_position[0] = value->value_array2_dbl[0];
-  mass_send[(*nsend)].first_position[1] = value->value_array2_dbl[1];
-  mass_send[(*nsend)].first_position[2] = value->value_array2_dbl[2];
-  mass_send[(*nsend)].centre_of_mass[0] = value->value_array_dbl[0];
-  mass_send[(*nsend)].centre_of_mass[1] = value->value_array_dbl[1];
-  mass_send[(*nsend)].centre_of_mass[2] = value->value_array_dbl[2];
-  mass_send[(*nsend)].max_part_density_index = value->value_st;
-  mass_send[(*nsend)++].max_part_density = value->value_flt;
+  mass_send[*nsend].group_mass = value->value_dbl;
+  mass_send[*nsend].first_position[0] = value->value_array2_dbl[0];
+  mass_send[*nsend].first_position[1] = value->value_array2_dbl[1];
+  mass_send[*nsend].first_position[2] = value->value_array2_dbl[2];
+  mass_send[*nsend].centre_of_mass[0] = value->value_array_dbl[0];
+  mass_send[*nsend].centre_of_mass[1] = value->value_array_dbl[1];
+  mass_send[*nsend].centre_of_mass[2] = value->value_array_dbl[2];
+  mass_send[*nsend].max_part_density_index = value->value_st;
+  mass_send[*nsend].max_part_density = value->value_flt;
+
+  (*nsend)++;
 }
 
 #endif /* WITH_MPI */
