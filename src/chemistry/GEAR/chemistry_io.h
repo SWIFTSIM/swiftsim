@@ -139,9 +139,7 @@ INLINE static void chemistry_write_flavour(hid_t h_grp, hid_t h_grp_columns,
 #ifdef FEEDBACK_GEAR
   /* Without feedback, the elements are meaningless */
   const int with_feedback = e->policy & engine_policy_feedback;
-  if (!with_feedback)
-    return;
-
+  if (!with_feedback) return;
 
   const char* element_names = e->feedback_props->stellar_model.elements_name;
 
