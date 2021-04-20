@@ -2783,15 +2783,6 @@ void fof_search_tree(struct fof_props *props,
             clocks_from_ticks(getticks() - comms_tic), clocks_getunit());
 
   node_offset = nr_gparts_cumulative - nr_gparts_local;
-
-  /* snprintf(output_file_name + strlen(output_file_name), FILENAME_BUFFER_SIZE,
-   */
-  /*          "_mpi_rank_%d.dat", engine_rank); */
-  snprintf(output_file_name + strlen(output_file_name), FILENAME_BUFFER_SIZE,
-           "_mpi.dat");
-#else
-  snprintf(output_file_name + strlen(output_file_name), FILENAME_BUFFER_SIZE,
-           ".dat");
 #endif
 
   /* Local copy of the arrays */
@@ -3143,6 +3134,14 @@ void fof_search_tree(struct fof_props *props,
 
   /* Dump group data. */
   if (dump_debug_results) {
+#ifdef WITH_MPI
+    snprintf(output_file_name + strlen(output_file_name), FILENAME_BUFFER_SIZE,
+             "_mpi.dat");
+#else
+    snprintf(output_file_name + strlen(output_file_name), FILENAME_BUFFER_SIZE,
+             ".dat");
+#endif
+
     fof_dump_group_data(props, s->e->nodeID, s->e->nr_nodes, output_file_name,
                         s, num_groups_local, high_group_sizes);
   }
@@ -3155,20 +3154,21 @@ void fof_search_tree(struct fof_props *props,
 
   /* Free the left-overs */
   swift_free("fof_high_group_sizes", high_group_sizes);
-#endif /* #ifndef WITHOUT_GROUP_PROPS */
-  swift_free("fof_group_index", props->group_index);
-  swift_free("fof_group_size", props->group_size);
   swift_free("fof_group_mass", props->group_mass);
   swift_free("fof_group_centre_of_mass", props->group_centre_of_mass);
   swift_free("fof_group_first_position", props->group_first_position);
   swift_free("fof_max_part_density_index", props->max_part_density_index);
   swift_free("fof_max_part_density", props->max_part_density);
-  props->group_index = NULL;
-  props->group_size = NULL;
   props->group_mass = NULL;
   props->group_centre_of_mass = NULL;
   props->max_part_density_index = NULL;
   props->max_part_density = NULL;
+
+#endif /* #ifndef WITHOUT_GROUP_PROPS */
+  swift_free("fof_group_index", props->group_index);
+  swift_free("fof_group_size", props->group_size);
+  props->group_index = NULL;
+  props->group_size = NULL;
 
   if (engine_rank == 0) {
     message(

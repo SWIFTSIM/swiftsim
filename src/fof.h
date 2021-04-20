@@ -27,6 +27,7 @@
 #include "parser.h"
 
 /* Avoid cyclic inclusions */
+struct cell;
 struct gpart;
 struct space;
 struct engine;
@@ -34,23 +35,6 @@ struct unit_system;
 struct phys_const;
 struct black_holes_props;
 struct cosmology;
-
-/* MPI message required for FOF. */
-struct fof_mpi {
-
-  /* The local particle's root ID.*/
-  size_t group_i;
-
-  /* The local group's size.*/
-  size_t group_i_size;
-
-  /* The foreign particle's root ID.*/
-  size_t group_j;
-
-  /* The local group's size.*/
-  size_t group_j_size;
-
-} SWIFT_STRUCT_ALIGN;
 
 struct fof_props {
 
@@ -136,11 +120,28 @@ struct group_length {
 } SWIFT_STRUCT_ALIGN;
 
 #ifdef WITH_MPI
+
+/* MPI message required for FOF. */
+struct fof_mpi {
+
+  /* The local particle's root ID.*/
+  size_t group_i;
+
+  /* The local group's size.*/
+  size_t group_i_size;
+
+  /* The foreign particle's root ID.*/
+  size_t group_j;
+
+  /* The local group's size.*/
+  size_t group_j_size;
+};
+
 /* Struct used to find final group ID when using MPI */
 struct fof_final_index {
   size_t local_root;
   size_t global_root;
-} SWIFT_STRUCT_ALIGN;
+};
 
 /* Struct used to find the total mass of a group when using MPI */
 struct fof_final_mass {
@@ -150,22 +151,20 @@ struct fof_final_mass {
   double centre_of_mass[3];
   long long max_part_density_index;
   float max_part_density;
-} SWIFT_STRUCT_ALIGN;
+};
 
 /* Struct used to iterate over the hash table and unpack the mass fragments of a
  * group when using MPI */
 struct fof_mass_send_hashmap {
   struct fof_final_mass *mass_send;
   size_t nsend;
-} SWIFT_STRUCT_ALIGN;
-#endif
+};
 
 /* Store local and foreign cell indices that touch. */
 struct cell_pair_indices {
-
   struct cell *local, *foreign;
-
-} SWIFT_STRUCT_ALIGN;
+};
+#endif
 
 /* Function prototypes. */
 void fof_init(struct fof_props *props, struct swift_params *params,
@@ -190,6 +189,7 @@ void rec_fof_search_pair(const struct fof_props *props, const double dim[3],
                          struct cell *restrict ci, struct cell *restrict cj);
 void fof_struct_dump(const struct fof_props *props, FILE *stream);
 void fof_struct_restore(struct fof_props *props, FILE *stream);
+
 #ifdef WITH_MPI
 /* MPI data type for the particle transfers */
 extern MPI_Datatype fof_mpi_type;
