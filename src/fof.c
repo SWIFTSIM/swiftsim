@@ -39,6 +39,7 @@
 #include "black_holes.h"
 #include "common_io.h"
 #include "engine.h"
+#include "fof_catalogue_io.h"
 #include "hashmap.h"
 #include "memuse.h"
 #include "proxy.h"
@@ -2725,14 +2726,16 @@ void fof_search_foreign_cells(struct fof_props *props, const struct space *s) {
  * @param constants The physical constants in internal units.
  * @param cosmo The current cosmological model.
  * @param s The #space containing the particles.
- * @param dump_results Do we want to write the group catalogue to a file?
+ * @param dump_debug_results Are we writing txt-file debug catalogues including BH-seeding info?
+ * @param dump_results Do we want to write the group catalogue to a hdf5 file?
  * @param seed_black_holes Do we want to seed black holes in haloes?
  */
 void fof_search_tree(struct fof_props *props,
                      const struct black_holes_props *bh_props,
                      const struct phys_const *constants,
                      const struct cosmology *cosmo, struct space *s,
-                     const int dump_results, const int seed_black_holes) {
+                     const int dump_results, const int dump_debug_results,
+                     const int seed_black_holes) {
 
   const size_t nr_gparts = s->nr_gparts;
   const size_t min_group_size = props->min_group_size;
@@ -3138,7 +3141,7 @@ void fof_search_tree(struct fof_props *props,
             clocks_from_ticks(getticks() - tic_seeding), clocks_getunit());
 
   /* Dump group data. */
-  if (dump_results) {
+  if (dump_debug_results) {
     fof_dump_group_data(props, s->e->nodeID, s->e->nr_nodes, output_file_name,
                         s, num_groups_local, high_group_sizes);
   }
