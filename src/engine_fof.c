@@ -102,12 +102,12 @@ void engine_activate_fof_tasks(struct engine *e) {
  *
  * @param e the engine
  * @param dump_results Are we writing group catalogues to output files?
- * @param dump_debug_results Are we writing a txt-file debug catalogue (including BH seed info)?
+ * @param dump_debug_results Are we writing a txt-file debug catalogue
+ * (including BH seed info)?
  * @param seed_black_holes Are we seeding black holes?
  */
 void engine_fof(struct engine *e, const int dump_results,
-		const int dump_debug_results,
-                const int seed_black_holes) {
+                const int dump_debug_results, const int seed_black_holes) {
 
 #ifdef WITH_FOF
 

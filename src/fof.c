@@ -2726,7 +2726,8 @@ void fof_search_foreign_cells(struct fof_props *props, const struct space *s) {
  * @param constants The physical constants in internal units.
  * @param cosmo The current cosmological model.
  * @param s The #space containing the particles.
- * @param dump_debug_results Are we writing txt-file debug catalogues including BH-seeding info?
+ * @param dump_debug_results Are we writing txt-file debug catalogues including
+ * BH-seeding info?
  * @param dump_results Do we want to write the group catalogue to a hdf5 file?
  * @param seed_black_holes Do we want to seed black holes in haloes?
  */
