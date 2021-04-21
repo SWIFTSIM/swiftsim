@@ -2182,7 +2182,6 @@ void engine_step(struct engine *e) {
     if (e->ti_end_min > e->ti_next_fof && e->ti_next_fof > 0) {
       e->run_fof = 1;
     }
-    if (e->step == 3) e->run_fof = 1;
   }
 
 #ifdef WITH_LOGGER

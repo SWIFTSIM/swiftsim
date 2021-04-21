@@ -600,8 +600,6 @@ void read_ic_serial(char* fileName, const struct unit_system* internal_units,
     io_read_attribute(h_grp, "NumPart_Total_HighWord", LONGLONG,
                       numParticles_highWord);
 
-    numParticles[5] = 0;
-
     /* Check that the user is not doing something silly when they e.g. restart
      * from a snapshot by asserting that the current scale-factor (from
      * parameter file) and the redshift in the header are consistent */
