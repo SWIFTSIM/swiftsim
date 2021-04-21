@@ -1377,6 +1377,8 @@ int engine_prepare(struct engine *e) {
 
     engine_fof(e, e->dump_catalogue_when_seeding, /*dump_debug=*/0,
                /*seed_black_holes=*/1);
+
+    if (e->dump_catalogue_when_seeding) e->snapshot_output_count++;
   }
 
   /* Perform particle splitting. Only if there is a rebuild coming and no
