@@ -3133,7 +3133,15 @@ void fof_search_tree(struct fof_props *props,
             clocks_from_ticks(getticks() - tic_seeding), clocks_getunit());
 
   /* Dump group data. */
-  if (dump_debug_results) {
+  if (dump_results) {
+#ifdef HAVE_HDF5
+    write_fof_hdf5_catalogue(props, num_groups_local, s->e);
+#else
+    error("Can't dump hdf5 catalogues with hdf5 switched off!");
+#endif
+  }
+
+  if (1) {  // dump_debug_results) {
 #ifdef WITH_MPI
     snprintf(output_file_name + strlen(output_file_name), FILENAME_BUFFER_SIZE,
              "_mpi.dat");
@@ -3141,7 +3149,6 @@ void fof_search_tree(struct fof_props *props,
     snprintf(output_file_name + strlen(output_file_name), FILENAME_BUFFER_SIZE,
              ".dat");
 #endif
-
     fof_dump_group_data(props, s->e->nodeID, s->e->nr_nodes, output_file_name,
                         s, num_groups_local, high_group_sizes);
   }
