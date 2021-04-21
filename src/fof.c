@@ -813,6 +813,9 @@ void fof_search_self_cell(const struct fof_props *props, const double l_x2,
     /* Ignore inhibited particles */
     if (pi->time_bin >= time_bin_inhibited) continue;
 
+    /* Ignore neutrinos */
+    if (pi->type == swift_type_neutrino) continue;
+
 #ifdef SWIFT_DEBUG_CHECKS
     if (pi->ti_drift != ti_current)
       error("Running FOF on an un-drifted particle!");
@@ -831,6 +834,9 @@ void fof_search_self_cell(const struct fof_props *props, const double l_x2,
 
       /* Ignore inhibited particles */
       if (pj->time_bin >= time_bin_inhibited) continue;
+
+      /* Ignore neutrinos */
+      if (pj->type == swift_type_neutrino) continue;
 
 #ifdef SWIFT_DEBUG_CHECKS
       if (pj->ti_drift != ti_current)
@@ -924,6 +930,9 @@ void fof_search_pair_cells(const struct fof_props *props, const double dim[3],
     /* Ignore inhibited particles */
     if (pi->time_bin >= time_bin_inhibited) continue;
 
+    /* Ignore neutrinos */
+    if (pi->type == swift_type_neutrino) continue;
+
 #ifdef SWIFT_DEBUG_CHECKS
     if (pi->ti_drift != ti_current)
       error("Running FOF on an un-drifted particle!");
@@ -942,6 +951,9 @@ void fof_search_pair_cells(const struct fof_props *props, const double dim[3],
 
       /* Ignore inhibited particles */
       if (pj->time_bin >= time_bin_inhibited) continue;
+
+      /* Ignore neutrinos */
+      if (pj->type == swift_type_neutrino) continue;
 
 #ifdef SWIFT_DEBUG_CHECKS
       if (pj->ti_drift != ti_current)
@@ -1040,6 +1052,9 @@ void fof_search_pair_cells_foreign(
     /* Ignore inhibited particles */
     if (pi->time_bin >= time_bin_inhibited) continue;
 
+    /* Ignore neutrinos */
+    if (pi->type == swift_type_neutrino) continue;
+
 #ifdef SWIFT_DEBUG_CHECKS
     if (pi->ti_drift != ti_current)
       error("Running FOF on an un-drifted particle!");
@@ -1059,6 +1074,9 @@ void fof_search_pair_cells_foreign(
 
       /* Ignore inhibited particles */
       if (pj->time_bin >= time_bin_inhibited) continue;
+
+      /* Ignore neutrinos */
+      if (pj->type == swift_type_neutrino) continue;
 
 #ifdef SWIFT_DEBUG_CHECKS
       if (pj->ti_drift != ti_current)
