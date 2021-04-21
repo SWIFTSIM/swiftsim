@@ -2021,6 +2021,56 @@ void fof_find_foreign_links_mapper(void *map_data, int num_elements,
 #endif
 }
 
+void fof_finalise_group_data(struct fof_props *props,
+                             const struct group_length *group_sizes,
+                             const struct gpart *gparts, const int periodic,
+                             const double dim[3], const int num_groups) {
+
+  size_t *group_size = (size_t *)malloc(num_groups * sizeof(size_t));
+  size_t *group_index = (size_t *)malloc(num_groups * sizeof(size_t));
+  double *group_centre_of_mass =
+      (double *)malloc(3 * num_groups * sizeof(double));
+
+  for (int i = 0; i < num_groups; i++) {
+
+    const size_t group_offset = group_sizes[i].index;
+
+    /* Centre of mass, including possible box wrapping */
+    double CoM[3] = {
+        props->group_centre_of_mass[i * 3 + 0] / props->group_mass[i],
+        props->group_centre_of_mass[i * 3 + 1] / props->group_mass[i],
+        props->group_centre_of_mass[i * 3 + 2] / props->group_mass[i]};
+    if (periodic) {
+      CoM[0] =
+          box_wrap(CoM[0] + props->group_first_position[i * 3 + 0], 0., dim[0]);
+      CoM[1] =
+          box_wrap(CoM[1] + props->group_first_position[i * 3 + 1], 0., dim[1]);
+      CoM[2] =
+          box_wrap(CoM[2] + props->group_first_position[i * 3 + 2], 0., dim[2]);
+    }
+
+#ifdef WITH_MPI
+    group_index[i] = gparts[group_offset - node_offset].fof_data.group_id;
+    group_size[i] = props->group_size[group_offset - node_offset];
+#else
+    group_index[i] = gparts[group_offset].fof_data.group_id;
+    group_size[i] = props->group_size[group_offset];
+#endif
+
+    group_centre_of_mass[i * 3 + 0] = CoM[0];
+    group_centre_of_mass[i * 3 + 1] = CoM[1];
+    group_centre_of_mass[i * 3 + 2] = CoM[2];
+  }
+
+  swift_free("fof_group_centre_of_mass", props->group_centre_of_mass);
+  swift_free("fof_group_size", props->group_size);
+  swift_free("fof_group_index", props->group_index);
+
+  props->group_centre_of_mass = group_centre_of_mass;
+  props->group_size = group_size;
+  props->group_index = group_index;
+}
+
 /**
  * @brief Seed black holes from gas particles in the haloes on the local MPI
  * rank that passed the criteria.
@@ -2037,8 +2087,7 @@ void fof_seed_black_holes(const struct fof_props *props,
                           const struct black_holes_props *bh_props,
                           const struct phys_const *constants,
                           const struct cosmology *cosmo, struct space *s,
-                          const int num_groups_local,
-                          struct group_length *group_sizes) {
+                          const int num_groups_local) {
 
   const long long *max_part_density_index = props->max_part_density_index;
 
@@ -2151,17 +2200,15 @@ void fof_seed_black_holes(const struct fof_props *props,
 /* Dump FOF group data. */
 void fof_dump_group_data(const struct fof_props *props, const int my_rank,
                          const int nr_nodes, const char *out_file_name,
-                         struct space *s, const int num_groups,
-                         struct group_length *group_sizes) {
+                         struct space *s, const int num_groups) {
 
   FILE *file = NULL;
 
-  struct gpart *gparts = s->gparts;
   struct part *parts = s->parts;
   size_t *group_size = props->group_size;
+  size_t *group_index = props->group_index;
   double *group_mass = props->group_mass;
   double *group_centre_of_mass = props->group_centre_of_mass;
-  double *group_first_position = props->group_first_position;
   const long long *max_part_density_index = props->max_part_density_index;
   const float *max_part_density = props->max_part_density;
 
@@ -2191,36 +2238,15 @@ void fof_dump_group_data(const struct fof_props *props, const int my_rank,
 
       for (int i = 0; i < num_groups; i++) {
 
-        const size_t group_offset = group_sizes[i].index;
-        const long long part_id = max_part_density_index[i] >= 0
+        const long long part_id = props->max_part_density_index[i] >= 0
                                       ? parts[max_part_density_index[i]].id
                                       : -1;
-
-        /* Centre of mass, including possible box wrapping */
-        double CoM[3] = {group_centre_of_mass[i * 3 + 0] / group_mass[i],
-                         group_centre_of_mass[i * 3 + 1] / group_mass[i],
-                         group_centre_of_mass[i * 3 + 2] / group_mass[i]};
-        if (s->periodic) {
-          CoM[0] =
-              box_wrap(CoM[0] + group_first_position[i * 3 + 0], 0., s->dim[0]);
-          CoM[1] =
-              box_wrap(CoM[1] + group_first_position[i * 3 + 1], 0., s->dim[1]);
-          CoM[2] =
-              box_wrap(CoM[2] + group_first_position[i * 3 + 2], 0., s->dim[2]);
-        }
-
-#ifdef WITH_MPI
         fprintf(file, "  %8zu %12zu %12e %12e %12e %12e %12e %24lld %24lld\n",
-                (size_t)gparts[group_offset - node_offset].fof_data.group_id,
-                group_size[group_offset - node_offset], group_mass[i], CoM[0],
-                CoM[1], CoM[2], max_part_density[i], max_part_density_index[i],
-                part_id);
-#else
-        fprintf(file, "  %8zu %12zu %12e %12e %12e %12e %12e %24lld %24lld\n",
-                (size_t)gparts[group_offset].fof_data.group_id,
-                group_size[group_offset], group_mass[i], CoM[0], CoM[1], CoM[2],
-                max_part_density[i], max_part_density_index[i], part_id);
-#endif
+                group_index[i], group_size[i], group_mass[i],
+                group_centre_of_mass[i * 3 + 0],
+                group_centre_of_mass[i * 3 + 1],
+                group_centre_of_mass[i * 3 + 2], max_part_density[i],
+                max_part_density_index[i], part_id);
       }
 
       /* Dump the extra black hole seeds. */
@@ -2545,6 +2571,7 @@ void fof_search_foreign_cells(struct fof_props *props, const struct space *s) {
                  MPI_COMM_WORLD);
 
   /* Clean up memory. */
+  free(group_link_counts);
   free(displ);
   swift_free("fof_group_links", props->group_links);
   props->group_links = NULL;
@@ -3128,6 +3155,10 @@ void fof_search_tree(struct fof_props *props,
                       NULL, props->group_mass);
 #endif
 
+  /* Finalise the group data before dump */
+  fof_finalise_group_data(props, high_group_sizes, s->gparts, s->periodic,
+                          s->dim, num_groups_local);
+
   if (verbose)
     message("Computing group properties took: %.3f %s.",
             clocks_from_ticks(getticks() - tic_seeding), clocks_getunit());
@@ -3141,7 +3172,7 @@ void fof_search_tree(struct fof_props *props,
 #endif
   }
 
-  if (1) {  // dump_debug_results) {
+  if (dump_debug_results) {
 #ifdef WITH_MPI
     snprintf(output_file_name + strlen(output_file_name), FILENAME_BUFFER_SIZE,
              "_mpi.dat");
@@ -3150,13 +3181,13 @@ void fof_search_tree(struct fof_props *props,
              ".dat");
 #endif
     fof_dump_group_data(props, s->e->nodeID, s->e->nr_nodes, output_file_name,
-                        s, num_groups_local, high_group_sizes);
+                        s, num_groups_local);
   }
 
   /* Seed black holes */
   if (seed_black_holes) {
-    fof_seed_black_holes(props, bh_props, constants, cosmo, s, num_groups_local,
-                         high_group_sizes);
+    fof_seed_black_holes(props, bh_props, constants, cosmo, s,
+                         num_groups_local);
   }
 
   /* Free the left-overs */
