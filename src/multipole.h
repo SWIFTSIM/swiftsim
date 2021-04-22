@@ -988,6 +988,7 @@ __attribute__((nonnull)) INLINE static void gravity_P2M(
   float epsilon_max = 0.f;
   float min_old_a_grav_norm = FLT_MAX;
   double mass = 0.0;
+  double abs_mass = 0.0;
   double com[3] = {0.0, 0.0, 0.0};
   double vel[3] = {0.f, 0.f, 0.f};
 
@@ -995,6 +996,7 @@ __attribute__((nonnull)) INLINE static void gravity_P2M(
   for (int k = 0; k < gcount; k++) {
     const double m = gparts[k].mass;
     const float epsilon = gravity_get_softening(&gparts[k], grav_props);
+    const float abs_m = fabsf(m);
 
 #ifdef SWIFT_DEBUG_CHECKS
     if (gparts[k].time_bin == time_bin_inhibited)
@@ -1008,12 +1010,19 @@ __attribute__((nonnull)) INLINE static void gravity_P2M(
     epsilon_max = max(epsilon_max, epsilon);
     min_old_a_grav_norm = min(min_old_a_grav_norm, gparts[k].old_a_grav_norm);
     mass += m;
+    abs_mass += abs_m;
     com[0] += gparts[k].x[0] * m;
     com[1] += gparts[k].x[1] * m;
     com[2] += gparts[k].x[2] * m;
     vel[0] += gparts[k].v_full[0] * m;
     vel[1] += gparts[k].v_full[1] * m;
     vel[2] += gparts[k].v_full[2] * m;
+  }
+
+  /* Truncate higher order terms in rare cases where the CoM is ill-defined */
+  int truncate_higher_order = 1;
+  if (fabsf(mass) < 0.05 * mass) {
+    truncate_higher_order = 1;
   }
 
   /* Final operation on CoM */
@@ -1181,12 +1190,18 @@ __attribute__((nonnull)) INLINE static void gravity_P2M(
   multi->m_pole.min_delta_vel[2] = min_delta_vel[2];
   multi->m_pole.M_000 = mass;
 
+#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_GRAVITY_FORCE_CHECKS)
+  multi->m_pole.num_gpart = gcount;
+#endif
+
+  if (truncate_higher_order) return;
+
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 0
 
-  /* 1st order terms (all 0 since we expand around CoM) */
-  // multi->m_pole.M_100 = M_100;
-  // multi->m_pole.M_010 = M_010;
-  // multi->m_pole.M_001 = M_001;
+    /* 1st order terms (all 0 since we expand around CoM) */
+    // multi->m_pole.M_100 = M_100;
+    // multi->m_pole.M_010 = M_010;
+    // multi->m_pole.M_001 = M_001;
 #endif
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 1
 
@@ -1258,10 +1273,6 @@ __attribute__((nonnull)) INLINE static void gravity_P2M(
 #endif
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 5
 #error "Missing implementation for order >5"
-#endif
-
-#if defined(SWIFT_DEBUG_CHECKS) || defined(SWIFT_GRAVITY_FORCE_CHECKS)
-  multi->m_pole.num_gpart = gcount;
 #endif
 }
 
