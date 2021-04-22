@@ -1198,10 +1198,10 @@ __attribute__((nonnull)) INLINE static void gravity_P2M(
 
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 0
 
-    /* 1st order terms (all 0 since we expand around CoM) */
-    // multi->m_pole.M_100 = M_100;
-    // multi->m_pole.M_010 = M_010;
-    // multi->m_pole.M_001 = M_001;
+  /* 1st order terms (all 0 since we expand around CoM) */
+  // multi->m_pole.M_100 = M_100;
+  // multi->m_pole.M_010 = M_010;
+  // multi->m_pole.M_001 = M_001;
 #endif
 #if SELF_GRAVITY_MULTIPOLE_ORDER > 1
 
