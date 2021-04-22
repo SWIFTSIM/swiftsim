@@ -1493,7 +1493,11 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
    * foreign group fragments */
   for (size_t i = 0; i < nr_gparts; i++) {
 
-    if (gparts[i].time_bin == time_bin_inhibited) continue;
+    /* Ignore inhibited particles */
+    if (gparts[i].time_bin >= time_bin_inhibited) continue;
+
+    /* Ignore neutrinos */
+    if (gparts[i].type == swift_type_neutrino) continue;
 
     /* Check if the particle is in a group above the threshold. */
     if (gparts[i].fof_data.group_id != group_id_default) {
@@ -1646,7 +1650,11 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
    * We can do this now as we eventually have the total group mass */
   for (size_t i = 0; i < nr_gparts; i++) {
 
-    if (gparts[i].time_bin == time_bin_inhibited) continue;
+    /* Ignore inhibited particles */
+    if (gparts[i].time_bin >= time_bin_inhibited) continue;
+
+    /* Ignore neutrinos */
+    if (gparts[i].type == swift_type_neutrino) continue;
 
     /* Only check groups above the minimum mass threshold. */
     if (gparts[i].fof_data.group_id != group_id_default) {
@@ -1864,7 +1872,11 @@ void fof_calc_group_mass(struct fof_props *props, const struct space *s,
   /* JSW TODO: Parallelise with threadpool*/
   for (size_t i = 0; i < nr_gparts; i++) {
 
-    if (gparts[i].time_bin == time_bin_inhibited) continue;
+    /* Ignore inhibited particles */
+    if (gparts[i].time_bin >= time_bin_inhibited) continue;
+
+    /* Ignore neutrinos */
+    if (gparts[i].type == swift_type_neutrino) continue;
 
     const size_t index = gparts[i].fof_data.group_id - group_id_offset;
 
