@@ -1020,7 +1020,7 @@ __attribute__((nonnull)) INLINE static void gravity_P2M(
   }
 
   /* Truncate higher order terms in rare cases where the CoM is ill-defined */
-  int truncate_higher_order = 1;
+  int truncate_higher_order = 0;
   if (fabsf(mass) < 0.05 * mass) {
     truncate_higher_order = 1;
   }
