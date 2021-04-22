@@ -1172,6 +1172,10 @@ __attribute__((nonnull)) INLINE static void gravity_P2M(
 #endif
   }
 
+  if (truncate_higher_order) {
+    gravity_multipole_init(&multi->m_pole);
+  }
+
   /* Store the data on the multipole. */
   multi->r_max = sqrt(r_max2);
   multi->CoM[0] = com[0];
