@@ -30,6 +30,7 @@
 #include "drift.h"
 #include "feedback.h"
 #include "gravity.h"
+#include "lightcone.h"
 #include "multipole.h"
 #include "neutrino/relativity.h"
 #include "pressure_floor.h"
@@ -270,7 +271,8 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force) {
  * @param e The #engine (to get ti_current).
  * @param force Drift the particles irrespective of the #cell flags.
  */
-void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
+void cell_drift_gpart(struct cell *c, const struct engine *e, int force,
+                      struct replication_list *replication_list_in) {
   const int periodic = e->s->periodic;
   const double dim[3] = {e->s->dim[0], e->s->dim[1], e->s->dim[2]};
   const int with_cosmology = (e->policy & engine_policy_cosmology);
@@ -305,7 +307,28 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
     return;
   }
 
-  /* Ok, we have some particles somewhere in the hierarchy to drift */
+  /* Ok, we have some particles somewhere in the hierarchy to drift.
+     If making lightcones, get the refined replication list for this cell.
+  
+     IMPORTANT: after this point we must not return without freeing the
+     replication list if we allocated it.
+  */
+  struct replication_list *replication_list = NULL;
+#ifdef WITH_LIGHTCONE
+  struct replication_list local_replication_list;
+  if(e->lightcone_properties->enabled) {
+    if(replication_list_in) {
+      /* We're not at the top of the hierarchy, so use the replication list passed in */
+      replication_list = replication_list_in;
+    } else {
+      /* Current call is top of the recursive hierarchy, so compute refined replication list */
+      replication_list_subset_for_cell(&e->lightcone_properties->replication_list,
+                                       c, e->lightcone_properties->observer_position,
+                                       &local_replication_list);
+      replication_list = &local_replication_list;
+    }
+  }
+#endif
 
   /* Are we not in a leaf ? */
   if (c->split && (force || cell_get_flag(c, cell_flag_do_grav_sub_drift))) {
@@ -316,7 +339,7 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
         struct cell *cp = c->progeny[k];
 
         /* Recurse */
-        cell_drift_gpart(cp, e, force);
+        cell_drift_gpart(cp, e, force, replication_list);
       }
     }
 
@@ -349,7 +372,8 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
       }
 
       /* Drift... */
-      drift_gpart(gp, dt_drift_k, ti_old_gpart, ti_current, grav_props, e);
+      drift_gpart(gp, dt_drift_k, ti_old_gpart, ti_current, grav_props, e,
+                  replication_list, c->loc);
 
 #ifdef SWIFT_DEBUG_CHECKS
       /* Make sure the particle does not drift by more than a box length. */
@@ -409,6 +433,12 @@ void cell_drift_gpart(struct cell *c, const struct engine *e, int force) {
     /* Update the time of the last drift */
     c->grav.ti_old_part = ti_current;
   }
+
+#ifdef WITH_LIGHTCONE
+  /* If we're at the top of the recursive hierarchy, tidy up the refined replication list */
+  if(e->lightcone_properties->enabled && !replication_list_in)
+    replication_list_clean(&local_replication_list);
+#endif
 
   /* Clear the drift flags. */
   cell_clear_flag(c, cell_flag_do_grav_drift | cell_flag_do_grav_sub_drift);
@@ -685,7 +715,7 @@ void cell_drift_bpart(struct cell *c, const struct engine *e, int force) {
       dt_drift = (ti_current - ti_old_bpart) * e->time_base;
     }
 
-    /* Loop over all the star particles in the cell */
+    /* Loop over all the black hole particles in the cell */
     const size_t nr_bparts = c->black_holes.count;
     for (size_t k = 0; k < nr_bparts; k++) {
 
@@ -861,7 +891,7 @@ void cell_drift_sink(struct cell *c, const struct engine *e, int force) {
       dt_drift = (ti_current - ti_old_sink) * e->time_base;
     }
 
-    /* Loop over all the star particles in the cell */
+    /* Loop over all the sink particles in the cell */
     const size_t nr_sinks = c->sinks.count;
     for (size_t k = 0; k < nr_sinks; k++) {
 

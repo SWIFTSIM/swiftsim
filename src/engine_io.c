@@ -33,6 +33,7 @@
 /* Local headers. */
 #include "distributed_io.h"
 #include "kick.h"
+#include "lightcone.h"
 #include "line_of_sight.h"
 #include "logger_io.h"
 #include "parallel_io.h"
@@ -111,6 +112,21 @@ void engine_dump_restarts(struct engine *e, int drifted_all, int force) {
 
       /* Drift all particles first (may have just been done). */
       if (!drifted_all) engine_drift_all(e, /*drift_mpole=*/1);
+
+#ifdef WITH_LIGHTCONE
+      if(e->lightcone_properties->enabled) {
+        /* Empty all lightcone buffers before dumping restart files */
+        lightcone_flush_particle_buffers(e->lightcone_properties,
+                                         e->internal_units,
+                                         e->snapshot_units,
+                                         /* flush_all = */ 1, /* end_file = */ 1);
+        lightcone_flush_map_updates(e->lightcone_properties);
+#ifdef WITH_MPI
+        MPI_Barrier(MPI_COMM_WORLD);
+#endif
+      }
+#endif
+
       restart_write(e, e->restart_file);
 
 #ifdef WITH_MPI
