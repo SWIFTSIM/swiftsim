@@ -65,6 +65,7 @@ include_HEADERS += space_unique_id.h line_of_sight.h io_compression.h
 include_HEADERS += rays.h rays_struct.h
 include_HEADERS += particle_splitting.h particle_splitting_struct.h
 include_HEADERS += logger_history.h chemistry_logger.h star_formation_particle_logger.h
+include_HEADERS += mesh_gravity_mpi.h mesh_gravity_patch.h
 
 # source files for EAGLE cooling
 QLA_COOLING_SOURCES =
@@ -177,6 +178,7 @@ AM_SOURCES += chemistry.c cosmology.c mesh_gravity.c velociraptor_interface.c
 AM_SOURCES += output_list.c velociraptor_dummy.c logger_io.c memuse.c mpiuse.c memuse_rnodes.c
 AM_SOURCES += fof.c fof_catalogue_io.c
 AM_SOURCES += hashmap.c pressure_floor.c logger_history.c
+AM_SOURCES += mesh_gravity_mpi.c mesh_gravity_patch.c
 AM_SOURCES += $(QLA_COOLING_SOURCES) 
 AM_SOURCES += $(EAGLE_COOLING_SOURCES) $(EAGLE_FEEDBACK_SOURCES) 
 AM_SOURCES += $(GRACKLE_COOLING_SOURCES) $(GEAR_FEEDBACK_SOURCES) 
