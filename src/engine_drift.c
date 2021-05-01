@@ -28,6 +28,8 @@
 /* This object's header. */
 #include "engine.h"
 
+#include "lightcone.h"
+
 /**
  * @brief Mapper function to drift *all* the #part to the current time.
  *
@@ -119,7 +121,7 @@ void engine_do_drift_all_gpart_mapper(void *map_data, int num_elements,
     if (c->nodeID == e->nodeID) {
 
       /* Drift all the particles */
-      cell_drift_gpart(c, e, /* force the drift=*/1);
+      cell_drift_gpart(c, e, /* force the drift=*/1, /*replication_list=*/NULL);
     }
   }
 }
@@ -332,6 +334,14 @@ void engine_drift_all(struct engine *e, const int drift_mpoles) {
       message("Drifting all to t=%e",
               e->ti_current * e->time_base + e->time_begin);
   }
+#endif
+
+#ifdef WITH_LIGHTCONE
+  /* Determine which periodic replications could contribute to the lightcone
+     during this time step */
+  if(e->lightcone_properties->enabled)
+    lightcone_prepare_for_step(e->lightcone_properties, e->cosmology,
+                               e->ti_old, e->ti_current, e->dt_max);
 #endif
 
   if (!e->restarting) {

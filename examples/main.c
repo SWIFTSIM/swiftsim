@@ -102,6 +102,7 @@ int main(int argc, char *argv[]) {
   struct entropy_floor_properties entropy_floor;
   struct black_holes_props black_holes_properties;
   struct fof_props fof_properties;
+  struct lightcone_props lightcone_properties;
   struct part *parts = NULL;
   struct phys_const prog_const;
   struct space s;
@@ -164,6 +165,7 @@ int main(int argc, char *argv[]) {
   int with_hydro = 0;
   int with_stars = 0;
   int with_fof = 0;
+  int with_lightcone = 0;
   int with_star_formation = 0;
   int with_feedback = 0;
   int with_black_holes = 0;
@@ -233,6 +235,9 @@ int main(int argc, char *argv[]) {
           'u', "fof", &with_fof,
           "Run Friends-of-Friends algorithm to perform black hole seeding.",
           NULL, 0, 0),
+
+      OPT_BOOLEAN(0, "lightcone", &with_lightcone, "Generate lightcone outputs.",
+                  NULL, 0, 0),
       OPT_BOOLEAN('x', "velociraptor", &with_structure_finding,
                   "Run with structure finding.", NULL, 0, 0),
       OPT_BOOLEAN(0, "line-of-sight", &with_line_of_sight,
@@ -523,6 +528,14 @@ int main(int argc, char *argv[]) {
           "Error: Cannot perform FOF search without gravity, -g or -G must be "
           "chosen.\n");
     return 1;
+  }
+
+  if (with_lightcone) {
+#ifndef WITH_LIGHTCONE
+    error("Running with lightcone output but compiled without it!");
+#endif
+    if(!with_cosmology)
+      error("Error: cannot make lightcones without --cosmology.");
   }
 
   if (!with_stars && with_star_formation) {
@@ -1280,6 +1293,15 @@ int main(int argc, char *argv[]) {
     /* Initialise the line of sight properties. */
     if (with_line_of_sight) los_init(s.dim, &los_properties, params);
 
+    /* Initialise the lightcone properties */
+    bzero(&lightcone_properties, sizeof(struct lightcone_props));
+#ifdef WITH_LIGHTCONE
+    if (with_lightcone)
+      lightcone_init(&lightcone_properties, &s, &cosmo, params, verbose);
+    else
+      lightcone_properties.enabled = 0;
+#endif
+
     if (myrank == 0) {
       clocks_gettime(&toc);
       message("space_init took %.3f %s.", clocks_diff(&tic, &toc),
@@ -1424,7 +1446,8 @@ int main(int argc, char *argv[]) {
                 &entropy_floor, &gravity_properties, &stars_properties,
                 &black_holes_properties, &sink_properties, &feedback_properties,
                 &rt_properties, &mesh, &potential, &cooling_func, &starform,
-                &chemistry, &fof_properties, &los_properties);
+                &chemistry, &fof_properties, &los_properties,
+                &lightcone_properties);
     engine_config(/*restart=*/0, /*fof=*/0, &e, params, nr_nodes, myrank,
                   nr_threads, nr_pool_threads, with_aff, talking, restart_file);
 
@@ -1762,6 +1785,19 @@ int main(int argc, char *argv[]) {
         velociraptor_invoke(&e, /*linked_with_snap=*/0);
     }
 #endif
+
+    /* Write out any remaining lightcone data at the end of the run */
+#ifdef WITH_LIGHTCONE
+    if(e.lightcone_properties->enabled) {
+      lightcone_flush_particle_buffers(e.lightcone_properties,
+                                       e.internal_units, e.snapshot_units,
+                                       /*flush_all=*/1, /*end_file=*/1);
+      lightcone_dump_completed_shells(e.lightcone_properties, e.cosmology,
+                                      e.internal_units, e.snapshot_units,
+                                      /*dump_all=*/1, /*need_flush=*/1);
+    }
+#endif
+
   }
 
   /* Remove the stop file if used. Do this anyway, we could have missed the
@@ -1783,6 +1819,7 @@ int main(int argc, char *argv[]) {
   if (with_self_gravity) pm_mesh_clean(e.mesh);
   if (with_cooling || with_temperature) cooling_clean(e.cooling_func);
   if (with_feedback) feedback_clean(e.feedback_props);
+  if (with_lightcone) lightcone_clean(e.lightcone_properties);
   if (with_rt) rt_clean(e.rt_props);
   engine_clean(&e, /*fof=*/0, restart);
   free(params);
