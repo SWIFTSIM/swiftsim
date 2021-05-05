@@ -96,6 +96,11 @@ void csds_write_description(struct csds_writer* log, struct engine* e) {
   fprintf(f, "  Dimension: %i\n", (int)hydro_dimension);
   fprintf(f, "  RunName: %s\n", e->run_name);
   fprintf(f, "  Periodic: %i\n", e->s->periodic);
+  /* Here I am using the local number of particles as
+   * it is used to estimate the number of particles per logfile. */
+  fprintf(f, "  NumberParts: %li\n", e->s->nr_parts);
+  fprintf(f, "  NumberSParts: %li\n", e->s->nr_sparts);
+  fprintf(f, "  NumberGParts: %li\n", e->s->nr_gparts);
   fprintf(f, "\n");
 
   /* Write unit system */
