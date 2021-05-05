@@ -465,7 +465,7 @@ void runner_do_star_formation(struct runner *r, struct cell *c, int timer) {
 
               /* Write the s-particle */
               csds_log_spart(e->csds, sp, e, /* log_all */ 1, csds_flag_create,
-                             /* data */ 0);
+                             /* data */ swift_type_stars);
 #endif
             } else if (swift_star_formation_model_creates_stars) {
 

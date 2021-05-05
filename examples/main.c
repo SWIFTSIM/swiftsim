@@ -1507,7 +1507,7 @@ int main(int argc, char *argv[]) {
     /* Write the state of the system before starting time integration. */
 #ifdef WITH_CSDS
     if (e.policy & engine_policy_csds) {
-      csds_log_all_particles(e.csds, &e);
+      csds_log_all_particles(e.csds, &e, /* first_log */ 1);
     }
 #endif
     /* Dump initial state snapshot, if not working with an output list */
@@ -1725,7 +1725,7 @@ int main(int argc, char *argv[]) {
     }
 #ifdef WITH_CSDS
     if (e.policy & engine_policy_csds) {
-      csds_log_all_particles(e.csds, &e);
+      csds_log_all_particles(e.csds, &e, /* first_log */ 0);
 
       /* Write a sentinel timestamp */
       if (e.policy & engine_policy_cosmology) {

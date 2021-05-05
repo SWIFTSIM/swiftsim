@@ -129,11 +129,17 @@ void csds_write_data(struct dump *d, size_t *offset, size_t size,
 /**
  * @brief log all particles in the engine.
  *
+ * If this is the first log of all the particles,
+ * we include a flag for the type. This will be used by the reader
+ * to generate the index files.
+ *
  * TODO use threadpool + csds function for multiple particles.
- * @param log The #csds_writer
- * @param e The #engine
+ * @param log The #csds_writer.
+ * @param e The #engine.
+ * @param first_log Is it the first log of the particles?
  */
-void csds_log_all_particles(struct csds_writer *log, const struct engine *e) {
+void csds_log_all_particles(struct csds_writer *log, const struct engine *e,
+                            int first_log) {
 
   /* Ensure that enough space is available. */
   csds_ensure_size(log, e->s->nr_parts, e->s->nr_gparts, e->s->nr_sparts);
@@ -141,40 +147,43 @@ void csds_log_all_particles(struct csds_writer *log, const struct engine *e) {
   /* some constants. */
   const struct space *s = e->s;
 
+  /* Create the flags */
+  int flag_data = first_log ? swift_type_gas : 0;
+  const enum csds_special_flags flag = first_log ? csds_flag_create : csds_flag_none;
+
   /* log the parts. */
   for (size_t i = 0; i < s->nr_parts; i++) {
     struct part *p = &s->parts[i];
     struct xpart *xp = &s->xparts[i];
     if (!part_is_inhibited(p, e) && p->time_bin != time_bin_not_created) {
-      csds_log_part(log, p, xp, e,
-                    /* log_all_fields */ 1, csds_flag_none,
-                    /* data */ 0);
+      csds_log_part(log, p, xp, e, /* log_all_fields */ 1, flag, flag_data);
     }
   }
 
   /* log the gparts */
+  flag_data = first_log ? swift_type_dark_matter : 0;
+
   for (size_t i = 0; i < s->nr_gparts; i++) {
     struct gpart *gp = &s->gparts[i];
     if (!gpart_is_inhibited(gp, e) && gp->time_bin != time_bin_not_created &&
         (gp->type == swift_type_dark_matter ||
          gp->type == swift_type_dark_matter_background)) {
-      csds_log_gpart(log, gp, e,
-                     /* log_all_fields */ 1, csds_flag_none,
-                     /* data */ 0);
+      csds_log_gpart(log, gp, e, /* log_all_fields */ 1, flag, flag_data);
     }
   }
 
   /* log the parts */
+  flag_data = first_log ? swift_type_stars : 0;
+
   for (size_t i = 0; i < s->nr_sparts; i++) {
     struct spart *sp = &s->sparts[i];
     if (!spart_is_inhibited(sp, e) && sp->time_bin != time_bin_not_created) {
-      csds_log_spart(log, sp, e,
-                     /* log_all_fields */ 1, csds_flag_none,
-                     /* data */ 0);
+      csds_log_spart(log, sp, e, /* log_all_fields */ 1, flag, flag_data);
     }
   }
 
   if (e->total_nr_bparts > 0) error("Not implemented");
+  if (e->total_nr_sinks > 0) error("Not implemented");
 }
 
 /**
