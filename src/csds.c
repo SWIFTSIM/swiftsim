@@ -333,16 +333,6 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
     xp[i].csds_data.steps_since_last_output = 0;
     buff += size;
     offset_new += size;
-
-    /* Write the particle into the history if needed. */
-    if (flag == csds_flag_create || flag == csds_flag_mpi_enter) {
-      csds_history_log(&log->history_new[swift_type_gas], p[i].id,
-                       xp[i].csds_data.last_offset);
-    } else if (flag == csds_flag_change_type || flag == csds_flag_delete ||
-               flag == csds_flag_mpi_exit) {
-      csds_history_log(&log->history_removed[swift_type_gas], p[i].id,
-                       xp[i].csds_data.last_offset);
-    }
   }
 
 #ifdef SWIFT_DEBUG_CHECKS
@@ -511,15 +501,6 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
     buff += size;
     offset_new += size;
 
-    /* Write the particle into the history if needed. */
-    if (flag == csds_flag_create || flag == csds_flag_mpi_enter) {
-      csds_history_log(&log->history_new[swift_type_stars], sp[i].id,
-                       sp[i].csds_data.last_offset);
-    } else if (flag == csds_flag_change_type || flag == csds_flag_delete ||
-               flag == csds_flag_mpi_exit) {
-      csds_history_log(&log->history_removed[swift_type_stars], sp[i].id,
-                       sp[i].csds_data.last_offset);
-    }
   }
 #ifdef SWIFT_DEBUG_CHECKS
   /* Ensure that the buffer was fully used */
@@ -674,15 +655,6 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
     buff += size;
     offset_new += size;
 
-    /* Write the particle into the history if needed. */
-    if (flag == csds_flag_create || flag == csds_flag_mpi_enter) {
-      csds_history_log(&log->history_new[swift_type_dark_matter],
-                       p[i].id_or_neg_offset, p[i].csds_data.last_offset);
-    } else if (flag == csds_flag_change_type || flag == csds_flag_delete ||
-               flag == csds_flag_mpi_exit) {
-      csds_history_log(&log->history_removed[swift_type_dark_matter],
-                       p[i].id_or_neg_offset, p[i].csds_data.last_offset);
-    }
   }
 #ifdef SWIFT_DEBUG_CHECKS
   /* Ensure that the buffer was fully used */
@@ -1030,16 +1002,11 @@ void csds_init(struct csds_writer *log, const struct engine *e,
       parser_get_opt_param_float(params, "CSDS:buffer_scale", 10);
   parser_get_param_string(params, "CSDS:basename", log->base_name);
 
-  log->index.mem_frac =
-      parser_get_opt_param_float(params, "CSDS:index_mem_frac", 0.05);
-
   /* Initialize the csds_mask_data */
   csds_init_masks(log, e);
 
   /* set initial value of parameters. */
   log->timestamp_offset = 0;
-  log->index.dump_size_last_output = 0;
-  log->index_file_number = 0;
 
   /* generate dump filename. */
   char csds_name_file[PARSER_MAX_LINE_SIZE];
@@ -1059,22 +1026,6 @@ void csds_init(struct csds_writer *log, const struct engine *e,
 
   /* init dump. */
   dump_init(&log->dump, csds_name_file, buffer_size);
-
-  /* Read the maximal size of the history. */
-  const float max_memory_size =
-      parser_get_opt_param_float(params, "CSDS:maximal_memory_size", 1.);
-  log->maximal_size_history =
-      1e9 * max_memory_size / sizeof(struct csds_index_data);
-
-  if (e->nodeID == 0) {
-    message("Maximal memory size for the CSDS history: %g GB", max_memory_size);
-  }
-
-  /* initialize the history */
-  for (int i = 0; i < swift_type_count; i++) {
-    csds_history_init(&log->history_removed[i]);
-    csds_history_init(&log->history_new[i]);
-  }
 }
 
 /**
@@ -1089,10 +1040,6 @@ void csds_free(struct csds_writer *log) {
   log->csds_mask_data = NULL;
   log->csds_count_mask = 0;
 
-  for (int i = 0; i < swift_type_count; i++) {
-    csds_history_free(&log->history_new[i]);
-    csds_history_free(&log->history_removed[i]);
-  }
 }
 
 /**
@@ -1365,11 +1312,6 @@ void csds_struct_dump(const struct csds_writer *log, FILE *stream) {
                        log->csds_count_mask, stream, "csds_masks",
                        "csds_masks");
 
-  /* Dump the csds mpi history */
-  for (int i = 0; i < swift_type_count; i++) {
-    csds_history_dump(&log->history_new[i], stream);
-    csds_history_dump(&log->history_removed[i], stream);
-  }
 }
 
 /**
@@ -1418,11 +1360,6 @@ void csds_struct_restore(struct csds_writer *log, FILE *stream) {
 
   dump_restart(&log->dump, csds_name_file);
 
-  /* Restore the csds mpi history */
-  for (int i = 0; i < swift_type_count; i++) {
-    csds_history_restore(&log->history_new[i], stream);
-    csds_history_restore(&log->history_removed[i], stream);
-  }
 }
 
 #endif /* WITH_CSDS */

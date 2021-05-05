@@ -2418,11 +2418,6 @@ void engine_step(struct engine *e) {
   engine_dump_restarts(e, 0, e->restart_onexit && engine_is_done(e));
 
   engine_check_for_dumps(e);
-#ifdef WITH_CSDS
-  if (e->policy & engine_policy_csds) {
-    engine_check_for_index_dump(e);
-  }
-#endif
 
   TIMER_TOC2(timer_step);
 

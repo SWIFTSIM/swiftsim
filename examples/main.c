@@ -1508,7 +1508,6 @@ int main(int argc, char *argv[]) {
 #ifdef WITH_CSDS
     if (e.policy & engine_policy_csds) {
       csds_log_all_particles(e.csds, &e);
-      engine_dump_index(&e);
     }
 #endif
     /* Dump initial state snapshot, if not working with an output list */
@@ -1727,9 +1726,6 @@ int main(int argc, char *argv[]) {
 #ifdef WITH_CSDS
     if (e.policy & engine_policy_csds) {
       csds_log_all_particles(e.csds, &e);
-
-      /* Write a final index file */
-      engine_dump_index(&e);
 
       /* Write a sentinel timestamp */
       if (e.policy & engine_policy_cosmology) {

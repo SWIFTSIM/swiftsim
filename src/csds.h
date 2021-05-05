@@ -27,7 +27,6 @@
 /* Includes. */
 #include "align.h"
 #include "common_io.h"
-#include "csds_history.h"
 #include "dump.h"
 #include "error.h"
 #include "inline.h"
@@ -41,7 +40,7 @@ struct part;
 struct engine;
 
 #define csds_major_version 1
-#define csds_minor_version 2
+#define csds_minor_version 3
 /* Size of the strings. */
 #define csds_string_length 200
 
@@ -111,26 +110,6 @@ struct csds_writer {
 
   /* Csds basename. */
   char base_name[csds_string_length];
-
-  struct {
-    /* The total memory fraction reserved for the index files. */
-    float mem_frac;
-
-    /* Size of the dump since at the last output */
-    size_t dump_size_last_output;
-  } index;
-
-  /* Index file number for the filename. */
-  int index_file_number;
-
-  /* History of the new particles since the last index file. */
-  struct csds_history history_new[swift_type_count];
-
-  /* History of the particles removed since the last index file. */
-  struct csds_history history_removed[swift_type_count];
-
-  /* Maximal number of particle stored in the history. */
-  size_t maximal_size_history;
 
   /*  Dump file (In the reader, the dump is cleaned, therefore it is renamed
    * logfile). */
