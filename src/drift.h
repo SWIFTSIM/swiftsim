@@ -31,6 +31,8 @@
 #include "entropy_floor.h"
 #include "hydro.h"
 #include "hydro_properties.h"
+#include "lightcone_replications.h"
+#include "lightcone_crossing.h"
 #include "part.h"
 #include "sink.h"
 #include "stars.h"
@@ -48,7 +50,8 @@
 __attribute__((always_inline)) INLINE static void drift_gpart(
     struct gpart *restrict gp, double dt_drift, integertime_t ti_old,
     integertime_t ti_current, const struct gravity_props *grav_props,
-    const struct engine *e) {
+    const struct engine *e, struct replication_list *replication_list,
+    const double cell_loc[3]) {
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (gp->time_bin == time_bin_not_created) {
@@ -86,6 +89,10 @@ __attribute__((always_inline)) INLINE static void drift_gpart(
     gp->v_full[1] = 0.f;
     gp->v_full[2] = 0.f;
   }
+#endif
+
+#ifdef WITH_LIGHTCONE
+  lightcone_check_particle_crosses(e, replication_list, gp, dt_drift, ti_old, ti_current, cell_loc);
 #endif
 
   /* Drift... */
