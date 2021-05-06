@@ -63,7 +63,6 @@
 #include "version.h"
 #include "xmf.h"
 
-
 /**
  * @brief Write the parameters into a yaml file.
  *

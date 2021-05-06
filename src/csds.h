@@ -235,7 +235,7 @@ INLINE static uint32_t csds_pack_flags_and_data(enum csds_special_flags flag,
   }
 #endif
   return ((uint32_t)flag << (3 * 8)) | ((flag_data & 0xFFFF) << 8) |
-    (type & 0xFF);
+         (type & 0xFF);
 }
 
 /**

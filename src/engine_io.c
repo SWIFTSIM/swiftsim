@@ -206,7 +206,6 @@ void engine_run_on_dump(struct engine *e) {
   }
 }
 
-
 /**
  * @brief Check whether any kind of i/o has to be performed during this
  * step.

@@ -148,7 +148,8 @@ void csds_log_all_particles(struct csds_writer *log, const struct engine *e,
   const struct space *s = e->s;
 
   /* Create the flags */
-  const enum csds_special_flags flag = first_log ? csds_flag_create : csds_flag_none;
+  const enum csds_special_flags flag =
+      first_log ? csds_flag_create : csds_flag_none;
 
   /* log the parts. */
   for (size_t i = 0; i < s->nr_parts; i++) {
@@ -272,8 +273,8 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
   /* Build the special flag */
   const int size_special_flag =
       log->csds_mask_data[csds_index_special_flags].size;
-  const uint32_t special_flags = csds_pack_flags_and_data(
-      flag, flag_data, swift_type_gas);
+  const uint32_t special_flags =
+      csds_pack_flags_and_data(flag, flag_data, swift_type_gas);
 
   /* Compute the size of the buffer. */
   size_t size_total = 0;
@@ -436,8 +437,8 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
   /* Build the special flag */
   const int size_special_flag =
       log->csds_mask_data[csds_index_special_flags].size;
-  const uint32_t special_flags = csds_pack_flags_and_data(
-      flag, flag_data, swift_type_stars);
+  const uint32_t special_flags =
+      csds_pack_flags_and_data(flag, flag_data, swift_type_stars);
 
   /* Compute the size of the buffer. */
   size_t size_total = 0;
@@ -509,7 +510,6 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
     sp[i].csds_data.steps_since_last_output = 0;
     buff += size;
     offset_new += size;
-
   }
 #ifdef SWIFT_DEBUG_CHECKS
   /* Ensure that the buffer was fully used */
@@ -600,8 +600,8 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
   /* Build the special flag */
   const int size_special_flag =
       log->csds_mask_data[csds_index_special_flags].size;
-  const uint32_t special_flags = csds_pack_flags_and_data(
-      flag, flag_data, swift_type_dark_matter);
+  const uint32_t special_flags =
+      csds_pack_flags_and_data(flag, flag_data, swift_type_dark_matter);
 
   /* Compute the size of the buffer. */
   /* As we might have some non DM particles, we cannot log_all_fields blindly */
@@ -664,7 +664,6 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
     p[i].csds_data.steps_since_last_output = 0;
     buff += size;
     offset_new += size;
-
   }
 #ifdef SWIFT_DEBUG_CHECKS
   /* Ensure that the buffer was fully used */
@@ -1049,7 +1048,6 @@ void csds_free(struct csds_writer *log) {
   free(log->csds_mask_data);
   log->csds_mask_data = NULL;
   log->csds_count_mask = 0;
-
 }
 
 /**
@@ -1321,7 +1319,6 @@ void csds_struct_dump(const struct csds_writer *log, FILE *stream) {
   restart_write_blocks((void *)log->csds_mask_data, sizeof(struct mask_data),
                        log->csds_count_mask, stream, "csds_masks",
                        "csds_masks");
-
 }
 
 /**
@@ -1369,7 +1366,6 @@ void csds_struct_restore(struct csds_writer *log, FILE *stream) {
   csds_get_dump_name(log, csds_name_file);
 
   dump_restart(&log->dump, csds_name_file);
-
 }
 
 #endif /* WITH_CSDS */

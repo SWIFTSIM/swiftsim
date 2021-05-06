@@ -121,7 +121,6 @@ INLINE static int csds_should_write_field(struct mask_data mask_data,
 
 void csds_write_description(struct csds_writer* log, struct engine* e);
 
-
 #endif
 
 #endif /* SWIFT_CSDS_IO_H */
