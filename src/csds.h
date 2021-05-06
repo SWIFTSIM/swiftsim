@@ -217,22 +217,25 @@ void csds_struct_restore(struct csds_writer *log, FILE *stream);
  *
  * @param flag The special flag to use.
  * @param flag_data The data to write in the record.
+ * @param type The type of the particle.
  */
 INLINE static uint32_t csds_pack_flags_and_data(enum csds_special_flags flag,
-                                                int flag_data) {
+                                                int flag_data,
+                                                enum part_type type) {
 #ifdef SWIFT_DEBUG_CHECKS
   if (flag & 0xFFFFFF00) {
     error(
         "The special flag in the particle CSDS cannot be larger than 1 "
         "byte.");
   }
-  if (flag_data & ~0xFFFFFF) {
+  if (flag_data & ~0xFFFF) {
     error(
         "The data for the special flag in the particle CSDS cannot be larger "
-        "than 3 bytes.");
+        "than 2 bytes.");
   }
 #endif
-  return ((uint32_t)flag << (3 * 8)) | (flag_data & 0xFFFFFF);
+  return ((uint32_t)flag << (3 * 8)) | ((flag_data & 0xFFFF) << 8) |
+    (type & 0xFF);
 }
 
 /**
@@ -242,7 +245,7 @@ INLINE static uint32_t csds_pack_flags_and_data(enum csds_special_flags flag,
  */
 INLINE static void csds_part_data_init(struct csds_part_data *csds) {
   csds->last_offset = 0;
-  csds->steps_since_last_output = INT_MAX;
+  csds->steps_since_last_output = 0;
 }
 
 /**

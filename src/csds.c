@@ -148,7 +148,6 @@ void csds_log_all_particles(struct csds_writer *log, const struct engine *e,
   const struct space *s = e->s;
 
   /* Create the flags */
-  int flag_data = first_log ? swift_type_gas : 0;
   const enum csds_special_flags flag = first_log ? csds_flag_create : csds_flag_none;
 
   /* log the parts. */
@@ -156,29 +155,28 @@ void csds_log_all_particles(struct csds_writer *log, const struct engine *e,
     struct part *p = &s->parts[i];
     struct xpart *xp = &s->xparts[i];
     if (!part_is_inhibited(p, e) && p->time_bin != time_bin_not_created) {
-      csds_log_part(log, p, xp, e, /* log_all_fields */ 1, flag, flag_data);
+      csds_log_part(log, p, xp, e, /* log_all_fields */ 1, flag,
+                    /* flag_data */ 0);
     }
   }
 
   /* log the gparts */
-  flag_data = first_log ? swift_type_dark_matter : 0;
-
   for (size_t i = 0; i < s->nr_gparts; i++) {
     struct gpart *gp = &s->gparts[i];
     if (!gpart_is_inhibited(gp, e) && gp->time_bin != time_bin_not_created &&
         (gp->type == swift_type_dark_matter ||
          gp->type == swift_type_dark_matter_background)) {
-      csds_log_gpart(log, gp, e, /* log_all_fields */ 1, flag, flag_data);
+      csds_log_gpart(log, gp, e, /* log_all_fields */ 1, flag,
+                     /* flag_data */ 0);
     }
   }
 
   /* log the parts */
-  flag_data = first_log ? swift_type_stars : 0;
-
   for (size_t i = 0; i < s->nr_sparts; i++) {
     struct spart *sp = &s->sparts[i];
     if (!spart_is_inhibited(sp, e) && sp->time_bin != time_bin_not_created) {
-      csds_log_spart(log, sp, e, /* log_all_fields */ 1, flag, flag_data);
+      csds_log_spart(log, sp, e, /* log_all_fields */ 1, flag,
+                     /* flag_data */ 0);
     }
   }
 
@@ -274,13 +272,14 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
   /* Build the special flag */
   const int size_special_flag =
       log->csds_mask_data[csds_index_special_flags].size;
-  const uint32_t special_flags = csds_pack_flags_and_data(flag, flag_data);
+  const uint32_t special_flags = csds_pack_flags_and_data(
+      flag, flag_data, swift_type_gas);
 
   /* Compute the size of the buffer. */
   size_t size_total = 0;
   if (log_all_fields) {
     size_t size = log->max_size_record_part + csds_header_bytes;
-    if (flag != 0) {
+    if (flag != csds_flag_none) {
       size += size_special_flag;
     }
     size_total = count * size;
@@ -293,7 +292,7 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
       chemistry_csds_compute_size_and_mask_part(
           log->mask_data_pointers.chemistry_part, &p[i], &xp[i], log_all_fields,
           &size, &mask);
-      if (flag != 0) {
+      if (flag != csds_flag_none) {
         size += size_special_flag;
       }
       size_total += size + csds_header_bytes;
@@ -323,7 +322,7 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
     size += csds_header_bytes;
 
     /* Add the special flag. */
-    if (flag != 0) {
+    if (flag != csds_flag_none) {
       mask |= log->csds_mask_data[csds_index_special_flags].mask;
       size += size_special_flag;
       /* reset the offset of the previous log */
@@ -437,13 +436,14 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
   /* Build the special flag */
   const int size_special_flag =
       log->csds_mask_data[csds_index_special_flags].size;
-  const uint32_t special_flags = csds_pack_flags_and_data(flag, flag_data);
+  const uint32_t special_flags = csds_pack_flags_and_data(
+      flag, flag_data, swift_type_stars);
 
   /* Compute the size of the buffer. */
   size_t size_total = 0;
   if (log_all_fields) {
     size_t size = log->max_size_record_spart + csds_header_bytes;
-    if (flag != 0) {
+    if (flag != csds_flag_none) {
       size += size_special_flag;
     }
     size_total = count * size;
@@ -459,7 +459,7 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
       star_formation_csds_compute_size_and_mask(
           log->mask_data_pointers.star_formation, &sp[i], log_all_fields, &size,
           &mask);
-      if (flag != 0) {
+      if (flag != csds_flag_none) {
         size += size_special_flag;
       }
       size_total += size + csds_header_bytes;
@@ -490,7 +490,7 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
     size += csds_header_bytes;
 
     /* Add the special flag. */
-    if (flag != 0) {
+    if (flag != csds_flag_none) {
       mask |= log->csds_mask_data[csds_index_special_flags].mask;
       size += size_special_flag;
 
@@ -600,7 +600,8 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
   /* Build the special flag */
   const int size_special_flag =
       log->csds_mask_data[csds_index_special_flags].size;
-  const uint32_t special_flags = csds_pack_flags_and_data(flag, flag_data);
+  const uint32_t special_flags = csds_pack_flags_and_data(
+      flag, flag_data, swift_type_dark_matter);
 
   /* Compute the size of the buffer. */
   /* As we might have some non DM particles, we cannot log_all_fields blindly */
@@ -615,7 +616,7 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
     size_t size = 0;
     gravity_csds_compute_size_and_mask(log->mask_data_pointers.gravity, &p[i],
                                        log_all_fields, &size, &mask);
-    if (flag != 0) {
+    if (flag != csds_flag_none) {
       size += size_special_flag;
     }
     size_total += size + csds_header_bytes;
@@ -644,7 +645,7 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
     size += csds_header_bytes;
 
     /* Add the special flag. */
-    if (flag != 0) {
+    if (flag != csds_flag_none) {
       mask |= log->csds_mask_data[csds_index_special_flags].mask;
       size += size_special_flag;
 
