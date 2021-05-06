@@ -130,8 +130,8 @@ void csds_write_data(struct dump *d, size_t *offset, size_t size,
  * @brief log all particles in the engine.
  *
  * If this is the first log of all the particles,
- * we include a flag for the type. This will be used by the reader
- * to generate the index files.
+ * we include a flag and write the type of particle.
+ * This will be used by the reader to generate the index files.
  *
  * TODO use threadpool + csds function for multiple particles.
  * @param log The #csds_writer.
@@ -1003,6 +1003,14 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
  */
 void csds_init(struct csds_writer *log, const struct engine *e,
                struct swift_params *params) {
+
+#ifdef WITH_MPI
+  /* Should be safe, but better to check */
+  if (e->nr_nodes >= 1 << 16)
+    error("The special flag does not contain enough bits"
+          "to store the information about the ranks.");
+#endif
+
   /* read parameters. */
   log->delta_step = parser_get_param_int(params, "CSDS:delta_step");
   size_t buffer_size =
