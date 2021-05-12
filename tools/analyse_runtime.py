@@ -204,7 +204,6 @@ important_is_rebuild = [0]
 important_is_fof = [0]
 important_is_VR = [0]
 important_is_mesh = [0]
-important_is_csds = [0]
 important_labels = ["Others (all below %.1f\%%)" % (threshold * 100)]
 need_print = True
 print("Time spent in the different code sections:")
@@ -216,7 +215,6 @@ for i in range(len(labels)):
         important_is_fof.append(labels[i][1] == 2)
         important_is_VR.append(labels[i][1] == 3)
         important_is_mesh.append(labels[i][1] == 4)
-        important_is_csds.append(labels[i][1] == 5)
         important_labels.append(labels[i][0])
     else:
         if need_print:
@@ -283,11 +281,6 @@ for i in range(len(code_pie)):
 for i in range(len(code_pie)):
     if important_is_mesh[i]:
         code_pie[i].set_hatch(".")
-        code_pie[i].set_edgecolor(code_pie[i].get_facecolor())
-        code_pie[i].set_fill(False)
-for i in range(len(code_pie)):
-    if important_is_csds[i]:
-        code_pie[i].set_hatch("X")
         code_pie[i].set_edgecolor(code_pie[i].get_facecolor())
         code_pie[i].set_fill(False)
 
