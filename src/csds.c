@@ -141,10 +141,11 @@ void csds_write_data(struct dump *d, size_t *offset, size_t size,
 void csds_log_all_particles(struct csds_writer *log, const struct engine *e,
                             int first_log) {
 
-  ticks tic = getticks();
-
   /* Ensure that enough space is available. */
   csds_ensure_size(log, e);
+
+  /* csds_ensure_size is tracked separately. */
+  ticks tic = getticks();
 
   /* some constants. */
   const struct space *s = e->s;
