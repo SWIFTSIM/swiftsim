@@ -384,6 +384,7 @@ INLINE static void stars_props_print(const struct stars_props *sp) {
 
 #if defined(HAVE_HDF5)
 INLINE static void stars_props_print_snapshot(hid_t h_grpstars,
+                                              hid_t h_grp_columns,
                                               const struct stars_props *sp) {
 
   io_write_attribute_s(h_grpstars, "Kernel function", kernel_name);
@@ -399,6 +400,23 @@ INLINE static void stars_props_print_snapshot(hid_t h_grpstars,
                        pow_dimension(expf(sp->log_max_h_change)));
   io_write_attribute_i(h_grpstars, "Max ghost iterations",
                        sp->max_smoothing_iterations);
+
+  const int luminosity_band_name_length = 32;
+  static const char *luminosity_band_names[luminosity_bands_count] = {
+      "u", "g", "r", "i", "z", "Y", "J", "H", "K"};
+
+  /* Add to the named columns */
+  hsize_t dims[1] = {luminosity_bands_count};
+  hid_t type = H5Tcopy(H5T_C_S1);
+  H5Tset_size(type, luminosity_band_name_length);
+  hid_t space = H5Screate_simple(1, dims, NULL);
+  hid_t dset = H5Dcreate(h_grp_columns, "Luminosities", type, space,
+                         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  H5Dwrite(dset, type, H5S_ALL, H5S_ALL, H5P_DEFAULT, luminosity_band_names[0]);
+  H5Dclose(dset);
+
+  H5Tclose(type);
+  H5Sclose(space);
 }
 #endif
 
