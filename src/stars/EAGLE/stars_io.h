@@ -289,6 +289,42 @@ INLINE static void stars_props_init(struct stars_props *sp,
   sp->max_time_step_old = max_time_step_old_Myr * Myr / conv_fac;
   sp->age_threshold = age_threshold_Myr * Myr / conv_fac;
   sp->age_threshold_unlimited = age_threshold_unlimited_Myr * Myr / conv_fac;
+
+  /* Luminosities */
+  for (int i = 0; i < (int)luminosity_bands_count; ++i) {
+
+    const int count_Z = 6;
+    const int count_ages = 221;
+    const int count_L = count_Z * count_ages;
+
+    sp->lum_tables_Z[i] = (float *)malloc(count_Z * sizeof(float));
+    sp->lum_tables_ages[i] = (float *)malloc(count_ages * sizeof(float));
+    sp->lum_tables_luminosities[i] = (float *)malloc(count_L * sizeof(float));
+
+    static const char *luminosity_band_names[luminosity_bands_count] = {
+        "u_sorted", "g_sorted", "r_sorted", "i_sorted", "z_sorted",
+        "Y_sorted", "J_sorted", "H_sorted", "K_sorted"};
+
+    static const char *dirname = "./photometry/GAMA";
+
+    char fname[200];
+    sprintf(fname, "%s/%s", dirname, luminosity_band_names[i]);
+    FILE *file = fopen(fname, "r");
+
+    char buffer[200];
+    int j = 0, k = 0;
+    while (fgets(buffer, sizeof(buffer), file)) {
+      double z, age, L;
+      sscanf(buffer, "%le %le %le", &z, &age, &L);
+
+      if (age == 0.) sp->lum_tables_Z[i][k++] = log10(z);
+      if (j < count_ages) sp->lum_tables_ages[i][j] = log10(age);
+      sp->lum_tables_luminosities[i][j] = log10(L);
+      ++j;
+    }
+
+    fclose(file);
+  }
 }
 
 /**
@@ -350,10 +386,28 @@ INLINE static void stars_props_print_snapshot(hid_t h_grpstars,
  * @param p the struct
  * @param stream the file stream
  */
-INLINE static void stars_props_struct_dump(const struct stars_props *p,
+INLINE static void stars_props_struct_dump(struct stars_props *p,
                                            FILE *stream) {
+
   restart_write_blocks((void *)p, sizeof(struct stars_props), 1, stream,
                        "starsprops", "stars props");
+
+  for (int i = 0; i < (int)luminosity_bands_count; ++i) {
+    restart_write_blocks(p->lum_tables_Z[i], 6, sizeof(float), stream,
+                         "luminosity_Z", "stars props");
+    restart_write_blocks(p->lum_tables_ages[i], 221, sizeof(float), stream,
+                         "luminosity_Z", "stars props");
+    restart_write_blocks(p->lum_tables_luminosities[i], 6 * 221, sizeof(float),
+                         stream, "luminosity_Z", "stars props");
+
+    free(p->lum_tables_Z[i]);
+    free(p->lum_tables_ages[i]);
+    free(p->lum_tables_luminosities[i]);
+
+    p->lum_tables_Z[i] = 0;
+    p->lum_tables_ages[i] = 0;
+    p->lum_tables_luminosities[i] = 0;
+  }
 }
 
 /**
@@ -363,10 +417,29 @@ INLINE static void stars_props_struct_dump(const struct stars_props *p,
  * @param p the struct
  * @param stream the file stream
  */
-INLINE static void stars_props_struct_restore(const struct stars_props *p,
+INLINE static void stars_props_struct_restore(struct stars_props *p,
                                               FILE *stream) {
+
   restart_read_blocks((void *)p, sizeof(struct stars_props), 1, stream, NULL,
                       "stars props");
+
+  for (int i = 0; i < (int)luminosity_bands_count; ++i) {
+
+    const int count_Z = 6;
+    const int count_ages = 221;
+    const int count_L = count_Z * count_ages;
+
+    p->lum_tables_Z[i] = (float *)malloc(count_Z * sizeof(float));
+    p->lum_tables_ages[i] = (float *)malloc(count_ages * sizeof(float));
+    p->lum_tables_luminosities[i] = (float *)malloc(count_L * sizeof(float));
+
+    restart_read_blocks((void *)p->lum_tables_Z[i], count_Z, sizeof(float),
+                        stream, NULL, "stars props");
+    restart_read_blocks((void *)p->lum_tables_ages[i], count_ages,
+                        sizeof(float), stream, NULL, "stars props");
+    restart_read_blocks((void *)p->lum_tables_luminosities[i], count_L,
+                        sizeof(float), stream, NULL, "stars props");
+  }
 }
 
 #endif /* SWIFT_EAGLE_STAR_IO_H */
