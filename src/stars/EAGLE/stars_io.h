@@ -290,7 +290,7 @@ INLINE static void stars_props_init(struct stars_props *sp,
   sp->age_threshold = age_threshold_Myr * Myr / conv_fac;
   sp->age_threshold_unlimited = age_threshold_unlimited_Myr * Myr / conv_fac;
 
-  /* Luminosities */
+  /* Luminosity tables */
   for (int i = 0; i < (int)luminosity_bands_count; ++i) {
 
     const int count_Z = 6;
@@ -318,13 +318,21 @@ INLINE static void stars_props_init(struct stars_props *sp,
       sscanf(buffer, "%le %le %le", &z, &age, &L);
 
       if (age == 0.) sp->lum_tables_Z[i][k++] = log10(z);
-      if (j < count_ages) sp->lum_tables_ages[i][j] = log10(age);
+      if (j < count_ages) sp->lum_tables_ages[i][j] = log10(age + FLT_MIN);
       sp->lum_tables_luminosities[i][j] = log10(L);
       ++j;
     }
 
     fclose(file);
   }
+
+  /* Luminosity conversion factor */
+  const double L_sun = 3.828e26;   /* Watt */
+  const double pc = 3.08567758e16; /* cm */
+  const double A = 4. * M_PI * (10. * pc) * (10 * pc);
+  const double to_Jansky = 1e26 * L_sun / A;
+  const double zero_point_AB = 3631; /* Jansky */
+  sp->lum_tables_factor = to_Jansky / zero_point_AB;
 }
 
 /**

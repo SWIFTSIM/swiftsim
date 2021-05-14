@@ -253,6 +253,9 @@ struct stars_props {
 
   /*! The luminosities */
   float* lum_tables_luminosities[luminosity_bands_count];
+
+  /*! Conversion factor to luminosities */
+  double lum_tables_factor;
 };
 
 #endif /* SWIFT_EAGLE_STAR_PART_H */
