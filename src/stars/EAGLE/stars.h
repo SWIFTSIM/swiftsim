@@ -334,7 +334,7 @@ INLINE static void stars_get_luminosities(
 
     const float log10_f = (y_diff1 * f_1 + y_diff2 * f_2) / y_diff3;
 
-    luminosities[i] = exp10f(log10_f) * mass_Msun * sp->lum_tables_factor;
+    luminosities[i] = exp10f(log10_f) * mass_Msun * props->lum_tables_factor;
   }
 }
 

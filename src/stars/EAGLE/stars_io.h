@@ -108,6 +108,14 @@ INLINE static void convert_spart_vel(const struct engine *e,
   ret[2] *= cosmo->a_inv;
 }
 
+INLINE static void convert_spart_luminosities(const struct engine *e,
+                                              const struct spart *sp,
+                                              float *ret) {
+
+  stars_get_luminosities(sp, e->cosmology, e->physical_constants,
+                         e->stars_properties, ret);
+}
+
 /**
  * @brief Specifies which s-particle fields to write to a dataset
  *
@@ -121,7 +129,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
                                          const int with_cosmology) {
 
   /* Say how much we want to write */
-  *num_fields = 12;
+  *num_fields = 13;
 
   /* List what we want to write */
   list[0] = io_make_output_field_convert_spart(
@@ -187,6 +195,12 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "FeedbackNumberOfHeatingEvents", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f,
       sparts, number_of_heating_events,
       "Expected number of particles that were heated by each star particle.");
+
+  list[12] = io_make_output_field_convert_spart(
+      "Luminosities", FLOAT, luminosity_bands_count, UNIT_CONV_NO_UNITS, 0.f,
+      sparts, convert_spart_luminosities,
+      "Rest-frame dust-free AB-luminosities of the star particles in the GAMA "
+      "bands computed following Trayford+15");
 }
 
 /**
