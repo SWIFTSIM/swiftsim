@@ -202,7 +202,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       sparts, convert_spart_luminosities,
       "Rest-frame dust-free AB-luminosities of the star particles in the GAMA "
       "bands computed using the model of Trayford et al. (2015). The "
-      "luminosities are given in dimentionless units. They have been divided "
+      "luminosities are given in dimensionless units. They have been divided "
       "by 3631 Jy already, i.e. they can be turned into AB-magnitudes directly "
       "by applying -2.5 log10(L) without additional corrections.");
 }
