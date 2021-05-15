@@ -437,13 +437,17 @@ INLINE static void stars_props_struct_dump(struct stars_props *p,
   restart_write_blocks((void *)p, sizeof(struct stars_props), 1, stream,
                        "starsprops", "stars props");
 
+  const int count_Z = eagle_stars_lum_tables_N_Z;
+  const int count_ages = eagle_stars_lum_tables_N_ages;
+  const int count_L = count_Z * count_ages;
+
   for (int i = 0; i < (int)luminosity_bands_count; ++i) {
-    restart_write_blocks(p->lum_tables_Z[i], 6, sizeof(float), stream,
+    restart_write_blocks(p->lum_tables_Z[i], count_Z, sizeof(float), stream,
                          "luminosity_Z", "stars props");
-    restart_write_blocks(p->lum_tables_ages[i], 221, sizeof(float), stream,
-                         "luminosity_Z", "stars props");
-    restart_write_blocks(p->lum_tables_luminosities[i], 6 * 221, sizeof(float),
-                         stream, "luminosity_Z", "stars props");
+    restart_write_blocks(p->lum_tables_ages[i], count_ages, sizeof(float),
+                         stream, "luminosity_ages", "stars props");
+    restart_write_blocks(p->lum_tables_luminosities[i], count_L, sizeof(float),
+                         stream, "luminosity_L", "stars props");
 
     free(p->lum_tables_Z[i]);
     free(p->lum_tables_ages[i]);
@@ -470,8 +474,8 @@ INLINE static void stars_props_struct_restore(struct stars_props *p,
 
   for (int i = 0; i < (int)luminosity_bands_count; ++i) {
 
-    const int count_Z = 6;
-    const int count_ages = 221;
+    const int count_Z = eagle_stars_lum_tables_N_Z;
+    const int count_ages = eagle_stars_lum_tables_N_ages;
     const int count_L = count_Z * count_ages;
 
     p->lum_tables_Z[i] = (float *)malloc(count_Z * sizeof(float));
