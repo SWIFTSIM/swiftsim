@@ -175,6 +175,9 @@ struct spart {
 
 } SWIFT_STRUCT_ALIGN;
 
+#define eagle_stars_lum_tables_N_Z 6
+#define eagle_stars_lum_tables_N_ages 221
+
 /**
  * @brief The luminosity bands written in snapshots
  */

@@ -112,8 +112,9 @@ INLINE static void convert_spart_luminosities(const struct engine *e,
                                               const struct spart *sp,
                                               float *ret) {
 
-  stars_get_luminosities(sp, e->cosmology, e->physical_constants,
-                         e->stars_properties, ret);
+  stars_get_luminosities(sp, e->policy & engine_policy_cosmology, e->cosmology,
+                         e->time, e->physical_constants, e->stars_properties,
+                         ret);
 }
 
 /**
@@ -200,7 +201,7 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "Luminosities", FLOAT, luminosity_bands_count, UNIT_CONV_NO_UNITS, 0.f,
       sparts, convert_spart_luminosities,
       "Rest-frame dust-free AB-luminosities of the star particles in the GAMA "
-      "bands computed following Trayford+15");
+      "bands computed using the model of Trayford et al. (2015)");
 }
 
 /**
@@ -304,11 +305,15 @@ INLINE static void stars_props_init(struct stars_props *sp,
   sp->age_threshold = age_threshold_Myr * Myr / conv_fac;
   sp->age_threshold_unlimited = age_threshold_unlimited_Myr * Myr / conv_fac;
 
+  /* Read yield table filepath  */
+  char base_dir_name[200];
+  parser_get_param_string(params, "Stars:luminosity_filename", base_dir_name);
+
   /* Luminosity tables */
   for (int i = 0; i < (int)luminosity_bands_count; ++i) {
 
-    const int count_Z = 6;
-    const int count_ages = 221;
+    const int count_Z = eagle_stars_lum_tables_N_Z;
+    const int count_ages = eagle_stars_lum_tables_N_ages;
     const int count_L = count_Z * count_ages;
 
     sp->lum_tables_Z[i] = (float *)malloc(count_Z * sizeof(float));
@@ -316,13 +321,10 @@ INLINE static void stars_props_init(struct stars_props *sp,
     sp->lum_tables_luminosities[i] = (float *)malloc(count_L * sizeof(float));
 
     static const char *luminosity_band_names[luminosity_bands_count] = {
-        "u_sorted", "g_sorted", "r_sorted", "i_sorted", "z_sorted",
-        "Y_sorted", "J_sorted", "H_sorted", "K_sorted"};
+        "u", "g", "r", "i", "z", "Y", "J", "H", "K"};
 
-    static const char *dirname = "./photometry/GAMA";
-
-    char fname[200];
-    sprintf(fname, "%s/%s", dirname, luminosity_band_names[i]);
+    char fname[256];
+    sprintf(fname, "%s/GAMA/%s", base_dir_name, luminosity_band_names[i]);
     FILE *file = fopen(fname, "r");
 
     char buffer[200];
@@ -341,8 +343,8 @@ INLINE static void stars_props_init(struct stars_props *sp,
   }
 
   /* Luminosity conversion factor */
-  const double L_sun = 3.828e26;   /* Watt */
-  const double pc = 3.08567758e16; /* cm */
+  const double L_sun = 3.828e26;      /* Watt */
+  const double pc = 3.08567758149e16; /* m */
   const double A = 4. * M_PI * (10. * pc) * (10 * pc);
   const double to_Jansky = 1e26 * L_sun / A;
   const double zero_point_AB = 3631; /* Jansky */
@@ -403,7 +405,8 @@ INLINE static void stars_props_print_snapshot(hid_t h_grpstars,
 
   const int luminosity_band_name_length = 32;
   static const char *luminosity_band_names[luminosity_bands_count] = {
-      "u", "g", "r", "i", "z", "Y", "J", "H", "K"};
+      "GAMA_u", "GAMA_g", "GAMA_r", "GAMA_i", "GAMA_z",
+      "GAMA_Y", "GAMA_J", "GAMA_H", "GAMA_K"};
 
   /* Add to the named columns */
   hsize_t dims[1] = {luminosity_bands_count};

@@ -266,19 +266,24 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
 }
 
 INLINE static void stars_get_luminosities(
-    const struct spart* sp, const struct cosmology* cosmo,
+    const struct spart* sp, const int with_cosmology,
+    const struct cosmology* cosmo, const double time,
     const struct phys_const* phys_const, const struct stars_props* props,
     float luminosities[luminosity_bands_count]) {
 
-  const int count_Z = 6;
-  const int count_ages = 221;
+  const int count_Z = eagle_stars_lum_tables_N_Z;
+  const int count_ages = eagle_stars_lum_tables_N_ages;
 
   /* Get star properties (all in internal units */
   const float Z =
       chemistry_get_star_total_metal_mass_fraction_for_luminosity(sp);
   const float mass = sp->mass_init;
-  const float age = cosmology_get_delta_time_from_scale_factors(
-      cosmo, sp->birth_scale_factor, cosmo->a);
+  float age;
+  if (with_cosmology)
+    age = cosmology_get_delta_time_from_scale_factors(
+        cosmo, sp->birth_scale_factor, cosmo->a);
+  else
+    age = time - sp->birth_time;
 
   /* Convert to the units of the tables */
   const float mass_Msun = mass / phys_const->const_solar_mass;
@@ -313,6 +318,8 @@ INLINE static void stars_get_luminosities(
 
     const float* array = props->lum_tables_luminosities[i];
 
+    /* 2D interpolation */
+
     const float f_11 = array[(Z_index - 1) * count_ages + (age_index - 1)];
     const float f_12 = array[(Z_index - 0) * count_ages + (age_index - 1)];
     const float f_21 = array[(Z_index - 1) * count_ages + (age_index - 0)];
@@ -334,6 +341,7 @@ INLINE static void stars_get_luminosities(
 
     const float log10_f = (y_diff1 * f_1 + y_diff2 * f_2) / y_diff3;
 
+    /* Final conversion */
     luminosities[i] = exp10f(log10_f) * mass_Msun * props->lum_tables_factor;
   }
 }
