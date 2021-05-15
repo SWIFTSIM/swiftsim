@@ -763,7 +763,7 @@ void DOSUB_SELF1_RT(struct runner *r, struct cell *c, int timer) {
  */
 void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
                     int timer) {
-
+#if 0
   TIMER_TIC;
 
   struct space *s = r->e->s;
@@ -803,4 +803,5 @@ void DOSUB_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
   }
 
   if (timer) TIMER_TOC(TIMER_DOSUB_PAIR_RT);
+#endif
 }
