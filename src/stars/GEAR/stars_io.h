@@ -235,6 +235,7 @@ INLINE static void stars_props_print(const struct stars_props *sp) {
 
 #if defined(HAVE_HDF5)
 INLINE static void stars_props_print_snapshot(hid_t h_grpstars,
+                                              hid_t h_grp_columns,
                                               const struct stars_props *sp) {
 
   io_write_attribute_s(h_grpstars, "Kernel function", kernel_name);
