@@ -403,15 +403,14 @@ INLINE static void stars_props_print_snapshot(hid_t h_grpstars,
   io_write_attribute_i(h_grpstars, "Max ghost iterations",
                        sp->max_smoothing_iterations);
 
-  const int luminosity_band_name_length = 32;
-  static const char *luminosity_band_names[luminosity_bands_count] = {
+  static const char luminosity_band_names[luminosity_bands_count][32] = {
       "GAMA_u", "GAMA_g", "GAMA_r", "GAMA_i", "GAMA_z",
       "GAMA_Y", "GAMA_J", "GAMA_H", "GAMA_K"};
 
   /* Add to the named columns */
   hsize_t dims[1] = {luminosity_bands_count};
   hid_t type = H5Tcopy(H5T_C_S1);
-  H5Tset_size(type, luminosity_band_name_length);
+  H5Tset_size(type, 32);
   hid_t space = H5Screate_simple(1, dims, NULL);
   hid_t dset = H5Dcreate(h_grp_columns, "Luminosities", type, space,
                          H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
