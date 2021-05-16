@@ -265,6 +265,17 @@ __attribute__((always_inline)) INLINE static void stars_reset_feedback(
 #endif
 }
 
+/**
+ * @brief Compute the luminosities of a particles in different bands.
+ *
+ * @param sp The particle.
+ * @param with_cosmology Are we running a cosmological simulation?
+ * @param cosmo The #cosmology object.
+ * @param time The current physical time (internal units).
+ * @param phys_const The physical constants in internal units.
+ * @param props The #stars_props of that run.
+ * @param luminosities (return) The luminosity in each band.
+ */
 INLINE static void stars_get_luminosities(
     const struct spart* sp, const int with_cosmology,
     const struct cosmology* cosmo, const double time,
