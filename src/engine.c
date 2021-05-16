@@ -3287,9 +3287,11 @@ void engine_clean(struct engine *e, const int fof, const int restart) {
     free((void *)e->output_options);
     free((void *)e->external_potential);
     free((void *)e->black_holes_properties);
+    free((void *)e->rt_props);
     free((void *)e->sink_properties);
     free((void *)e->stars_properties);
     free((void *)e->gravity_properties);
+    free((void *)e->neutrino_properties);
     free((void *)e->hydro_properties);
     free((void *)e->physical_constants);
     free((void *)e->internal_units);
