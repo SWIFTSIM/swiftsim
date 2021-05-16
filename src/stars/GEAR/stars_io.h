@@ -255,6 +255,15 @@ INLINE static void stars_props_print_snapshot(hid_t h_grpstars,
 #endif
 
 /**
+ * @brief Free the memory allocated for the stellar properties.
+ *
+ * Nothing to do here.
+ *
+ * @param sp The #stars_props structure.
+ */
+INLINE static void stars_props_clean(struct stars_props *sp) {}
+
+/**
  * @brief Write a #stars_props struct to the given FILE as a stream of bytes.
  *
  * @param p the struct
