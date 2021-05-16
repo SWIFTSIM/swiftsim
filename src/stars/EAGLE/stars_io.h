@@ -448,14 +448,6 @@ INLINE static void stars_props_struct_dump(struct stars_props *p,
                          stream, "luminosity_ages", "stars props");
     restart_write_blocks(p->lum_tables_luminosities[i], count_L, sizeof(float),
                          stream, "luminosity_L", "stars props");
-
-    free(p->lum_tables_Z[i]);
-    free(p->lum_tables_ages[i]);
-    free(p->lum_tables_luminosities[i]);
-
-    p->lum_tables_Z[i] = 0;
-    p->lum_tables_ages[i] = 0;
-    p->lum_tables_luminosities[i] = 0;
   }
 }
 
