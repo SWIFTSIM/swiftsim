@@ -201,10 +201,13 @@ INLINE static void stars_write_particles(const struct spart *sparts,
       "Luminosities", FLOAT, luminosity_bands_count, UNIT_CONV_NO_UNITS, 0.f,
       sparts, convert_spart_luminosities,
       "Rest-frame dust-free AB-luminosities of the star particles in the GAMA "
-      "bands computed using the model of Trayford et al. (2015). The "
-      "luminosities are given in dimensionless units. They have been divided "
-      "by 3631 Jy already, i.e. they can be turned into AB-magnitudes directly "
-      "by applying -2.5 log10(L) without additional corrections.");
+      "bands. These were computed using the BC03 (GALAXEV) models convolved "
+      "with different filter bands and interpolated in log-log (f(log(Z), "
+      "log(age)) = log(flux)) as used in the dust-free modelling of Trayford "
+      "et al. (2015). The luminosities are given in dimensionless units. They "
+      "have been divided by 3631 Jy already, i.e. they can be turned into "
+      "absolute AB-magnitudes (rest-frame absolute maggies) directly by "
+      "applying -2.5 log10(L) without additional corrections.");
 }
 
 /**
