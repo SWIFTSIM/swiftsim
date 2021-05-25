@@ -138,6 +138,9 @@ struct part {
     /*! Particle velocity divergence */
     float div_v;
 
+    /*! Shock indicator (D) */
+    float shock_indicator;
+
     /*! Particle shock indicator from previous step */
     float shock_indicator_previous_step;
 
