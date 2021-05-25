@@ -73,7 +73,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
 
   pj->rho += mi * wj;
   pj->density.rho_dh -= mi * (hydro_dimension * wj + uj * wj_dx);
-  
+
   pj->density.wcount += wj;
   pj->density.wcount_dh -= (hydro_dimension * wj + uj * wj_dx);
 
@@ -127,6 +127,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
           mi * dv_ij * dx_ij * wj_dx * r_inv;
     }
   }
+
+  /* Correction factors for kernel gradients, and norm for the velocity gradient. */
+
+  pi->weighted_wcount += mj * r2 * wi_dx * r_inv;
+  pj->weighted_wcount += mi * r2 * wj_dx * r_inv;
 }
 
 /**
@@ -199,6 +204,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
           mj * dv_ij * dx_ij * wi_dx * r_inv;
     }
   }
+
+  /* Correction factors for kernel gradients, and norm for the velocity gradient. */
+  pi->weighted_wcount += mj * r2 * wi_dx * r_inv;
 }
 
 /**
@@ -264,9 +272,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
   const float rho_inv_i = 1.f / pi->rho;
   const float rho_inv_j = 1.f / pj->rho;
 
-  pi->weighted_wcount += pj->mass * r2 * wi_dx * rho_inv_i * r_inv;
   pi->weighted_neighbour_wcount += pj->mass * r2 * wi_dx * rho_inv_j * r_inv;
-  pj->weighted_wcount += pi->mass * r2 * wj_dx * rho_inv_j * r_inv;
   pj->weighted_neighbour_wcount += pi->mass * r2 * wj_dx * rho_inv_i * r_inv;
 }
 
@@ -328,10 +334,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
   kernel_deval(ui, &wi, &wi_dx);
 
   /* Correction factors for kernel gradients */
-  const float rho_inv_i = 1.f / pi->rho;
+
   const float rho_inv_j = 1.f / pj->rho;
 
-  pi->weighted_wcount += pj->mass * r2 * wi_dx * rho_inv_i * r_inv;
   pi->weighted_neighbour_wcount += pj->mass * r2 * wi_dx * rho_inv_j * r_inv;
 }
 
@@ -400,7 +405,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
                       const_viscosity_beta * mu_ij;
 
   /* Variable smoothing length term */
-  const float kernel_gradient = (wi_dr * pi->force.f + wj_dr * pj->force.f);
+  const float kernel_gradient = 0.5f * (wi_dr * pi->force.f + wj_dr * pj->force.f);
 
   /* Construct the full viscosity term */
   const float rho_ij = rhoi + rhoj;
@@ -517,7 +522,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
                       const_viscosity_beta * mu_ij;
 
   /* Variable smoothing length term */
-  const float kernel_gradient = (wi_dr * pi->force.f + wj_dr * pj->force.f);
+  const float kernel_gradient = 0.5f * (wi_dr * pi->force.f + wj_dr * pj->force.f);
 
   /* Construct the full viscosity term */
   const float rho_ij = rhoi + rhoj;

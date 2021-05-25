@@ -84,7 +84,7 @@
 /* Diffusion parameters -- Defaults; can be changed at run-time */
 
 /*! Rate limiting coefficient for the diffusion. */
-#define hydro_props_default_diffusion_coefficient 0.03f
+#define hydro_props_default_diffusion_coefficient 0.f
 
 /* Structs that store the relevant variables */
 
