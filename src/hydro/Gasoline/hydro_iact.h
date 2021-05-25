@@ -268,6 +268,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
   kernel_deval(ui, &wi, &wi_dx);
   kernel_deval(uj, &wj, &wj_dx);
 
+  /* Calculate the shock limiter component */
+  pi->viscosity.shock_limiter +=
+      pj->mass * pj->viscosity.shock_indicator * wi / pj->viscosity.tensor_norm;
+  pj->viscosity.shock_limiter +=
+      pi->mass * pi->viscosity.shock_indicator * wj / pi->viscosity.tensor_norm;
+
   /* Correction factors for kernel gradients */
   const float rho_inv_i = 1.f / pi->rho;
   const float rho_inv_j = 1.f / pj->rho;
@@ -325,13 +331,17 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
   /* Update if we need to */
   pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
 
-  /* Calculate Del^2 u for the thermal diffusion coefficient. */
+
   /* Need to get some kernel values F_ij = wi_dx */
   float wi, wi_dx;
 
   const float ui = r / hi;
 
   kernel_deval(ui, &wi, &wi_dx);
+
+  /* Calculate the shock limiter component */
+  pi->viscosity.shock_limiter +=
+      pj->mass * pj->viscosity.shock_indicator * wi / pj->viscosity.tensor_norm;
 
   /* Correction factors for kernel gradients */
 

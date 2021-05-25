@@ -135,6 +135,12 @@ struct part {
     /*! Velocity gradient tensor */
     float velocity_gradient[3][3];
 
+    /*! Velocity gradient tensor trace norm |T| */
+    float tensor_norm;
+
+    /*! Shock limiter (top portion of R) */
+    float shock_limiter;
+
     /*! Particle velocity divergence */
     float div_v;
 
