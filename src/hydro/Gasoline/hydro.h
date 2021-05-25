@@ -499,6 +499,7 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
 
   p->viscosity.div_v = 0.f;
   p->viscosity.shock_indicator = 0.f;
+  p->viscosity.shock_limiter = 0.f;
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
@@ -612,6 +613,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
 
   float dv_dn = 0.f;
   float shear = 0.f;
+  float trace = 0.f;
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
@@ -619,11 +621,12 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
                p->viscosity.velocity_gradient[i][j] * unit_pressure_gradient[j];
 
       const float delta = i == j ? (1.f / 3.f) * p->viscosity.div_v : 0.f;
-      const float shear_component =
-          0.5f * (p->viscosity.velocity_gradient[i][j] +
-                  p->viscosity.velocity_gradient[j][i]) -
-          delta;
+      const float trace_component = 0.5f * (p->viscosity.velocity_gradient[i][j] +
+                  p->viscosity.velocity_gradient[j][i]);
+      const float shear_component = trace_component - delta;
+
       shear += shear_component * shear_component;
+      trace += trace_component * trace_component;
     }
   }
 
@@ -635,6 +638,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
       hydro_props->diffusion.coefficient * shear * p->h * p->h;
 
   p->diffusion.rate = diffusion_rate;
+  p->viscosity.tensor_norm = trace;
   p->viscosity.shock_indicator = shock_indicator;
 }
 
@@ -666,6 +670,14 @@ __attribute__((always_inline)) INLINE static void hydro_end_gradient(
     struct part *p) {
   /* The f_i is calculated explicitly in Gasoline. */
   p->force.f = p->weighted_wcount / (p->weighted_neighbour_wcount * p->rho);
+
+  /* Calculate smoothing length powers */
+  const float h = p->h;
+  const float h_inv = 1.0f / h;                       /* 1/h */
+  const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
+
+  /* Apply correct normalisation */
+  p->viscosity.shock_limiter *= h_inv_dim;
 }
 
 /**
@@ -745,14 +757,18 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
                                    hydro_get_physical_pressure(p, cosmo)) *
       cosmo->a_factor_sound_speed;
 
-  const float shock_limiter =
-      1.f; /* TODO: Incorporate their version of the Balsara */
+  const float shock_limiter_core = 0.5f * (1.f - p->viscosity.shock_limiter / p->rho);
+  const float shock_limiter_core_2 = shock_limiter_core * shock_limiter_core;
+  const float shock_limiter = shock_limiter_core_2 * shock_limiter_core_2;
   const float shock_detector =
       2.0 * p->h * p->h * shock_limiter * max(-1.f * d_shock_indicator_dt, 0.f);
 
+  /* Note that we keep the original SWIFT definition of signal speed here,
+   * and modify the alpha_loc to be equivalent. This is to enable consistent
+   * time integration between SPH models. */
   const float alpha_loc =
       hydro_props->viscosity.alpha_max *
-      (shock_detector / (shock_detector + v_sig_physical * v_sig_physical));
+      (shock_detector / (shock_detector + 0.25f * v_sig_physical * v_sig_physical));
 
   /* TODO: Probably use physical _h_ throughout this function */
   const float d_alpha_dt = (alpha_loc - p->viscosity.alpha) *
@@ -1026,6 +1042,7 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
   xp->u_full = p->u;
 
   p->viscosity.shock_indicator_previous_step = 0.f;
+  p->viscosity.tensor_norm = 0.f;
 
   hydro_reset_acceleration(p);
   hydro_init_part(p, NULL);
