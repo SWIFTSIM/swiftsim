@@ -422,7 +422,7 @@ hydro_diffusive_feedback_reset(struct part *restrict p) {
   hydro_set_viscosity_alpha(p,
                             hydro_props_default_viscosity_alpha_feedback_reset);
 
-  p->diffusion.alpha = hydro_props_default_diffusion_alpha_feedback_reset;
+  p->diffusion.rate = hydro_props_default_diffusion_coefficient_feedback_reset;
 }
 
 /**
@@ -501,11 +501,9 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
-      p->viscosity.velocity_gradient = 0.f;
+      p->viscosity.velocity_gradient[i][j] = 0.f;
     }
   }
-
-  p->diffusion.laplace_u = 0.f;
 }
 
 /**
@@ -578,13 +576,6 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
 __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
     struct part *restrict p, struct xpart *restrict xp,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props) {
-  /* Compute the norm of the curl */
-  const float curl_v = sqrtf(p->density.rot_v[0] * p->density.rot_v[0] +
-                             p->density.rot_v[1] * p->density.rot_v[1] +
-                             p->density.rot_v[2] * p->density.rot_v[2]);
-
-  /* Compute the norm of div v */
-  const float abs_div_v = fabsf(p->viscosity.div_v);
 
   /* Compute the sound speed  */
   const float pressure = hydro_get_comoving_pressure(p);
@@ -625,7 +616,7 @@ __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
 __attribute__((always_inline)) INLINE static void hydro_end_gradient(
     struct part *p) {
   /* The f_i is calculated explicitly in Gasoline. */
-  p->force.f = p->weighted_wcount / weighted_neighbour_wcount;
+  p->force.f = p->weighted_wcount / p->weighted_neighbour_wcount;
 
   /* Finish calculation of the velocity gradient tensor */
   for (int i = 0; i < 3; i++) {
@@ -671,11 +662,10 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
 
   /* Probably not shocking, so this is safe to do */
   p->viscosity.div_v = 0.f;
-  p->diffusion.laplace_u = 0.f;
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
-      p->viscosity.velocity_gradient = 0.f;
+      p->viscosity.velocity_gradient[i][j] = 0.f;
     }
   }
 }
@@ -705,7 +695,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   const float mod_pressure_gradient =
       sqrtf(p->smooth_pressure_gradient[0] * p->smooth_pressure_gradient[0] +
             p->smooth_pressure_gradient[1] * p->smooth_pressure_gradient[1] +
-            p->smooth_pressure_gradient[2] * p->smooth_pressure_gradient[2] +);
+            p->smooth_pressure_gradient[2] * p->smooth_pressure_gradient[2]);
 
   float unit_pressure_gradient[3];
 
@@ -724,7 +714,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
       dv_dn += unit_pressure_gradient[i] *
                p->viscosity.velocity_gradient[i][j] * unit_pressure_gradient[j];
 
-      const float delta = = i == j ? (1.f / 3.f) * p->viscosity.div_v : 0.f;
+      const float delta = i == j ? (1.f / 3.f) * p->viscosity.div_v : 0.f;
       shear += 0.5f * (p->viscosity.velocity_gradient[i][j] +
                        p->viscosity.velocity_gradient[j][i]) -
                delta;
@@ -732,38 +722,38 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   }
 
   const float shock_indicator =
-      (3.f / 2.f) * (dv_dn + max(-(1.f / 3.f) * p->viscosity.div_v));
+      (3.f / 2.f) * (dv_dn + max(-(1.f / 3.f) * p->viscosity.div_v, 0.f));
 
-  const float d_shock_detector_dt =
-      (shock_detector - p->viscosity.shock_indicator_previous_step) / dt_alpha;
+  const float d_shock_indicator_dt =
+      (shock_indicator - p->viscosity.shock_indicator_previous_step) / dt_alpha;
 
   /* A_i in all of the equations */
   const float v_sig_physical = p->viscosity.v_sig * cosmo->a_factor_sound_speed;
   const float soundspeed_physical =
-      gas_soundspeed_from_pressure(p->rho, pressure_including_floor) *
+      gas_soundspeed_from_pressure(p->rho, hydro_get_physical_pressure(p, cosmo)) *
       cosmo->a_factor_sound_speed;
 
   const float shock_limiter =
       1.f; /* TODO: Incorporate their version of the Balsara */
   const float shock_detector =
-      2.0 * p->h * p->h * shock_limiter * max(-1.f * d_shock_detector_dt, 0.f);
+      2.0 * p->h * p->h * shock_limiter * max(-1.f * d_shock_indicator_dt, 0.f);
 
   const float alpha_loc =
-      hydro_properties->viscosity.alpha_max *
+      hydro_props->viscosity.alpha_max *
       (shock_detector / (shock_detector + v_sig_physical * v_sig_physical));
 
   /* TODO: Probably use physical _h_ throughout this function */
-  const float d_alpha_dt = (alpha_loc - p->viscosity_alpha) *
+  const float d_alpha_dt = (alpha_loc - p->viscosity.alpha) *
                            hydro_props->viscosity.length * soundspeed_physical /
                            p->h;
 
-  const float new_alpha = min(max(p->viscosity.alpha + d_alpha_dt * dt_alpha,
-                                  hydro_props->viscosity.alpha_min),
-                              hydro_props->viscosity.alpha_max);
+  float new_alpha = max(p->viscosity.alpha + d_alpha_dt * dt_alpha,
+                                  hydro_props->viscosity.alpha_min);
+  new_alpha = min(new_alpha, hydro_props->viscosity.alpha_max);
 
   /* Now do the conduction coefficient; note that no limiter is used here. */
   const float diffusion_rate =
-      hydro_properties->diffusion.coefficient * shear * p->h * p->h;
+      hydro_props->diffusion.coefficient * shear * p->h * p->h;
 
   p->viscosity.alpha = new_alpha;
   p->viscosity.shock_indicator_previous_step = shock_indicator;
@@ -990,12 +980,6 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
      schemes for safety */
 
   p->viscosity.alpha = hydro_props->viscosity.alpha;
-  /* Initialise this here to keep all the AV variables together */
-  p->viscosity.div_v_previous_step = 0.f;
-  p->viscosity.div_v_dt = 0.f;
-
-  /* Set the initial values for the thermal diffusion */
-  p->diffusion.alpha = hydro_props->diffusion.alpha;
 
   const float pressure = gas_pressure_from_internal_energy(p->rho, p->u);
   const float pressure_including_floor =

@@ -73,6 +73,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
 
   pj->rho += mi * wj;
   pj->density.rho_dh -= mi * (hydro_dimension * wj + uj * wj_dx);
+  
   pj->density.wcount += wj;
   pj->density.wcount_dh -= (hydro_dimension * wj + uj * wj_dx);
 
@@ -121,9 +122,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
       const float dx_ij = pi->x[i] - pj->x[j];
 
       pi->viscosity.velocity_gradient[i][j] +=
-          pj->m * dv_ij * dx_ij * wi_dx * r_inv;
-      pj->viscosity.velocity_gradient[i][j] +=
-          pj->m * dv_ij * dx_ij * wj_dx * r_inv;
+         mj * dv_ij * dx_ij * wi_dx * r_inv;
+      pj->viscosity.velocity_gradient[j][i] +=
+          mi * dv_ij * dx_ij * wj_dx * r_inv;
     }
   }
 }
@@ -195,7 +196,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
       const float dx_ij = pi->x[i] - pj->x[j];
 
       pi->viscosity.velocity_gradient[i][j] +=
-          pj->m * dv_ij * dx_ij * wi_dx * r_inv;
+          mj * dv_ij * dx_ij * wi_dx * r_inv;
     }
   }
 }
@@ -258,17 +259,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
 
   kernel_deval(ui, &wi, &wi_dx);
   kernel_deval(uj, &wj, &wj_dx);
-
-  const float delta_u_factor = (pi->u - pj->u) * r_inv;
-  pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
-  pj->diffusion.laplace_u -= pi->mass * delta_u_factor * wj_dx / pi->rho;
-
-  /* Set the maximal alpha from the previous step over the neighbours
-   * (this is used to limit the diffusion in hydro_prepare_force) */
-  const float alpha_i = pi->viscosity.alpha;
-  const float alpha_j = pj->viscosity.alpha;
-  pi->force.alpha_visc_max_ngb = max(pi->force.alpha_visc_max_ngb, alpha_j);
-  pj->force.alpha_visc_max_ngb = max(pj->force.alpha_visc_max_ngb, alpha_i);
 
   /* Correction factors for kernel gradients */
   const float rho_inv_i = 1.f / pi->rho;
@@ -336,14 +326,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
   const float ui = r / hi;
 
   kernel_deval(ui, &wi, &wi_dx);
-
-  const float delta_u_factor = (pi->u - pj->u) * r_inv;
-  pi->diffusion.laplace_u += pj->mass * delta_u_factor * wi_dx / pj->rho;
-
-  /* Set the maximal alpha from the previous step over the neighbours
-   * (this is used to limit the diffusion in hydro_prepare_force) */
-  const float alpha_j = pj->viscosity.alpha;
-  pi->force.alpha_visc_max_ngb = max(pi->force.alpha_visc_max_ngb, alpha_j);
 
   /* Correction factors for kernel gradients */
   const float rho_inv_i = 1.f / pi->rho;
@@ -494,7 +476,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float r_inv = 1.0f / r;
 
   /* Recover some data */
-  const float mi = pi->mass;
   const float mj = pj->mass;
 
   const float rhoi = pi->rho;

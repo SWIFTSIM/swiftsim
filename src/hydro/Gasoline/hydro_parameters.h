@@ -79,13 +79,9 @@
  * feedback event. This should be set to the same value as the
  * hydro_props_default_diffusion_alpha in fixed schemes, and likely
  * to hydro_props_default_diffusion_alpha_min in variable schemes. */
-#define hydro_props_default_diffusion_alpha_feedback_reset 0.0f
+#define hydro_props_default_diffusion_coefficient_feedback_reset 0.0f
 
 /* Diffusion parameters -- Defaults; can be changed at run-time */
-
-/*! The "initial" diffusion, or the fixed value for non-variable
- * schemes. This usually takes the value 0.0. */
-#define hydro_props_default_diffusion_alpha 0.0f
 
 /*! Rate limiting coefficient for the diffusion. */
 #define hydro_props_default_diffusion_coefficient 0.03f
@@ -220,7 +216,7 @@ static INLINE void diffusion_init(struct swift_params* params,
                                   const struct phys_const* phys_const,
                                   struct diffusion_global_data* diffusion) {
 
-  diffusion->ceofficient =
+  diffusion->coefficient =
       parser_get_opt_param_float(params, "SPH:diffusion_coefficient",
                                  hydro_props_default_diffusion_coefficient);
 }
