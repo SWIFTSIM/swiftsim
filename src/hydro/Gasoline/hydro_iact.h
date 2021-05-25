@@ -45,7 +45,6 @@
 __attribute__((always_inline)) INLINE static void runner_iact_density(
     float r2, const float* dx, float hi, float hj, struct part* pi,
     struct part* pj, float a, float H) {
-
   float wi, wj, wi_dx, wj_dx;
   float dv[3], curlvr[3];
 
@@ -82,6 +81,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
   const float faci = mj * wi_dx * r_inv;
   const float facj = mi * wj_dx * r_inv;
 
+  /* Smooth pressure gradient */
+  pi->smooth_pressure_gradient[0] += faci * pj->u * dx[0];
+  pi->smooth_pressure_gradient[1] += faci * pj->u * dx[1];
+  pi->smooth_pressure_gradient[2] += faci * pj->u * dx[2];
+
+  pj->smooth_pressure_gradient[0] -= facj * pi->u * dx[0];
+  pj->smooth_pressure_gradient[1] -= facj * pi->u * dx[1];
+  pj->smooth_pressure_gradient[2] -= facj * pi->u * dx[2];
+
   /* Compute dv dot r */
   dv[0] = pi->v[0] - pj->v[0];
   dv[1] = pi->v[1] - pj->v[1];
@@ -105,12 +113,19 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
   pj->density.rot_v[1] += facj * curlvr[1];
   pj->density.rot_v[2] += facj * curlvr[2];
 
-#ifdef SWIFT_HYDRO_DENSITY_CHECKS
-  pi->n_density += wi;
-  pj->n_density += wj;
-  pi->N_density++;
-  pj->N_density++;
-#endif
+  /* Finally, the big boy; the velocity gradient tensor. Note that the
+   * loops here are over the coordinates, i=0 -> x, and so on. */
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      const float dv_ij = pi->v[i] - pj->v[j];
+      const float dx_ij = pi->x[i] - pj->x[j];
+
+      pi->viscosity.velocity_gradient[i][j] +=
+          pj->m * dv_ij * dx_ij * wi_dx * r_inv;
+      pj->viscosity.velocity_gradient[i][j] +=
+          pj->m * dv_ij * dx_ij * wj_dx * r_inv;
+    }
+  }
 }
 
 /**
@@ -128,7 +143,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
     float r2, const float* dx, float hi, float hj, struct part* pi,
     const struct part* pj, float a, float H) {
-
   float wi, wi_dx;
   float dv[3], curlvr[3];
 
@@ -151,6 +165,11 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
   const float r_inv = 1.f / r;
   const float faci = mj * wi_dx * r_inv;
 
+  /* Compute pressure gradient */
+  pi->smooth_pressure_gradient[0] += faci * pj->u * dx[0];
+  pi->smooth_pressure_gradient[1] += faci * pj->u * dx[1];
+  pi->smooth_pressure_gradient[2] += faci * pj->u * dx[2];
+
   /* Compute dv dot r */
   dv[0] = pi->v[0] - pj->v[0];
   dv[1] = pi->v[1] - pj->v[1];
@@ -168,10 +187,17 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
   pi->density.rot_v[1] += faci * curlvr[1];
   pi->density.rot_v[2] += faci * curlvr[2];
 
-#ifdef SWIFT_HYDRO_DENSITY_CHECKS
-  pi->n_density += wi;
-  pi->N_density++;
-#endif
+  /* Finally, the big boy; the velocity gradient tensor. Note that the
+   * loops here are over the coordinates, i=0 -> x, and so on. */
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      const float dv_ij = pi->v[i] - pj->v[j];
+      const float dx_ij = pi->x[i] - pj->x[j];
+
+      pi->viscosity.velocity_gradient[i][j] +=
+          pj->m * dv_ij * dx_ij * wi_dx * r_inv;
+    }
+  }
 }
 
 /**
@@ -193,7 +219,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 __attribute__((always_inline)) INLINE static void runner_iact_gradient(
     float r2, const float* dx, float hi, float hj, struct part* restrict pi,
     struct part* restrict pj, float a, float H) {
-
   /* We need to construct the maximal signal velocity between our particle
    * and all of it's neighbours */
 
@@ -245,12 +270,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
   pi->force.alpha_visc_max_ngb = max(pi->force.alpha_visc_max_ngb, alpha_j);
   pj->force.alpha_visc_max_ngb = max(pj->force.alpha_visc_max_ngb, alpha_i);
 
-#ifdef SWIFT_HYDRO_DENSITY_CHECKS
-  pi->n_gradient += wi;
-  pj->n_gradient += wj;
-  pi->N_gradient++;
-  pj->N_gradient++;
-#endif
+  /* Correction factors for kernel gradients */
+  const float rho_inv_i = 1.f / pi->rho;
+  const float rho_inv_j = 1.f / pj->rho;
+
+  pi->weighted_wcount += pj->mass * r2 * wi_dx * rho_inv_i * r_inv;
+  pi->weighted_neighbour_wcount += pj->mass * r2 * wi_dx * rho_inv_j * r_inv;
+  pj->weighted_wcount += pi->mass * r2 * wj_dx * rho_inv_j * r_inv;
+  pj->weighted_neighbour_wcount += pi->mass * r2 * wj_dx * rho_inv_i * r_inv;
 }
 
 /**
@@ -273,7 +300,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
     float r2, const float* dx, float hi, float hj, struct part* restrict pi,
     struct part* restrict pj, float a, float H) {
-
   /* We need to construct the maximal signal velocity between our particle
    * and all of it's neighbours */
 
@@ -319,10 +345,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
   const float alpha_j = pj->viscosity.alpha;
   pi->force.alpha_visc_max_ngb = max(pi->force.alpha_visc_max_ngb, alpha_j);
 
-#ifdef SWIFT_HYDRO_DENSITY_CHECKS
-  pi->n_gradient += wi;
-  pi->N_gradient++;
-#endif
+  /* Correction factors for kernel gradients */
+  const float rho_inv_i = 1.f / pi->rho;
+  const float rho_inv_j = 1.f / pj->rho;
+
+  pi->weighted_wcount += pj->mass * r2 * wi_dx * rho_inv_i * r_inv;
+  pi->weighted_neighbour_wcount += pj->mass * r2 * wi_dx * rho_inv_j * r_inv;
 }
 
 /**
@@ -340,7 +368,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
 __attribute__((always_inline)) INLINE static void runner_iact_force(
     float r2, const float* dx, float hi, float hj, struct part* pi,
     struct part* pj, float a, float H) {
-
   /* Cosmological factors entering the EoMs */
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
   const float a2_Hubble = a * a * H;
@@ -391,30 +418,19 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
                       const_viscosity_beta * mu_ij;
 
   /* Variable smoothing length term */
-  const float f_ij = 1.f - pi->force.f / mj;
-  const float f_ji = 1.f - pj->force.f / mi;
-
-  /* Balsara term */
-  const float balsara_i = pi->force.balsara;
-  const float balsara_j = pj->force.balsara;
+  const float kernel_gradient = (wi_dr * pi->force.f + wj_dr * pj->force.f);
 
   /* Construct the full viscosity term */
   const float rho_ij = rhoi + rhoj;
   const float alpha = pi->viscosity.alpha + pj->viscosity.alpha;
-  const float visc =
-      -0.25f * alpha * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
+  const float visc = -0.25f * alpha * v_sig * mu_ij / rho_ij;
 
   /* Convolve with the kernel */
-  const float visc_acc_term =
-      0.5f * visc * (wi_dr * f_ij + wj_dr * f_ji) * r_inv;
-
-  /* Compute gradient terms */
-  const float P_over_rho2_i = pressurei / (rhoi * rhoi) * f_ij;
-  const float P_over_rho2_j = pressurej / (rhoj * rhoj) * f_ji;
+  const float visc_acc_term = 0.5f * visc * kernel_gradient * r_inv;
 
   /* SPH acceleration term */
   const float sph_acc_term =
-      (P_over_rho2_i * wi_dr + P_over_rho2_j * wj_dr) * r_inv;
+      (pressurei + pressurej) * r_inv * kernel_gradient / (pi->rho * pj->rho);
 
   /* Assemble the acceleration */
   const float acc = sph_acc_term + visc_acc_term;
@@ -429,26 +445,18 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   pj->a_hydro[2] += mi * acc * dx[2];
 
   /* Get the time derivative for u. */
-  const float sph_du_term_i = P_over_rho2_i * dvdr * r_inv * wi_dr;
-  const float sph_du_term_j = P_over_rho2_j * dvdr * r_inv * wj_dr;
+  const float sph_du_term_i =
+      pressurei * dvdr * r_inv * kernel_gradient / (pi->rho * pj->rho);
+  const float sph_du_term_j =
+      pressurej * dvdr * r_inv * kernel_gradient / (pi->rho * pj->rho);
 
   /* Viscosity term */
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Diffusion term */
-  /* Combine the alpha_diff into a pressure-based switch -- this allows the
-   * alpha from the highest pressure particle to dominate, so that the
-   * diffusion limited particles always take precedence - another trick to
-   * allow the scheme to work with thermal feedback. */
-  const float alpha_diff =
-      (pressurei * pi->diffusion.alpha + pressurej * pj->diffusion.alpha) /
-      (pressurei + pressurej);
-  const float v_diff = alpha_diff * 0.5f *
-                       (sqrtf(2.f * fabsf(pressurei - pressurej) / rho_ij) +
-                        fabsf(fac_mu * r_inv * dvdr_Hubble));
-  /* wi_dx + wj_dx / 2 is F_ij */
-  const float diff_du_term =
-      v_diff * (pi->u - pj->u) * (f_ij * wi_dr / rhoi + f_ji * wj_dr / rhoj);
+  const float diff_du_term = 2.f * (pi->diffusion.rate + pj->diffusion.rate) *
+                             (pj->u - pi->u) * (kernel_gradient * r_inv) /
+                             rho_ij;
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
@@ -461,19 +469,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   /* Get the time derivative for h. */
   pi->force.h_dt -= mj * dvdr * r_inv / rhoj * wi_dr;
   pj->force.h_dt -= mi * dvdr * r_inv / rhoi * wj_dr;
-
-  /* Update if we need to; this should be guaranteed by the gradient loop but
-   * due to some possible synchronisation problems this is here as a _quick
-   * fix_. Added: 14th August 2019. To be removed by 1st Jan 2020. (JB) */
-  pi->viscosity.v_sig = max(pi->viscosity.v_sig, v_sig);
-  pj->viscosity.v_sig = max(pj->viscosity.v_sig, v_sig);
-
-#ifdef SWIFT_HYDRO_DENSITY_CHECKS
-  pi->n_force += wi + wj;
-  pj->n_force += wi + wj;
-  pi->N_force++;
-  pj->N_force++;
-#endif
 }
 
 /**
@@ -491,7 +486,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
     float r2, const float* dx, float hi, float hj, struct part* pi,
     const struct part* pj, float a, float H) {
-
   /* Cosmological factors entering the EoMs */
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
   const float a2_Hubble = a * a * H;
@@ -542,30 +536,19 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
                       const_viscosity_beta * mu_ij;
 
   /* Variable smoothing length term */
-  const float f_ij = 1.f - pi->force.f / mj;
-  const float f_ji = 1.f - pj->force.f / mi;
-
-  /* Balsara term */
-  const float balsara_i = pi->force.balsara;
-  const float balsara_j = pj->force.balsara;
+  const float kernel_gradient = (wi_dr * pi->force.f + wj_dr * pj->force.f);
 
   /* Construct the full viscosity term */
   const float rho_ij = rhoi + rhoj;
   const float alpha = pi->viscosity.alpha + pj->viscosity.alpha;
-  const float visc =
-      -0.25f * alpha * v_sig * mu_ij * (balsara_i + balsara_j) / rho_ij;
+  const float visc = -0.25f * alpha * v_sig * mu_ij / rho_ij;
 
   /* Convolve with the kernel */
-  const float visc_acc_term =
-      0.5f * visc * (wi_dr * f_ij + wj_dr * f_ji) * r_inv;
-
-  /* Compute gradient terms */
-  const float P_over_rho2_i = pressurei / (rhoi * rhoi) * f_ij;
-  const float P_over_rho2_j = pressurej / (rhoj * rhoj) * f_ji;
+  const float visc_acc_term = 0.5f * visc * kernel_gradient * r_inv;
 
   /* SPH acceleration term */
   const float sph_acc_term =
-      (P_over_rho2_i * wi_dr + P_over_rho2_j * wj_dr) * r_inv;
+      (pressurei + pressurej) * r_inv * kernel_gradient / (pi->rho * pj->rho);
 
   /* Assemble the acceleration */
   const float acc = sph_acc_term + visc_acc_term;
@@ -576,25 +559,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   pi->a_hydro[2] -= mj * acc * dx[2];
 
   /* Get the time derivative for u. */
-  const float sph_du_term_i = P_over_rho2_i * dvdr * r_inv * wi_dr;
+  const float sph_du_term_i =
+      pressurei * dvdr * r_inv * kernel_gradient / (pi->rho * pj->rho);
 
   /* Viscosity term */
   const float visc_du_term = 0.5f * visc_acc_term * dvdr_Hubble;
 
   /* Diffusion term */
-  /* Combine the alpha_diff into a pressure-based switch -- this allows the
-   * alpha from the highest pressure particle to dominate, so that the
-   * diffusion limited particles always take precedence - another trick to
-   * allow the scheme to work with thermal feedback. */
-  const float alpha_diff =
-      (pressurei * pi->diffusion.alpha + pressurej * pj->diffusion.alpha) /
-      (pressurei + pressurej);
-  const float v_diff = alpha_diff * 0.5f *
-                       (sqrtf(2.f * fabsf(pressurei - pressurej) / rho_ij) +
-                        fabsf(fac_mu * r_inv * dvdr_Hubble));
-  /* wi_dx + wj_dx / 2 is F_ij */
-  const float diff_du_term =
-      v_diff * (pi->u - pj->u) * (f_ij * wi_dr / rhoi + f_ji * wj_dr / rhoj);
+  const float diff_du_term = 2.f * (pi->diffusion.rate + pj->diffusion.rate) *
+                             (pj->u - pi->u) * (kernel_gradient * r_inv) /
+                             rho_ij;
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
@@ -604,16 +578,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 
   /* Get the time derivative for h. */
   pi->force.h_dt -= mj * dvdr * r_inv / rhoj * wi_dr;
-
-  /* Update if we need to; this should be guaranteed by the gradient loop but
-   * due to some possible synchronisation problems this is here as a _quick
-   * fix_. Added: 14th August 2019. To be removed by 1st Jan 2020. (JB) */
-  pi->viscosity.v_sig = max(pi->viscosity.v_sig, v_sig);
-
-#ifdef SWIFT_HYDRO_DENSITY_CHECKS
-  pi->n_force += wi + wj;
-  pi->N_force++;
-#endif
 }
 
 #endif /* SWIFT_GASOLINE_HYDRO_IACT_H */

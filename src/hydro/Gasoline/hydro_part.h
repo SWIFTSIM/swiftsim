@@ -46,7 +46,6 @@
  * potentially ghost tasks only.
  */
 struct xpart {
-
   /*! Offset between current position and position at last tree rebuild. */
   float x_diff[3];
 
@@ -92,7 +91,6 @@ struct xpart {
  * variables should be declared in the main part of the part structure,
  */
 struct part {
-
   /*! Particle unique ID. */
   long long id;
 
@@ -123,17 +121,25 @@ struct part {
   /*! Particle density. */
   float rho;
 
+  /*! Smoothed pressure gradient */
+  float smooth_pressure_gradient[3];
+
+  /*! Weightings for correction factor */
+  /* mj / rho_i r^2 W */
+  float weighted_wcount;
+  /* mj / rho_j r^2 W */
+  float weighted_neighbour_wcount;
+
   /* Store viscosity information in a separate struct. */
   struct {
+    /*! Velocity gradient tensor */
+    float velocity_gradient[3][3];
 
     /*! Particle velocity divergence */
     float div_v;
 
-    /*! Time differential of velocity divergence */
-    float div_v_dt;
-
-    /*! Particle velocity divergence from previous step */
-    float div_v_previous_step;
+    /*! Particle shock indicator from previous step */
+    float shock_indicator_previous_step;
 
     /*! Artificial viscosity parameter */
     float alpha;
@@ -146,17 +152,13 @@ struct part {
   /* Store thermal diffusion information in a separate struct. */
   struct {
 
-    /*! del^2 u, a smoothed quantity */
-    float laplace_u;
-
-    /*! Thermal diffusion coefficient */
-    float alpha;
+    /*! Thermal diffusion rate */
+    float rate;
 
   } diffusion;
 
   /* Store density/force specific stuff. */
   union {
-
     /**
      * @brief Structure for the variables only used in the density loop over
      * neighbours.
@@ -165,7 +167,6 @@ struct part {
      * loop over neighbours and the ghost task.
      */
     struct {
-
       /*! Neighbour number count. */
       float wcount;
 
@@ -188,7 +189,6 @@ struct part {
      * loop over neighbours and the ghost, drift and kick tasks.
      */
     struct {
-
       /*! "Grad h" term -- only partial in P-U */
       float f;
 
@@ -200,12 +200,6 @@ struct part {
 
       /*! Time derivative of smoothing length  */
       float h_dt;
-
-      /*! Balsara switch */
-      float balsara;
-
-      /*! Maximal alpha (viscosity) over neighbours */
-      float alpha_visc_max_ngb;
 
     } force;
   };
@@ -242,54 +236,6 @@ struct part {
   /* Time of the last kick */
   integertime_t ti_kick;
 
-#endif
-
-#ifdef SWIFT_HYDRO_DENSITY_CHECKS
-
-  /* Integer number of neighbours in the density loop */
-  int N_density;
-
-  /* Exact integer number of neighbours in the density loop */
-  int N_density_exact;
-
-  /* Integer number of neighbours in the gradient loop */
-  int N_gradient;
-
-  /* Exact integer number of neighbours in the gradient loop */
-  int N_gradient_exact;
-
-  /* Integer number of neighbours in the force loop */
-  int N_force;
-
-  /* Exact integer number of neighbours in the force loop */
-  int N_force_exact;
-
-  /*! Exact value of the density field obtained via brute-force loop */
-  float rho_exact;
-
-  /*! Weighted numer of neighbours in the density loop */
-  float n_density;
-
-  /*! Exact value of the weighted numer of neighbours in the density loop */
-  float n_density_exact;
-
-  /*! Weighted numer of neighbours in the gradient loop */
-  float n_gradient;
-
-  /*! Exact value of the weighted numer of neighbours in the gradient loop */
-  float n_gradient_exact;
-
-  /*! Weighted numer of neighbours in the force loop */
-  float n_force;
-
-  /*! Exact value of the weighted numer of neighbours in the force loop */
-  float n_force_exact;
-
-  /*! Has this particle interacted with any unhibited neighbour? */
-  char inhibited_exact;
-
-  /*! Has this particle been woken up by the limiter? */
-  char limited_part;
 #endif
 
 } SWIFT_STRUCT_ALIGN;
