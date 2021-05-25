@@ -56,7 +56,6 @@
 __attribute__((always_inline)) INLINE static float
 hydro_get_comoving_internal_energy(const struct part *restrict p,
                                    const struct xpart *restrict xp) {
-
   return xp->u_full;
 }
 
@@ -77,7 +76,6 @@ __attribute__((always_inline)) INLINE static float
 hydro_get_physical_internal_energy(const struct part *restrict p,
                                    const struct xpart *restrict xp,
                                    const struct cosmology *cosmo) {
-
   return xp->u_full * cosmo->a_factor_internal_energy;
 }
 
@@ -89,7 +87,6 @@ hydro_get_physical_internal_energy(const struct part *restrict p,
  */
 __attribute__((always_inline)) INLINE static float
 hydro_get_drifted_comoving_internal_energy(const struct part *restrict p) {
-
   return p->u;
 }
 
@@ -103,7 +100,6 @@ hydro_get_drifted_comoving_internal_energy(const struct part *restrict p) {
 __attribute__((always_inline)) INLINE static float
 hydro_get_drifted_physical_internal_energy(const struct part *restrict p,
                                            const struct cosmology *cosmo) {
-
   return p->u * cosmo->a_factor_internal_energy;
 }
 
@@ -116,7 +112,6 @@ hydro_get_drifted_physical_internal_energy(const struct part *restrict p,
  */
 __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
     const struct part *restrict p) {
-
   return gas_pressure_from_internal_energy(p->rho, p->u);
 }
 
@@ -131,7 +126,6 @@ __attribute__((always_inline)) INLINE static float hydro_get_comoving_pressure(
  */
 __attribute__((always_inline)) INLINE static float hydro_get_physical_pressure(
     const struct part *restrict p, const struct cosmology *cosmo) {
-
   return cosmo->a_factor_pressure * hydro_get_comoving_pressure(p);
 }
 
@@ -148,7 +142,6 @@ __attribute__((always_inline)) INLINE static float hydro_get_physical_pressure(
  */
 __attribute__((always_inline)) INLINE static float hydro_get_comoving_entropy(
     const struct part *restrict p, const struct xpart *restrict xp) {
-
   return gas_entropy_from_internal_energy(p->rho, xp->u_full);
 }
 
@@ -168,7 +161,6 @@ __attribute__((always_inline)) INLINE static float hydro_get_comoving_entropy(
 __attribute__((always_inline)) INLINE static float hydro_get_physical_entropy(
     const struct part *restrict p, const struct xpart *restrict xp,
     const struct cosmology *cosmo) {
-
   /* Note: no cosmological conversion required here with our choice of
    * coordinates. */
   return gas_entropy_from_internal_energy(p->rho, xp->u_full);
@@ -182,7 +174,6 @@ __attribute__((always_inline)) INLINE static float hydro_get_physical_entropy(
  */
 __attribute__((always_inline)) INLINE static float
 hydro_get_drifted_comoving_entropy(const struct part *restrict p) {
-
   return gas_entropy_from_internal_energy(p->rho, p->u);
 }
 
@@ -196,7 +187,6 @@ hydro_get_drifted_comoving_entropy(const struct part *restrict p) {
 __attribute__((always_inline)) INLINE static float
 hydro_get_drifted_physical_entropy(const struct part *restrict p,
                                    const struct cosmology *cosmo) {
-
   /* Note: no cosmological conversion required here with our choice of
    * coordinates. */
   return gas_entropy_from_internal_energy(p->rho, p->u);
@@ -209,7 +199,6 @@ hydro_get_drifted_physical_entropy(const struct part *restrict p,
  */
 __attribute__((always_inline)) INLINE static float
 hydro_get_comoving_soundspeed(const struct part *restrict p) {
-
   return gas_soundspeed_from_internal_energy(p->rho, p->u);
 }
 
@@ -222,7 +211,6 @@ hydro_get_comoving_soundspeed(const struct part *restrict p) {
 __attribute__((always_inline)) INLINE static float
 hydro_get_physical_soundspeed(const struct part *restrict p,
                               const struct cosmology *cosmo) {
-
   return cosmo->a_factor_sound_speed * hydro_get_comoving_soundspeed(p);
 }
 
@@ -233,7 +221,6 @@ hydro_get_physical_soundspeed(const struct part *restrict p,
  */
 __attribute__((always_inline)) INLINE static float hydro_get_comoving_density(
     const struct part *restrict p) {
-
   return p->rho;
 }
 
@@ -245,7 +232,6 @@ __attribute__((always_inline)) INLINE static float hydro_get_comoving_density(
  */
 __attribute__((always_inline)) INLINE static float hydro_get_physical_density(
     const struct part *restrict p, const struct cosmology *cosmo) {
-
   return cosmo->a3_inv * p->rho;
 }
 
@@ -256,7 +242,6 @@ __attribute__((always_inline)) INLINE static float hydro_get_physical_density(
  */
 __attribute__((always_inline)) INLINE static float hydro_get_mass(
     const struct part *restrict p) {
-
   return p->mass;
 }
 
@@ -268,7 +253,6 @@ __attribute__((always_inline)) INLINE static float hydro_get_mass(
  */
 __attribute__((always_inline)) INLINE static void hydro_set_mass(
     struct part *restrict p, float m) {
-
   p->mass = m;
 }
 
@@ -281,7 +265,6 @@ __attribute__((always_inline)) INLINE static void hydro_set_mass(
  */
 __attribute__((always_inline)) INLINE static float
 hydro_get_comoving_internal_energy_dt(const struct part *restrict p) {
-
   return p->u_dt;
 }
 
@@ -296,7 +279,6 @@ hydro_get_comoving_internal_energy_dt(const struct part *restrict p) {
 __attribute__((always_inline)) INLINE static float
 hydro_get_physical_internal_energy_dt(const struct part *restrict p,
                                       const struct cosmology *cosmo) {
-
   return p->u_dt * cosmo->a_factor_internal_energy;
 }
 
@@ -310,7 +292,6 @@ hydro_get_physical_internal_energy_dt(const struct part *restrict p,
  */
 __attribute__((always_inline)) INLINE static void
 hydro_set_comoving_internal_energy_dt(struct part *restrict p, float du_dt) {
-
   p->u_dt = du_dt;
 }
 
@@ -327,7 +308,6 @@ __attribute__((always_inline)) INLINE static void
 hydro_set_physical_internal_energy_dt(struct part *restrict p,
                                       const struct cosmology *cosmo,
                                       float du_dt) {
-
   p->u_dt = du_dt / cosmo->a_factor_internal_energy;
 }
 
@@ -342,7 +322,6 @@ hydro_set_physical_internal_energy_dt(struct part *restrict p,
 __attribute__((always_inline)) INLINE static void hydro_set_physical_entropy(
     struct part *p, struct xpart *xp, const struct cosmology *cosmo,
     const float entropy) {
-
   /* Note there is no conversion from physical to comoving entropy */
   const float comoving_entropy = entropy;
   xp->u_full = gas_internal_energy_from_entropy(p->rho, comoving_entropy);
@@ -360,7 +339,6 @@ __attribute__((always_inline)) INLINE static void
 hydro_set_physical_internal_energy(struct part *p, struct xpart *xp,
                                    const struct cosmology *cosmo,
                                    const float u) {
-
   xp->u_full = u / cosmo->a_factor_internal_energy;
 }
 
@@ -375,7 +353,6 @@ __attribute__((always_inline)) INLINE static void
 hydro_set_drifted_physical_internal_energy(struct part *p,
                                            const struct cosmology *cosmo,
                                            const float u) {
-
   /* There is no need to use the floor here as this function is called in the
    * feedback, so the new value of the internal energy should be strictly
    * higher than the old value. */
@@ -411,7 +388,6 @@ __attribute__((always_inline)) INLINE static void
 hydro_set_v_sig_based_on_velocity_kick(struct part *p,
                                        const struct cosmology *cosmo,
                                        const float dv_phys) {
-
   /* Compute the velocity kick in comoving coordinates */
   const float dv = dv_phys / cosmo->a_factor_sound_speed;
 
@@ -464,7 +440,6 @@ __attribute__((always_inline)) INLINE static float hydro_compute_timestep(
     const struct part *restrict p, const struct xpart *restrict xp,
     const struct hydro_props *restrict hydro_properties,
     const struct cosmology *restrict cosmo) {
-
   const float CFL_condition = hydro_properties->CFL_condition;
 
   /* CFL condition */
@@ -507,35 +482,30 @@ __attribute__((always_inline)) INLINE static void hydro_remove_part(
  */
 __attribute__((always_inline)) INLINE static void hydro_init_part(
     struct part *restrict p, const struct hydro_space *hs) {
-
   p->density.wcount = 0.f;
   p->density.wcount_dh = 0.f;
   p->rho = 0.f;
+  p->weighted_wcount = 0.f;
+  p->weighted_neighbour_wcount = 0.f;
   p->density.rho_dh = 0.f;
 
   p->density.rot_v[0] = 0.f;
   p->density.rot_v[1] = 0.f;
   p->density.rot_v[2] = 0.f;
 
-  p->viscosity.div_v = 0.f;
-  p->diffusion.laplace_u = 0.f;
+  p->smooth_pressure_gradient[0] = 0.f;
+  p->smooth_pressure_gradient[1] = 0.f;
+  p->smooth_pressure_gradient[2] = 0.f;
 
-#ifdef SWIFT_HYDRO_DENSITY_CHECKS
-  p->N_density = 1; /* Self contribution */
-  p->N_force = 0;
-  p->N_gradient = 1;
-  p->N_density_exact = 0;
-  p->N_force_exact = 0;
-  p->rho_exact = 0.f;
-  p->n_gradient = 0.f;
-  p->n_gradient_exact = 0.f;
-  p->n_density = 0.f;
-  p->n_density_exact = 0.f;
-  p->n_force = 0.f;
-  p->n_force_exact = 0.f;
-  p->inhibited_exact = 0;
-  p->limited_part = 0;
-#endif
+  p->viscosity.div_v = 0.f;
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      p->viscosity.velocity_gradient = 0.f;
+    }
+  }
+
+  p->diffusion.laplace_u = 0.f;
 }
 
 /**
@@ -553,7 +523,6 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
  */
 __attribute__((always_inline)) INLINE static void hydro_end_density(
     struct part *restrict p, const struct cosmology *cosmo) {
-
   /* Some smoothing length multiples. */
   const float h = p->h;
   const float h_inv = 1.0f / h;                       /* 1/h */
@@ -575,6 +544,12 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   const float rho_inv = 1.f / p->rho;
   const float a_inv2 = cosmo->a2_inv;
 
+  /* Finish caclulation of the pressure gradients; note that the
+   * kernel derivative is zero at our particle's position. */
+  p->smooth_pressure_gradient[0] *= hydro_gamma_minus_one * h_inv_dim_plus_one;
+  p->smooth_pressure_gradient[1] *= hydro_gamma_minus_one * h_inv_dim_plus_one;
+  p->smooth_pressure_gradient[2] *= hydro_gamma_minus_one * h_inv_dim_plus_one;
+
   /* Finish calculation of the velocity curl components */
   p->density.rot_v[0] *= h_inv_dim_plus_one * a_inv2 * rho_inv;
   p->density.rot_v[1] *= h_inv_dim_plus_one * a_inv2 * rho_inv;
@@ -583,11 +558,6 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   /* Finish calculation of the velocity divergence */
   p->viscosity.div_v *= h_inv_dim_plus_one * rho_inv * a_inv2;
   p->viscosity.div_v += cosmo->H * hydro_dimension;
-
-#ifdef SWIFT_HYDRO_DENSITY_CHECKS
-  p->n_density += kernel_root;
-  p->n_density *= h_inv_dim;
-#endif
 }
 
 /**
@@ -608,9 +578,6 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
 __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
     struct part *restrict p, struct xpart *restrict xp,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props) {
-
-  const float fac_B = cosmo->a_factor_Balsara_eps;
-
   /* Compute the norm of the curl */
   const float curl_v = sqrtf(p->density.rot_v[0] * p->density.rot_v[0] +
                              p->density.rot_v[1] * p->density.rot_v[1] +
@@ -626,30 +593,9 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
   const float soundspeed =
       gas_soundspeed_from_pressure(p->rho, pressure_including_floor);
 
-  /* Compute the Balsara switch */
-  const float balsara =
-      abs_div_v / (abs_div_v + curl_v + 0.0001f * soundspeed * fac_B / p->h);
-
-  /* Compute the "grad h" term  - Note here that we have \tilde{x}
-   * as 1 as we use the local number density to find neighbours. This
-   * introduces a j-component that is considered in the force loop,
-   * meaning that this cached grad_h_term gives:
-   *
-   * f_ij = 1.f - grad_h_term_i / m_j */
-  const float common_factor = p->h * hydro_dimension_inv / p->density.wcount;
-  float grad_h_term = common_factor * p->density.rho_dh /
-                      (1.f + common_factor * p->density.wcount_dh);
-
-  /* Ignore changing-kernel effects when h ~= h_max */
-  if (p->h > 0.9999f * hydro_props->h_max) {
-    grad_h_term = 0.f;
-  }
-
   /* Update variables. */
-  p->force.f = grad_h_term;
   p->force.pressure = pressure_including_floor;
   p->force.soundspeed = soundspeed;
-  p->force.balsara = balsara;
 }
 
 /**
@@ -663,9 +609,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
  */
 __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
     struct part *restrict p) {
-
   p->viscosity.v_sig = 2.f * p->force.soundspeed;
-  p->force.alpha_visc_max_ngb = p->viscosity.alpha;
 }
 
 /**
@@ -680,20 +624,16 @@ __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
  */
 __attribute__((always_inline)) INLINE static void hydro_end_gradient(
     struct part *p) {
+  /* The f_i is calculated explicitly in Gasoline. */
+  p->force.f = p->weighted_wcount / weighted_neighbour_wcount;
 
-  /* Some smoothing length multiples. */
-  const float h = p->h;
-  const float h_inv = 1.0f / h;                       /* 1/h */
-  const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
-  const float h_inv_dim_plus_one = h_inv_dim * h_inv; /* 1/h^(d+1) */
-
-  /* Include the extra factors in the del^2 u */
-
-  p->diffusion.laplace_u *= 2.f * h_inv_dim_plus_one;
-
-#ifdef SWIFT_HYDRO_DENSITY_CHECKS
-  p->n_gradient += kernel_root;
-#endif
+  /* Finish calculation of the velocity gradient tensor */
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      p->viscosity.velocity_gradient[i][j] *=
+          (3.f / (p->weighted_wcount * p->rho));
+    }
+  }
 }
 
 /**
@@ -710,7 +650,6 @@ __attribute__((always_inline)) INLINE static void hydro_end_gradient(
 __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
     struct part *restrict p, struct xpart *restrict xp,
     const struct cosmology *cosmo) {
-
   /* Some smoothing length multiples. */
   const float h = p->h;
   const float h_inv = 1.0f / h;                 /* 1/h */
@@ -722,6 +661,9 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
   p->density.wcount = kernel_root * h_inv_dim;
   p->density.rho_dh = 0.f;
   p->density.wcount_dh = 0.f;
+  /* Set to 1 as these are only used by taking the ratio */
+  p->weighted_wcount = 1.f;
+  p->weighted_neighbour_wcount = 1.f;
 
   p->density.rot_v[0] = 0.f;
   p->density.rot_v[1] = 0.f;
@@ -730,6 +672,12 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
   /* Probably not shocking, so this is safe to do */
   p->viscosity.div_v = 0.f;
   p->diffusion.laplace_u = 0.f;
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      p->viscosity.velocity_gradient = 0.f;
+    }
+  }
 }
 
 /**
@@ -753,112 +701,73 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     struct part *restrict p, struct xpart *restrict xp,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const float dt_alpha) {
+  /* Here we need to update the artificial viscosity and conduction */
+  const float mod_pressure_gradient =
+      sqrtf(p->smooth_pressure_gradient[0] * p->smooth_pressure_gradient[0] +
+            p->smooth_pressure_gradient[1] * p->smooth_pressure_gradient[1] +
+            p->smooth_pressure_gradient[2] * p->smooth_pressure_gradient[2] +);
 
-  /* Here we need to update the artificial viscosity */
+  float unit_pressure_gradient[3];
 
-  /* We use in this function that h is the radius of support */
-  const float kernel_support_physical = p->h * cosmo->a * kernel_gamma;
-  const float kernel_support_physical_inv = 1.f / kernel_support_physical;
+  unit_pressure_gradient[0] =
+      p->smooth_pressure_gradient[0] / mod_pressure_gradient;
+  unit_pressure_gradient[1] =
+      p->smooth_pressure_gradient[1] / mod_pressure_gradient;
+  unit_pressure_gradient[2] =
+      p->smooth_pressure_gradient[2] / mod_pressure_gradient;
+
+  float dv_dn = 0.f;
+  float shear = 0.f;
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      dv_dn += unit_pressure_gradient[i] *
+               p->viscosity.velocity_gradient[i][j] * unit_pressure_gradient[j];
+
+      const float delta = = i == j ? (1.f / 3.f) * p->viscosity.div_v : 0.f;
+      shear += 0.5f * (p->viscosity.velocity_gradient[i][j] +
+                       p->viscosity.velocity_gradient[j][i]) -
+               delta;
+    }
+  }
+
+  const float shock_indicator =
+      (3.f / 2.f) * (dv_dn + max(-(1.f / 3.f) * p->viscosity.div_v));
+
+  const float d_shock_detector_dt =
+      (shock_detector - p->viscosity.shock_indicator_previous_step) / dt_alpha;
+
+  /* A_i in all of the equations */
   const float v_sig_physical = p->viscosity.v_sig * cosmo->a_factor_sound_speed;
-  const float pressure = hydro_get_comoving_pressure(p);
-  const float pressure_including_floor =
-      pressure_floor_get_comoving_pressure(p, pressure, cosmo);
   const float soundspeed_physical =
       gas_soundspeed_from_pressure(p->rho, pressure_including_floor) *
       cosmo->a_factor_sound_speed;
 
-  const float sound_crossing_time_inverse =
-      soundspeed_physical * kernel_support_physical_inv;
+  const float shock_limiter =
+      1.f; /* TODO: Incorporate their version of the Balsara */
+  const float shock_detector =
+      2.0 * p->h * p->h * shock_limiter * max(-1.f * d_shock_detector_dt, 0.f);
 
-  /* Construct time differential of div.v implicitly following the ANARCHY spec
-   */
-
-  const float div_v_dt =
-      dt_alpha == 0.f
-          ? 0.f
-          : (p->viscosity.div_v - p->viscosity.div_v_previous_step) / dt_alpha;
-
-  /* Construct the source term for the AV; if shock detected this is _positive_
-   * as div_v_dt should be _negative_ before the shock hits */
-  /* Source term is only activated if flow is converging (i.e. in the pre-
-   * shock region) */
-  const float S = p->viscosity.div_v < 0.f
-                      ? kernel_support_physical * kernel_support_physical *
-                            max(0.f, -1.f * div_v_dt)
-                      : 0.f;
-
-  /* We want the decay to occur based on the thermodynamic properties
-   * of the gas - hence use the soundspeed instead of the signal velocity */
-  const float soundspeed_square = soundspeed_physical * soundspeed_physical;
-
-  /* Calculate the current appropriate value of the AV based on the above */
   const float alpha_loc =
-      hydro_props->viscosity.alpha_max * S / (soundspeed_square + S);
+      hydro_properties->viscosity.alpha_max *
+      (shock_detector / (shock_detector + v_sig_physical * v_sig_physical));
 
-  if (alpha_loc > p->viscosity.alpha) {
-    /* Reset the value of alpha to the appropriate value */
-    p->viscosity.alpha = alpha_loc;
-  } else {
-    /* Integrate the alpha forward in time to decay back to alpha = alpha_loc */
-    /* This type of integration is stable w.r.t. different time-step lengths
-     * (Price 2018) */
-    const float timescale_ratio =
-        dt_alpha * sound_crossing_time_inverse * hydro_props->viscosity.length;
+  /* TODO: Probably use physical _h_ throughout this function */
+  const float d_alpha_dt = (alpha_loc - p->viscosity_alpha) *
+                           hydro_props->viscosity.length * soundspeed_physical /
+                           p->h;
 
-    p->viscosity.alpha += alpha_loc * timescale_ratio;
-    p->viscosity.alpha /= (1.f + timescale_ratio);
-  }
+  const float new_alpha = min(max(p->viscosity.alpha + d_alpha_dt * dt_alpha,
+                                  hydro_props->viscosity.alpha_min),
+                              hydro_props->viscosity.alpha_max);
 
-  /* Check that we did not hit the minimum */
-  p->viscosity.alpha =
-      max(p->viscosity.alpha, hydro_props->viscosity.alpha_min);
+  /* Now do the conduction coefficient; note that no limiter is used here. */
+  const float diffusion_rate =
+      hydro_properties->diffusion.coefficient * shear * p->h * p->h;
 
-  /* Set our old div_v to the one for the next loop */
-  p->viscosity.div_v_previous_step = p->viscosity.div_v;
-  p->viscosity.div_v_dt = div_v_dt;
-
-  /* Now for the diffusive alpha */
-
-  const float diffusion_timescale_physical_inverse =
-      v_sig_physical * kernel_support_physical_inv;
-
-  const float sqrt_u_inv = 1.f / sqrtf(p->u);
-
-  /* Calculate initial value of alpha dt before bounding */
-  /* Evolution term: following Schaller+ 2015. This is made up of several
-     cosmology factors: physical smoothing length, sound speed from laplace(u) /
-     sqrt(u), and the 1 / a^2 coming from the laplace operator. */
-  float alpha_diff_dt = hydro_props->diffusion.beta * kernel_support_physical *
-                        p->diffusion.laplace_u * cosmo->a_factor_sound_speed *
-                        sqrt_u_inv * cosmo->a2_inv;
-
-  /* Decay term: not documented in Schaller+ 2015 but was present
-   * in the original EAGLE code and in appendix of Schaye+ 2015 */
-  alpha_diff_dt -= (p->diffusion.alpha - hydro_props->diffusion.alpha_min) *
-                   diffusion_timescale_physical_inverse;
-
-  float new_diffusion_alpha = p->diffusion.alpha;
-  new_diffusion_alpha += alpha_diff_dt * dt_alpha;
-
-  /* Consistency checks to ensure min < alpha < max */
-  new_diffusion_alpha =
-      max(new_diffusion_alpha, hydro_props->diffusion.alpha_min);
-
-  /* Now we limit in viscous flows; remove diffusion there. If we
-   * don't do that, then we end up diffusing energy away in supernovae.
-   * This is an EAGLE-specific fix. We limit based on the maximal
-   * viscous alpha over our neighbours in an attempt to keep diffusion
-   * low near to supernovae sites. */
-
-  /* This also enforces alpha_diff < alpha_diff_max */
-
-  const float viscous_diffusion_limit =
-      hydro_props->diffusion.alpha_max *
-      (1.f - p->force.alpha_visc_max_ngb / hydro_props->viscosity.alpha_max);
-
-  new_diffusion_alpha = min(new_diffusion_alpha, viscous_diffusion_limit);
-
-  p->diffusion.alpha = new_diffusion_alpha;
+  p->viscosity.alpha = new_alpha;
+  p->viscosity.shock_indicator_previous_step = shock_indicator;
+  p->diffusion.rate = diffusion_rate;
 }
 
 /**
@@ -871,7 +780,6 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
  */
 __attribute__((always_inline)) INLINE static void hydro_reset_acceleration(
     struct part *restrict p) {
-
   /* Reset the acceleration. */
   p->a_hydro[0] = 0.0f;
   p->a_hydro[1] = 0.0f;
@@ -893,7 +801,6 @@ __attribute__((always_inline)) INLINE static void hydro_reset_acceleration(
 __attribute__((always_inline)) INLINE static void hydro_reset_predicted_values(
     struct part *restrict p, const struct xpart *restrict xp,
     const struct cosmology *cosmo) {
-
   /* Re-set the predicted velocities */
   p->v[0] = xp->v_full[0];
   p->v[1] = xp->v_full[1];
@@ -938,7 +845,6 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
     float dt_therm, const struct cosmology *cosmo,
     const struct hydro_props *hydro_props,
     const struct entropy_floor_properties *floor_props) {
-
   /* Predict the internal energy */
   p->u += p->u_dt * dt_therm;
 
@@ -1002,7 +908,6 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
  */
 __attribute__((always_inline)) INLINE static void hydro_end_force(
     struct part *restrict p, const struct cosmology *cosmo) {
-
   p->force.h_dt *= p->h * hydro_dimension_inv;
 }
 
@@ -1027,7 +932,6 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
     float dt_grav, float dt_hydro, float dt_kick_corr,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props,
     const struct entropy_floor_properties *floor_props) {
-
   /* Integrate the internal energy forward in time */
   const float delta_u = p->u_dt * dt_therm;
 
@@ -1067,7 +971,6 @@ __attribute__((always_inline)) INLINE static void hydro_kick_extra(
 __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
     struct part *restrict p, struct xpart *restrict xp,
     const struct cosmology *cosmo, const struct hydro_props *hydro_props) {
-
   /* Convert the physcial internal energy to the comoving one. */
   /* u' = a^(3(g-1)) u */
   const float factor = 1.f / cosmo->a_factor_internal_energy;
@@ -1116,7 +1019,6 @@ __attribute__((always_inline)) INLINE static void hydro_convert_quantities(
  */
 __attribute__((always_inline)) INLINE static void hydro_first_init_part(
     struct part *restrict p, struct xpart *restrict xp) {
-
   p->time_bin = 0;
 
   xp->v_full[0] = p->v[0];
@@ -1141,7 +1043,6 @@ __attribute__((always_inline)) INLINE static void hydro_first_init_part(
  */
 __attribute__((always_inline)) INLINE static void
 hydro_set_init_internal_energy(struct part *p, float u_init) {
-
   p->u = u_init;
 }
 

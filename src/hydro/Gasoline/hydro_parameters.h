@@ -71,7 +71,7 @@
 #define hydro_props_default_viscosity_alpha_max 2.0f
 
 /*! Decay length for the viscosity scheme. This is scheme dependent. */
-#define hydro_props_default_viscosity_length 0.05f
+#define hydro_props_default_viscosity_length 0.2f
 
 /* Diffusion parameters -- FIXED -- MUST BE DEFINED AT COMPILE-TIME */
 
@@ -87,18 +87,8 @@
  * schemes. This usually takes the value 0.0. */
 #define hydro_props_default_diffusion_alpha 0.0f
 
-/*! Beta coefficient for the diffusion. This controls how fast the
- * diffusion coefficient peaks, and how high it can get. Chosen to be
- * very small in schemes where little diffusion is needed, 0.2-1.0 in
- * schemes (e.g. density-energy) where diffusion is needed to solve
- * the contact discontinuity problem. */
-#define hydro_props_default_diffusion_beta 1.0f
-
-/*! Maximal value for the diffusion alpha in variable schemes. */
-#define hydro_props_default_diffusion_alpha_max 1.0f
-
-/*! Minimal value for the diffusion alpha in variable schemes. */
-#define hydro_props_default_diffusion_alpha_min 0.0f
+/*! Rate limiting coefficient for the diffusion. */
+#define hydro_props_default_diffusion_coefficient 0.03f
 
 /* Structs that store the relevant variables */
 
@@ -121,18 +111,8 @@ struct viscosity_global_data {
 /*! Thermal diffusion parameters */
 struct diffusion_global_data {
 
-  /*! Initialisation value, or the case for constant thermal diffusion coeffs
-   */
-  float alpha;
-
-  /*! Tuning parameter for speed of ramp up/down */
-  float beta;
-
-  /*! Maximal value for alpha_diff */
-  float alpha_max;
-
-  /*! Minimal value for alpha_diff */
-  float alpha_min;
+  /*! Rate limiting coefficcient */
+  float coefficient;
 };
 
 /* Functions for reading from parameter file */
@@ -240,19 +220,9 @@ static INLINE void diffusion_init(struct swift_params* params,
                                   const struct phys_const* phys_const,
                                   struct diffusion_global_data* diffusion) {
 
-  diffusion->alpha = parser_get_opt_param_float(
-      params, "SPH:diffusion_alpha", hydro_props_default_diffusion_alpha);
-
-  diffusion->beta = parser_get_opt_param_float(
-      params, "SPH:diffusion_beta", hydro_props_default_diffusion_beta);
-
-  diffusion->alpha_max =
-      parser_get_opt_param_float(params, "SPH:diffusion_alpha_max",
-                                 hydro_props_default_diffusion_alpha_max);
-
-  diffusion->alpha_min =
-      parser_get_opt_param_float(params, "SPH:diffusion_alpha_min",
-                                 hydro_props_default_diffusion_alpha_min);
+  diffusion->ceofficient =
+      parser_get_opt_param_float(params, "SPH:diffusion_coefficient",
+                                 hydro_props_default_diffusion_coefficient);
 }
 
 /**
@@ -263,10 +233,7 @@ static INLINE void diffusion_init(struct swift_params* params,
  **/
 static INLINE void diffusion_init_no_hydro(
     struct diffusion_global_data* diffusion) {
-  diffusion->alpha = hydro_props_default_diffusion_alpha;
-  diffusion->alpha_max = hydro_props_default_diffusion_alpha_max;
-  diffusion->alpha_min = hydro_props_default_diffusion_alpha_min;
-  diffusion->beta = hydro_props_default_diffusion_beta;
+  diffusion->coefficient = hydro_props_default_diffusion_coefficient;
 }
 
 /**
@@ -277,11 +244,8 @@ static INLINE void diffusion_init_no_hydro(
  **/
 static INLINE void diffusion_print(
     const struct diffusion_global_data* diffusion) {
-  message(
-      "Artificial diffusion parameters set to alpha: %.3f, max: %.3f, "
-      "min: %.3f, beta: %.3f.",
-      diffusion->alpha, diffusion->alpha_max, diffusion->alpha_min,
-      diffusion->beta);
+  message("Artificial diffusion parameters set to coefficient: %.3f",
+          diffusion->coefficient);
 }
 
 #ifdef HAVE_HDF5
@@ -293,10 +257,8 @@ static INLINE void diffusion_print(
  **/
 static INLINE void diffusion_print_snapshot(
     hid_t h_grpsph, const struct diffusion_global_data* diffusion) {
-  io_write_attribute_f(h_grpsph, "Diffusion alpha", diffusion->alpha);
-  io_write_attribute_f(h_grpsph, "Diffusion alpha (max)", diffusion->alpha_max);
-  io_write_attribute_f(h_grpsph, "Diffusion alpha (min)", diffusion->alpha_min);
-  io_write_attribute_f(h_grpsph, "Diffusion beta", diffusion->beta);
+  io_write_attribute_f(h_grpsph, "Diffusion coefficient",
+                       diffusion->coefficient);
 }
 #endif
 
