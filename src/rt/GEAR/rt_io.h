@@ -16,14 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_RT_IO_M1CLOSURE_H
-#define SWIFT_RT_IO_M1CLOSURE_H
+#ifndef SWIFT_RT_IO_GEAR_H
+#define SWIFT_RT_IO_GEAR_H
 
 #include "io_properties.h"
 
 /**
- * @file src/rt/M1closure/rt_io.h
- * @brief Main header file for no radiative transfer scheme IO routines.
+ * @file src/rt/GEAR/rt_io.h
+ * @brief Main header file for GEAR M1 Closure radiative transfer 
+ * scheme IO routines.
  */
 
 /**
@@ -53,9 +54,14 @@ INLINE static int rt_write_stars(const struct spart* sparts,
 INLINE static void rt_write_flavour(hid_t h_grp, const struct rt_props* rtp) {
 #if defined(HAVE_HDF5)
 
-  io_write_attribute_s(h_grp, "RT Scheme", RT_IMPLEMENTATION);
+  if (rtp->hydro_controlled_injection) {
+    io_write_attribute_s(h_grp, "RT Scheme",
+                         RT_IMPLEMENTATION ", hydro controlled injection");
+  } else {
+    io_write_attribute_s(h_grp, "RT Scheme", RT_IMPLEMENTATION);
+  }
 
 #endif
 }
 
-#endif /* SWIFT_RT_IO_M1CLOSURE_H */
+#endif /* SWIFT_RT_IO_GEAR_H */

@@ -62,9 +62,7 @@ __attribute__((always_inline)) INLINE static void rt_props_print(
     const struct rt_props* rtp) {
 
   /* Only the master print */
-  if (engine_rank != 0) {
-    return;
-  }
+  if (engine_rank != 0) return;
 
   message("Radiative transfer scheme: '%s'", RT_IMPLEMENTATION);
 

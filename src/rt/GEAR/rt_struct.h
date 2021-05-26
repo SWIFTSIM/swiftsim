@@ -16,12 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_RT_STRUCT_M1CLOSURE_H
-#define SWIFT_RT_STRUCT_M1CLOSURE_H
+#ifndef SWIFT_RT_STRUCT_GEAR_H
+#define SWIFT_RT_STRUCT_GEAR_H
 
 /**
- * @file src/rt/M1closure/rt_struct.h
- * @brief Main header file for no radiative transfer struct.
+ * @file src/rt/GEAR/rt_struct.h
+ * @brief Main header file for the GEAR M1 Closure radiative transfer struct.
  */
 
 /* Additional RT data in hydro particle struct */
@@ -30,4 +30,4 @@ struct rt_part_data {};
 /* Additional RT data in star particle struct */
 struct rt_spart_data {};
 
-#endif /* SWIFT_RT_STRUCT_M1CLOSURE_H */
+#endif /* SWIFT_RT_STRUCT_GEAR_H */

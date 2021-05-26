@@ -16,17 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_RT_PROPERTIES_M1_H
-#define SWIFT_RT_PROPERTIES_M1_H
+#ifndef SWIFT_RT_PROPERTIES_GEAR_H
+#define SWIFT_RT_PROPERTIES_GEAR_H
 
 /**
- * @file src/rt/M1closure/rt_properties.h
- * @brief Main header file for the 'M1closure' radiative transfer scheme
+ * @file src/rt/GEAR/rt_properties.h
+ * @brief Main header file for the 'GEAR' radiative transfer scheme
  * properties.
  */
 
 /**
- * @brief Properties of the 'M1closure' radiative transfer model
+ * @brief Properties of the 'GEAR' radiative transfer model
  */
 struct rt_props {
 
@@ -46,7 +46,7 @@ __attribute__((always_inline)) INLINE static void rt_props_print(
   /* Only the master print */
   if (engine_rank != 0) return;
 
-  message("Radiative transfer scheme: %s", RT_IMPLEMENTATION);
+  message("Radiative transfer scheme: '%s'", RT_IMPLEMENTATION);
 }
 
 /**
@@ -66,6 +66,11 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
 
   /* After initialisation, print params to screen */
   rt_props_print(rtp);
+
+  /* Print a final message. */
+  if (engine_rank == 0) {
+    message("Radiative transfer initialized");
+  }
 }
 
 /**
@@ -96,4 +101,4 @@ __attribute__((always_inline)) INLINE static void rt_struct_restore(
                       "RT properties struct");
 }
 
-#endif /* SWIFT_RT_PROPERTIES_M1_H */
+#endif /* SWIFT_RT_PROPERTIES_GEAR_H */
