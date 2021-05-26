@@ -2419,7 +2419,7 @@ AC_DEFINE_UNQUOTED([SELF_GRAVITY_MULTIPOLE_ORDER], [$with_multipole_order], [Mul
 #  Radiative transfer scheme
 AC_ARG_WITH([rt],
    [AS_HELP_STRING([--with-rt=<scheme>],
-      [Radiative transfer scheme to use @<:@none, M1closure, debug default: none@:>@. This is still work in progress, currently no scheme works.]
+      [Radiative transfer scheme to use @<:@none, GEAR, debug default: none@:>@. This is still work in progress, currently no scheme works.]
    )],
    [with_rt="$withval"],
    [with_rt="none"]
@@ -2429,8 +2429,8 @@ case "$with_rt" in
    none)
       AC_DEFINE([RT_NONE], [1], [No radiative transfer scheme])
    ;;
-   M1closure)
-      AC_DEFINE([RT_M1], [1], [M1 closure scheme])
+   GEAR)
+      AC_DEFINE([RT_GEAR], [1], [GEAR M1 closure scheme])
    ;;
    debug)
       AC_DEFINE([RT_DEBUG], [1], [debugging scheme])
