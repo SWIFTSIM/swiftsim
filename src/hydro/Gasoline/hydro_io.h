@@ -76,6 +76,15 @@ INLINE static void convert_P(const struct engine* e, const struct part* p,
   ret[0] = hydro_get_comoving_pressure(p);
 }
 
+INLINE static void convert_div_v(const struct engine* e, const struct part* p,
+                                 const struct xpart* xp, float* ret) {
+  /* The velocity divergence is the 1/3 of the trace of the velocity
+   * gradient tensor */
+  ret[0] = (1. / 3.) * (p->viscosity.velocity_gradient[0][0] +
+                        p->viscosity.velocity_gradient[1][1] +
+                        p->viscosity.velocity_gradient[2][2]);
+}
+
 INLINE static void convert_part_pos(const struct engine* e,
                                     const struct part* p,
                                     const struct xpart* xp, double* ret) {
@@ -217,9 +226,9 @@ INLINE static void hydro_write_particles(const struct part* parts,
       "Visosity coefficient (alpha_visc) of the particles, multiplied by the "
       "balsara switch");
 
-  list[10] = io_make_output_field(
+  list[10] = io_make_output_field_convert_part(
       "VelocityDivergences", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts,
-      viscosity.div_v,
+      xparts, convert_div_v,
       "Local velocity divergence field around the particles. Provided without "
       "cosmology, as this includes the Hubble flow. To return to a peculiar "
       "velocity divergence, div . v_pec = a^2 (div . v - n_D H)");
@@ -228,12 +237,12 @@ INLINE static void hydro_write_particles(const struct part* parts,
   list[11] = io_make_output_field(
       "ShockIndicators", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts,
       viscosity.shock_indicator,
-      "Shock indicators (D in the paper) created from the velocity tensor.");
+      "Physical shock indicators (D in the paper) created from the velocity tensor.");
 
   list[11] = io_make_output_field(
     "DiffusionRates", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts,
     viscosity.shock_indicator,
-    "Diffusion rates calculated from the shear tensor.");
+    "Physical diffusion rates calculated from the shear tensor.");
 }
 
 /**
