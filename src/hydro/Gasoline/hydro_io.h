@@ -171,7 +171,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
                                          struct io_props* list,
                                          int* num_fields) {
 
-  *num_fields = 11;
+  *num_fields = 12;
   /* List what we want to write */
   list[0] = io_make_output_field_convert_part(
       "Coordinates", DOUBLE, 3, UNIT_CONV_LENGTH, 1.f, parts, xparts,
@@ -223,6 +223,16 @@ INLINE static void hydro_write_particles(const struct part* parts,
       "Local velocity divergence field around the particles. Provided without "
       "cosmology, as this includes the Hubble flow. To return to a peculiar "
       "velocity divergence, div . v_pec = a^2 (div . v - n_D H)");
+
+  list[11] = io_make_output_field(
+      "ShockIndicators", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts,
+      viscosity.shock_indicator,
+      "Shock indicators (D in the paper) created from the velocity tensor.");
+
+  list[11] = io_make_output_field(
+    "DiffusionRates", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts,
+    viscosity.shock_indicator,
+    "Diffusion rates calculated from the shear tensor.");
 }
 
 /**
