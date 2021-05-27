@@ -493,7 +493,6 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
   p->smooth_pressure_gradient[1] = 0.f;
   p->smooth_pressure_gradient[2] = 0.f;
 
-  p->viscosity.div_v = 0.f;
   p->viscosity.shock_indicator = 0.f;
   p->viscosity.shock_limiter = 0.f;
 
@@ -537,18 +536,11 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   p->density.wcount *= h_inv_dim;
   p->density.wcount_dh *= h_inv_dim_plus_one;
 
-  const float rho_inv = 1.f / p->rho;
-  const float a_inv2 = cosmo->a2_inv;
-
   /* Finish caclulation of the pressure gradients; note that the
    * kernel derivative is zero at our particle's position. */
   p->smooth_pressure_gradient[0] *= hydro_gamma_minus_one * h_inv_dim_plus_one;
   p->smooth_pressure_gradient[1] *= hydro_gamma_minus_one * h_inv_dim_plus_one;
   p->smooth_pressure_gradient[2] *= hydro_gamma_minus_one * h_inv_dim_plus_one;
-
-  /* Finish calculation of the velocity divergence */
-  p->viscosity.div_v *= h_inv_dim_plus_one * rho_inv * a_inv2;
-  p->viscosity.div_v += cosmo->H * hydro_dimension;
 
   /* Finish calculation of the velocity gradient tensor */
   for (int i = 0; i < 3; i++) {
@@ -607,37 +599,38 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
       p->smooth_pressure_gradient[2] / mod_pressure_gradient;
 
   float dv_dn = 0.f;
-  float shear = 0.f;
-  float trace = 0.f;
+  float shear_norm2 = 0.f;
+  float traceless_shear_norm2 = 0.f;
+  float div_v = 0.f;
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
       dv_dn += unit_pressure_gradient[i] *
                p->viscosity.velocity_gradient[i][j] * unit_pressure_gradient[j];
 
-      const float delta = i == j ? (1.f / 3.f) * p->viscosity.div_v : 0.f;
-      const float trace_component =
+      const float shear_component =
           0.5f * (p->viscosity.velocity_gradient[i][j] +
                   p->viscosity.velocity_gradient[j][i]);
-      const float shear_component = trace_component - delta;
+      const float shear_component2 = shear_component * shear_component;
 
-      shear += shear_component * shear_component;
-      trace += trace_component * trace_component;
+      shear_norm2 += shear_component2;
+      traceless_shear_norm2 += i == j ? 0.f : shear_component2;
+      div_v += i == j ? (1. / 3.) * p->viscosity.velocity_gradient[i][j] : 0.f;
     }
   }
 
   const float shock_indicator =
-      (3.f / 2.f) * (dv_dn + max(-(1.f / 3.f) * p->viscosity.div_v, 0.f));
+      (3.f / 2.f) * (dv_dn + max(-(1.f / 3.f) * div_v, 0.f));
 
   /* Now do the conduction coefficient; note that no limiter is used here. */
   /* These square roots are not included in the original documentation */
   const float h_physical = p->h * cosmo->a;
 
   const float diffusion_rate = hydro_props->diffusion.coefficient *
-                               sqrtf(shear) * h_physical * h_physical;
+                               sqrtf(traceless_shear_norm2) * h_physical * h_physical;
 
   p->diffusion.rate = diffusion_rate;
-  p->viscosity.tensor_norm = sqrtf(trace);
+  p->viscosity.tensor_norm = sqrtf(shear_norm2);
   p->viscosity.shock_indicator = shock_indicator;
 }
 
@@ -708,9 +701,6 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
   p->weighted_wcount = 1.f;
   p->weighted_neighbour_wcount = 1.f;
 
-  /* Probably not shocking, so this is safe to do */
-  p->viscosity.div_v = 0.f;
-
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
       p->viscosity.velocity_gradient[i][j] = 0.f;
@@ -753,11 +743,16 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
                                    hydro_get_physical_pressure(p, cosmo));
   const float h_physical = p->h * cosmo->a;
 
+  /* Note that viscosity.shock_limiter still includes the cosmology dependence
+   * from the density, so what we do here is correct (i.e. include no explicit
+   * h-factors). */
   const float shock_limiter_core =
       0.5f * (1.f - p->viscosity.shock_limiter / p->rho);
   const float shock_limiter_core_2 = shock_limiter_core * shock_limiter_core;
   const float shock_limiter = shock_limiter_core_2 * shock_limiter_core_2;
-  const float shock_detector = 10.f * h_physical * h_physical * shock_limiter *
+
+  const float shock_detector = 2.f * h_physical * h_physical * kernel_gamma2 *
+                               shock_limiter *
                                max(-1.f * d_shock_indicator_dt, 0.f);
 
   const float alpha_loc =

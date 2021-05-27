@@ -46,7 +46,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
     float r2, const float* dx, float hi, float hj, struct part* pi,
     struct part* pj, float a, float H) {
   float wi, wj, wi_dx, wj_dx;
-  float dv[3];
 
   const float r = sqrtf(r2);
 
@@ -91,15 +90,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
   pj->smooth_pressure_gradient[1] -= facj * pi->u * dx[1];
   pj->smooth_pressure_gradient[2] -= facj * pi->u * dx[2];
 
-  /* Compute dv dot r */
-  dv[0] = pi->v[0] - pj->v[0];
-  dv[1] = pi->v[1] - pj->v[1];
-  dv[2] = pi->v[2] - pj->v[2];
-  const float dvdr = dv[0] * dx[0] + dv[1] * dx[1] + dv[2] * dx[2];
-
-  pi->viscosity.div_v -= faci * dvdr;
-  pj->viscosity.div_v -= facj * dvdr;
-
   /* Finally, the big boy; the velocity gradient tensor. Note that the
    * loops here are over the coordinates, i=0 -> x, and so on. */
   for (int i = 0; i < 3; i++) {
@@ -137,7 +127,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
     float r2, const float* dx, float hi, float hj, struct part* pi,
     const struct part* pj, float a, float H) {
   float wi, wi_dx;
-  float dv[3];
 
   /* Get the masses. */
   const float mj = pj->mass;
@@ -162,14 +151,6 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
   pi->smooth_pressure_gradient[0] += faci * pj->u * dx[0];
   pi->smooth_pressure_gradient[1] += faci * pj->u * dx[1];
   pi->smooth_pressure_gradient[2] += faci * pj->u * dx[2];
-
-  /* Compute dv dot r */
-  dv[0] = pi->v[0] - pj->v[0];
-  dv[1] = pi->v[1] - pj->v[1];
-  dv[2] = pi->v[2] - pj->v[2];
-  const float dvdr = dv[0] * dx[0] + dv[1] * dx[1] + dv[2] * dx[2];
-
-  pi->viscosity.div_v -= faci * dvdr;
 
   /* Finally, the big boy; the velocity gradient tensor. Note that the
    * loops here are over the coordinates, i=0 -> x, and so on. */

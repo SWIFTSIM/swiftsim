@@ -132,6 +132,7 @@ struct part {
 
   /* Store viscosity information in a separate struct. */
   struct {
+    
     /*! Velocity gradient tensor (physical) */
     float velocity_gradient[3][3];
 
@@ -140,9 +141,6 @@ struct part {
 
     /*! Shock limiter (top portion of R) */
     float shock_limiter;
-
-    /*! Particle velocity divergence */
-    float div_v;
 
     /*! Shock indicator (D) */
     float shock_indicator;
