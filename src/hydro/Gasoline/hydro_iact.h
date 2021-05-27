@@ -229,10 +229,18 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
   kernel_deval(uj, &wj, &wj_dx);
 
   /* Calculate the shock limiter component */
-  pi->viscosity.shock_limiter +=
-      pj->mass * pj->viscosity.shock_indicator * wi / pj->viscosity.tensor_norm;
-  pj->viscosity.shock_limiter +=
-      pi->mass * pi->viscosity.shock_indicator * wj / pi->viscosity.tensor_norm;
+  const float shock_ratio_i =
+      / pj->viscosity.tensor_norm > 0.f
+          ? pj->viscosity.shock_indicator / pj->viscosity.tensor_norm
+          : 0.f;
+
+  const float shock_ratio_j =
+      / pi->viscosity.tensor_norm > 0.f
+          ? pi->viscosity.shock_indicator / pi->viscosity.tensor_norm
+          : 0.f;
+
+  pi->viscosity.shock_limiter += pj->mass * shock_ratio_i * wi;
+  pj->viscosity.shock_limiter += pi->mass * shock_ratio_j * wj;
 
   /* Correction factors for kernel gradients */
   const float rho_inv_i = 1.f / pi->rho;
@@ -299,8 +307,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
   kernel_deval(ui, &wi, &wi_dx);
 
   /* Calculate the shock limiter component */
-  pi->viscosity.shock_limiter +=
-      pj->mass * pj->viscosity.shock_indicator * wi / pj->viscosity.tensor_norm;
+  const float shock_ratio_i =
+      / pj->viscosity.tensor_norm > 0.f
+          ? pj->viscosity.shock_indicator / pj->viscosity.tensor_norm
+          : 0.f;
+
+  pi->viscosity.shock_limiter += pj->mass * shock_ratio_i * wi;
 
   /* Correction factors for kernel gradients */
 
