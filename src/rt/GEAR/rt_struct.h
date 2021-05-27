@@ -25,7 +25,14 @@
  */
 
 /* Additional RT data in hydro particle struct */
-struct rt_part_data {};
+struct rt_part_data {
+
+  /* conserved state vector */
+  struct {
+    float E;
+    float F[3];
+  } conserved[RT_NGROUPS];
+};
 
 /* Additional RT data in star particle struct */
 struct rt_spart_data {};

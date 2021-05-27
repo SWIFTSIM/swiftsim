@@ -23,11 +23,9 @@
 
 /**
  * @file src/rt/GEAR/rt_io.h
- * @brief Main header file for GEAR M1 Closure radiative transfer 
+ * @brief Main header file for GEAR M1 Closure radiative transfer
  * scheme IO routines.
  */
-
-
 
 /**
  * @brief Specifies which particle fields to read from a dataset
@@ -37,8 +35,25 @@
  *
  * @return Returns the number of fields to read.
  */
-INLINE static int rt_read_particles(const struct part* parts, struct io_props* list) {
-  return 0;
+INLINE static int rt_read_particles(const struct part* parts,
+                                    struct io_props* list) {
+
+  /* List what we want to read */
+
+  char fieldname[30];
+  int count = 0;
+  for (int phg = 0; phg < RT_NGROUPS; phg++) {
+    sprintf(fieldname, "RTPhotonGroup%dEnergies", phg + 1);
+    list[count++] =
+        io_make_input_field(fieldname, FLOAT, 1, OPTIONAL, UNIT_CONV_NO_UNITS,
+                            parts, rt_data.conserved[phg].E);
+    sprintf(fieldname, "RTPhotonGroup%dFluxes", phg + 1);
+    list[count++] =
+        io_make_input_field(fieldname, FLOAT, 3, OPTIONAL, UNIT_CONV_NO_UNITS,
+                            parts, rt_data.conserved[phg].F);
+  }
+
+  return count;
 }
 
 /**
@@ -49,12 +64,10 @@ INLINE static int rt_read_particles(const struct part* parts, struct io_props* l
  *
  * @return Returns the number of fields to read.
  */
-INLINE static int rt_read_stars(const struct spart* sparts, struct io_props* list) {
+INLINE static int rt_read_stars(const struct spart* sparts,
+                                struct io_props* list) {
   return 0;
 }
-
-
-
 
 /**
  * @brief Creates additional output fields for the radiative
@@ -62,7 +75,24 @@ INLINE static int rt_read_stars(const struct spart* sparts, struct io_props* lis
  */
 INLINE static int rt_write_particles(const struct part* parts,
                                      struct io_props* list) {
-  return 0;
+  char fieldname[30];
+  char description[30];
+  int count = 0;
+  for (int phg = 0; phg < RT_NGROUPS; phg++) {
+    sprintf(fieldname, "RTPhotonGroup%dEnergies", phg + 1);
+    sprintf(description, "Photon Group %d Energies", phg + 1);
+    list[count++] =
+        io_make_output_field(fieldname, FLOAT, 1, UNIT_CONV_NO_UNITS, 0, parts,
+                             rt_data.conserved[phg].E, description);
+
+    sprintf(fieldname, "RTPhotonGroup%dFluxes", phg + 1);
+    sprintf(description, "Photon Group %d Fluxes", phg + 1);
+    list[count++] =
+        io_make_output_field(fieldname, FLOAT, 3, UNIT_CONV_NO_UNITS, 0, parts,
+                             rt_data.conserved[phg].F, description);
+  }
+
+  return count;
 }
 
 /**
