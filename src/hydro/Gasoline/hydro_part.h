@@ -185,9 +185,6 @@ struct part {
       /*! Derivative of density with respect to h */
       float rho_dh;
 
-      /*! Particle velocity curl. */
-      float rot_v[3];
-
     } density;
 
     /**

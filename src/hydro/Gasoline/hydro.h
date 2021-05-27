@@ -372,7 +372,7 @@ hydro_set_drifted_physical_internal_energy(struct part *p,
   p->force.soundspeed = soundspeed;
   p->force.pressure = pressure_including_floor;
 
-  p->viscosity.v_sig = max(p->viscosity.v_sig, 2.f * soundspeed);
+  p->viscosity.v_sig = max(p->viscosity.v_sig, soundspeed);
 }
 
 /**
@@ -396,7 +396,7 @@ hydro_set_v_sig_based_on_velocity_kick(struct part *p,
 
   /* Update the signal velocity */
   p->viscosity.v_sig =
-      max(2.f * soundspeed, p->viscosity.v_sig + const_viscosity_beta * dv);
+      max(soundspeed, p->viscosity.v_sig + const_viscosity_beta * dv);
 }
 
 /**
@@ -489,10 +489,6 @@ __attribute__((always_inline)) INLINE static void hydro_init_part(
   p->weighted_neighbour_wcount = 0.f;
   p->density.rho_dh = 0.f;
 
-  p->density.rot_v[0] = 0.f;
-  p->density.rot_v[1] = 0.f;
-  p->density.rot_v[2] = 0.f;
-
   p->smooth_pressure_gradient[0] = 0.f;
   p->smooth_pressure_gradient[1] = 0.f;
   p->smooth_pressure_gradient[2] = 0.f;
@@ -549,11 +545,6 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   p->smooth_pressure_gradient[0] *= hydro_gamma_minus_one * h_inv_dim_plus_one;
   p->smooth_pressure_gradient[1] *= hydro_gamma_minus_one * h_inv_dim_plus_one;
   p->smooth_pressure_gradient[2] *= hydro_gamma_minus_one * h_inv_dim_plus_one;
-
-  /* Finish calculation of the velocity curl components */
-  p->density.rot_v[0] *= h_inv_dim_plus_one * a_inv2 * rho_inv;
-  p->density.rot_v[1] *= h_inv_dim_plus_one * a_inv2 * rho_inv;
-  p->density.rot_v[2] *= h_inv_dim_plus_one * a_inv2 * rho_inv;
 
   /* Finish calculation of the velocity divergence */
   p->viscosity.div_v *= h_inv_dim_plus_one * rho_inv * a_inv2;
@@ -634,11 +625,12 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
       (3.f / 2.f) * (dv_dn + max(-(1.f / 3.f) * p->viscosity.div_v, 0.f));
 
   /* Now do the conduction coefficient; note that no limiter is used here. */
+  /* These square roots are not included in the original documentation */
   const float diffusion_rate =
-      hydro_props->diffusion.coefficient * shear * p->h * p->h;
+      hydro_props->diffusion.coefficient * sqrtf(shear) * p->h * p->h;
 
   p->diffusion.rate = diffusion_rate;
-  p->viscosity.tensor_norm = trace;
+  p->viscosity.tensor_norm = sqrtf(trace);
   p->viscosity.shock_indicator = shock_indicator;
 }
 
@@ -653,7 +645,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
  */
 __attribute__((always_inline)) INLINE static void hydro_reset_gradient(
     struct part *restrict p) {
-  p->viscosity.v_sig = 2.f * p->force.soundspeed;
+  p->viscosity.v_sig = p->force.soundspeed;
 }
 
 /**
@@ -709,10 +701,6 @@ __attribute__((always_inline)) INLINE static void hydro_part_has_no_neighbours(
   p->weighted_wcount = 1.f;
   p->weighted_neighbour_wcount = 1.f;
 
-  p->density.rot_v[0] = 0.f;
-  p->density.rot_v[1] = 0.f;
-  p->density.rot_v[2] = 0.f;
-
   /* Probably not shocking, so this is safe to do */
   p->viscosity.div_v = 0.f;
 
@@ -746,9 +734,10 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
     const float dt_alpha) {
   /* Here we need to update the artificial viscosity alpha */
   const float d_shock_indicator_dt =
-      (p->viscosity.shock_indicator -
-       p->viscosity.shock_indicator_previous_step) /
-      dt_alpha;
+      dt_alpha == 0.f ? 0.f
+                      : (p->viscosity.shock_indicator -
+                         p->viscosity.shock_indicator_previous_step) /
+                            dt_alpha;
 
   /* A_i in all of the equations */
   const float v_sig_physical = p->viscosity.v_sig * cosmo->a_factor_sound_speed;
@@ -756,24 +745,23 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
       gas_soundspeed_from_pressure(p->rho,
                                    hydro_get_physical_pressure(p, cosmo)) *
       cosmo->a_factor_sound_speed;
+  const float h_physical = p->h * cosmo->a_inv;
 
   const float shock_limiter_core = 0.5f * (1.f - p->viscosity.shock_limiter / p->rho);
   const float shock_limiter_core_2 = shock_limiter_core * shock_limiter_core;
   const float shock_limiter = shock_limiter_core_2 * shock_limiter_core_2;
-  const float shock_detector =
-      2.0 * p->h * p->h * shock_limiter * max(-1.f * d_shock_indicator_dt, 0.f);
+  const float shock_detector = 10.f * h_physical *
+                               h_physical * shock_limiter *
+                               max(-1.f * d_shock_indicator_dt, 0.f);
 
-  /* Note that we keep the original SWIFT definition of signal speed here,
-   * and modify the alpha_loc to be equivalent. This is to enable consistent
-   * time integration between SPH models. */
   const float alpha_loc =
       hydro_props->viscosity.alpha_max *
-      (shock_detector / (shock_detector + 0.25f * v_sig_physical * v_sig_physical));
+      (shock_detector / (shock_detector + v_sig_physical * v_sig_physical));
 
   /* TODO: Probably use physical _h_ throughout this function */
   const float d_alpha_dt = (alpha_loc - p->viscosity.alpha) *
                            hydro_props->viscosity.length * soundspeed_physical /
-                           p->h;
+                           h_physical;
 
   float new_alpha = p->viscosity.alpha;
 
@@ -841,7 +829,7 @@ __attribute__((always_inline)) INLINE static void hydro_reset_predicted_values(
   p->force.soundspeed = soundspeed;
 
   /* Update the signal velocity, if we need to. */
-  p->viscosity.v_sig = max(p->viscosity.v_sig, 2.f * soundspeed);
+  p->viscosity.v_sig = max(p->viscosity.v_sig, soundspeed);
 }
 
 /**
@@ -912,7 +900,7 @@ __attribute__((always_inline)) INLINE static void hydro_predict_extra(
   p->force.soundspeed = soundspeed;
 
   /* Update signal velocity if we need to */
-  p->viscosity.v_sig = max(p->viscosity.v_sig, 2.f * soundspeed);
+  p->viscosity.v_sig = max(p->viscosity.v_sig, soundspeed);
 }
 
 /**

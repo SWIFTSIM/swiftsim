@@ -46,7 +46,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
     float r2, const float* dx, float hi, float hj, struct part* pi,
     struct part* pj, float a, float H) {
   float wi, wj, wi_dx, wj_dx;
-  float dv[3], curlvr[3];
+  float dv[3];
 
   const float r = sqrtf(r2);
 
@@ -100,35 +100,22 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
   pi->viscosity.div_v -= faci * dvdr;
   pj->viscosity.div_v -= facj * dvdr;
 
-  /* Compute dv cross r */
-  curlvr[0] = dv[1] * dx[2] - dv[2] * dx[1];
-  curlvr[1] = dv[2] * dx[0] - dv[0] * dx[2];
-  curlvr[2] = dv[0] * dx[1] - dv[1] * dx[0];
-
-  pi->density.rot_v[0] += faci * curlvr[0];
-  pi->density.rot_v[1] += faci * curlvr[1];
-  pi->density.rot_v[2] += faci * curlvr[2];
-
-  /* Negative because of the change in sign of dx & dv. */
-  pj->density.rot_v[0] += facj * curlvr[0];
-  pj->density.rot_v[1] += facj * curlvr[1];
-  pj->density.rot_v[2] += facj * curlvr[2];
-
   /* Finally, the big boy; the velocity gradient tensor. Note that the
    * loops here are over the coordinates, i=0 -> x, and so on. */
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
-      const float dv_ij = pi->v[i] - pj->v[j];
-      const float dx_ij = pi->x[i] - pj->x[j];
+      const float dv_ij = pi->v[i] - pj->v[i];
+      const float dx_ij = pi->x[j] - pj->x[j];
 
       pi->viscosity.velocity_gradient[i][j] +=
-         mj * dv_ij * dx_ij * wi_dx * r_inv;
-      pj->viscosity.velocity_gradient[j][i] +=
+          mj * dv_ij * dx_ij * wi_dx * r_inv;
+      pj->viscosity.velocity_gradient[i][j] +=
           mi * dv_ij * dx_ij * wj_dx * r_inv;
     }
   }
 
-  /* Correction factors for kernel gradients, and norm for the velocity gradient. */
+  /* Correction factors for kernel gradients, and norm for the velocity
+   * gradient. */
 
   pi->weighted_wcount += mj * r2 * wi_dx * r_inv;
   pj->weighted_wcount += mi * r2 * wj_dx * r_inv;
@@ -150,7 +137,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
     float r2, const float* dx, float hi, float hj, struct part* pi,
     const struct part* pj, float a, float H) {
   float wi, wi_dx;
-  float dv[3], curlvr[3];
+  float dv[3];
 
   /* Get the masses. */
   const float mj = pj->mass;
@@ -184,28 +171,20 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 
   pi->viscosity.div_v -= faci * dvdr;
 
-  /* Compute dv cross r */
-  curlvr[0] = dv[1] * dx[2] - dv[2] * dx[1];
-  curlvr[1] = dv[2] * dx[0] - dv[0] * dx[2];
-  curlvr[2] = dv[0] * dx[1] - dv[1] * dx[0];
-
-  pi->density.rot_v[0] += faci * curlvr[0];
-  pi->density.rot_v[1] += faci * curlvr[1];
-  pi->density.rot_v[2] += faci * curlvr[2];
-
   /* Finally, the big boy; the velocity gradient tensor. Note that the
    * loops here are over the coordinates, i=0 -> x, and so on. */
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
-      const float dv_ij = pi->v[i] - pj->v[j];
-      const float dx_ij = pi->x[i] - pj->x[j];
+      const float dv_ij = pi->v[i] - pj->v[i];
+      const float dx_ij = pi->x[j] - pj->x[j];
 
       pi->viscosity.velocity_gradient[i][j] +=
           mj * dv_ij * dx_ij * wi_dx * r_inv;
     }
   }
 
-  /* Correction factors for kernel gradients, and norm for the velocity gradient. */
+  /* Correction factors for kernel gradients, and norm for the velocity
+   * gradient. */
   pi->weighted_wcount += mj * r2 * wi_dx * r_inv;
 }
 
@@ -252,7 +231,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
   /* Signal velocity */
-  const float new_v_sig = ci + cj - const_viscosity_beta * mu_ij;
+  const float new_v_sig = 0.5f * (ci + cj) - mu_ij;
 
   /* Update if we need to */
   pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
@@ -326,11 +305,10 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
   /* Signal velocity */
-  const float new_v_sig = ci + cj - const_viscosity_beta * mu_ij;
+  const float new_v_sig = 0.5f * (ci + cj) - mu_ij;
 
   /* Update if we need to */
   pi->viscosity.v_sig = max(pi->viscosity.v_sig, new_v_sig);
-
 
   /* Need to get some kernel values F_ij = wi_dx */
   float wi, wi_dx;
@@ -410,20 +388,23 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float omega_ij = min(dvdr_Hubble, 0.f);
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
-  /* Compute sound speeds and signal velocity */
-  const float v_sig = pi->force.soundspeed + pj->force.soundspeed -
-                      const_viscosity_beta * mu_ij;
-
   /* Variable smoothing length term */
-  const float kernel_gradient = 0.5f * (wi_dr * pi->force.f + wj_dr * pj->force.f);
+  const float kernel_gradient =
+      0.5f * (wi_dr * pi->force.f + wj_dr * pj->force.f);
 
   /* Construct the full viscosity term */
   const float rho_ij = rhoi + rhoj;
   const float alpha = pi->viscosity.alpha + pj->viscosity.alpha;
-  const float visc = -0.25f * alpha * v_sig * mu_ij / rho_ij;
+  const float visc =
+      omega_ij < 0.f
+          ? (-0.25f * alpha * (pi->force.soundspeed + pj->force.soundspeed) *
+                 mu_ij +
+             const_viscosity_beta * mu_ij * mu_ij) /
+                (0.5f * rho_ij)
+          : 0.f;
 
   /* Convolve with the kernel */
-  const float visc_acc_term = 0.5f * visc * kernel_gradient * r_inv;
+  const float visc_acc_term = visc * kernel_gradient * r_inv;
 
   /* SPH acceleration term */
   const float sph_acc_term =
@@ -452,8 +433,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 
   /* Diffusion term */
   const float diff_du_term = 2.f * (pi->diffusion.rate + pj->diffusion.rate) *
-                             (pj->u - pi->u) * (kernel_gradient * r_inv) /
-                             rho_ij;
+                             (pi->u - pj->u) * kernel_gradient / rho_ij;
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
@@ -527,20 +507,23 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float omega_ij = min(dvdr_Hubble, 0.f);
   const float mu_ij = fac_mu * r_inv * omega_ij; /* This is 0 or negative */
 
-  /* Compute sound speeds and signal velocity */
-  const float v_sig = pi->force.soundspeed + pj->force.soundspeed -
-                      const_viscosity_beta * mu_ij;
-
   /* Variable smoothing length term */
-  const float kernel_gradient = 0.5f * (wi_dr * pi->force.f + wj_dr * pj->force.f);
+  const float kernel_gradient =
+      0.5f * (wi_dr * pi->force.f + wj_dr * pj->force.f);
 
   /* Construct the full viscosity term */
   const float rho_ij = rhoi + rhoj;
   const float alpha = pi->viscosity.alpha + pj->viscosity.alpha;
-  const float visc = -0.25f * alpha * v_sig * mu_ij / rho_ij;
+  const float visc =
+      omega_ij < 0.f
+          ? (-0.25f * alpha * (pi->force.soundspeed + pj->force.soundspeed) *
+                 mu_ij +
+             const_viscosity_beta * mu_ij * mu_ij) /
+                (0.5f * rho_ij)
+          : 0.f;
 
   /* Convolve with the kernel */
-  const float visc_acc_term = 0.5f * visc * kernel_gradient * r_inv;
+  const float visc_acc_term = visc * kernel_gradient * r_inv;
 
   /* SPH acceleration term */
   const float sph_acc_term =
@@ -563,8 +546,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 
   /* Diffusion term */
   const float diff_du_term = 2.f * (pi->diffusion.rate + pj->diffusion.rate) *
-                             (pj->u - pi->u) * (kernel_gradient * r_inv) /
-                             rho_ij;
+                             (pi->u - pj->u) * kernel_gradient / rho_ij;
 
   /* Assemble the energy equation term */
   const float du_dt_i = sph_du_term_i + visc_du_term + diff_du_term;
