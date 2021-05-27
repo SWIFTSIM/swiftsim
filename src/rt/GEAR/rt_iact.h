@@ -21,8 +21,8 @@
 
 /**
  * @file src/rt/GEAR/rt_iact.h
- * @brief Main header file for the GEAR M1 closure radiative transfer scheme particle
- * interactions.
+ * @brief Main header file for the GEAR M1 closure radiative transfer scheme
+ * particle interactions.
  */
 
 /**
