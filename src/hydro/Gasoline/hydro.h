@@ -553,8 +553,11 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   /* Finish calculation of the velocity gradient tensor */
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
+      const float hubble_term = i == j ? hydro_dimension * cosmo->H : 0.f;
+
       p->viscosity.velocity_gradient[i][j] *=
-          (3.f / (p->weighted_wcount));
+          3.f * cosmo->a2_inv / (p->weighted_wcount);
+      p->viscosity.velocity_gradient[i][j] += hubble_term;
     }
   }
 }
@@ -595,6 +598,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
 
   float unit_pressure_gradient[3];
 
+  /* As this is normalised, no cosmology factor is required */
   unit_pressure_gradient[0] =
       p->smooth_pressure_gradient[0] / mod_pressure_gradient;
   unit_pressure_gradient[1] =
@@ -612,7 +616,8 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
                p->viscosity.velocity_gradient[i][j] * unit_pressure_gradient[j];
 
       const float delta = i == j ? (1.f / 3.f) * p->viscosity.div_v : 0.f;
-      const float trace_component = 0.5f * (p->viscosity.velocity_gradient[i][j] +
+      const float trace_component =
+          0.5f * (p->viscosity.velocity_gradient[i][j] +
                   p->viscosity.velocity_gradient[j][i]);
       const float shear_component = trace_component - delta;
 
@@ -626,8 +631,10 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
 
   /* Now do the conduction coefficient; note that no limiter is used here. */
   /* These square roots are not included in the original documentation */
-  const float diffusion_rate =
-      hydro_props->diffusion.coefficient * sqrtf(shear) * p->h * p->h;
+  const float h_physical = p->h * cosmo->a;
+
+  const float diffusion_rate = hydro_props->diffusion.coefficient *
+                               sqrtf(shear) * h_physical * h_physical;
 
   p->diffusion.rate = diffusion_rate;
   p->viscosity.tensor_norm = sqrtf(trace);
@@ -665,8 +672,8 @@ __attribute__((always_inline)) INLINE static void hydro_end_gradient(
 
   /* Calculate smoothing length powers */
   const float h = p->h;
-  const float h_inv = 1.0f / h;                       /* 1/h */
-  const float h_inv_dim = pow_dimension(h_inv);       /* 1/h^d */
+  const float h_inv = 1.0f / h;                 /* 1/h */
+  const float h_inv_dim = pow_dimension(h_inv); /* 1/h^d */
 
   /* Apply correct normalisation */
   p->viscosity.shock_limiter *= h_inv_dim;
@@ -742,16 +749,15 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   /* A_i in all of the equations */
   const float v_sig_physical = p->viscosity.v_sig * cosmo->a_factor_sound_speed;
   const float soundspeed_physical =
-      gas_soundspeed_from_pressure(p->rho,
-                                   hydro_get_physical_pressure(p, cosmo)) *
-      cosmo->a_factor_sound_speed;
-  const float h_physical = p->h * cosmo->a_inv;
+      gas_soundspeed_from_pressure(hydro_get_physical_density(p, cosmo),
+                                   hydro_get_physical_pressure(p, cosmo));
+  const float h_physical = p->h * cosmo->a;
 
-  const float shock_limiter_core = 0.5f * (1.f - p->viscosity.shock_limiter / p->rho);
+  const float shock_limiter_core =
+      0.5f * (1.f - p->viscosity.shock_limiter / p->rho);
   const float shock_limiter_core_2 = shock_limiter_core * shock_limiter_core;
   const float shock_limiter = shock_limiter_core_2 * shock_limiter_core_2;
-  const float shock_detector = 10.f * h_physical *
-                               h_physical * shock_limiter *
+  const float shock_detector = 10.f * h_physical * h_physical * shock_limiter *
                                max(-1.f * d_shock_indicator_dt, 0.f);
 
   const float alpha_loc =

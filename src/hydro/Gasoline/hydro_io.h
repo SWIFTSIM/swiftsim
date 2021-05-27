@@ -224,6 +224,7 @@ INLINE static void hydro_write_particles(const struct part* parts,
       "cosmology, as this includes the Hubble flow. To return to a peculiar "
       "velocity divergence, div . v_pec = a^2 (div . v - n_D H)");
 
+  /* Units and cosmology TBD */
   list[11] = io_make_output_field(
       "ShockIndicators", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts,
       viscosity.shock_indicator,
