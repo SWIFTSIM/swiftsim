@@ -227,22 +227,23 @@ INLINE static void hydro_write_particles(const struct part* parts,
       "balsara switch");
 
   list[10] = io_make_output_field_convert_part(
-      "VelocityDivergences", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts,
-      xparts, convert_div_v,
+      "VelocityDivergences", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts, xparts,
+      convert_div_v,
       "Local velocity divergence field around the particles. Provided without "
       "cosmology, as this includes the Hubble flow. To return to a peculiar "
       "velocity divergence, div . v_pec = a^2 (div . v - n_D H)");
 
   /* Units and cosmology TBD */
-  list[11] = io_make_output_field(
-      "ShockIndicators", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts,
-      viscosity.shock_indicator,
-      "Physical shock indicators (D in the paper) created from the velocity tensor.");
+  list[11] =
+      io_make_output_field("ShockIndicators", FLOAT, 1, UNIT_CONV_FREQUENCY,
+                           0.f, parts, viscosity.shock_indicator,
+                           "Physical shock indicators (D in the paper) created "
+                           "from the velocity tensor.");
 
   list[11] = io_make_output_field(
-    "DiffusionRates", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts,
-    viscosity.shock_indicator,
-    "Physical diffusion rates calculated from the shear tensor.");
+      "DiffusionRates", FLOAT, 1, UNIT_CONV_FREQUENCY, 0.f, parts,
+      viscosity.shock_indicator,
+      "Physical diffusion rates calculated from the shear tensor.");
 }
 
 /**

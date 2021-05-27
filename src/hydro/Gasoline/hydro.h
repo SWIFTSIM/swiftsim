@@ -27,8 +27,6 @@
  *        equations)
  */
 
-#include <float.h>
-
 #include "adiabatic_index.h"
 #include "approx_math.h"
 #include "cosmology.h"
@@ -41,6 +39,8 @@
 #include "kernel_hydro.h"
 #include "minmax.h"
 #include "pressure_floor.h"
+
+#include <float.h>
 
 /**
  * @brief Returns the comoving internal energy of a particle at the last
@@ -627,7 +627,8 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_gradient(
   const float h_physical = p->h * cosmo->a;
 
   const float diffusion_rate = hydro_props->diffusion.coefficient *
-                               sqrtf(traceless_shear_norm2) * h_physical * h_physical;
+                               sqrtf(traceless_shear_norm2) * h_physical *
+                               h_physical;
 
   p->diffusion.rate = diffusion_rate;
   p->viscosity.tensor_norm = sqrtf(shear_norm2);

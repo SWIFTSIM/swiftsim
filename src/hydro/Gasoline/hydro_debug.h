@@ -53,10 +53,8 @@ __attribute__((always_inline)) INLINE static void hydro_debug_particle(
       p->viscosity.velocity_gradient[1][2],
       p->viscosity.velocity_gradient[2][0],
       p->viscosity.velocity_gradient[2][1],
-      p->viscosity.velocity_gradient[2][2],
-      p->smooth_pressure_gradient[0],
-      p->smooth_pressure_gradient[1],
-      p->smooth_pressure_gradient[2],
+      p->viscosity.velocity_gradient[2][2], p->smooth_pressure_gradient[0],
+      p->smooth_pressure_gradient[1], p->smooth_pressure_gradient[2],
       p->weighted_wcount);
 }
 
