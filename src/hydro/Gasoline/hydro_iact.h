@@ -230,12 +230,12 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
 
   /* Calculate the shock limiter component */
   const float shock_ratio_i =
-      / pj->viscosity.tensor_norm > 0.f
+      pj->viscosity.tensor_norm > 0.f
           ? pj->viscosity.shock_indicator / pj->viscosity.tensor_norm
           : 0.f;
 
   const float shock_ratio_j =
-      / pi->viscosity.tensor_norm > 0.f
+      pi->viscosity.tensor_norm > 0.f
           ? pi->viscosity.shock_indicator / pi->viscosity.tensor_norm
           : 0.f;
 
@@ -308,7 +308,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
 
   /* Calculate the shock limiter component */
   const float shock_ratio_i =
-      / pj->viscosity.tensor_norm > 0.f
+      pj->viscosity.tensor_norm > 0.f
           ? pj->viscosity.shock_indicator / pj->viscosity.tensor_norm
           : 0.f;
 
