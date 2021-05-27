@@ -132,7 +132,7 @@ struct part {
 
   /* Store viscosity information in a separate struct. */
   struct {
-    /*! Velocity gradient tensor */
+    /*! Velocity gradient tensor (physical) */
     float velocity_gradient[3][3];
 
     /*! Velocity gradient tensor trace norm |T| */
