@@ -543,12 +543,15 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
   p->smooth_pressure_gradient[2] *= hydro_gamma_minus_one * h_inv_dim_plus_one;
 
   /* Finish calculation of the velocity gradient tensor */
+  const float velocity_gradient_norm =
+      p->weighted_wcount > 0.f ? 3.f * cosmo->a2_inv / p->weighted_wcount : 0.f;
+
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
       const float hubble_term = i == j ? hydro_dimension * cosmo->H : 0.f;
 
-      p->viscosity.velocity_gradient[i][j] *=
-          3.f * cosmo->a2_inv / (p->weighted_wcount);
+      p->viscosity.velocity_gradient[i][j] *= velocity_gradient_norm;
+      
       p->viscosity.velocity_gradient[i][j] += hubble_term;
     }
   }
