@@ -551,7 +551,7 @@ __attribute__((always_inline)) INLINE static void hydro_end_density(
       const float hubble_term = i == j ? hydro_dimension * cosmo->H : 0.f;
 
       p->viscosity.velocity_gradient[i][j] *= velocity_gradient_norm;
-      
+
       p->viscosity.velocity_gradient[i][j] += hubble_term;
     }
   }
