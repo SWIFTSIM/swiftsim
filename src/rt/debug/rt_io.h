@@ -126,10 +126,14 @@ INLINE static int rt_write_stars(const struct spart* sparts,
  * @param h_grp The HDF5 group in which to write
  * @param h_grp_columns The HDF5 group containing named columns
  * @param e The engine
+ * @param internal_units The internal unit system
+ * @param snapshot_units Units used for the snapshot
  * @param rtp The #rt_props
  */
 INLINE static void rt_write_flavour(hid_t h_grp, hid_t h_grp_columns,
                                     const struct engine* e,
+                                    const struct unit_system* internal_units,
+                                    const struct unit_system* snapshot_units,
                                     const struct rt_props* rtp) {
 #if defined(HAVE_HDF5)
 
