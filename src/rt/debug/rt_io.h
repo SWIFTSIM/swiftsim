@@ -123,10 +123,10 @@ INLINE static int rt_write_stars(const struct spart* sparts,
 /**
  * @brief Write the RT model properties to the snapshot.
  *
- * @param rtp The #rt_props
  * @param h_grp The HDF5 group in which to write
+ * @param rtp The #rt_props
  */
-INLINE static void rt_write_flavour(hid_t h_grp, const struct rt_props* rtp) {
+INLINE static void rt_write_flavour(hid_t h_grp, hid_t h_grp_columns, const struct rt_props* rtp) {
 #if defined(HAVE_HDF5)
 
   if (rtp->hydro_controlled_injection) {
