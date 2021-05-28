@@ -33,7 +33,6 @@
  * function is called.
  **/
 struct unit_system {
-
   /*! Conversion factor from grams to internal mass units */
   double UnitMass_in_cgs;
 
@@ -106,7 +105,8 @@ enum unit_conversion_factor {
   UNIT_CONV_DIFF_RATE,
   UNIT_CONV_DIFF_COEFF,
   UNIT_CONV_MASS_PER_UNIT_TIME,
-  UNIT_CONV_VELOCITY_SQUARED
+  UNIT_CONV_VELOCITY_SQUARED,
+  UNIT_CONV_GASOLINE_DIFF_RATE
 };
 
 void units_init_cgs(struct unit_system*);
