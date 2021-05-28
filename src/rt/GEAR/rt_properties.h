@@ -66,10 +66,15 @@ __attribute__((always_inline)) INLINE static void rt_props_print(
  * @brief Initialize the global properties of the RT scheme.
  *
  * @param rtp The #rt_props.
+ * @param phys_const The physical constants in the internal unit system.
+ * @param us The internal unit system.
  * @param params The parsed parameters.
+ * @param cosmo The cosmological model.
  */
 __attribute__((always_inline)) INLINE static void rt_props_init(
-    struct rt_props* rtp, struct swift_params* params) {
+    struct rt_props* rtp, const struct phys_const* phys_const,
+    const struct unit_system* us, struct swift_params* params,
+    struct cosmology* cosmo) {
 
 #ifdef RT_HYDRO_CONTROLLED_INJECTION
   rtp->hydro_controlled_injection = 1;
@@ -82,8 +87,10 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
   parser_get_param_float_array(params, "GEARRT:photon_groups", RT_NGROUPS - 1,
                                frequencies);
 
+  float Hz_internal = units_cgs_conversion_factor(us, UNIT_CONV_HZ);
+  float Hz_internal_inv = 1.f / Hz_internal;
   for (int g = 0; g < RT_NGROUPS - 1; g++) {
-    rtp->photon_groups[g + 1] = frequencies[g];
+    rtp->photon_groups[g + 1] = frequencies[g] * Hz_internal_inv;
   }
   rtp->photon_groups[0] = 0.f;
 
