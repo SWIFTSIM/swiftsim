@@ -19,6 +19,8 @@
 #ifndef SWIFT_RT_IO_GEAR_H
 #define SWIFT_RT_IO_GEAR_H
 
+#define RT_LABELS_SIZE 20
+
 /* #include "io_properties.h" */
 
 /**
@@ -72,9 +74,11 @@ INLINE static int rt_read_stars(const struct spart* sparts,
 /**
  * @brief Extract photon energies of conserved struct for all photon groups
  */
-INLINE static void rt_convert_conserved_photon_energies(const struct engine* engine, const struct part* part, const struct xpart* xpart, float* ret){
-  
-  for (int g = 0; g < RT_NGROUPS; g++){
+INLINE static void rt_convert_conserved_photon_energies(
+    const struct engine* engine, const struct part* part,
+    const struct xpart* xpart, float* ret) {
+
+  for (int g = 0; g < RT_NGROUPS; g++) {
     ret[g] = part->rt_data.conserved[g].E;
   }
 }
@@ -82,10 +86,12 @@ INLINE static void rt_convert_conserved_photon_energies(const struct engine* eng
 /**
  * @brief Extract photon energies of conserved struct for all photon groups
  */
-INLINE static void rt_convert_conserved_photon_fluxes(const struct engine* engine, const struct part* part, const struct xpart* xpart, float* ret){
-  
+INLINE static void rt_convert_conserved_photon_fluxes(
+    const struct engine* engine, const struct part* part,
+    const struct xpart* xpart, float* ret) {
+
   int i = 0;
-  for (int g = 0; g < RT_NGROUPS; g++){
+  for (int g = 0; g < RT_NGROUPS; g++) {
     ret[i++] = part->rt_data.conserved[g].F[0];
     ret[i++] = part->rt_data.conserved[g].F[1];
     ret[i++] = part->rt_data.conserved[g].F[2];
@@ -99,19 +105,15 @@ INLINE static void rt_convert_conserved_photon_fluxes(const struct engine* engin
 INLINE static int rt_write_particles(const struct part* parts,
                                      struct io_props* list) {
 
-  list[0] = 
-      io_make_output_field_convert_part("RTPhotonEnergies", FLOAT, RT_NGROUPS, 
-                                        UNIT_CONV_NO_UNITS, 0, parts,
-                                        /*xparts=*/NULL, 
-                                        rt_convert_conserved_photon_energies, 
-                                        "Photon Energies (all groups)");
-  list[1] = 
-      io_make_output_field_convert_part("RTPhotonFluxes", FLOAT, 3*RT_NGROUPS, 
-                                        UNIT_CONV_NO_UNITS, 0, parts, 
-                                        /*xparts=*/NULL, 
-                                        rt_convert_conserved_photon_fluxes, 
-                                        "Photon Fluxes (all groups; x, y, "
-                                        "and z coordinates)");
+  list[0] = io_make_output_field_convert_part(
+      "RTPhotonEnergies", FLOAT, RT_NGROUPS, UNIT_CONV_NO_UNITS, 0, parts,
+      /*xparts=*/NULL, rt_convert_conserved_photon_energies,
+      "Photon Energies (all groups)");
+  list[1] = io_make_output_field_convert_part(
+      "RTPhotonFluxes", FLOAT, 3 * RT_NGROUPS, UNIT_CONV_NO_UNITS, 0, parts,
+      /*xparts=*/NULL, rt_convert_conserved_photon_fluxes,
+      "Photon Fluxes (all groups; x, y, "
+      "and z coordinates)");
 
   return 2;
 }
@@ -133,7 +135,9 @@ INLINE static int rt_write_stars(const struct spart* sparts,
  * @param e The engine
  * @param rtp The #rt_props
  */
-INLINE static void rt_write_flavour(hid_t h_grp, hid_t h_grp_columns,const struct engine* e, const struct rt_props* rtp) {
+INLINE static void rt_write_flavour(hid_t h_grp, hid_t h_grp_columns,
+                                    const struct engine* e,
+                                    const struct rt_props* rtp) {
 
 #if defined(HAVE_HDF5)
 
@@ -149,73 +153,61 @@ INLINE static void rt_write_flavour(hid_t h_grp, hid_t h_grp_columns,const struc
   io_write_attribute_i(h_grp, "RT photon group number", RT_NGROUPS);
 
   /* Write photon goup bin edges */
-  io_write_attribute(h_grp, "RT photon group edges", FLOAT, 
-                     rtp->photon_groups, RT_NGROUPS);
-
-
+  io_write_attribute(h_grp, "RT photon group edges", FLOAT, rtp->photon_groups,
+                     RT_NGROUPS);
 
   /* If without RT, we have nothing more to do. */
   const int with_rt = e->policy & engine_policy_rt;
   if (!with_rt) return;
 
-
   /* Write photon group names now */
 
-  /* Generate Group names */
-  char* names_energy[RT_NGROUPS];
-  for (int g = 0; g < RT_NGROUPS; g++){
-    char* newEname = malloc(15*sizeof(char));
-    sprintf(newEname, "Group%dEnergy", g+1);
-    names_energy[g] = newEname;
-  }
-
-  for (int g = 0; g < RT_NGROUPS; g++){
-    printf("%s\n", names_energy[g]);
+  /* Generate Energy Group names */
+  char names_energy[RT_NGROUPS * RT_LABELS_SIZE];
+  for (int g = 0; g < RT_NGROUPS; g++) {
+    char newEname[RT_LABELS_SIZE];
+    sprintf(newEname, "Group%dEnergy", g + 1);
+    strcpy(names_energy + g * RT_LABELS_SIZE, newEname);
   }
 
   /* Now write them down */
   hid_t type = H5Tcopy(H5T_C_S1);
-  H5Tset_size(type, 20);
+  H5Tset_size(type, RT_LABELS_SIZE);
 
   hsize_t dimsE[1] = {RT_NGROUPS};
   hid_t spaceE = H5Screate_simple(1, dimsE, NULL);
   hid_t dsetE = H5Dcreate(h_grp_columns, "RTPhotonGroupEnergies", type, spaceE,
-                         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                          H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5Dwrite(dsetE, type, H5S_ALL, H5S_ALL, H5P_DEFAULT, names_energy);
   H5Dclose(dsetE);
 
-  /* Generate Fluxes Names */
-  char* names_fluxes[RT_NGROUPS*3];
+  /* Generate Fluxes Group Names */
+  char names_fluxes[3 * RT_NGROUPS * RT_LABELS_SIZE];
   int i = 0;
-  for (int g = 0; g < RT_NGROUPS; g++){
-    char* newFnameX = malloc(15*sizeof(char));
-    sprintf(newFnameX, "Group%dFluxx", g+1);
-    names_fluxes[i++] = newFnameX;
-    char* newFnameY = malloc(15*sizeof(char));
-    sprintf(newFnameY, "Group%dFluxy", g+1);
-    names_fluxes[i++] = newFnameY;
-    char* newFnameZ = malloc(15*sizeof(char));
-    sprintf(newFnameZ, "Group%dFluxz", g+1);
-    names_fluxes[i++] = newFnameZ;
+  for (int g = 0; g < RT_NGROUPS; g++) {
+    char newFnameX[RT_LABELS_SIZE];
+    sprintf(newFnameX, "Group%dFluxx", g + 1);
+    strcpy(names_fluxes + i * RT_LABELS_SIZE, newFnameX);
+    i++;
+    char newFnameY[RT_LABELS_SIZE];
+    sprintf(newFnameY, "Group%dFluxy", g + 1);
+    strcpy(names_fluxes + i * RT_LABELS_SIZE, newFnameY);
+    i++;
+    char newFnameZ[RT_LABELS_SIZE];
+    sprintf(newFnameZ, "Group%dFluxz", g + 1);
+    strcpy(names_fluxes + i * RT_LABELS_SIZE, newFnameZ);
+    i++;
   }
-  for (int j = 0; j < i; j++){
-    printf("%s\n", names_fluxes[j]);
-  }
-
 
   /* Now write them down */
-  hsize_t dimsF[1] = {3*RT_NGROUPS};
+  hsize_t dimsF[1] = {3 * RT_NGROUPS};
   hid_t spaceF = H5Screate_simple(1, dimsF, NULL);
   hid_t dsetF = H5Dcreate(h_grp_columns, "RTPhotonGroupFluxes", type, spaceF,
-                   H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                          H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5Dwrite(dsetF, type, H5S_ALL, H5S_ALL, H5P_DEFAULT, names_fluxes);
   H5Dclose(dsetF);
 
   H5Tclose(type);
-
-  /* clean up after yourself */
-  for (int g = 0; g < RT_NGROUPS; g++) free(names_energy[g]);
-  for (int g = 0; g < 3*RT_NGROUPS; g++) free(names_fluxes[g]);
 
 #endif
 }

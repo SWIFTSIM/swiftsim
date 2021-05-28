@@ -34,7 +34,7 @@ struct rt_props {
    * This is added to avoid #ifdef macros as far as possible */
   int hydro_controlled_injection;
 
-  /* Frequency bin edges for photon groups 
+  /* Frequency bin edges for photon groups
    * Includes 0 as leftmost edge, doesn't include infinity as
    * rightmost bin edge*/
   float photon_groups[RT_NGROUPS];
@@ -54,7 +54,7 @@ __attribute__((always_inline)) INLINE static void rt_props_print(
   message("Radiative transfer scheme: '%s'", RT_IMPLEMENTATION);
   char messagestring[200] = "Using photon frequency bins: [0.";
   char freqstring[20];
-  for (int g = 1; g < RT_NGROUPS; g++){
+  for (int g = 1; g < RT_NGROUPS; g++) {
     sprintf(freqstring, ", %.3g", rtp->photon_groups[g]);
     strcat(messagestring, freqstring);
   }
@@ -78,14 +78,14 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
 #endif
 
   /* Read in parameters */
-  float frequencies[RT_NGROUPS-1];
-  parser_get_param_float_array(params, "GEARRT:photon_groups", RT_NGROUPS-1, frequencies);
+  float frequencies[RT_NGROUPS - 1];
+  parser_get_param_float_array(params, "GEARRT:photon_groups", RT_NGROUPS - 1,
+                               frequencies);
 
-  for (int g = 0; g < RT_NGROUPS-1; g++){
-    rtp->photon_groups[g+1] = frequencies[g];
+  for (int g = 0; g < RT_NGROUPS - 1; g++) {
+    rtp->photon_groups[g + 1] = frequencies[g];
   }
   rtp->photon_groups[0] = 0.f;
-
 
   /* After initialisation, print params to screen */
   rt_props_print(rtp);
