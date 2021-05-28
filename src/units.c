@@ -42,7 +42,6 @@
  * @param us The unit_system to initialize
  */
 void units_init_cgs(struct unit_system* us) {
-
   us->UnitMass_in_cgs = 1.;
   us->UnitLength_in_cgs = 1.;
   us->UnitTime_in_cgs = 1.;
@@ -56,7 +55,6 @@ void units_init_cgs(struct unit_system* us) {
  * @param us The unit_system to initialize
  */
 void units_init_si(struct unit_system* us) {
-
   us->UnitMass_in_cgs = 1000.;
   us->UnitLength_in_cgs = 100.;
   us->UnitTime_in_cgs = 1.;
@@ -93,7 +91,6 @@ void units_init(struct unit_system* us, double U_M_in_cgs, double U_L_in_cgs,
  */
 void units_init_from_params(struct unit_system* us, struct swift_params* params,
                             const char* category) {
-
   char buffer[200];
   sprintf(buffer, "%s:UnitMass_in_cgs", category);
   us->UnitMass_in_cgs = parser_get_param_double(params, buffer);
@@ -119,7 +116,6 @@ void units_init_from_params(struct unit_system* us, struct swift_params* params,
  */
 void units_init_default(struct unit_system* us, struct swift_params* params,
                         const char* category, const struct unit_system* def) {
-
   if (!def) error("Default unit_system not allocated");
 
   char buffer[200];
@@ -149,7 +145,6 @@ void units_init_default(struct unit_system* us, struct swift_params* params,
  * @param src The source of the copy.
  */
 void units_copy(struct unit_system* dest, const struct unit_system* src) {
-
   dest->UnitMass_in_cgs = src->UnitMass_in_cgs;
   dest->UnitLength_in_cgs = src->UnitLength_in_cgs;
   dest->UnitTime_in_cgs = src->UnitTime_in_cgs;
@@ -433,6 +428,10 @@ void units_get_base_unit_exponents_array(float baseUnitsExp[5],
       baseUnitsExp[UNIT_TIME] = -1.f;
       break;
 
+    case UNIT_CONV_GASOLINE_DIFF_RATE:
+      baseUnitsExp[UNIT_LENGTH] = 2.f;
+      baseUnitsExp[UNIT_TIME] = -1.f;
+
     default:
       error("Invalid choice of pre-defined units");
       break;
@@ -631,7 +630,6 @@ void units_general_cgs_conversion_string(char* buffer,
  * @return 1 if the systems are the same, 0 otherwise
  */
 int units_are_equal(const struct unit_system* a, const struct unit_system* b) {
-
   if (a->UnitMass_in_cgs != b->UnitMass_in_cgs) return 0;
   if (a->UnitLength_in_cgs != b->UnitLength_in_cgs) return 0;
   if (a->UnitTime_in_cgs != b->UnitTime_in_cgs) return 0;
@@ -652,7 +650,6 @@ int units_are_equal(const struct unit_system* a, const struct unit_system* b) {
 double units_general_conversion_factor(const struct unit_system* from,
                                        const struct unit_system* to,
                                        const float baseUnitsExponents[5]) {
-
   const double from_cgs =
       units_general_cgs_conversion_factor(from, baseUnitsExponents);
   const double to_cgs =
@@ -673,7 +670,6 @@ double units_general_conversion_factor(const struct unit_system* from,
 double units_conversion_factor(const struct unit_system* from,
                                const struct unit_system* to,
                                enum unit_conversion_factor unit) {
-
   float baseUnitsExp[5] = {0.f};
 
   units_get_base_unit_exponents_array(baseUnitsExp, unit);
@@ -687,7 +683,6 @@ double units_conversion_factor(const struct unit_system* from,
  * @param us The #unit_system
  */
 void units_print(const struct unit_system* us) {
-
   message("Units:");
   message("\tUnit Mass:        %g", us->UnitMass_in_cgs);
   message("\tUnit Length:      %g", us->UnitLength_in_cgs);
