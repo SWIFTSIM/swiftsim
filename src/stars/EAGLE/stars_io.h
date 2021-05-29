@@ -309,6 +309,9 @@ INLINE static void stars_props_init(struct stars_props *sp,
   char base_dir_name[200];
   parser_get_param_string(params, "Stars:luminosity_filename", base_dir_name);
 
+  static const char *luminosity_band_names[luminosity_bands_count] = {
+      "u", "g", "r", "i", "z", "Y", "J", "H", "K"};
+
   /* Luminosity tables */
   for (int i = 0; i < (int)luminosity_bands_count; ++i) {
     const int count_Z = eagle_stars_lum_tables_N_Z;
@@ -318,9 +321,6 @@ INLINE static void stars_props_init(struct stars_props *sp,
     sp->lum_tables_Z[i] = (float *)malloc(count_Z * sizeof(float));
     sp->lum_tables_ages[i] = (float *)malloc(count_ages * sizeof(float));
     sp->lum_tables_luminosities[i] = (float *)malloc(count_L * sizeof(float));
-
-    static const char *luminosity_band_names[luminosity_bands_count] = {
-        "u", "g", "r", "i", "z", "Y", "J", "H", "K"};
 
     char fname[256];
     sprintf(fname, "%s/GAMA/%s", base_dir_name, luminosity_band_names[i]);
