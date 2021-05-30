@@ -48,11 +48,11 @@ INLINE static int rt_read_particles(const struct part* parts,
     sprintf(fieldname, "PhotonEnergiesGroup%d", phg + 1);
     list[count++] =
         io_make_input_field(fieldname, FLOAT, 1, OPTIONAL, UNIT_CONV_ENERGY,
-                            parts, rt_data.conserved[phg].E);
+                            parts, rt_data.conserved[phg].energy);
     sprintf(fieldname, "PhotonFluxesGroup%d", phg + 1);
     list[count++] = io_make_input_field(fieldname, FLOAT, 3, OPTIONAL,
                                         UNIT_CONV_ENERGY_FLUX, parts,
-                                        rt_data.conserved[phg].F);
+                                        rt_data.conserved[phg].flux);
   }
 
   return count;
@@ -79,7 +79,7 @@ INLINE static void rt_convert_conserved_photon_energies(
     const struct xpart* xpart, float* ret) {
 
   for (int g = 0; g < RT_NGROUPS; g++) {
-    ret[g] = part->rt_data.conserved[g].E;
+    ret[g] = part->rt_data.conserved[g].energy;
   }
 }
 
@@ -92,9 +92,9 @@ INLINE static void rt_convert_conserved_photon_fluxes(
 
   int i = 0;
   for (int g = 0; g < RT_NGROUPS; g++) {
-    ret[i++] = part->rt_data.conserved[g].F[0];
-    ret[i++] = part->rt_data.conserved[g].F[1];
-    ret[i++] = part->rt_data.conserved[g].F[2];
+    ret[i++] = part->rt_data.conserved[g].flux[0];
+    ret[i++] = part->rt_data.conserved[g].flux[1];
+    ret[i++] = part->rt_data.conserved[g].flux[2];
   }
 }
 
@@ -167,10 +167,10 @@ INLINE static void rt_write_flavour(hid_t h_grp, hid_t h_grp_columns,
 
   /* Write unit conversion factors for this data set */
   char buffer[FIELD_BUFFER_SIZE] = {0};
-  units_cgs_conversion_string(buffer, snapshot_units, UNIT_CONV_HZ,
+  units_cgs_conversion_string(buffer, snapshot_units, UNIT_CONV_INV_TIME,
                               /*scale_factor_exponent=*/0);
   float baseUnitsExp[5];
-  units_get_base_unit_exponents_array(baseUnitsExp, UNIT_CONV_HZ);
+  units_get_base_unit_exponents_array(baseUnitsExp, UNIT_CONV_INV_TIME);
   io_write_attribute_f(dset, "U_M exponent", baseUnitsExp[UNIT_MASS]);
   io_write_attribute_f(dset, "U_L exponent", baseUnitsExp[UNIT_LENGTH]);
   io_write_attribute_f(dset, "U_t exponent", baseUnitsExp[UNIT_TIME]);
@@ -182,7 +182,7 @@ INLINE static void rt_write_flavour(hid_t h_grp, hid_t h_grp_columns,
 
   /* Write the actual number this conversion factor corresponds to */
   const double factor =
-      units_cgs_conversion_factor(snapshot_units, UNIT_CONV_HZ);
+      units_cgs_conversion_factor(snapshot_units, UNIT_CONV_INV_TIME);
   io_write_attribute_d(
       dset, "Conversion factor to CGS (not including cosmological corrections)",
       factor);

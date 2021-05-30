@@ -29,8 +29,8 @@ struct rt_part_data {
 
   /* conserved state vector */
   struct {
-    float E;
-    float F[3];
+    float energy;
+    float flux[3];
   } conserved[RT_NGROUPS];
 };
 

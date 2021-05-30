@@ -84,10 +84,10 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
 
   /* Read in parameters */
   float frequencies[RT_NGROUPS - 1];
-  parser_get_param_float_array(params, "GEARRT:photon_groups", RT_NGROUPS - 1,
-                               frequencies);
+  parser_get_param_float_array(params, "GEARRT:photon_groups_Hz",
+                               RT_NGROUPS - 1, frequencies);
 
-  float Hz_internal = units_cgs_conversion_factor(us, UNIT_CONV_HZ);
+  float Hz_internal = units_cgs_conversion_factor(us, UNIT_CONV_INV_TIME);
   float Hz_internal_inv = 1.f / Hz_internal;
   for (int g = 0; g < RT_NGROUPS - 1; g++) {
     rtp->photon_groups[g + 1] = frequencies[g] * Hz_internal_inv;

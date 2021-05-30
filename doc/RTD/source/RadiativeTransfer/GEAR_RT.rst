@@ -31,7 +31,7 @@ You need to provide the following runtime parameters in the yaml file:
 .. code:: yaml
 
    GEARRT:
-       photon_groups: [3.288e15, 5.945e15, 13.157e15]  # Photon frequency group bin edges in Hz
+       photon_groups_Hz: [3.288e15, 5.945e15, 13.157e15]  # Photon frequency group bin edges in Hz
 
 
 The ``photon_groups`` need to be ``N - 1`` frequency edges (floats) to separate 
