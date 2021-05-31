@@ -27,6 +27,10 @@
 /* Config parameters. */
 #include "../config.h"
 
+#if defined(RT_DEBUG) || (defined(RT_GEAR) && defined(SWIFT_DEBUG_CHECKS))
+#define SWIFT_RT_DEBUG_CHECKS
+#endif
+
 /* Import the right RT definition */
 #if defined(RT_NONE)
 #define RT_IMPLEMENTATION "none"

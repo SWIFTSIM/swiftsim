@@ -90,7 +90,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
         "rt_finalise_gradient count is %d",
         pi->rt_data.debug_gradients_done);
 
-  pi->rt_data.debug_calls_iact_transport += 1;
+  pi->rt_data.debug_calls_iact_transport_interaction += 1;
 
   if (mode == 1) {
 
@@ -111,7 +111,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_flux_common(
           "rt_finalise_gradient count is %d",
           pj->rt_data.debug_gradients_done);
 
-    pj->rt_data.debug_calls_iact_transport += 1;
+    pj->rt_data.debug_calls_iact_transport_interaction += 1;
   }
 }
 

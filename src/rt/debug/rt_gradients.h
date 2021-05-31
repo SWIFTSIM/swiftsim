@@ -50,9 +50,9 @@ __attribute__((always_inline)) INLINE static void rt_gradients_collect(
         "%d ID %lld",
         pj->rt_data.debug_injection_done, pj->id);
 
-  pi->rt_data.debug_calls_iact_gradient += 1;
+  pi->rt_data.debug_calls_iact_gradient_interaction += 1;
 
-  pj->rt_data.debug_calls_iact_gradient += 1;
+  pj->rt_data.debug_calls_iact_gradient_interaction += 1;
 }
 
 /**
@@ -75,7 +75,7 @@ __attribute__((always_inline)) INLINE static void rt_gradients_nonsym_collect(
         "%d ID %lld",
         pi->rt_data.debug_injection_done, pi->id);
 
-  pi->rt_data.debug_calls_iact_gradient += 1;
+  pi->rt_data.debug_calls_iact_gradient_interaction += 1;
 }
 
 #endif /* SWIFT_RT_GRADIENT_DEBUG_H */

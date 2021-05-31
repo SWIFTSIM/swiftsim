@@ -53,6 +53,8 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
   p->rt_data.debug_calls_iact_gradient = 0;
   p->rt_data.debug_calls_iact_transport = 0;
   p->rt_data.debug_injection_check = 0;
+  p->rt_data.debug_calls_iact_gradient_interaction = 0;
+  p->rt_data.debug_calls_iact_transport_interaction = 0;
 
   p->rt_data.debug_injection_done = 0;
   p->rt_data.debug_gradients_done = 0;
@@ -148,7 +150,8 @@ __attribute__((always_inline)) INLINE static void
 rt_injection_update_photon_density(struct part* restrict p,
                                    struct rt_props* props) {
 
-  if (props->do_all_parts_have_stars_checks && p->rt_data.debug_injection_check != 1)
+  if (props->do_all_parts_have_stars_checks &&
+      p->rt_data.debug_injection_check != 1)
     error("called ghost1 when injection check count is %d; ID=%lld",
           p->rt_data.debug_injection_check, p->id);
   p->rt_data.debug_injection_done += 1;
@@ -204,6 +207,11 @@ __attribute__((always_inline)) INLINE static void rt_finalise_gradient(
         "Called finalise gradient on particle "
         "with iact gradient count = %d",
         p->rt_data.debug_calls_iact_gradient);
+  if (p->rt_data.debug_calls_iact_gradient_interaction == 0)
+    message(
+        "WARNING: Called finalise gradient on particle "
+        "with iact gradient count from rt_iact = %d",
+        p->rt_data.debug_calls_iact_gradient_interaction);
 
   p->rt_data.debug_gradients_done += 1;
 }
@@ -239,6 +247,11 @@ __attribute__((always_inline)) INLINE static void rt_finalise_transport(
         "Called finalise transport on particle "
         "with iact transport count = %d",
         p->rt_data.debug_calls_iact_transport);
+  if (p->rt_data.debug_calls_iact_transport_interaction == 0)
+    message(
+        "WARNING: Called finalise transport on particle "
+        "with iact transport count from rt_iact = %d",
+        p->rt_data.debug_calls_iact_transport_interaction);
 
   p->rt_data.debug_transport_done += 1;
 }
