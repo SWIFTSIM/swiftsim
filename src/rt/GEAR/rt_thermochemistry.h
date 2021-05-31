@@ -16,32 +16,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_RT_H
-#define SWIFT_RT_H
+#ifndef SWIFT_RT_THERMOCHEMISTRY_GEAR_H
+#define SWIFT_RT_THERMOCHEMISTRY_GEAR_H
 
 /**
- * @file src/rt.h
- * @brief Branches between the different radiative transfer schemes.
+ * @file src/rt/GEAR/rt_thermochemistry.h
+ * @brief Main header file for the GEAR M1 closure radiative transfer scheme
+ * thermochemistry related functions.
  */
 
-/* Config parameters. */
-#include "../config.h"
+/**
+ * @brief Main function for the thermochemistry step.
+ *
+ * @param p Particle to work on.
+ */
 
-/* Import the right RT definition */
-#if defined(RT_NONE)
-#define RT_IMPLEMENTATION "none"
-#include "./rt/none/rt.h"
-#include "./rt/none/rt_iact.h"
-#elif defined(RT_DEBUG)
-#define RT_IMPLEMENTATION "debug"
-#include "./rt/debug/rt.h"
-#include "./rt/debug/rt_iact.h"
-#elif defined(RT_GEAR)
-#define RT_IMPLEMENTATION "GEAR M1closure"
-#include "./rt/GEAR/rt.h"
-#include "./rt/GEAR/rt_iact.h"
-#else
-#error "Invalid choice of radiation scheme"
+__attribute__((always_inline)) INLINE static void rt_do_thermochemistry(
+    struct part *restrict p) {
+
+#ifdef SWIFT_RT_DEBUG_CHECKS
+  if (!p->rt_data.debug_injection_done)
+    error("Trying to do thermochemistry when injection step hasn't been done");
+  if (!p->rt_data.debug_gradients_done)
+    error("Trying to do thermochemistry when gradient step hasn't been done");
+  if (!p->rt_data.debug_transport_done)
+    error("Trying to do thermochemistry when transport step hasn't been done");
+
+  p->rt_data.debug_thermochem_done += 1;
 #endif
+}
 
-#endif /* SWIFT_RT_H */
+#endif /* SWIFT_RT_THERMOCHEMISTRY_DEBUG_H */

@@ -128,7 +128,9 @@ __attribute__((always_inline)) INLINE static void rt_split_part(struct part* p,
  * @param p The #part.
  */
 __attribute__((always_inline)) INLINE static void rt_part_has_no_neighbours(
-    struct part* p){};
+    struct part* p) {
+  message("WARNING: found particle without neighbours");
+};
 
 /**
  * @brief Exception handle a star part not having any neighbours in ghost task
@@ -150,7 +152,7 @@ __attribute__((always_inline)) INLINE static void
 rt_injection_update_photon_density(struct part* restrict p,
                                    struct rt_props* props) {
 
-  if (props->do_all_parts_have_stars_checks &&
+  if (props->debug_do_all_parts_have_stars_checks &&
       p->rt_data.debug_injection_check != 1)
     error("called ghost1 when injection check count is %d; ID=%lld",
           p->rt_data.debug_injection_check, p->id);

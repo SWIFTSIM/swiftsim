@@ -142,7 +142,7 @@ def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
         F.close()
         quit()
 
-    if "debug" not in scheme:
+    if "debug" not in scheme and "GEAR" not in scheme:
         raise ValueError(
             "These tests only work for the debug RT scheme. Compile swift --with-rt=debug"
         )

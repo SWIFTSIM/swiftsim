@@ -33,9 +33,8 @@ struct rt_part_data {
                                     from stars during total lifetime */
 
   /* data to store during one time step */
-  int debug_iact_stars_inject;   /* how many stars this particle interacted with
-                                  */
-  int debug_calls_iact_gradient; /* calls from gradient interaction loop */
+  int debug_iact_stars_inject;    /* how many stars this partinteracted with */
+  int debug_calls_iact_gradient;  /* calls from gradient interaction loop */
   int debug_calls_iact_transport; /* calls from transport interaction loop */
   int debug_injection_check;      /* called in a self/rt_injection task? */
   /* calls from gradient interaction loop in actual function */
@@ -60,8 +59,7 @@ struct rt_spart_data {
   /* data to store during one time step */
   int debug_iact_hydro_inject; /* how many hydro particles this particle
                                   interacted with */
-  int debug_emission_rate_set; /* stellar photon emisison rate has been computed
-                                */
+  int debug_emission_rate_set; /* stellar photon emisison rate computed? */
   int debug_injection_check;   /* called in a self/rt_injection task? */
 };
 

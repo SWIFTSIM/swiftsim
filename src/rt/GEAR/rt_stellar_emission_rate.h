@@ -1,6 +1,6 @@
 /*******************************************************************************
  * This file is part of SWIFT.
- * Copyright (c) 2020 Mladen Ivkovic (mladen.ivkovic@hotmail.com)
+ * Copyright (c) 2021 Mladen Ivkovic (mladen.ivkovic@hotmail.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -16,32 +16,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ******************************************************************************/
-#ifndef SWIFT_RT_H
-#define SWIFT_RT_H
+#ifndef SWIFT_RT_STELLAR_EMISSION_RATE_GEAR_H
+#define SWIFT_RT_STELLAR_EMISSION_RATE_GEAR_H
 
 /**
- * @file src/rt.h
- * @brief Branches between the different radiative transfer schemes.
+ * @file src/rt/GEAR/rt_stellar_emission_rate.h
+ * @brief Main header file for the GEAR M1 closure radiative transfer scheme
+ * stellar radiation emission rates related functions.
  */
 
-/* Config parameters. */
-#include "../config.h"
+/**
+ * @brief Main function for getting the stellar emission rate and updating it
+ * in the spart.
+ *
+ * @param sp Star particle to work on.
+ * @param age_beg Age of the stars at the beginning of the step
+ * @param age_end Age of the stars at the end of the step
+ */
 
-/* Import the right RT definition */
-#if defined(RT_NONE)
-#define RT_IMPLEMENTATION "none"
-#include "./rt/none/rt.h"
-#include "./rt/none/rt_iact.h"
-#elif defined(RT_DEBUG)
-#define RT_IMPLEMENTATION "debug"
-#include "./rt/debug/rt.h"
-#include "./rt/debug/rt_iact.h"
-#elif defined(RT_GEAR)
-#define RT_IMPLEMENTATION "GEAR M1closure"
-#include "./rt/GEAR/rt.h"
-#include "./rt/GEAR/rt_iact.h"
-#else
-#error "Invalid choice of radiation scheme"
+__attribute__((always_inline)) INLINE static void rt_set_stellar_emission_rate(
+    struct spart *restrict sp, double age_beg, double age_end) {
+
+#ifdef SWIFT_RT_DEBUG_CHECKS
+  sp->rt_data.debug_emission_rate_set += 1;
 #endif
+}
 
-#endif /* SWIFT_RT_H */
+#endif /* SWIFT_RT_STELLAR_EMISSION_RATE_GEAR_H */
