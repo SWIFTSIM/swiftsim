@@ -51,7 +51,7 @@ INLINE static int rt_read_particles(const struct part* parts,
                             parts, rt_data.conserved[phg].energy);
     sprintf(fieldname, "PhotonFluxesGroup%d", phg + 1);
     list[count++] = io_make_input_field(fieldname, FLOAT, 3, OPTIONAL,
-                                        UNIT_CONV_ENERGY_FLUX, parts,
+                                        UNIT_CONV_RADIATION_FLUX, parts,
                                         rt_data.conserved[phg].flux);
   }
 
@@ -110,7 +110,7 @@ INLINE static int rt_write_particles(const struct part* parts,
       /*xparts=*/NULL, rt_convert_conserved_photon_energies,
       "Photon Energies (all groups)");
   list[1] = io_make_output_field_convert_part(
-      "PhotonFluxes", FLOAT, 3 * RT_NGROUPS, UNIT_CONV_ENERGY_FLUX, 0, parts,
+      "PhotonFluxes", FLOAT, 3 * RT_NGROUPS, UNIT_CONV_RADIATION_FLUX, 0, parts,
       /*xparts=*/NULL, rt_convert_conserved_photon_fluxes,
       "Photon Fluxes (all groups; x, y, and z coordinates)");
 
