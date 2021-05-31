@@ -58,7 +58,7 @@ __attribute__((always_inline)) INLINE static void rt_props_print(
     sprintf(freqstring, ", %.3g", rtp->photon_groups[g]);
     strcat(messagestring, freqstring);
   }
-  strcat(messagestring, "] Hz");
+  strcat(messagestring, "]");
   message("%s", messagestring);
 }
 
@@ -82,17 +82,24 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
   rtp->hydro_controlled_injection = 0;
 #endif
 
-  /* Read in parameters */
-  float frequencies[RT_NGROUPS - 1];
-  parser_get_param_float_array(params, "GEARRT:photon_groups_Hz",
-                               RT_NGROUPS - 1, frequencies);
-
-  float Hz_internal = units_cgs_conversion_factor(us, UNIT_CONV_INV_TIME);
-  float Hz_internal_inv = 1.f / Hz_internal;
-  for (int g = 0; g < RT_NGROUPS - 1; g++) {
-    rtp->photon_groups[g + 1] = frequencies[g] * Hz_internal_inv;
+  if (RT_NGROUPS <= 0) {
+    error("You need to run GEAR-RT with at least 1 photon group, you have %d", RT_NGROUPS);
+  } 
+  else if (RT_NGROUPS == 1) {
+    rtp->photon_groups[0] = 0.f;
+  } 
+  else {
+    /* Read in parameters */
+    float frequencies[RT_NGROUPS - 1];
+    parser_get_param_float_array(params, "GEARRT:photon_groups_Hz",
+                                 RT_NGROUPS - 1, frequencies);
+    float Hz_internal = units_cgs_conversion_factor(us, UNIT_CONV_INV_TIME);
+    float Hz_internal_inv = 1.f / Hz_internal;
+    for (int g = 0; g < RT_NGROUPS - 1; g++) {
+      rtp->photon_groups[g + 1] = frequencies[g] * Hz_internal_inv;
+    }
+    rtp->photon_groups[0] = 0.f;
   }
-  rtp->photon_groups[0] = 0.f;
 
   /* After initialisation, print params to screen */
   rt_props_print(rtp);
