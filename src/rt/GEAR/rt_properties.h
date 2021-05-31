@@ -83,12 +83,11 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
 #endif
 
   if (RT_NGROUPS <= 0) {
-    error("You need to run GEAR-RT with at least 1 photon group, you have %d", RT_NGROUPS);
-  } 
-  else if (RT_NGROUPS == 1) {
+    error("You need to run GEAR-RT with at least 1 photon group, you have %d",
+          RT_NGROUPS);
+  } else if (RT_NGROUPS == 1) {
     rtp->photon_groups[0] = 0.f;
-  } 
-  else {
+  } else {
     /* Read in parameters */
     float frequencies[RT_NGROUPS - 1];
     parser_get_param_float_array(params, "GEARRT:photon_groups_Hz",
