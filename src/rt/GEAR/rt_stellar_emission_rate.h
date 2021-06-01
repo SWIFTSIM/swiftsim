@@ -32,10 +32,18 @@
  * @param sp Star particle to work on.
  * @param age_beg Age of the stars at the beginning of the step
  * @param age_end Age of the stars at the end of the step
+ * @param props RT props struct
  */
-
 __attribute__((always_inline)) INLINE static void rt_set_stellar_emission_rate(
-    struct spart *restrict sp, double age_beg, double age_end) {
+    struct spart *restrict sp, double age_beg, double age_end, struct rt_props* props) {
+
+  const double dt = age_end - age_beg;
+  const float dtf = (float) dt;
+  if (props->use_const_emission_rates) {
+    for (int g = 0; g < RT_NGROUPS; g++) {
+      sp->rt_data.emission_this_step[g] = props->stellar_const_emission_rates[g] * dtf;
+    }
+  }
 
 #ifdef SWIFT_RT_DEBUG_CHECKS
   sp->rt_data.debug_emission_rate_set += 1;

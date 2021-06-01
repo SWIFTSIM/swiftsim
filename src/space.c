@@ -783,7 +783,7 @@ void space_convert_rt_star_quantities_mapper(void *restrict map_data,
         stars_compute_age(sp, e->cosmology, e->time, with_cosmology);
 
     rt_compute_stellar_emission_rate(sp, e->time, star_age_end_of_step,
-                                     dt_star);
+                                     dt_star, e->rt_props);
   }
 }
 

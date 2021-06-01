@@ -32,10 +32,11 @@
  * @param sp Star particle to work on.
  * @param age_beg Age of the stars at the beginning of the step
  * @param age_end Age of the stars at the end of the step
+ * @param props RT properties struct
  */
 
 __attribute__((always_inline)) INLINE static void rt_set_stellar_emission_rate(
-    struct spart *restrict sp, double age_beg, double age_end) {
+    struct spart *restrict sp, double age_beg, double age_end, struct rt_props* props) {
 
   sp->rt_data.debug_emission_rate_set += 1;
 }

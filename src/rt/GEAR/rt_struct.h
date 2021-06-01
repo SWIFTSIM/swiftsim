@@ -59,7 +59,11 @@ struct rt_part_data {
 /* Additional RT data in star particle struct */
 struct rt_spart_data {
 
-  float emission_rate[RT_NGROUPS];
+  /* Stellar energy emission that will be injected in to gas.
+   * Total energy, not density, not rate! */
+  /* keep this also for RT_HYDRO_CONTROLLED_INJECTION and store
+   * results with each hydro-star interaction in here */
+  float emission_this_step[RT_NGROUPS];
 
 #ifdef SWIFT_RT_DEBUG_CHECKS
   /* data to store during entire run */

@@ -252,7 +252,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               feedback_reset_feedback(sp, feedback_props);
             }
 
-            if (with_rt) {
+            if (with_rt && !e->rt_props->hydro_controlled_injection) {
 
               rt_reset_spart(sp);
 
@@ -277,7 +277,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
                   stars_compute_age(sp, e->cosmology, e->time, with_cosmology);
 
               rt_compute_stellar_emission_rate(sp, e->time,
-                                               star_age_end_of_step, dt_star);
+                                               star_age_end_of_step, dt_star, e->rt_props);
             }
 
             /* Ok, we are done with this particle */
@@ -422,7 +422,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
           feedback_reset_feedback(sp, feedback_props);
         }
 
-        if (with_rt) {
+        if (with_rt && !e->rt_props->hydro_controlled_injection) {
 
           rt_reset_spart(sp);
 
@@ -446,7 +446,7 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               stars_compute_age(sp, e->cosmology, e->time, with_cosmology);
 
           rt_compute_stellar_emission_rate(sp, e->time, star_age_end_of_step,
-                                           dt_star);
+                                           dt_star, e->rt_props);
         }
       }
 

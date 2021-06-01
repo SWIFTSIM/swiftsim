@@ -43,6 +43,19 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
     const float r2, float *dx, const float hi, const float hj,
     struct spart *restrict si, struct part *restrict pj, float a, float H) {
 
+  float wi;
+  const float r = sqrtf(r2);
+  const float hi_inv = 1.f / hi;
+  const float xi = r * hi_inv;
+  kernel_eval(xi, &wi);
+  const float hi_inv_dim = pow_dimension(hi_inv);
+  const float psi_i_xj = wi / si->density.wcount * hi_inv_dim;
+
+  /* TODO: this is done differently for RT_HYDRO_CONTROLLED_INJECTION */
+  for (int g = 0; g < RT_NGROUPS; g++){
+    pj->rt_data.conserved[g].energy += si->rt_data.emission_this_step[g] * psi_i_xj;
+  }
+
 #ifdef SWIFT_RT_DEBUG_CHECKS
   struct rt_spart_data *restrict sd = &(si->rt_data);
   struct rt_part_data *restrict pd = &(pj->rt_data);
