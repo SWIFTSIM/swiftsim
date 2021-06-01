@@ -59,6 +59,8 @@ struct rt_part_data {
 /* Additional RT data in star particle struct */
 struct rt_spart_data {
 
+  float emission_rate[RT_NGROUPS];
+
 #ifdef SWIFT_RT_DEBUG_CHECKS
   /* data to store during entire run */
   unsigned long long
