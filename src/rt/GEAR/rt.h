@@ -178,10 +178,10 @@ rt_injection_update_photon_density(struct part* restrict p,
  * @param time current system time
  * @param star_age age of the star *at the end of the step*
  * @param dt star time step
+ * @param props RT properties struct
  */
 __attribute__((always_inline)) INLINE static void
-rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
-                                 double star_age, double dt) {
+rt_compute_stellar_emission_rate(struct spart* restrict sp, double time, double star_age, double dt, struct rt_props* props) {
 
   /* Skip initial fake time-step */
   if (dt == 0.0l) return;
@@ -195,7 +195,7 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
   /* now get the emission rates */
   double star_age_begin_of_step = star_age - dt;
   star_age_begin_of_step = max(0.l, star_age_begin_of_step);
-  rt_set_stellar_emission_rate(sp, star_age_begin_of_step, star_age);
+  rt_set_stellar_emission_rate(sp, star_age_begin_of_step, star_age, props);
 }
 
 /**
