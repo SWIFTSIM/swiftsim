@@ -169,18 +169,24 @@ void io_collect_parts_to_write(const struct part* restrict parts,
                                const struct xpart* restrict xparts,
                                struct part* restrict parts_written,
                                struct xpart* restrict xparts_written,
-                               const size_t Nparts,
+                               const int subsample, const float subsample_ratio,
+                               const int snap_num, const size_t Nparts,
                                const size_t Nparts_written);
 void io_collect_sinks_to_write(const struct sink* restrict sinks,
                                struct sink* restrict sinks_written,
-                               const size_t Nsinks,
+                               const int subsample, const float subsample_ratio,
+                               const int snap_num, const size_t Nsinks,
                                const size_t Nsinks_written);
 void io_collect_sparts_to_write(const struct spart* restrict sparts,
                                 struct spart* restrict sparts_written,
+                                const int subsample,
+                                const float subsample_ratio, const int snap_num,
                                 const size_t Nsparts,
                                 const size_t Nsparts_written);
 void io_collect_bparts_to_write(const struct bpart* restrict bparts,
                                 struct bpart* restrict bparts_written,
+                                const int subsample,
+                                const float subsample_ratio, const int snap_num,
                                 const size_t Nbparts,
                                 const size_t Nbparts_written);
 void io_collect_gparts_to_write(const struct gpart* restrict gparts,
@@ -195,14 +201,17 @@ void io_collect_gparts_background_to_write(
     const struct gpart* restrict gparts,
     const struct velociraptor_gpart_data* vr_data,
     struct gpart* restrict gparts_written,
-    struct velociraptor_gpart_data* vr_data_written, const size_t Ngparts,
+    struct velociraptor_gpart_data* vr_data_written, const int subsample,
+    const float subsample_ratio, const int snap_num, const size_t Ngparts,
     const size_t Ngparts_written, int with_stf);
 void io_collect_gparts_neutrino_to_write(
     const struct gpart* restrict gparts,
     const struct velociraptor_gpart_data* vr_data,
     struct gpart* restrict gparts_written,
-    struct velociraptor_gpart_data* vr_data_written, const size_t Ngparts,
+    struct velociraptor_gpart_data* vr_data_written, const int subsample,
+    const float subsample_ratio, const int snap_num, const size_t Ngparts,
     const size_t Ngparts_written, int with_stf);
+
 void io_prepare_dm_gparts(struct threadpool* tp, struct gpart* const gparts,
                           size_t Ndm);
 void io_prepare_dm_background_gparts(struct threadpool* tp,
