@@ -862,9 +862,8 @@ void write_output_single(struct engine* e,
   }
 
   output_options_get_subsampling(
-      output_options, current_selection_name,
-      //.e->snapshot_subsample, e->snapshot_subsample_fraction,
-      subsample, subsample_fraction, subsample, subsample_fraction);
+      output_options, current_selection_name, e->snapshot_subsample,
+      e->snapshot_subsample_fraction, subsample, subsample_fraction);
 
   /* Is any particle type being subsampled? */
   int subsample_any = 0;
