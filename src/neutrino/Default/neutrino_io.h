@@ -81,7 +81,8 @@ INLINE static void convert_gpart_mnu(const struct engine* e,
   double micro_mass;
 
   /* Resample if running with the delta-f method or neutrino ic generation */
-  if (e->neutrino_properties->use_delta_f || e->neutrino_properties->generate_ics) {
+  if (e->neutrino_properties->use_delta_f ||
+      e->neutrino_properties->generate_ics) {
 
     /* Use a particle id dependent seed (sum of global seed and ID) */
     const long long neutrino_seed = e->neutrino_properties->neutrino_seed;
