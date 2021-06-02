@@ -93,10 +93,12 @@ INLINE static void convert_gpart_mnu(const struct engine* e,
 
     micro_mass = neutrino_seed_to_mass(N_nu, m_eV_array, seed);  // eV
   } else {
-    /* Otherwise, simply use the mass implied by the conversion factor */
+    /* Otherwise, simply use the mass implied by the conversion factor and
+     * total degeneracy */
+    const double deg_nu_tot = e->cosmology->deg_nu_tot;
     const double mass_factor = e->neutrino_mass_conversion_factor;
 
-    micro_mass = gp->mass * mass_factor;  // eV
+    micro_mass = gp->mass * mass_factor / deg_nu_tot;  // eV
   }
 
   /* Convert units and store the answer */
