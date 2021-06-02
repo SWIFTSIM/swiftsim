@@ -36,3 +36,4 @@ difference is the parameter file that will need to be adapted for SWIFT.
    AnalysisTools/index
    CSDS/index
    ImplementationDetails/index
+   Doxygen/index
