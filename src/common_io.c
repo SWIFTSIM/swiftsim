@@ -907,20 +907,6 @@ void io_prepare_dm_background_gparts(struct threadpool* tp,
                  sizeof(struct gpart), threadpool_auto_chunk_size, NULL);
 }
 
-size_t io_count_dm_background_gparts(const struct gpart* const gparts,
-                                     const size_t Ndm) {
-
-  swift_declare_aligned_ptr(const struct gpart, gparts_array, gparts,
-                            SWIFT_STRUCT_ALIGNMENT);
-
-  size_t count = 0;
-  for (size_t i = 0; i < Ndm; ++i) {
-    if (gparts_array[i].type == swift_type_dark_matter_background) ++count;
-  }
-
-  return count;
-}
-
 void io_prepare_dm_neutrino_gparts_mapper(void* restrict data, int Ndm,
                                           void* dummy) {
 
@@ -955,20 +941,6 @@ void io_prepare_dm_neutrino_gparts(struct threadpool* tp,
 
   threadpool_map(tp, io_prepare_dm_neutrino_gparts_mapper, gparts, Ndm,
                  sizeof(struct gpart), threadpool_auto_chunk_size, NULL);
-}
-
-size_t io_count_dm_neutrino_gparts(const struct gpart* const gparts,
-                                   const size_t Ndm) {
-
-  swift_declare_aligned_ptr(const struct gpart, gparts_array, gparts,
-                            SWIFT_STRUCT_ALIGNMENT);
-
-  size_t count = 0;
-  for (size_t i = 0; i < Ndm; ++i) {
-    if (gparts_array[i].type == swift_type_neutrino) ++count;
-  }
-
-  return count;
 }
 
 struct duplication_data {
