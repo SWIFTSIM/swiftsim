@@ -7,13 +7,12 @@
 # ---------------------------------------------------------------------
 
 from swiftsimio import Writer
-from swiftsimio.units import cosmo_units
 
 import unyt
 import numpy as np
 
 # Box is 1 Mpc
-boxsize = 1 * unyt.Mpc
+boxsize = 100 * unyt.m
 
 # number of hydro particles in each dimension
 n_p = 40
@@ -50,25 +49,16 @@ xp = unyt.unyt_array(xp, boxsize.units)
 xs = unyt.unyt_array(xs, boxsize.units)
 
 
-# Generate object. cosmo_units corresponds to default Gadget-oid units
-# of 10^10 Msun, Mpc, and km/s
-w = Writer(cosmo_units, boxsize)
+w = Writer(unyt.unit_systems.cgs_unit_system, boxsize)
 
 w.gas.coordinates = xp
 w.stars.coordinates = xs
-
-
-# Random velocities from 0 to 1 km/s
-w.gas.velocities = np.zeros(xp.shape) * (unyt.km / unyt.s)
-w.stars.velocities = np.zeros(xs.shape) * (unyt.km / unyt.s)
-
-# Generate uniform masses as 10^6 solar masses for each particle
-w.gas.masses = np.ones(xp.shape[0], dtype=float) * (1e6 * unyt.msun)
-w.stars.masses = np.ones(xs.shape[0], dtype=float) * (1e6 * unyt.msun)
-
-# Generate internal energy corresponding to 10^4 K
+w.gas.velocities = np.zeros(xp.shape) * (unyt.cm / unyt.s)
+w.stars.velocities = np.zeros(xs.shape) * (unyt.cm / unyt.s)
+w.gas.masses = np.ones(xp.shape[0], dtype=np.float) * 1000 * unyt.g
+w.stars.masses = np.ones(xs.shape[0], dtype=np.float) * 1000 * unyt.g
 w.gas.internal_energy = (
-    np.ones(xp.shape[0], dtype=float) * (1e4 * unyt.kb * unyt.K) / (1e6 * unyt.msun)
+    np.ones(xp.shape[0], dtype=np.float) * (300.0 * unyt.kb * unyt.K) / (unyt.g)
 )
 
 # Generate initial guess for smoothing lengths based on MIPS
