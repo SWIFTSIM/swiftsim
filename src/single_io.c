@@ -853,9 +853,18 @@ void write_output_single(struct engine* e,
   /* Create the directory */
   safe_checkdir(snapshot_subdir_name, /*create=*/1);
 
-  int subsample[swift_type_count] = {1, 1, 1, 1, 1, 1, 1};
-  float subsample_fraction[swift_type_count] = {0.1f, 0.1f, 0.1f, 0.1f,
-                                                0.1f, 0.1f, 0.1f};
+  /* Do we want to sub-sample any of the arrays */
+  int subsample[swift_type_count];
+  float subsample_fraction[swift_type_count];
+  for (int i = 0; i < swift_type_count; ++i) {
+    subsample[i] = 0;
+    subsample_fraction[i] = 1.f;
+  }
+
+  output_options_get_subsampling(
+      output_options, current_selection_name,
+      //.e->snapshot_subsample, e->snapshot_subsample_fraction,
+      subsample, subsample_fraction, subsample, subsample_fraction);
 
   /* Is any particle type being subsampled? */
   int subsample_any = 0;

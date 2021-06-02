@@ -309,7 +309,7 @@ int output_options_get_num_fields_to_write(
  * @param default_subdirname The default general sub-directory name.
  * @param default_basename The default general snapshot base name.
  * @param subdir_name (return) The sub-directory name to use for this dump.
- * @param basename (return) The snapshot base name to use for this dump,
+ * @param basename (return) The snapshot base name to use for this dump.
  */
 void output_options_get_basename(const struct output_options* output_options,
                                  const char* selection_name,
@@ -346,4 +346,55 @@ void output_options_get_basename(const struct output_options* output_options,
   } else {
     sprintf(subdir_name, "%s", output_options->subdir_names[selection_id]);
   }
+}
+
+/**
+ * @brief Return the subsampling fraction for the current output selection.
+ *
+ * @param output_options The #output_options structure.
+ * @param selection_name The current output selection name.
+ * @param default_subsample The default general subsampling status.
+ * @param default_subsample_ratio The default general subsampling ratio.
+ * @param subsample (return) The subsampling status to use for this dump.
+ * @param subsample_ratio (return) The subsampling ratio to use for this dump.
+ */
+void output_options_get_subsampling(
+    const struct output_options* output_options, const char* selection_name,
+    const int default_subsample[swift_type_count],
+    const float default_subsample_ratio[swift_type_count],
+    int subsample[swift_type_count], float subsample_ratio[swift_type_count]) {
+
+  /* Get the ID of the output selection in the structure */
+  int selection_id =
+      parser_get_section_id(output_options->select_output, selection_name);
+
+  /* Special treatment for absent `Default` section */
+  if (selection_id < 0) {
+    selection_id = output_options->select_output->sectionCount;
+  }
+
+  memcpy(subsample, default_subsample, sizeof(int) * swift_type_count);
+  memcpy(subsample_ratio, default_subsample_ratio,
+         sizeof(float) * swift_type_count);
+
+  /* /\* If the default keyword is found, we use the name provided */
+  /*  * in the param file (not the select output!), aka. the argument */
+  /*  * of the function. *\/ */
+  /* if (strcmp(output_options->basenames[selection_id], */
+  /*            select_output_default_basename) == 0) { */
+  /*   sprintf(basename, "%s", default_basename); */
+  /* } else { */
+  /*   sprintf(basename, "%s", output_options->basenames[selection_id]); */
+  /* } */
+
+  /* /\* If the default keyword is found, we use the subdir name provided */
+  /*  * in the param file (not the select output!), aka. the argument */
+  /*  * of the function. *\/ */
+  /* if (strcmp(output_options->subdir_names[selection_id], */
+  /*            select_output_default_subdir_name) == 0) { */
+  /*   sprintf(subdir_name, "%s", default_subdirname); */
+  /* } else { */
+  /*   sprintf(subdir_name, "%s", output_options->subdir_names[selection_id]);
+   */
+  /* } */
 }

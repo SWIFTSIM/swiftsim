@@ -93,4 +93,9 @@ void output_options_get_basename(const struct output_options* output_options,
                                  char subdir_name[FILENAME_BUFFER_SIZE],
                                  char snap_basename[FILENAME_BUFFER_SIZE]);
 
+void output_options_get_subsampling(
+    const struct output_options* output_options, const char* selection_name,
+    const int default_subsample[swift_type_count],
+    const float default_subsample_ratio[swift_type_count],
+    int subsample[swift_type_count], float subsample_ratio[swift_type_count]);
 #endif
