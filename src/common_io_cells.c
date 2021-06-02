@@ -444,10 +444,32 @@ void io_write_array(hid_t h_grp, const int n, const void* array,
   H5Sclose(h_space);
 }
 
+/**
+ * @brief Compute and write the top-level cell counts and offsets meta-data.
+ *
+ * @param h_grp the hdf5 group to write to.
+ * @param cdim The number of top-level cells along each axis.
+ * @param dim The box size.
+ * @param cells_top The top-level cells.
+ * @param nr_cells The number of top-level cells.
+ * @param distributed Is this a distributed snapshot?
+ * @param subsample Are we subsampling the different particle types?
+ * @param subsample_fraction The fraction of particles to keep when subsampling.
+ * @param snap_num The snapshot number used as subsampling random seed.
+ * @param global_counts The total number of particles across all nodes.
+ * @param global_offsets The offsets of this node into the global list of
+ * particles.
+ * @param numFields The number of fields to write for each particle type.
+ * @param internal_units The internal unit system.
+ * @param snapshot_units The snapshot unit system.
+ */
 void io_write_cell_offsets(hid_t h_grp, const int cdim[3], const double dim[3],
                            const struct cell* cells_top, const int nr_cells,
                            const double width[3], const int nodeID,
                            const int distributed,
+                           const int subsample[swift_type_count],
+                           const float subsample_fraction[swift_type_count],
+                           const int snap_num,
                            const long long global_counts[swift_type_count],
                            const long long global_offsets[swift_type_count],
                            const int num_fields[swift_type_count],
@@ -542,18 +564,34 @@ void io_write_cell_offsets(hid_t h_grp, const int cdim[3], const double dim[3],
       centres[i * 3 + 2] = box_wrap(centres[i * 3 + 2], 0.0, dim[2]);
 
       /* Count real particles that will be written */
-      count_part[i] = cell_count_non_inhibited_gas(&cells_top[i], 0, 0, 0);
-      count_gpart[i] =
-          cell_count_non_inhibited_dark_matter(&cells_top[i], 0, 0, 0);
+      count_part[i] = cell_count_non_inhibited_gas(
+          &cells_top[i], subsample[swift_type_gas],
+          subsample_fraction[swift_type_gas], snap_num);
+
+      count_gpart[i] = cell_count_non_inhibited_dark_matter(
+          &cells_top[i], subsample[swift_type_dark_matter],
+          subsample_fraction[swift_type_dark_matter], snap_num);
+
       count_background_gpart[i] =
-          cell_count_non_inhibited_background_dark_matter(&cells_top[i], 0, 0,
-                                                          0);
-      count_spart[i] = cell_count_non_inhibited_stars(&cells_top[i], 0, 0, 0);
-      count_bpart[i] =
-          cell_count_non_inhibited_black_holes(&cells_top[i], 0, 0, 0);
-      count_sink[i] = cell_count_non_inhibited_sinks(&cells_top[i], 0, 0, 0);
-      count_nupart[i] =
-          cell_count_non_inhibited_neutrinos(&cells_top[i], 0, 0, 0);
+          cell_count_non_inhibited_background_dark_matter(
+              &cells_top[i], subsample[swift_type_dark_matter_background],
+              subsample_fraction[swift_type_dark_matter_background], snap_num);
+
+      count_spart[i] = cell_count_non_inhibited_stars(
+          &cells_top[i], subsample[swift_type_stars],
+          subsample_fraction[swift_type_stars], snap_num);
+
+      count_bpart[i] = cell_count_non_inhibited_black_holes(
+          &cells_top[i], subsample[swift_type_black_hole],
+          subsample_fraction[swift_type_black_hole], snap_num);
+
+      count_sink[i] = cell_count_non_inhibited_sinks(
+          &cells_top[i], subsample[swift_type_sink],
+          subsample_fraction[swift_type_sink], snap_num);
+
+      count_nupart[i] = cell_count_non_inhibited_neutrinos(
+          &cells_top[i], subsample[swift_type_neutrino],
+          subsample_fraction[swift_type_neutrino], snap_num);
 
       /* Offsets including the global offset of all particles on this MPI rank
        * Note that in the distributed case, the global offsets are 0 such that
