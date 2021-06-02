@@ -857,12 +857,6 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
     /* Retrieve the present-day total density due to massive neutrinos */
     c->Omega_nu_0 = cosmology_get_neutrino_density(c, 1);
     c->Omega_nu = c->Omega_nu_0;  // will be updated
-
-    /* Find the smallest neutrino mass */
-    double M_eV_min = FLT_MAX;
-    for (int i = 0; i < c->N_nu; i++) {
-      M_eV_min = fmin(M_eV_min, c->M_nu_eV[i]);
-    }
   }
 
   /* Cold dark matter density */
