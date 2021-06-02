@@ -29,15 +29,6 @@
 #include "timeline.h"
 #include "units.h"
 
-#if defined(HAVE_HDF5)
-
-#include <hdf5.h>
-
-/* MPI headers. */
-#ifdef WITH_MPI
-#include <mpi.h>
-#endif
-
 static long long cell_count_non_inhibited_gas(const struct cell* c,
                                               const int subsample,
                                               const float subsample_ratio,
@@ -53,7 +44,6 @@ static long long cell_count_non_inhibited_gas(const struct cell* c,
       if (subsample) {
         const float r = random_unit_interval(parts[i].id, snap_num,
                                              random_number_snapshot_sampling);
-
         if (r > subsample_ratio) continue;
       }
 
@@ -80,7 +70,6 @@ static long long cell_count_non_inhibited_dark_matter(
         const float r =
             random_unit_interval(gparts[i].id_or_neg_offset, snap_num,
                                  random_number_snapshot_sampling);
-
         if (r > subsample_ratio) continue;
       }
       ++count;
@@ -106,7 +95,6 @@ static long long cell_count_non_inhibited_background_dark_matter(
         const float r =
             random_unit_interval(gparts[i].id_or_neg_offset, snap_num,
                                  random_number_snapshot_sampling);
-
         if (r > subsample_ratio) continue;
       }
 
@@ -131,7 +119,6 @@ static long long cell_count_non_inhibited_stars(const struct cell* c,
       if (subsample) {
         const float r = random_unit_interval(sparts[i].id, snap_num,
                                              random_number_snapshot_sampling);
-
         if (r > subsample_ratio) continue;
       }
 
@@ -155,7 +142,6 @@ static long long cell_count_non_inhibited_black_holes(
       if (subsample) {
         const float r = random_unit_interval(bparts[i].id, snap_num,
                                              random_number_snapshot_sampling);
-
         if (r > subsample_ratio) continue;
       }
 
@@ -180,7 +166,6 @@ static long long cell_count_non_inhibited_sinks(const struct cell* c,
       if (subsample) {
         const float r = random_unit_interval(sinks[i].id, snap_num,
                                              random_number_snapshot_sampling);
-
         if (r > subsample_ratio) continue;
       }
 
@@ -208,7 +193,6 @@ static long long cell_count_non_inhibited_neutrinos(const struct cell* c,
         const float r =
             random_unit_interval(gparts[i].id_or_neg_offset, snap_num,
                                  random_number_snapshot_sampling);
-
         if (r > subsample_ratio) continue;
       }
 
@@ -233,7 +217,6 @@ long long io_count_gas_to_write(const struct space* s, const int subsample,
                                 const int snap_num) {
 
   long long count = 0;
-
   for (int i = 0; i < s->nr_local_cells; ++i) {
 
     const struct cell* c = &s->cells_top[s->local_cells_top[i]];
@@ -260,7 +243,6 @@ long long io_count_dark_matter_to_write(const struct space* s,
                                         const int snap_num) {
 
   long long count = 0;
-
   for (int i = 0; i < s->nr_local_cells; ++i) {
 
     const struct cell* c = &s->cells_top[s->local_cells_top[i]];
@@ -287,7 +269,6 @@ long long io_count_background_dark_matter_to_write(const struct space* s,
                                                    const int snap_num) {
 
   long long count = 0;
-
   for (int i = 0; i < s->nr_local_cells; ++i) {
 
     const struct cell* c = &s->cells_top[s->local_cells_top[i]];
@@ -312,7 +293,6 @@ long long io_count_stars_to_write(const struct space* s, const int subsample,
                                   const int snap_num) {
 
   long long count = 0;
-
   for (int i = 0; i < s->nr_local_cells; ++i) {
 
     const struct cell* c = &s->cells_top[s->local_cells_top[i]];
@@ -337,7 +317,6 @@ long long io_count_sinks_to_write(const struct space* s, const int subsample,
                                   const int snap_num) {
 
   long long count = 0;
-
   for (int i = 0; i < s->nr_local_cells; ++i) {
 
     const struct cell* c = &s->cells_top[s->local_cells_top[i]];
@@ -364,7 +343,6 @@ long long io_count_black_holes_to_write(const struct space* s,
                                         const int snap_num) {
 
   long long count = 0;
-
   for (int i = 0; i < s->nr_local_cells; ++i) {
 
     const struct cell* c = &s->cells_top[s->local_cells_top[i]];
@@ -390,7 +368,6 @@ long long io_count_neutrinos_to_write(const struct space* s,
                                       const int snap_num) {
 
   long long count = 0;
-
   for (int i = 0; i < s->nr_local_cells; ++i) {
 
     const struct cell* c = &s->cells_top[s->local_cells_top[i]];
@@ -399,6 +376,15 @@ long long io_count_neutrinos_to_write(const struct space* s,
   }
   return count;
 }
+
+#if defined(HAVE_HDF5)
+
+#include <hdf5.h>
+
+/* MPI headers. */
+#ifdef WITH_MPI
+#include <mpi.h>
+#endif
 
 /**
  * @brief Write a single 1D array to a hdf5 group.
