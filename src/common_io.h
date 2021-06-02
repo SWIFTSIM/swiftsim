@@ -34,6 +34,7 @@
 
 /* Avoid cyclic inclusion problems */
 struct cell;
+struct space;
 struct part;
 struct gpart;
 struct velociraptor_gpart_data;
@@ -132,6 +133,38 @@ void io_copy_temp_buffer(void* temp, const struct engine* e,
 size_t io_sizeof_type(enum IO_DATA_TYPE type);
 int io_is_double_precision(enum IO_DATA_TYPE type);
 
+long long io_count_gas_to_write(const struct space* s, const int subsample,
+                                const float subsample_ratio,
+                                const int snap_num);
+
+long long io_count_dark_matter_to_write(const struct space* s,
+                                        const int subsample,
+                                        const float subsample_ratio,
+                                        const int snap_num);
+
+long long io_count_background_dark_matter_to_write(const struct space* s,
+                                                   const int subsample,
+                                                   const float subsample_ratio,
+                                                   const int snap_num);
+
+long long io_count_stars_to_write(const struct space* s, const int subsample,
+                                  const float subsample_ratio,
+                                  const int snap_num);
+
+long long io_count_sinks_to_write(const struct space* s, const int subsample,
+                                  const float subsample_ratio,
+                                  const int snap_num);
+
+long long io_count_black_holes_to_write(const struct space* s,
+                                        const int subsample,
+                                        const float subsample_ratio,
+                                        const int snap_num);
+
+long long io_count_neutrinos_to_write(const struct space* s,
+                                      const int subsample,
+                                      const float subsample_ratio,
+                                      const int snap_num);
+
 void io_collect_parts_to_write(const struct part* restrict parts,
                                const struct xpart* restrict xparts,
                                struct part* restrict parts_written,
@@ -154,6 +187,8 @@ void io_collect_gparts_to_write(const struct gpart* restrict gparts,
                                 const struct velociraptor_gpart_data* vr_data,
                                 struct gpart* restrict gparts_written,
                                 struct velociraptor_gpart_data* vr_data_written,
+                                const int subsample,
+                                const float subsample_ratio, const int snap_num,
                                 const size_t Ngparts,
                                 const size_t Ngparts_written, int with_stf);
 void io_collect_gparts_background_to_write(
