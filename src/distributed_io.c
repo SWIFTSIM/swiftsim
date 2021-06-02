@@ -390,6 +390,7 @@ void write_output_distributed(struct engine* e,
 
   /* Is any particle type being subsampled? */
   int subsample_any = 0;
+  for (int i = 0; i < swift_type_count; ++i) subsample_any += subsample[i];
 
   /* Number of particles that we will write */
   size_t Ngas_written, Ndm_written, Ndm_background, Ndm_neutrino,
