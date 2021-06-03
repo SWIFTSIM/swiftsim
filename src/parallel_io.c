@@ -1214,7 +1214,7 @@ void prepare_file(struct engine* e, const char* fileName,
   struct tm* timeinfo = localtime(&tm);
   char snapshot_date[64];
   strftime(snapshot_date, 64, "%T %F %Z", timeinfo);
-  io_write_attribute_s(h_grp, "Snapshot date", snapshot_date);
+  io_write_attribute_s(h_grp, "SnapshotDate", snapshot_date);
 
   /* GADGET-2 legacy values */
   /* Number of particles of each type */

@@ -999,7 +999,7 @@ void write_output_single(struct engine* e,
   struct tm* timeinfo = localtime(&tm);
   char snapshot_date[64];
   strftime(snapshot_date, 64, "%T %F %Z", timeinfo);
-  io_write_attribute_s(h_grp, "Snapshot date", snapshot_date);
+  io_write_attribute_s(h_grp, "SnapshotDate", snapshot_date);
 
   /* GADGET-2 legacy values: number of particles of each type */
   long long numParticlesThisFile[swift_type_count] = {0};
