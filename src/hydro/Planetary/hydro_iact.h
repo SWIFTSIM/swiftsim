@@ -91,6 +91,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
   pj->density.wcount += wj;
   pj->density.wcount_dh -= (hydro_dimension * wj + uj * wj_dx);
 
+  /* Skip overlapping particles */
+  if (r < 1e-6 * hi) {
+#ifdef SWIFT_DEBUG_CHECKS
+    message("Skipping too-close particles %lld, %lld, r = %.7g h", pi->id, pj->id, r / hi);
+#endif
+    return;
+  }
+
   /* Compute dv dot r */
   float dv[3], curlvr[3];
 
@@ -160,6 +168,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
   pi->density.wcount += wi;
   pi->density.wcount_dh -= (hydro_dimension * wi + ui * wi_dx);
 
+  /* Skip overlapping particles */
+  if (r < 1e-6 * hi) {
+#ifdef SWIFT_DEBUG_CHECKS
+    message("Skipping too-close particles %lld, %lld, r = %.7g h", pi->id, pj->id, r / hi);
+#endif
+    return;
+  }
+
   /* Compute dv dot r */
   float dv[3], curlvr[3];
 
@@ -212,7 +228,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   /* Get r and 1/r. */
   const float r = sqrtf(r2);
   const float r_inv = 1.0f / r;
-  ;
+
+  /* Skip overlapping particles */
+  if (r < 1e-6 * hi) {
+#ifdef SWIFT_DEBUG_CHECKS
+    message("Skipping too-close particles %lld, %lld, r = %.7g h", pi->id, pj->id, r / hi);
+#endif
+    return;
+  }
 
   /* Recover some data */
   const float mi = pi->mass;
@@ -342,6 +365,14 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   /* Get r and 1/r. */
   const float r = sqrtf(r2);
   const float r_inv = 1.0f / r;
+
+  /* Skip overlapping particles */
+  if (r < 1e-6 * hi) {
+#ifdef SWIFT_DEBUG_CHECKS
+    message("Skipping too-close particles %lld, %lld, r = %.7g h", pi->id, pj->id, r / hi);
+#endif
+    return;
+  }
 
   /* Recover some data */
   const float mi = pi->mass;
