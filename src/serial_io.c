@@ -1023,7 +1023,10 @@ void write_output_serial(struct engine* e,
 
   /* Is any particle type being subsampled? */
   int subsample_any = 0;
-  for (int i = 0; i < swift_type_count; ++i) subsample_any += subsample[i];
+  for (int i = 0; i < swift_type_count; ++i) {
+    subsample_any += subsample[i];
+    if (!subsample[i]) subsample_fraction[i] = 1.f;
+  }
 
   /* Number of particles that we will write */
   size_t Ngas_written, Ndm_written, Ndm_background, Ndm_neutrino,
