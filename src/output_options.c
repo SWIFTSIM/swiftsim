@@ -391,28 +391,27 @@ void output_options_get_subsampling(
     selection_id = output_options->select_output->sectionCount;
   }
 
-  memcpy(subsample, default_subsample, sizeof(int) * swift_type_count);
-  memcpy(subsample_fraction, default_subsample_fraction,
-         sizeof(float) * swift_type_count);
+  /* If the default keyword is found, we use the subsample flag provided
+   * in the param file (not the select output!), aka. the argument
+   * of the function. */
+  if (output_options->subsample[selection_id][0] ==
+      select_output_default_subsample) {
+    memcpy(subsample, default_subsample, sizeof(int) * swift_type_count);
+  } else {
+    memcpy(subsample, output_options->subsample[selection_id],
+           sizeof(int) * swift_type_count);
+  }
 
-  /* /\* If the default keyword is found, we use the name provided */
-  /*  * in the param file (not the select output!), aka. the argument */
-  /*  * of the function. *\/ */
-  /* if (strcmp(output_options->basenames[selection_id], */
-  /*            select_output_default_basename) == 0) { */
-  /*   sprintf(basename, "%s", default_basename); */
-  /* } else { */
-  /*   sprintf(basename, "%s", output_options->basenames[selection_id]); */
-  /* } */
-
-  /* /\* If the default keyword is found, we use the subdir name provided */
-  /*  * in the param file (not the select output!), aka. the argument */
-  /*  * of the function. *\/ */
-  /* if (strcmp(output_options->subdir_names[selection_id], */
-  /*            select_output_default_subdir_name) == 0) { */
-  /*   sprintf(subdir_name, "%s", default_subdirname); */
-  /* } else { */
-  /*   sprintf(subdir_name, "%s", output_options->subdir_names[selection_id]);
-   */
-  /* } */
+  /* If the default keyword is found, we use the subsample fraction provided
+   * in the param file (not the select output!), aka. the argument
+   * of the function. */
+  if (output_options->subsample_fractions[selection_id][0] ==
+      select_output_default_subsample_fraction) {
+    memcpy(subsample_fraction, default_subsample_fraction,
+           sizeof(float) * swift_type_count);
+  } else {
+    memcpy(subsample_fraction,
+           output_options->subsample_fractions[selection_id],
+           sizeof(float) * swift_type_count);
+  }
 }
