@@ -54,7 +54,8 @@ __attribute__((always_inline)) INLINE static void rt_reset_part(
 
   p->rt_data.debug_calls_iact_gradient = 0;
   p->rt_data.debug_calls_iact_transport = 0;
-  p->rt_data.debug_injection_check = 0;
+  /* skip this for GEAR */
+  /* p->rt_data.debug_injection_check = 0; */
   p->rt_data.debug_calls_iact_gradient_interaction = 0;
   p->rt_data.debug_calls_iact_transport_interaction = 0;
 
@@ -103,7 +104,8 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
   sp->rt_data.debug_iact_hydro_inject = 0;
 
   sp->rt_data.debug_emission_rate_set = 0;
-  sp->rt_data.debug_injection_check = 0;
+  /* skip this for GEAR */
+  /* sp->rt_data.debug_injection_check = 0; */
 #endif
 }
 
@@ -181,7 +183,9 @@ rt_injection_update_photon_density(struct part* restrict p,
  * @param props RT properties struct
  */
 __attribute__((always_inline)) INLINE static void
-rt_compute_stellar_emission_rate(struct spart* restrict sp, double time, double star_age, double dt, struct rt_props* props) {
+rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
+                                 double star_age, double dt,
+                                 struct rt_props* props) {
 
   /* Skip initial fake time-step */
   if (dt == 0.0l) return;
