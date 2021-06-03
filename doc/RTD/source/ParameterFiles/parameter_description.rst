@@ -792,6 +792,21 @@ of MPI ranks used in a given run. The individual files of snapshot 1234 will
 have the name ``base_name_1234.x.hdf5`` where when running on N MPI ranks, ``x``
 runs from 0 to N-1.
 
+Users can optionally ask to randomly sub-sample the particles in the snapshots.
+This is specified for each particle type individually:
+
+* Whether to switch on sub-sampling: ``subsample``   
+* Whether to switch on sub-sampling: ``subsample_fraction`` 
+
+These are arrays of 7 elements defaulting to seven 0s if left unspecified. Each
+entry corresponds to the particle type used in the initial conditions and
+snapshots [#f3]_.  The ``subsample`` array is made of ``0`` and ``1`` to indicate which
+particle types to subsample. The other array is a float between ``0`` and ``1``
+indicating the fraction of particles to keep in the outputs.  Note that the
+selection of particles is selected randomly for each individual
+snapshot. Particles can hence not be traced back from output to output when this
+is switched on.
+  
 Users can optionally specify the level of compression used by the HDF5 library
 using the parameter:
 
@@ -1486,14 +1501,6 @@ and all the gparts are not active during the timestep of the snapshot dump, the
 exact forces computation is performed on the first timestep at which all the
 gparts are active after that snapshot output timestep.
 
-
-------------------------
-
-.. [#f1] The thorough reader (or overly keen SWIFT tester) would find  that the speed of light is :math:`c=1.8026\times10^{12}\,\rm{fur}\,\rm{ftn}^{-1}`, Newton's constant becomes :math:`G_N=4.896735\times10^{-4}~\rm{fur}^3\,\rm{fir}^{-1}\,\rm{ftn}^{-2}` and Planck's constant turns into :math:`h=4.851453\times 10^{-34}~\rm{fur}^2\,\rm{fir}\,\rm{ftn}^{-1}`.
-
-
-.. [#f2] which would translate into a constant :math:`G_N=1.5517771\times10^{-9}~cm^{3}\,g^{-1}\,s^{-2}` if expressed in the CGS system.
-
 Neutrinos
 ---------
 
@@ -1514,3 +1521,13 @@ A complete specification of the model looks like
     generate_ics:  1    # Replace neutrino particle velocities with random Fermi-Dirac momenta at the start
     use_delta_f:   1    # Use the delta-f method for shot noise reduction
     neutrino_seed: 1234 # A random seed used for the Fermi-Dirac momenta
+
+
+------------------------
+    
+.. [#f1] The thorough reader (or overly keen SWIFT tester) would find  that the speed of light is :math:`c=1.8026\times10^{12}\,\rm{fur}\,\rm{ftn}^{-1}`, Newton's constant becomes :math:`G_N=4.896735\times10^{-4}~\rm{fur}^3\,\rm{fir}^{-1}\,\rm{ftn}^{-2}` and Planck's constant turns into :math:`h=4.851453\times 10^{-34}~\rm{fur}^2\,\rm{fir}\,\rm{ftn}^{-1}`.
+
+
+.. [#f2] which would translate into a constant :math:`G_N=1.5517771\times10^{-9}~cm^{3}\,g^{-1}\,s^{-2}` if expressed in the CGS system.
+
+.. [#f3] The mapping is 0 --> gas, 1 --> dark matter, 2 --> background dark matter, 3 --> sinks, 4 --> stars, 5 --> black holes, 6 --> neutrinos.
