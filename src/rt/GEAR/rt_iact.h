@@ -43,30 +43,52 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
     const float r2, float *dx, const float hi, const float hj,
     struct spart *restrict si, struct part *restrict pj, float a, float H) {
 
-  float wi;
-  const float r = sqrtf(r2);
-  const float hi_inv = 1.f / hi;
-  const float xi = r * hi_inv;
-  kernel_eval(xi, &wi);
-  const float hi_inv_dim = pow_dimension(hi_inv);
-  const float psi_i_xj = wi / si->density.wcount * hi_inv_dim;
+  if (si->density.wcount > 0.f) {
+    float wi;
+    const float r = sqrtf(r2);
+    const float hi_inv = 1.f / hi;
+    const float xi = r * hi_inv;
+    kernel_eval(xi, &wi);
+    const float hi_inv_dim = pow_dimension(hi_inv);
+    const float psi_i_xj = wi / si->density.wcount * hi_inv_dim;
 
-  /* TODO: this is done differently for RT_HYDRO_CONTROLLED_INJECTION */
-  for (int g = 0; g < RT_NGROUPS; g++) {
-    pj->rt_data.conserved[g].energy +=
-        si->rt_data.emission_this_step[g] * psi_i_xj;
+    /* TODO: this is done differently for RT_HYDRO_CONTROLLED_INJECTION */
+    for (int g = 0; g < RT_NGROUPS; g++) {
+      pj->rt_data.conserved[g].energy +=
+          si->rt_data.emission_this_step[g] * psi_i_xj;
+    }
+    /* message("iact check %8.3g, %8.3g, %8.3g %8.3g || %.3g %.3g %.3g %.3g %.3g %.3g %.3g %.3g",  */
+    /*           wi, si->density.wcount, hi, psi_i_xj,  */
+    /*           pj->rt_data.conserved[0].energy,  */
+    /*           pj->rt_data.conserved[1].energy,  */
+    /*           pj->rt_data.conserved[2].energy,  */
+    /*           pj->rt_data.conserved[3].energy,  */
+    /*           si->rt_data.emission_this_step[0],  */
+    /*           si->rt_data.emission_this_step[1],  */
+    /*           si->rt_data.emission_this_step[2],  */
+    /*           si->rt_data.emission_this_step[3] */
+    /*           ); */
+#ifdef SWIFT_RT_DEBUG_CHECKS
+    /* Take note how much energy we actually injected */
+    for (int g = 0; g < RT_NGROUPS; g++){
+      si->rt_data.debug_injected_energy[g] += 
+          si->rt_data.emission_this_step[g] * psi_i_xj;
+      si->rt_data.debug_injected_energy_tot[g] += 
+          si->rt_data.emission_this_step[g] * psi_i_xj;
+    }
+#endif
+  } else {
+    /* TODO: exception handle here */
   }
 
 #ifdef SWIFT_RT_DEBUG_CHECKS
-  struct rt_spart_data *restrict sd = &(si->rt_data);
-  struct rt_part_data *restrict pd = &(pj->rt_data);
+  si->rt_data.debug_iact_hydro_inject += 1;
+  si->rt_data.debug_radiation_emitted_tot += 1ULL;
 
-  sd->debug_iact_hydro_inject += 1;
-  sd->debug_radiation_emitted_tot += 1ULL;
-
-  pd->debug_iact_stars_inject += 1;
-  pd->debug_radiation_absorbed_tot += 1ULL;
+  pj->rt_data.debug_iact_stars_inject += 1;
+  pj->rt_data.debug_radiation_absorbed_tot += 1ULL;
 #endif
+
 }
 
 /**

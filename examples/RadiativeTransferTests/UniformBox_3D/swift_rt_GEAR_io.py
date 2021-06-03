@@ -40,6 +40,8 @@ class RTStarData(object):
         self.coords = None
         self.h = None
 
+        self.InjectedPhotonEnergy = None
+
         return
 
 
@@ -53,6 +55,8 @@ class RTSnapData(object):
         self.ncells = None
         self.boxsize = None
         self.time = None
+
+        self.cumulative_injected_energy = None
 
         self.nstars = None
         self.npart = None
@@ -72,7 +76,7 @@ class Rundata(object):
         self.use_const_emission_rate = False
 
         self.ngroups = 0  # photon frequency groups
-        self.const_emission_rates = []
+        self.const_emission_rates = None
 
         return
 
@@ -160,8 +164,10 @@ def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
 
         # transform string values to floats with unyts
         emissions = emissionstr.split(",")
+        emlist = []
         for er in emissions:
-            rundata.const_emission_rates.append(float(er) * unyt.erg / unyt.s)
+            emlist.append(float(er))
+        rundata.const_emission_rates = unyt.unyt_array(emlist) * unyt.erg / unyt.s
 
         if len(rundata.const_emission_rates) != rundata.ngroups:
             print("Got number of emission rates different from number of groups?")
@@ -198,18 +204,21 @@ def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
         Gas.IDs = data.gas.particle_ids
         Gas.coords = data.gas.coordinates
         Gas.h = data.gas.smoothing_lengths
-        Gas.PhotonEnergies = [
-            data.gas.photon_energies.group1,
-            data.gas.photon_energies.group2,
-            data.gas.photon_energies.group3,
-            data.gas.photon_energies.group4,
-        ]
+        Gas.PhotonEnergies = unyt.unyt_array(
+            [
+                data.gas.photon_energies.group1,
+                data.gas.photon_energies.group2,
+                data.gas.photon_energies.group3,
+                data.gas.photon_energies.group4,
+            ]
+        )
 
-        # Get star data
+        #  Get star data
         Stars = RTStarData()
         Stars.IDs = data.stars.particle_ids
         Stars.coords = data.stars.coordinates
         Stars.h = data.stars.smoothing_lengths
+        Stars.InjectedPhotonEnergy = data.stars.rtdebug_injected_photon_energy
 
         newsnap.gas = Gas
         newsnap.stars = Stars

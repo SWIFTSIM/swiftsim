@@ -157,6 +157,11 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
     error("GEAR-RT can't run without constant stellar emission rates for now.");
   }
 
+#ifdef SWIFT_RT_DEBUG_CHECKS
+  rtp->debug_radiation_emitted_tot = 0ULL;
+  rtp->debug_radiation_absorbed_tot = 0ULL;
+#endif
+
   /* After initialisation, print params to screen */
   rt_props_print(rtp);
 

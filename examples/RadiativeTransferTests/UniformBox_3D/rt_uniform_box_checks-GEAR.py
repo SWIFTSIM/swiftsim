@@ -3,7 +3,8 @@
 # -----------------------------------------------------------------------
 # Collection of checks for the 'GEAR' RT scheme in swift for the
 # uniform box test where particles don't move and every time step an
-# output file is generated.
+# output file is generated. Swift must be compiled with the
+# '--enable-debugging-checks' flag.
 #
 # Usage:
 #   ./rt_uniform_box_checks-GEAR.py
