@@ -6,9 +6,9 @@
 # output file is generated.
 #
 # Usage:
-#   ./rt_checks_uniform.py
+#   ./rt_uniform_box_checks.py
 # or
-#   ./rt_checks_uniform.py snapshot_basename
+#   ./rt_uniform_box_checks.py snapshot_basename
 #
 # where 'snapshot_basename' is the base name of the snapshots that you
 # want to work with. (Same argument as Snapshots:basename in the .yml
