@@ -52,8 +52,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
   const float psi_i_xj = wi / si->density.wcount * hi_inv_dim;
 
   /* TODO: this is done differently for RT_HYDRO_CONTROLLED_INJECTION */
-  for (int g = 0; g < RT_NGROUPS; g++){
-    pj->rt_data.conserved[g].energy += si->rt_data.emission_this_step[g] * psi_i_xj;
+  for (int g = 0; g < RT_NGROUPS; g++) {
+    pj->rt_data.conserved[g].energy +=
+        si->rt_data.emission_this_step[g] * psi_i_xj;
   }
 
 #ifdef SWIFT_RT_DEBUG_CHECKS

@@ -90,7 +90,6 @@ __attribute__((always_inline)) INLINE static void rt_props_print(
   strcat(messagestring, "]");
   message("%s", messagestring);
 
-
   if (rtp->use_const_emission_rates) {
     strcpy(messagestring, "Using constant stellar emission rates: [ ");
     for (int g = 0; g < RT_NGROUPS; g++) {
@@ -141,11 +140,13 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
   }
 
   /* Are we using constant emission rates? */
-  rtp->use_const_emission_rates = parser_get_opt_param_float(params, "GEARRT:use_const_emission_rates", /* default = */ 0);
+  rtp->use_const_emission_rates = parser_get_opt_param_float(
+      params, "GEARRT:use_const_emission_rates", /* default = */ 0);
 
   if (rtp->use_const_emission_rates) {
     float emission_rates[RT_NGROUPS];
-    parser_get_param_float_array(params, "GEARRT:star_emission_rates_erg_per_s", RT_NGROUPS, emission_rates);
+    parser_get_param_float_array(params, "GEARRT:star_emission_rates_erg_per_s",
+                                 RT_NGROUPS, emission_rates);
     float unit_fact = units_cgs_conversion_factor(us, UNIT_CONV_POWER);
     float unit_fact_inv = 1.f / unit_fact;
     for (int g = 0; g < RT_NGROUPS; g++) {
@@ -155,10 +156,6 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
     /* kill the run for now */
     error("GEAR-RT can't run without constant stellar emission rates for now.");
   }
-
-
-
-
 
   /* After initialisation, print params to screen */
   rt_props_print(rtp);

@@ -125,7 +125,9 @@ rt_injection_update_photon_density(struct part* restrict p,
  * @param props RT properties struct
  */
 __attribute__((always_inline)) INLINE static void
-rt_compute_stellar_emission_rate(struct spart* restrict sp, double time, double star_age, double dt, struct rt_props* props) {}
+rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
+                                 double star_age, double dt,
+                                 struct rt_props* props) {}
 
 /**
  * @brief finishes up the gradient computation
