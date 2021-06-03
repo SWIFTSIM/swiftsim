@@ -168,6 +168,14 @@ void io_prepare_output_fields(struct output_options* output_options,
     /* Default snapshot subdir name for this output selection */
     char subdir_name[FILENAME_BUFFER_SIZE] = select_output_default_subdir_name;
 
+    int subsample[swift_type_count];
+    for (int i = 0; i < swift_type_count; ++i)
+      subsample[i] = select_output_default_subsample;
+
+    float subsample_ratio[swift_type_count];
+    for (int i = 0; i < swift_type_count; ++i)
+      subsample_ratio[i] = select_output_default_subsample_ratio;
+
     /* Initialise section-specific writing counters for each particle type.
      * If default is 'write', then we start from the total to deduct any fields
      * that are switched off. If the default is 'off', we have to start from
@@ -300,6 +308,10 @@ void io_prepare_output_fields(struct output_options* output_options,
     /* Also copy the output names */
     strcpy(output_options->basenames[section_id], basename);
     strcpy(output_options->subdir_names[section_id], subdir_name);
+    memcpy(output_options->subsample[section_id], subsample,
+           swift_type_count * sizeof(int));
+    memcpy(output_options->subsample_ratios[section_id], subsample_ratio,
+           swift_type_count * sizeof(float));
 
   } /* Ends loop over sections, for different output classes */
 
