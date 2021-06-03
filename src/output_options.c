@@ -119,9 +119,9 @@ void output_options_struct_dump(struct output_options* output_options,
       (OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES + 1) * swift_type_count;
   restart_write_blocks(output_options->subsample, count_sub * sizeof(int), 1,
                        stream, "output_options_subsample", "output options");
-  restart_write_blocks(output_options->subsample_ratios,
+  restart_write_blocks(output_options->subsample_fractions,
                        count_sub * sizeof(float), 1, stream,
-                       "output_options_subsample_ratios", "output options");
+                       "output_options_subsample_fractions", "output options");
 }
 
 /**
@@ -156,9 +156,9 @@ void output_options_struct_restore(struct output_options* output_options,
       (OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES + 1) * swift_type_count;
   restart_read_blocks(output_options->subsample, count_sub * sizeof(int), 1,
                       stream, NULL, "output_options_subsample");
-  restart_read_blocks(output_options->subsample_ratios,
+  restart_read_blocks(output_options->subsample_fractions,
                       count_sub * sizeof(float), 1, stream, NULL,
-                      "output_options_subsample_ratios");
+                      "output_options_subsample_fractions");
 }
 
 /**
@@ -370,15 +370,17 @@ void output_options_get_basename(const struct output_options* output_options,
  * @param output_options The #output_options structure.
  * @param selection_name The current output selection name.
  * @param default_subsample The default general subsampling status.
- * @param default_subsample_ratio The default general subsampling ratio.
+ * @param default_subsample_fraction The default general subsampling fraction.
  * @param subsample (return) The subsampling status to use for this dump.
- * @param subsample_ratio (return) The subsampling ratio to use for this dump.
+ * @param subsample_fraction (return) The subsampling fraction to use for this
+ * dump.
  */
 void output_options_get_subsampling(
     const struct output_options* output_options, const char* selection_name,
     const int default_subsample[swift_type_count],
-    const float default_subsample_ratio[swift_type_count],
-    int subsample[swift_type_count], float subsample_ratio[swift_type_count]) {
+    const float default_subsample_fraction[swift_type_count],
+    int subsample[swift_type_count],
+    float subsample_fraction[swift_type_count]) {
 
   /* Get the ID of the output selection in the structure */
   int selection_id =
@@ -390,7 +392,7 @@ void output_options_get_subsampling(
   }
 
   memcpy(subsample, default_subsample, sizeof(int) * swift_type_count);
-  memcpy(subsample_ratio, default_subsample_ratio,
+  memcpy(subsample_fraction, default_subsample_fraction,
          sizeof(float) * swift_type_count);
 
   /* /\* If the default keyword is found, we use the name provided */

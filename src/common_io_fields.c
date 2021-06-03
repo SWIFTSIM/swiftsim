@@ -172,9 +172,9 @@ void io_prepare_output_fields(struct output_options* output_options,
     for (int i = 0; i < swift_type_count; ++i)
       subsample[i] = select_output_default_subsample;
 
-    float subsample_ratio[swift_type_count];
+    float subsample_fraction[swift_type_count];
     for (int i = 0; i < swift_type_count; ++i)
-      subsample_ratio[i] = select_output_default_subsample_ratio;
+      subsample_fraction[i] = select_output_default_subsample_fraction;
 
     /* Initialise section-specific writing counters for each particle type.
      * If default is 'write', then we start from the total to deduct any fields
@@ -225,6 +225,20 @@ void io_prepare_output_fields(struct output_options* output_options,
       /* Deal with a possible non-standard snapshot subdir name */
       if (strstr(param_name, ":subdir") != NULL) {
         parser_get_param_string(params, param_name, subdir_name);
+        continue;
+      }
+
+      /* Deal with a possible non-standard subsampling option */
+      if (strstr(param_name, ":subsample") != NULL) {
+        parser_get_param_int_array(params, param_name, swift_type_count,
+                                   subsample);
+        continue;
+      }
+
+      /* Deal with a possible non-standard subsampling fraction */
+      if (strstr(param_name, ":subsample_fraction") != NULL) {
+        parser_get_param_float_array(params, param_name, swift_type_count,
+                                     subsample_fraction);
         continue;
       }
 
@@ -310,7 +324,7 @@ void io_prepare_output_fields(struct output_options* output_options,
     strcpy(output_options->subdir_names[section_id], subdir_name);
     memcpy(output_options->subsample[section_id], subsample,
            swift_type_count * sizeof(int));
-    memcpy(output_options->subsample_ratios[section_id], subsample_ratio,
+    memcpy(output_options->subsample_fractions[section_id], subsample_fraction,
            swift_type_count * sizeof(float));
 
   } /* Ends loop over sections, for different output classes */
@@ -326,6 +340,12 @@ void io_prepare_output_fields(struct output_options* output_options,
             select_output_default_basename);
     sprintf(output_options->subdir_names[default_id], "%s",
             select_output_default_subdir_name);
+    for (int i = 0; i < swift_type_count; ++i)
+      output_options->subsample[default_id][i] =
+          select_output_default_subsample;
+    for (int i = 0; i < swift_type_count; ++i)
+      output_options->subsample_fractions[default_id][i] =
+          select_output_default_subsample_fraction;
   }
 }
 
