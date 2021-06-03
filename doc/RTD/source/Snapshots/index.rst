@@ -46,7 +46,7 @@ The field ``OutputType`` contains information about the kind of output this
 snapshot is. The possible values are:
 
 +---------------------+-----------------------------------------------------+
-| ``OutputType``      | Definition                                          |
+| OutputType          | Definition                                          |
 +=====================+=====================================================+
 | ``FullVolume``      | Regular vanilla snapshot                            |
 +---------------------+-----------------------------------------------------+
