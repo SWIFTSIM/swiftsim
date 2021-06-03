@@ -870,6 +870,7 @@ would have:
      time_first:          0.01
      delta_time:          0.005
      invoke_stf:          0
+     invoke_fof:          1
      compression:         3
      distributed:         1
      UnitLength_in_cgs:   1.  # Use cm in outputs
@@ -877,6 +878,10 @@ would have:
      UnitVelocity_in_cgs: 1.  # Use cm/s in outputs
      UnitCurrent_in_cgs:  1.  # Use Ampere in outputs
      UnitTemp_in_cgs:     1.  # Use Kelvin in outputs
+     subsample:           [0, 1, 0, 0, 0, 0, 1]   # Sub-sample the DM and neutrinos
+     subsample_fraction:  [0, 0.01, 0, 0, 0, 0, 0.1]  # Write 1% of the DM parts and 10% of the neutrinos
+     run_on_dump:         1
+     dump_command:        ./submit_analysis.sh
 
 Some additional specific options for the snapshot outputs are described in the
 following pages:
