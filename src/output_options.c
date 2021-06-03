@@ -114,6 +114,14 @@ void output_options_struct_dump(struct output_options* output_options,
   restart_write_blocks(output_options->subdir_names, count_chars * sizeof(char),
                        1, stream, "output_options_subdir_names",
                        "output options");
+
+  const size_t count_sub =
+      (OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES + 1) * swift_type_count;
+  restart_write_blocks(output_options->subsample, count_sub * sizeof(int), 1,
+                       stream, "output_options_subsample", "output options");
+  restart_write_blocks(output_options->subsample_ratios,
+                       count_sub * sizeof(float), 1, stream,
+                       "output_options_subsample_ratios", "output options");
 }
 
 /**
@@ -140,9 +148,17 @@ void output_options_struct_restore(struct output_options* output_options,
   const size_t count_chars =
       (OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES + 1) * FILENAME_BUFFER_SIZE;
   restart_read_blocks(output_options->basenames, count_chars * sizeof(char), 1,
-                      stream, NULL, "output options_basenames");
+                      stream, NULL, "output_options_basenames");
   restart_read_blocks(output_options->subdir_names, count_chars * sizeof(char),
-                      1, stream, NULL, "output options_subdir_names");
+                      1, stream, NULL, "output_options_subdir_names");
+
+  const size_t count_sub =
+      (OUTPUT_LIST_MAX_NUM_OF_SELECT_OUTPUT_STYLES + 1) * swift_type_count;
+  restart_read_blocks(output_options->subsample, count_sub * sizeof(int), 1,
+                      stream, NULL, "output_options_subsample");
+  restart_read_blocks(output_options->subsample_ratios,
+                      count_sub * sizeof(float), 1, stream, NULL,
+                      "output_options_subsample_ratios");
 }
 
 /**
