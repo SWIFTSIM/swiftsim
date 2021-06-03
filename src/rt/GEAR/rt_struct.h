@@ -63,8 +63,8 @@ struct rt_spart_data {
 
   /* Stellar energy emission that will be injected in to gas.
    * Total energy, not density, not rate! */
-  /* keep this also for RT_HYDRO_CONTROLLED_INJECTION and store
-   * results with each hydro-star interaction in here */
+  /* TODO: keep this also for RT_HYDRO_CONTROLLED_INJECTION and 
+   * store results with each hydro-star interaction in here */
   float emission_this_step[RT_NGROUPS];
 
 #ifdef SWIFT_RT_DEBUG_CHECKS
@@ -78,7 +78,15 @@ struct rt_spart_data {
                                   interacted with */
   int debug_emission_rate_set; /* stellar photon emisison rate computed? */
   /* skip this for GEAR */
-  /* int debug_injection_check;   [> called in a self/rt_injection task? <] */
+  /* int debug_injection_check; [> called in a self/rt_injection task? <] */
+
+  float debug_injected_energy[RT_NGROUPS]; /* how much energy this star 
+                                              particle actually has injected 
+                                              into the gas */
+  float debug_injected_energy_tot[RT_NGROUPS]; /* how much energy this star 
+                                              particle actually has injected 
+                                              into the gas over the entire 
+                                              run*/
 #endif
 };
 

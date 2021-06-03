@@ -97,6 +97,9 @@ __attribute__((always_inline)) INLINE static void rt_init_spart(
  */
 __attribute__((always_inline)) INLINE static void rt_reset_spart(
     struct spart* restrict sp) {
+  for (int g = 0; g < RT_NGROUPS; g++){
+    sp->rt_data.emission_this_step[g] = 0.f;
+  }
 
 #ifdef SWIFT_RT_DEBUG_CHECKS
   /* reset this here as well as in the rt_debugging_checks_end_of_step()
@@ -106,6 +109,10 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
   sp->rt_data.debug_emission_rate_set = 0;
   /* skip this for GEAR */
   /* sp->rt_data.debug_injection_check = 0; */
+
+  for (int g = 0; g < RT_NGROUPS; g++){
+    sp->rt_data.debug_injected_energy[g] = 0.f;
+  }
 #endif
 }
 
@@ -119,6 +126,9 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
   rt_reset_spart(sp);
 #ifdef SWIFT_RT_DEBUG_CHECKS
   sp->rt_data.debug_radiation_emitted_tot = 0ULL;
+  for (int g = 0; g < RT_NGROUPS; g++){
+    sp->rt_data.debug_injected_energy_tot[g] = 0.f;
+  }
 #endif
 }
 
