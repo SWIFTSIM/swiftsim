@@ -81,6 +81,31 @@ char csds_file_format[csds_format_size] = "SWIFT_CSDS";
 #define csds_index_timestamp 1
 
 /**
+ * @brief Print the current size used by the logger in GB (not the allocated
+ * one).
+ *
+ * @param log The #csds_writer.
+ * @param e The #engine.
+ */
+void csds_print_current_filesize_used_gb(const struct csds_writer *log,
+                                         const struct engine *e) {
+  long long size = log->dump.count;
+  long long total_size = 0;
+
+#ifdef WITH_MPI
+  if (MPI_Reduce(&size, &total_size, 1, MPI_LONG_LONG_INT, MPI_SUM, 0,
+                 MPI_COMM_WORLD) != MPI_SUCCESS)
+    error("Failed to accumulate the CSDS's file size.");
+#else
+  total_size = size;
+#endif
+
+  if (e->verbose)
+    message("The CSDS currently uses %f GB of storage",
+            ((float)total_size) / 1e9);
+}
+
+/**
  * @brief Write the header of a record (offset + mask).
  *
  * This is maybe broken for big(?) endian.
