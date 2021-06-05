@@ -714,6 +714,15 @@ void cosmology_init_tables(struct cosmology *c) {
 void cosmology_init(struct swift_params *params, const struct unit_system *us,
                     const struct phys_const *phys_const, struct cosmology *c) {
 
+  /* Check first for outdated parameter files still giving Omega_m */
+  const double test_Omega_m =
+      parser_get_opt_param_double(params, "Cosmology:Omega_m", -1.);
+  if (test_Omega_m != -1.)
+    error(
+        "Parameter file contains Cosmology:Omega_m. This is deprecated. Please "
+        "specify Omega_cdm (the cold dark matter density parameter) and "
+        "optionally neutrino parameters.");
+
   /* Read in the cosmological parameters */
   c->Omega_cdm = parser_get_param_double(params, "Cosmology:Omega_cdm");
   c->Omega_r = parser_get_opt_param_double(params, "Cosmology:Omega_r", 0.);
