@@ -1319,7 +1319,7 @@ int main(int argc, char *argv[]) {
     /* Check that the matter content matches the cosmology given in the
      * parameter file. */
     if (with_cosmology && with_self_gravity && !dry_run)
-      space_check_cosmology(&s, &cosmo, myrank);
+      space_check_cosmology(&s, &cosmo, with_hydro, myrank);
 
     /* Also update the total counts (in case of changes due to replication) */
     Nbaryons = s.nr_parts + s.nr_sparts + s.nr_bparts + s.nr_sinks;
