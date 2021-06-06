@@ -617,7 +617,7 @@ __attribute__((always_inline)) INLINE static void hydro_prepare_force(
   float grad_h_term;
 
   /* Ignore changing-kernel effects when h ~= h_max */
-  if (p->h > 0.9999f * hydro_props->h_max) {
+  if (p->h > 0.999f * hydro_props->h_max) {
     grad_h_term = 0.f;
   } else {
     grad_h_term = common_factor * p->density.rho_dh /
