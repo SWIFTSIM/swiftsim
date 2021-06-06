@@ -63,9 +63,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
     error("Inhibited pj in interaction function!");
 #endif
 
-  /* Get r and 1/r. */
+  /* Get r. */
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
 
   /* Get the masses. */
   const float mi = pi->mass;
@@ -98,6 +97,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
 #endif
     return;
   }
+  const float r_inv = 1.0f / r;
 
   /* Compute dv dot r */
   float dv[3], curlvr[3];
@@ -155,9 +155,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
   /* Get the masses. */
   const float mj = pj->mass;
 
-  /* Get r and 1/r. */
+  /* Get r. */
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
 
   const float h_inv = 1.f / hi;
   const float ui = r * h_inv;
@@ -175,6 +174,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 #endif
     return;
   }
+  const float r_inv = 1.0f / r;
 
   /* Compute dv dot r */
   float dv[3], curlvr[3];
@@ -225,9 +225,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
   const float a2_Hubble = a * a * H;
 
-  /* Get r and 1/r. */
+  /* Get r. */
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
 
   /* Skip overlapping particles */
   if (r < 1e-6 * hi) {
@@ -236,6 +235,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 #endif
     return;
   }
+  const float r_inv = 1.0f / r;
 
   /* Recover some data */
   const float mi = pi->mass;
@@ -362,9 +362,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
   const float a2_Hubble = a * a * H;
 
-  /* Get r and 1/r. */
+  /* Get r. */
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
 
   /* Skip overlapping particles */
   if (r < 1e-6 * hi) {
@@ -373,6 +372,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 #endif
     return;
   }
+  const float r_inv = 1.0f / r;
 
   /* Recover some data */
   const float mi = pi->mass;
