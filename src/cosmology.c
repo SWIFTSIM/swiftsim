@@ -721,7 +721,9 @@ void cosmology_init(struct swift_params *params, const struct unit_system *us,
     error(
         "Parameter file contains Cosmology:Omega_m. This is deprecated. Please "
         "specify Omega_cdm (the cold dark matter density parameter) and "
-        "optionally neutrino parameters.");
+        "optionally neutrino parameters.\nIf that simulation did not use "
+        "neutrinos then the new Omega_cdm parameter should just be (old) "
+        "Omega_m - Omega_b.");
 
   /* Read in the cosmological parameters */
   c->Omega_cdm = parser_get_param_double(params, "Cosmology:Omega_cdm");
