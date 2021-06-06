@@ -177,8 +177,7 @@ void gravity_props_init(struct gravity_props *p, struct swift_params *params,
       const double ratio_background =
           parser_get_param_double(params, "Gravity:softening_ratio_background");
 
-      const double Omega_m =
-          cosmo->Omega_cdm + cosmo->Omega_b + cosmo->Omega_nu;
+      const double Omega_m = cosmo->Omega_cdm + cosmo->Omega_b;
 
       const double mean_matter_density = Omega_m * cosmo->critical_density_0;
 
