@@ -1930,7 +1930,8 @@ void space_generate_gas(struct space *s, const struct cosmology *cosmo,
  * @param rank The MPI rank of this #space.
  */
 void space_check_cosmology(struct space *s, const struct cosmology *cosmo,
-                           const int with_hydro, const int rank) {
+                           const int with_hydro, const int rank,
+                           const int check_neutrinos) {
 
   struct gpart *gparts = s->gparts;
   const size_t nr_gparts = s->nr_gparts;
@@ -1998,12 +1999,10 @@ void space_check_cosmology(struct space *s, const struct cosmology *cosmo,
     const double Omega_particles_b = (total_mass_b / volume) / rho_crit0;
     const double Omega_particles_nu = (total_mass_nu / volume) / rho_crit0;
 
-    const double Omega_particles_m =
-        Omega_particles_cdm + Omega_particles_b + Omega_particles_nu;
+    const double Omega_particles_m = Omega_particles_cdm + Omega_particles_b;
 
     /* Expected matter density */
-    const double Omega_m =
-        cosmo->Omega_cdm + cosmo->Omega_b + cosmo->Omega_nu_0;
+    const double Omega_m = cosmo->Omega_cdm + cosmo->Omega_b;
 
     if (with_hydro && fabs(Omega_particles_cdm - cosmo->Omega_cdm) > 1e-3)
       error(
@@ -2018,7 +2017,7 @@ void space_check_cosmology(struct space *s, const struct cosmology *cosmo,
           "in the parameter file: cosmo.Omega_b = %e particles Omega_b = %e",
           cosmo->Omega_b, Omega_particles_b);
 
-    if (fabs(Omega_particles_nu - cosmo->Omega_nu_0) > 1e-3)
+    if (check_neutrinos && fabs(Omega_particles_nu - cosmo->Omega_nu_0) > 1e-3)
       error(
           "The massive neutrino content of the simulation does not match the "
           "cosmology in the parameter file: cosmo.Omega_nu = %e particles "
@@ -2029,11 +2028,10 @@ void space_check_cosmology(struct space *s, const struct cosmology *cosmo,
       error(
           "The total matter content of the simulation does not match the "
           "cosmology in the parameter file: cosmo.Omega_m = %e particles "
-          "Omega_m = %e \n cosmo: Omega_b=%e Omega_cdm=%e Omega_nu=%e \n "
-          "particles: Omega_b=%e Omega_cdm=%e Omega_nu=%e",
+          "Omega_m = %e \n cosmo: Omega_b=%e Omega_cdm=%e \n "
+          "particles: Omega_b=%e Omega_cdm=%e",
           Omega_m, Omega_particles_m, cosmo->Omega_b, cosmo->Omega_cdm,
-          cosmo->Omega_nu_0, Omega_particles_b, Omega_particles_cdm,
-          Omega_particles_nu);
+          Omega_particles_b, Omega_particles_cdm);
   }
 }
 
