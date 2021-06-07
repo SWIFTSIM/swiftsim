@@ -577,7 +577,7 @@ void csds_copy_gpart_fields(const struct csds_writer *log,
 
   /* Write the gravity fields */
   buff = gravity_csds_write_particle(log->mask_data_pointers.gravity, gp, &mask,
-                                     buff, e->cosmology->a);
+                                     buff);
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (mask) {
