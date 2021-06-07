@@ -526,7 +526,7 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
       data.ti_sinks_end_min, data.ti_sinks_beg_max, data.ti_black_holes_end_min,
       data.ti_black_holes_beg_max, e->forcerebuild, e->s->tot_cells,
       e->sched.nr_tasks, (float)e->sched.nr_tasks / (float)e->s->tot_cells,
-      data.sfh, data.runtime);
+      data.sfh, data.runtime, e);
 
 /* Aggregate collective data from the different nodes for this step. */
 #ifdef WITH_MPI
@@ -606,6 +606,12 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
 
   /* Apply to the engine, if requested. */
   if (apply) collectgroup1_apply(&e->collect_group1, e);
+
+#ifdef WITH_CSDS
+  if (e->policy & engine_policy_csds && e->verbose)
+    message("The CSDS currently uses %f GB of storage",
+            e->collect_group1.csds_file_size_gb);
+#endif
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),

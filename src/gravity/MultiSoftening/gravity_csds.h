@@ -129,7 +129,7 @@ INLINE static void gravity_csds_compute_size_and_mask(
  */
 INLINE static char *gravity_csds_write_particle(
     const struct mask_data *mask_data, const struct gpart *p,
-    unsigned int *mask, char *buff) {
+    unsigned int *mask, char *buff, double t) {
 
   /* Write the coordinate. */
   if (csds_should_write_field(mask_data[gravity_csds_field_coordinates],
@@ -152,6 +152,14 @@ INLINE static char *gravity_csds_write_particle(
         p->a_grav[1] + p->a_grav_mesh[1],
         p->a_grav[2] + p->a_grav_mesh[2],
     };
+    if (p->id_or_neg_offset == 100000) {
+      FILE *f = fopen("part.txt", "a");
+      fwrite(&t, 1, sizeof(t), f);
+      fwrite(p->x, 1, sizeof(p->x), f);
+      fwrite(p->v_full, 1, sizeof(p->v_full), f);
+      fwrite(acc, 1, sizeof(acc), f);
+      fclose(f);
+    }
     memcpy(buff, acc, sizeof(acc));
     buff += sizeof(acc);
   }

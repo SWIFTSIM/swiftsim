@@ -81,6 +81,18 @@ char csds_file_format[csds_format_size] = "SWIFT_CSDS";
 #define csds_index_timestamp 1
 
 /**
+ * @brief Print the current size used by the logger in GB (not the allocated
+ * one).
+ *
+ * @param log The #csds_writer.
+ * @param e The #engine.
+ */
+float csds_get_current_filesize_used_gb(const struct csds_writer *log,
+                                        const struct engine *e) {
+  return log->dump.count / 1e9;
+}
+
+/**
  * @brief Write the header of a record (offset + mask).
  *
  * This is maybe broken for big(?) endian.
@@ -565,7 +577,7 @@ void csds_copy_gpart_fields(const struct csds_writer *log,
 
   /* Write the gravity fields */
   buff = gravity_csds_write_particle(log->mask_data_pointers.gravity, gp, &mask,
-                                     buff);
+                                     buff, e->cosmology->a);
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (mask) {
