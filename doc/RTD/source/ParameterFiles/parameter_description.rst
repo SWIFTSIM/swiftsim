@@ -35,7 +35,7 @@ parameters:
    Cosmology:    # Planck13
      Omega_cdm:      0.2587481
      Omega_lambda:   0.693
-     Omega_b:        0.0455
+     Omega_b:        0.0482519
      h:              0.6777
      a_begin:        0.0078125     # z = 127
 
