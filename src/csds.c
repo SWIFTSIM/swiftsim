@@ -89,7 +89,7 @@ char csds_file_format[csds_format_size] = "SWIFT_CSDS";
  */
 float csds_get_current_filesize_used_gb(const struct csds_writer *log,
                                         const struct engine *e) {
-  return log->dump.count / 1e9;
+  return log->dump.count / (1024 * 1024 * 1024);
 }
 
 /**
