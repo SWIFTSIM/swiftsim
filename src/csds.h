@@ -172,8 +172,8 @@ struct csds_part_data {
 };
 
 /* Function prototypes. */
-void csds_print_current_filesize_used_gb(const struct csds_writer *log,
-                                         const struct engine *e);
+float csds_get_current_filesize_used_gb(const struct csds_writer *log,
+                                        const struct engine *e);
 void csds_log_all_particles(struct csds_writer *log, const struct engine *e,
                             int first_log);
 void csds_log_part(struct csds_writer *log, const struct part *p,

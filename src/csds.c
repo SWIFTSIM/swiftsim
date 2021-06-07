@@ -87,22 +87,9 @@ char csds_file_format[csds_format_size] = "SWIFT_CSDS";
  * @param log The #csds_writer.
  * @param e The #engine.
  */
-void csds_print_current_filesize_used_gb(const struct csds_writer *log,
-                                         const struct engine *e) {
-  long long size = log->dump.count;
-  long long total_size = 0;
-
-#ifdef WITH_MPI
-  if (MPI_Reduce(&size, &total_size, 1, MPI_LONG_LONG_INT, MPI_SUM, 0,
-                 MPI_COMM_WORLD) != MPI_SUCCESS)
-    error("Failed to accumulate the CSDS's file size.");
-#else
-  total_size = size;
-#endif
-
-  if (e->verbose)
-    message("The CSDS currently uses %f GB of storage",
-            ((float)total_size) / 1e9);
+float csds_get_current_filesize_used_gb(const struct csds_writer *log,
+                                        const struct engine *e) {
+  return log->dump.count / 1e9;
 }
 
 /**
@@ -590,7 +577,7 @@ void csds_copy_gpart_fields(const struct csds_writer *log,
 
   /* Write the gravity fields */
   buff = gravity_csds_write_particle(log->mask_data_pointers.gravity, gp, &mask,
-                                     buff);
+                                     buff, e->cosmology->a);
 
 #ifdef SWIFT_DEBUG_CHECKS
   if (mask) {

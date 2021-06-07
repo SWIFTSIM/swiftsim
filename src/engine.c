@@ -2199,8 +2199,6 @@ void engine_step(struct engine *e) {
     /* Make sure that we have enough space in the particle csds file
      * to store the particles in current time step. */
     csds_ensure_size(e->csds, e);
-
-    csds_print_current_filesize_used_gb(e->csds, e);
   }
 #endif
 
