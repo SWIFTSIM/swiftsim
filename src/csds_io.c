@@ -111,7 +111,7 @@ void csds_write_description(struct csds_writer* log, struct engine* e) {
   fprintf(f, "  Omega_nu_0: %g\n", e->cosmology->Omega_nu_0);
   fprintf(f, "  w_0: %g\n", e->cosmology->w_0);
   fprintf(f, "  w_a: %g\n", e->cosmology->w_a);
-  fprintf(f, "  Hubble: %g\n", e->cosmology->H0);
+  fprintf(f, "  Hubble0: %g\n", e->cosmology->H0);
   fprintf(f, "\n");
 
   /* Write unit system */
