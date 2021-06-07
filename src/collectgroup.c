@@ -191,7 +191,7 @@ void collectgroup1_apply(const struct collectgroup1 *grp1, struct engine *e) {
  * @param tasks_per_cell the used number of tasks per cell.
  * @param sfh The star formation history logger
  * @param runtime The runtime of rank in hours.
- * @param e The #engine
+ * @param csds_file_size_gb The current size of the CSDS.
  */
 void collectgroup1_init(
     struct collectgroup1 *grp1, size_t updated, size_t g_updated,
@@ -205,7 +205,7 @@ void collectgroup1_init(
     integertime_t ti_black_holes_beg_max, int forcerebuild,
     long long total_nr_cells, long long total_nr_tasks, float tasks_per_cell,
     const struct star_formation_history sfh, float runtime,
-    const struct engine *e) {
+    float csds_file_size_gb) {
 
   grp1->updated = updated;
   grp1->g_updated = g_updated;
@@ -234,8 +234,7 @@ void collectgroup1_init(
   grp1->sfh = sfh;
   grp1->runtime = runtime;
 #ifdef WITH_CSDS
-  if (e->policy & engine_policy_csds)
-    grp1->csds_file_size_gb = csds_get_current_filesize_used_gb(e->csds, e);
+  grp1->csds_file_size_gb = csds_file_size_gb;
 #endif
 }
 
