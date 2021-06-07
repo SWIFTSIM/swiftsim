@@ -108,6 +108,7 @@ void csds_write_description(struct csds_writer* log, struct engine* e) {
   fprintf(f, "  Omega_lambda: %g\n", e->cosmology->Omega_lambda);
   fprintf(f, "  Omega_b: %g\n", e->cosmology->Omega_b);
   fprintf(f, "  Omega_r: %g\n", e->cosmology->Omega_r);
+  fprintf(f, "  Omega_k: %g\n", e->cosmology->Omega_k);
   fprintf(f, "  Omega_nu_0: %g\n", e->cosmology->Omega_nu_0);
   fprintf(f, "  w_0: %g\n", e->cosmology->w_0);
   fprintf(f, "  w_a: %g\n", e->cosmology->w_a);
