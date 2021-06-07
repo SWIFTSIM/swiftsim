@@ -496,7 +496,9 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
   data.ti_stars_end_min = max_nr_timesteps, data.ti_stars_beg_max = 0;
   data.ti_sinks_end_min = max_nr_timesteps, data.ti_sinks_beg_max = 0;
   data.ti_black_holes_end_min = max_nr_timesteps,
-  data.ti_black_holes_beg_max = 0, data.e = e;
+  data.ti_black_holes_beg_max = 0, data.e = e, data.csds_file_size_gb = 0;
+
+  /* Get the file size from the CSDS. */
   if (e->policy & engine_policy_csds)
     data.csds_file_size_gb = csds_get_current_filesize_used_gb(e->csds, e);
 
