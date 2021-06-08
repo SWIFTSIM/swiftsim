@@ -37,6 +37,8 @@
 #include "clocks.h"
 #include "collectgroup.h"
 #include "dump.h"
+#include "lightcone.h"
+#include "lightcone_array.h"
 #include "mesh_gravity.h"
 #include "output_options.h"
 #include "parser.h"
@@ -536,6 +538,9 @@ struct engine {
   /* Line of sight properties. */
   struct los_props *los_properties;
 
+  /* Line of sight properties. */
+  struct lightcone_array_props *lightcone_array_properties;
+
   /* Line of sight outputs information. */
   struct output_list *output_list_los;
   double a_first_los;
@@ -543,6 +548,9 @@ struct engine {
   double delta_time_los;
   integertime_t ti_next_los;
   int los_output_count;
+
+  /* Lightcone information */
+  int flush_lightcone_maps;
 
 #ifdef SWIFT_GRAVITY_FORCE_CHECKS
   /* Run brute force checks only on steps when all gparts active? */
@@ -598,7 +606,8 @@ void engine_init(
     struct cooling_function_data *cooling_func,
     const struct star_formation *starform,
     const struct chemistry_global_data *chemistry,
-    struct fof_props *fof_properties, struct los_props *los_properties);
+    struct fof_props *fof_properties, struct los_props *los_properties,
+    struct lightcone_array_props *lightcone_array_properties);
 void engine_config(int restart, int fof, struct engine *e,
                    struct swift_params *params, int nr_nodes, int nodeID,
                    int nr_task_threads, int nr_pool_threads, int with_aff,

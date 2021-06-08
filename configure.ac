@@ -744,6 +744,10 @@ AC_SUBST([GSL_LIBS])
 AC_SUBST([GSL_INCS])
 AM_CONDITIONAL([HAVEGSL],[test -n "$GSL_LIBS"])
 
+# Check for HEALPix. AC_SUBSTs CHEALPIX_LIBS and CHEALPIX_CFLAGS and #defines HAVE_CHEALPIX
+GV_FIND_LIBRARY([chealpix], [CHEALPIX], [chealpix], [chealpix], [ang2vec])
+have_chealpix=$USE_CHEALPIX
+
 # Check for pthreads.
 AX_PTHREAD([LIBS="$PTHREAD_LIBS $LIBS" CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
     CC="$PTHREAD_CC" LDFLAGS="$LDFLAGS $PTHREAD_LIBS $LIBS"],
@@ -1668,6 +1672,18 @@ if test "$enable_standalone_fof" = "yes"; then
 fi
 AM_CONDITIONAL([HAVESTANDALONEFOF],[test $enable_standalone_fof = "yes"])
 
+# Check if lightcone output is on.
+AC_ARG_ENABLE([lightcone],
+   [AS_HELP_STRING([--enable-lightcone],
+     [Activate lightcone outputs.],
+   )],
+   [enable_lightcone="$enableval"],
+   [enable_lightcone="no"]
+)
+if test "$enable_lightcone" = "yes"; then
+   AC_DEFINE([WITH_LIGHTCONE], 1, [Enable lightcone outputs])
+fi
+
 # Gravity scheme.
 AC_ARG_WITH([gravity],
    [AS_HELP_STRING([--with-gravity=<scheme>],
@@ -2587,6 +2603,7 @@ AC_MSG_RESULT([
    METIS/ParMETIS       : $have_metis / $have_parmetis
    FFTW3 enabled        : $have_fftw
    GSL enabled          : $have_gsl
+   HEALPix enabled      : $have_chealpix
    libNUMA enabled      : $have_numa
    GRACKLE enabled      : $have_grackle
    Special allocators   : $have_special_allocator
@@ -2594,6 +2611,7 @@ AC_MSG_RESULT([
    Pthread barriers     : $have_pthread_barrier
    VELOCIraptor enabled : $have_velociraptor
    FoF activated:       : $enable_fof
+   Lightcones enabled   : $enable_lightcone
 
    Hydro scheme       : $with_hydro
    Dimensionality     : $with_dimension
