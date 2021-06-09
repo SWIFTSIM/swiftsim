@@ -364,14 +364,9 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
 
   /* Write the particles */
   for (int i = 0; i < count; i++) {
-    /* Add the special flag. */
-    if (flag != csds_flag_none) {
-      mask |= log->list_fields[csds_index_special_flags].mask;
-      size += size_special_flag;
-      /* reset the offset of the previous log */
-      if (flag == csds_flag_create || flag == csds_flag_mpi_enter) {
-        xp[i].csds_data.last_offset = 0;
-      }
+    /* reset the offset of the previous log */
+    if (flag == csds_flag_create || flag == csds_flag_mpi_enter) {
+      xp[i].csds_data.last_offset = 0;
     }
 
     /* Copy everything into the buffer */
@@ -390,7 +385,7 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
   /* Ensure that the buffer was fully used */
   const int diff = buff - buff_before;
   if (diff != (int)size_total) {
-    error("It seems that the requested buffer was not totally used: %i != %zi",
+    error("The requested buffer was not totally used: %i != %zi",
           diff, size_total);
   }
 #endif
