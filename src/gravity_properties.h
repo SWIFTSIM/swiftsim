@@ -78,6 +78,9 @@ struct gravity_props {
   /*! Are we applying long-range truncation to the forces in the MAC? */
   int consider_truncation_in_MAC;
 
+  /* Exclude neutrinos in the max/min delta v used for multipole drifts? */
+  int exclude_neutrinos_delta_vel;
+
   /* ------------- Properties of the softened gravity ------------------ */
 
   /*! Co-moving softening length for for high-res. DM particles */

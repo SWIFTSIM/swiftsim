@@ -328,6 +328,20 @@ simulation:
      use_tree_below_softening: 0    # Default optional value
      allow_truncation_in_MAC:  0    # Default optional value
 
+When running with neutrino particles, there are some additional parameters:
+
+* The Plummer-equivalent co-moving softening length used for all neutrino particles :math:`\epsilon_{\rm com,\nu}`: ``comoving_nu_softening``,
+* The Plummer-equivalent maximal physical softening length used for all neutrino particles :math:`\epsilon_{\rm max,\nu}`: ``max_physical_nu_softening``,
+* Whether to exclude neutrinos when calculating the maximum/minimum velocity difference for particles contributing to a multipole: ``exclude_neutrinos_delta_vel`` (default: ``0``).
+
+The first two parameters are exactly analogous to the softening lengths for
+dark matter and baryons. The last parameter controls whether neutrinos
+contribute to the maximum and minimum velocity difference of groups of particles
+with respect to the centre of mass velocity. These vectors are used when multipoles
+are drifted forward in time to conservatively estimate the maximum radius around
+the centre of mass of the region containing the particles. Excluding neutrinos can
+speed up the calculation by limiting the estimated size of multipoles.
+
 .. _Parameters_SPH:
 
 SPH
