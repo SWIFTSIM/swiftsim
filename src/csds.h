@@ -39,8 +39,8 @@ struct gpart;
 struct part;
 struct engine;
 
-#define csds_major_version 2
-#define csds_minor_version 0
+#define csds_major_version 1
+#define csds_minor_version 4
 /* Size of the strings. */
 #define csds_string_length 200
 
@@ -128,32 +128,13 @@ struct csds_writer {
   struct csds_field *list_fields;
 
   /* Pointer to the variable list_fields for each module. */
-  struct {
-    /* pointer for the hydro */
-    struct csds_field *hydro;
-
-    /* pointer for the gravity */
-    struct csds_field *gravity;
-
-    /* pointer for the stars */
-    struct csds_field *stars;
-
-  } field_pointers;
+  struct csds_field *field_pointers[swift_type_count];
 
   /* Number of fields for each particle type. */
   int number_fields[swift_type_count];
 
   /* Number of elements in list_fields. */
   int total_number_fields;
-
-  /* Maximum size for a hydro record. */
-  int max_size_record_part;
-
-  /* Maximum size for a gravity record. */
-  int max_size_record_gpart;
-
-  /* Maximum size for a star record. */
-  int max_size_record_spart;
 
 } SWIFT_STRUCT_ALIGN;
 
