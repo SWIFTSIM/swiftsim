@@ -254,7 +254,14 @@ void csds_copy_part_fields(const struct csds_writer *log, const struct part *p,
     }
     /* Write it manually */
     else {
-      memcpy(buff, ((char *) p) + field->offset, field->size);
+      if (field->use_xpart == 1)
+        memcpy(buff, ((char *) xp) + field->offset, field->size);
+      else if (field->use_xpart == 0)
+        memcpy(buff, ((char *) p) + field->offset, field->size);
+      else
+        error("It seems that you are using the wrong CSDS function in the hydro."
+              " You need to use csds_define_hydro_standard_field and not"
+              " the general one.");
     }
 
     /* Update the variables */

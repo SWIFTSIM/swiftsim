@@ -81,6 +81,9 @@ struct csds_field {
   /* The size of the field */
   size_t size;
 
+  /* Do we use the xpart or the normal one? */
+  int use_xpart;
+
   /* Conversion functions (NULL if none) */
   void *(*conversion_hydro)(const struct part *, const struct xpart *xp,
                            const struct engine *e, void *buffer);
@@ -94,6 +97,7 @@ struct csds_field {
   csds_field.offset = 0;                                                \
   csds_field.size = sizeof(type);                                       \
   csds_field.mask = 0;                                                  \
+  csds_field.use_xpart = -1;                                            \
   csds_field.conversion_hydro = NULL;                                   \
   csds_field.conversion_grav = NULL;                                    \
   csds_field.conversion_stars = NULL;                                   \
@@ -108,10 +112,18 @@ struct csds_field {
       error("Name %s too long", field_name);                            \
     strcpy(csds_field.name, field_name);                                \
     csds_field.mask = 0;                                                \
+    csds_field.use_xpart = -1;                                          \
     csds_field.conversion_hydro = NULL;                                 \
     csds_field.conversion_grav = NULL;                                  \
     csds_field.conversion_stars = NULL;                                 \
   }
+
+#define csds_define_hydro_standard_field(                               \
+      csds_field, field_name, part, field, saving_xpart) {              \
+    csds_define_standard_field(csds_field, field_name, part, field);    \
+    csds_field.use_xpart = saving_xpart;                                \
+}
+
 
 #define csds_define_field_from_function_general(                        \
       csds_field, field_name, conversion_func, field_size, part_type) { \
@@ -120,6 +132,7 @@ struct csds_field {
     strcpy(csds_field.name, field_name);                                \
     csds_field.size = field_size;                                       \
     csds_field.mask = 0;                                                \
+    csds_field.use_xpart = -1;                                          \
     csds_field.conversion_hydro = NULL;                                 \
     csds_field.conversion_grav = NULL;                                  \
     csds_field.conversion_stars = NULL;                                 \
