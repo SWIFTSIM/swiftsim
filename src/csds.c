@@ -242,7 +242,7 @@ void csds_copy_part_fields(const struct csds_writer *log, const struct part *p,
   /* Write the hydro fields */
   // TODO: write only some fields
   for(int i = 0; i < log->number_fields[swift_type_gas]; i++) {
-    struct csds_field *field = log->field_pointers[swift_type_gas];
+    struct csds_field *field = &log->field_pointers[swift_type_gas][i];
 
     /* Do we have a conversion function? */
     if (field->conversion_hydro) {
@@ -429,7 +429,7 @@ void csds_copy_spart_fields(const struct csds_writer *log,
   /* Write the stellar fields */
   // TODO: write only some fields
   for(int i = 0; i < log->number_fields[swift_type_stars]; i++) {
-    struct csds_field *field = log->field_pointers[swift_type_stars];
+    struct csds_field *field = &log->field_pointers[swift_type_stars][i];
 
     /* Do we have a conversion function? */
     if (field->conversion_stars) {
@@ -582,7 +582,7 @@ void csds_copy_gpart_fields(const struct csds_writer *log,
   /* Write the gravity fields */
   // TODO: write only some fields
   for(int i = 0; i < log->number_fields[swift_type_dark_matter]; i++) {
-    struct csds_field *field = log->field_pointers[swift_type_dark_matter];
+    struct csds_field *field = &log->field_pointers[swift_type_dark_matter][i];
 
     /* Do we have a conversion function? */
     if (field->conversion_grav) {
