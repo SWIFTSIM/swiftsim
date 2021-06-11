@@ -44,7 +44,8 @@ INLINE static void *csds_hydro_convert_acc(const struct part *p,
 
   /* The hydro and gravity do not have the same factors */
   /* Convert everything into gravity acceleration */
-  const double factor = pow(e->cosmology->a, 3 * hydro_gamma - 4);
+  const double factor = (e->policy & engine_policy_cosmology) ?
+    pow(e->cosmology->a, 3 * hydro_gamma - 4) : 1;
   acc[0] = p->a_hydro[0] * factor;
   acc[1] = p->a_hydro[1] * factor;
   acc[2] = p->a_hydro[2] * factor;
