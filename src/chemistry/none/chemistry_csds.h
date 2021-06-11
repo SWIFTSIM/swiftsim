@@ -30,7 +30,8 @@
  *
  * @return The number of fields.
  */
-INLINE static int csds_chemistry_define_fields_parts(struct csds_field *fields) {
+INLINE static int csds_chemistry_define_fields_parts(
+    struct csds_field *fields) {
   return 0;
 }
 

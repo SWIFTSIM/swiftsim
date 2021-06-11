@@ -241,8 +241,7 @@ void csds_copy_part_fields(const struct csds_writer *log, const struct part *p,
     struct csds_field *field = &log->field_pointers[swift_type_gas][i];
 
     /* Skip the fields that are not required. */
-    if (!(mask & field->mask))
-      continue;
+    if (!(mask & field->mask)) continue;
 
     /* Do we have a conversion function? */
     if (field->conversion_hydro) {
@@ -431,8 +430,7 @@ void csds_copy_spart_fields(const struct csds_writer *log,
     struct csds_field *field = &log->field_pointers[swift_type_stars][i];
 
     /* Skip the fields that are not required. */
-    if (!(mask & field->mask))
-      continue;
+    if (!(mask & field->mask)) continue;
 
     /* Do we have a conversion function? */
     if (field->conversion_stars) {
@@ -585,8 +583,7 @@ void csds_copy_gpart_fields(const struct csds_writer *log,
     struct csds_field *field = &log->field_pointers[swift_type_dark_matter][i];
 
     /* Skip the fields that are not required. */
-    if (!(mask & field->mask))
-      continue;
+    if (!(mask & field->mask)) continue;
 
     /* Do we have a conversion function? */
     if (field->conversion_grav) {
@@ -1204,8 +1201,7 @@ int csds_read_part(const struct csds_writer *log, struct part *p,
       } else if (strcmp("SPHENIXSecondaryFields", name) == 0) {
         // No need to read it for testing
         buff += 7 * sizeof(float);
-      }
-      else {
+      } else {
         error("Field '%s' not found", name);
       }
     }

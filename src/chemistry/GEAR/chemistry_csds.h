@@ -36,9 +36,9 @@
  * @return Position after the bits written.
  */
 INLINE static void *csds_chemistry_write_part(const struct part *p,
-                                                const struct xpart *xp,
-                                                const struct engine *e,
-                                                void *buffer) {
+                                              const struct xpart *xp,
+                                              const struct engine *e,
+                                              void *buffer) {
 
   /* Add the smoothed metals */
   const size_t size = sizeof(p->chemistry_data.smoothed_metal_mass_fraction);

@@ -44,8 +44,9 @@ INLINE static void *csds_hydro_convert_acc(const struct part *p,
 
   /* The hydro and gravity do not have the same factors */
   /* Convert everything into gravity acceleration */
-  const double factor = (e->policy & engine_policy_cosmology) ?
-    pow(e->cosmology->a, 3 * hydro_gamma - 4) : 1;
+  const double factor = (e->policy & engine_policy_cosmology)
+                            ? pow(e->cosmology->a, 3 * hydro_gamma - 4)
+                            : 1;
   acc[0] = p->a_hydro[0] * factor;
   acc[1] = p->a_hydro[1] * factor;
   acc[2] = p->a_hydro[2] * factor;
@@ -89,8 +90,8 @@ INLINE static int csds_hydro_define_fields(struct csds_field *fields) {
                                    h, /* saving_xpart */ 0);
 
   /* Entropies */
-  csds_define_hydro_standard_field(fields[5], "Entropies", struct part,
-                                   entropy, /* saving_xpart */ 0);
+  csds_define_hydro_standard_field(fields[5], "Entropies", struct part, entropy,
+                                   /* saving_xpart */ 0);
 
   /* Particle IDs */
   csds_define_hydro_standard_field(fields[6], "ParticleIDs", struct part, id,
