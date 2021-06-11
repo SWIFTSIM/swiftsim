@@ -26,7 +26,7 @@
 #ifdef WITH_CSDS
 
 /**
- * @brief Compute the acceleration and writes it.
+ * @brief Write the metallicities.
  *
  * @param p The #part
  * @param xp Its related #xpart
@@ -35,18 +35,18 @@
  *
  * @return Position after the bits written.
  */
-INLINE static void *csds_chemistry_convert_part(const struct part *p,
+INLINE static void *csds_chemistry_write_part(const struct part *p,
                                                 const struct xpart *xp,
                                                 const struct engine *e,
                                                 void *buffer) {
 
   /* Add the smoothed metals */
-  const size_t size = GEAR_CHEMISTRY_ELEMENT_COUNT * sizeof(double);
+  const size_t size = sizeof(p->chemistry_data.smoothed_metal_mass_fraction);
   memcpy(buffer, p->chemistry_data.smoothed_metal_mass_fraction, size);
   buffer += size;
 
   /* Add the metal mass */
-  float *metals = buffer;
+  double *metals = buffer;
   const float m = hydro_get_mass(p);
   for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     metals[i] = p->chemistry_data.metal_mass[i] / m;
@@ -67,8 +67,8 @@ INLINE static int csds_chemistry_define_fields_parts(
 
   /* Write the metallicities and non smoothed metallicities together. */
   csds_define_field_from_function_hydro(
-      fields[0], "GEARChemistryParts", csds_chemistry_convert_part,
-      2 * GEAR_CHEMISTRY_ELEMENT_COUNT * sizeof(float));
+      fields[0], "GEARChemistryParts", csds_chemistry_write_part,
+      2 * GEAR_CHEMISTRY_ELEMENT_COUNT * sizeof(double));
 
   return 1;
 }

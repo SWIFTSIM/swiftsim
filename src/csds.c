@@ -237,16 +237,19 @@ void csds_copy_part_fields(const struct csds_writer *log, const struct part *p,
   }
 
   /* Write the hydro fields */
-  // TODO: write only some fields
   for (int i = 0; i < log->number_fields[swift_type_gas]; i++) {
     struct csds_field *field = &log->field_pointers[swift_type_gas][i];
+
+    /* Skip the fields that are not required. */
+    if (!(mask & field->mask))
+      continue;
 
     /* Do we have a conversion function? */
     if (field->conversion_hydro) {
       char *tmp_buff = field->conversion_hydro(p, xp, e, buff);
       /* Check that the correct number of bits are written */
       if ((tmp_buff - buff) != (long int)field->size) {
-        error("The field %s took more place than expected", field->name);
+        error("The field %s wrote an unexpected number of bits", field->name);
       }
     }
     /* Write it manually */
@@ -424,16 +427,19 @@ void csds_copy_spart_fields(const struct csds_writer *log,
   }
 
   /* Write the stellar fields */
-  // TODO: write only some fields
   for (int i = 0; i < log->number_fields[swift_type_stars]; i++) {
     struct csds_field *field = &log->field_pointers[swift_type_stars][i];
+
+    /* Skip the fields that are not required. */
+    if (!(mask & field->mask))
+      continue;
 
     /* Do we have a conversion function? */
     if (field->conversion_stars) {
       char *tmp_buff = field->conversion_stars(sp, e, buff);
       /* Check that the correct number of bits are written */
       if ((tmp_buff - buff) != (long int)field->size) {
-        error("The field %s took more place than expected", field->name);
+        error("The field %s wrote an unexpected number of bits", field->name);
       }
     }
     /* Write it manually */
@@ -575,16 +581,19 @@ void csds_copy_gpart_fields(const struct csds_writer *log,
   }
 
   /* Write the gravity fields */
-  // TODO: write only some fields
   for (int i = 0; i < log->number_fields[swift_type_dark_matter]; i++) {
     struct csds_field *field = &log->field_pointers[swift_type_dark_matter][i];
+
+    /* Skip the fields that are not required. */
+    if (!(mask & field->mask))
+      continue;
 
     /* Do we have a conversion function? */
     if (field->conversion_grav) {
       char *tmp_buff = field->conversion_grav(gp, e, buff);
       /* Check that the correct number of bits are written */
       if ((tmp_buff - buff) != (long int)field->size) {
-        error("The field %s took more place than expected", field->name);
+        error("The field %s wrote an unexpected number of bits", field->name);
       }
     }
     /* Write it manually */
@@ -825,14 +834,14 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
     struct csds_field *current = &list[num_fields];
     enum mask_type mask_type;
 
+    /* Set the pointer */
+    log->field_pointers[i] = current;
+
     switch (i) {
       /* Hydro */
       case swift_type_gas:
         /* Set the mask type */
         mask_type = mask_type_gas;
-
-        /* Set the pointer */
-        log->field_pointers[swift_type_gas] = current;
 
         /* Set the masks */
         tmp_num_fields = csds_hydro_define_fields(current);
@@ -846,9 +855,6 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
         /* Set the mask type */
         mask_type = mask_type_stars;
 
-        /* Set the pointer */
-        log->field_pointers[swift_type_stars] = current;
-
         /* Set the masks */
         tmp_num_fields = csds_stars_define_fields(current);
         tmp_num_fields +=
@@ -861,11 +867,12 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
         /* Set the mask type */
         mask_type = mask_type_dark_matter;
 
-        /* Set the mask_data_pointers */
-        log->field_pointers[swift_type_dark_matter] = current;
-
         /* Set the masks */
         tmp_num_fields = csds_gravity_define_fields(current);
+        break;
+
+      default:
+        log->field_pointers[i] = NULL;
         break;
     }
 
@@ -876,7 +883,7 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
 
     /* Update the number of fields */
     num_fields += tmp_num_fields;
-    log->number_fields[i] += tmp_num_fields;
+    log->number_fields[i] = tmp_num_fields;
   }
 
   /* Set the counter */

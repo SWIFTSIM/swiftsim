@@ -82,7 +82,7 @@ INLINE static void *csds_hydro_convert_secondary(const struct part *p,
       p->viscosity.div_v,
       p->viscosity.div_v_dt,
   };
-  memcpy(buffer, &secondary, sizeof(secondary));
+  memcpy(buffer, secondary, sizeof(secondary));
   return buffer + sizeof(secondary);
 }
 

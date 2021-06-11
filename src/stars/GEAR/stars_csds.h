@@ -76,7 +76,7 @@ INLINE static int csds_stars_define_fields(struct csds_field *fields) {
   csds_define_standard_field(fields[5], "ParticleIDs", struct spart, id);
 
   /* Birth Time */
-  csds_define_standard_field(fields[5], "BirthTimes", struct spart, birth_time);
+  csds_define_standard_field(fields[6], "BirthTimes", struct spart, birth_time);
 
   return 7;
 }
