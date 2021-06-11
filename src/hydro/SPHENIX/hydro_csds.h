@@ -39,9 +39,13 @@ INLINE static void *csds_hydro_convert_acc(const struct part *p, const struct xp
                                            const struct engine *e, void *buffer) {
   /* Compute the acceleration due to hydro and gravity */
   float *acc = (float *)buffer;
-  acc[0] = p->a_hydro[0];
-  acc[1] = p->a_hydro[1];
-  acc[2] = p->a_hydro[2];
+
+  /* The hydro and gravity do not have the same factors */
+  /* Convert everything into gravity acceleration */
+  const double factor = pow(e->cosmology->a, 3 * hydro_gamma - 4);
+  acc[0] = p->a_hydro[0] * factor;
+  acc[1] = p->a_hydro[1] * factor;
+  acc[2] = p->a_hydro[2] * factor;
   if (p->gpart) {
     acc[0] += p->gpart->a_grav[0] + p->gpart->a_grav_mesh[0];
     acc[1] += p->gpart->a_grav[1] + p->gpart->a_grav_mesh[1];

@@ -66,9 +66,6 @@
 /* Number of bytes for the file format information. */
 #define csds_format_size 20
 
-/* Number of bytes for the labels in the header. */
-#define csds_label_size 20
-
 char csds_file_format[csds_format_size] = "SWIFT_CSDS";
 
 /*
@@ -196,8 +193,8 @@ void csds_log_all_particles(struct csds_writer *log, const struct engine *e,
     }
   }
 
-  if (e->total_nr_bparts > 0) error("Not implemented");
-  if (e->total_nr_sinks > 0) error("Not implemented");
+  if (s->nr_bparts > 0) error("Not implemented");
+  if (s->nr_sinks > 0) error("Not implemented");
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
@@ -348,6 +345,7 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
   /* Add the flag */
   if (flag != csds_flag_none) {
     size += size_special_flag;
+    mask |= log->list_fields[csds_index_special_flags].mask;
   }
   size += csds_header_bytes;
   size_t size_total = count * size;
@@ -518,9 +516,8 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
 #endif
 
   for (int i = 0; i < count; i++) {
-    /* Add the special flag. */
+    /* reset the offset of the previous log */
     if (flag == csds_flag_create || flag == csds_flag_mpi_enter) {
-      /* reset the offset of the previous log */
         sp[i].csds_data.last_offset = 0;
     }
 
@@ -800,6 +797,7 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
   /* Set the pointers to 0 */
   for(int i = 0; i < swift_type_count; i++) {
     log->field_pointers[i] = NULL;
+    log->number_fields[i] = 0;
   }
 
   struct csds_field list[100];
@@ -811,7 +809,7 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
     error("Expecting the special flags to be the first element.");
   }
   csds_define_common_field(list[csds_index_special_flags],
-                           "SpecialFlags", sizeof(int));
+                           "SpecialFlags", sizeof(uint32_t));
   num_fields += 1;
 
   /* Add the timestamp */
@@ -839,8 +837,7 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
         log->field_pointers[swift_type_gas] = current;
 
         /* Set the masks */
-        tmp_num_fields = csds_hydro_define_fields(
-            current);
+        tmp_num_fields = csds_hydro_define_fields(current);
         tmp_num_fields += csds_chemistry_define_fields_part(
             current + tmp_num_fields);
         // TODO add cooling + SF
@@ -855,8 +852,7 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
         log->field_pointers[swift_type_stars] = current;
 
         /* Set the masks */
-        tmp_num_fields = csds_stars_define_fields(
-            current);
+        tmp_num_fields = csds_stars_define_fields(current);
         tmp_num_fields += csds_chemistry_define_fields_spart(
             current + tmp_num_fields);
         tmp_num_fields += csds_star_formation_define_fields(
@@ -871,8 +867,7 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
         log->field_pointers[swift_type_dark_matter] = current;
 
         /* Set the masks */
-        tmp_num_fields = csds_gravity_define_fields(
-            current);
+        tmp_num_fields = csds_gravity_define_fields(current);
         break;
 
     }
@@ -1066,7 +1061,7 @@ void csds_write_file_header(struct csds_writer *log) {
   char *skip_header = dump_get(dump, csds_offset_size, &file_offset);
 
   /* write number of bytes used for names. */
-  const unsigned int label_size = csds_label_size;
+  const unsigned int label_size = csds_string_length;
   csds_write_data(dump, &file_offset, sizeof(unsigned int), &label_size);
 
   /* placeholder to write the number of unique masks. */
@@ -1092,7 +1087,7 @@ void csds_write_file_header(struct csds_writer *log) {
     unique_mask += 1;
 
     // mask name.
-    csds_write_data(dump, &file_offset, csds_label_size,
+    csds_write_data(dump, &file_offset, csds_string_length,
                     &log->list_fields[i].name);
 
     // mask size.
@@ -1108,6 +1103,9 @@ void csds_write_file_header(struct csds_writer *log) {
   /* Now write the order for each particle type */
   for(int i = 0; i < swift_type_count; i++) {
     int number_fields = log->number_fields[i];
+    if(number_fields == 0)
+      continue;
+
     struct csds_field *field = log->field_pointers[i];
 
     /* Loop over all the fields from this particle type */

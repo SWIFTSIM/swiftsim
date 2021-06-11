@@ -42,29 +42,6 @@ enum mask_type {
   mask_type_timestep = -1,
 } __attribute__((packed));
 
-struct mask_data {
-  /* Number of bytes for a mask. */
-  int size;
-
-  /* Mask value. */
-  unsigned int mask;
-
-  /* Type of particle (follow part_type.h and -1 for timestamp). */
-  enum mask_type type;
-
-  /* Name of the mask. */
-  char name[100];
-
-  /* Variables used only for the reader. */
-  struct {
-    /* Index of the fields containing the first derivative (< 0 for none) */
-    int first_deriv;
-
-    /* Index of the fields containing the second derivative (< 0 for none) */
-    int second_deriv;
-  } reader;
-};
-
 struct csds_field {
   /* Name of the field */
   char name[csds_string_length];
@@ -93,9 +70,12 @@ struct csds_field {
                            const struct engine *e, void *buffer);
 };
 
-#define csds_define_common_field(csds_field, field_name, type) {        \
+#define csds_define_common_field(csds_field, field_name, size_type) {   \
   csds_field.offset = 0;                                                \
-  csds_field.size = sizeof(type);                                       \
+  csds_field.size = size_type;                                          \
+  if (strlen(field_name) >= csds_string_length)                         \
+    error("Name %s too long", field_name);                              \
+  strcpy(csds_field.name, field_name);                                  \
   csds_field.mask = 0;                                                  \
   csds_field.use_xpart = -1;                                            \
   csds_field.conversion_hydro = NULL;                                   \
@@ -157,59 +137,6 @@ struct csds_field {
        csds_field, field_name, conversion_func, size, grav)             \
 }
 
-/**
- * @brief Initialize the mask_data with a given field.
- *
- * @param name The name of the field.
- * @param size The size of the field.
- *
- * @return The new mask_data.
- */
-INLINE static struct mask_data csds_create_mask_entry(const char* name,
-                                                      int size) {
-  struct mask_data mask;
-  /* Copy the fields */
-  strcpy(mask.name, name);
-  mask.size = size;
-  mask.mask = 0;
-
-  return mask;
-}
-
-/**
- * @brief Add a given field to the current mask.
- *
- * @param mask_data The mask_data corresponding to the field that we wish to
- * write.
- * @param buffer_size (in) The current size of the future buffer. (out) The
- * updated size.
- *
- * @return The mask of the current field.
- */
-INLINE static size_t csds_add_field_to_mask(struct mask_data mask_data,
-                                            size_t* buffer_size) {
-
-  *buffer_size += mask_data.size;
-  return mask_data.mask;
-}
-
-/**
- * @brief Check if a field should be written according to the mask set in
- * #csds_add_field_to_mask.
- *
- * @param mask_data The mask_data corresponding to the current field.
- * @param mask The mask used for the current record.
- */
-INLINE static int csds_should_write_field(struct mask_data mask_data,
-                                          unsigned int* mask) {
-
-  const int test = mask_data.mask & *mask;
-  if (test) {
-    *mask &= ~mask_data.mask;
-  }
-
-  return test;
-}
 
 void csds_write_description(struct csds_writer* log, struct engine* e);
 
