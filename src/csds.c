@@ -662,7 +662,8 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
     mask |= log->list_fields[csds_index_special_flags].mask;
     size += size_special_flag;
   }
-  size_t size_total = (size + csds_header_bytes) * count_dm;
+  size += csds_header_bytes;
+  size_t size_total = size * count_dm;
 
   /* Allocate a chunk of memory in the dump of the right size. */
   size_t offset_new;
@@ -1165,6 +1166,8 @@ int csds_read_part(const struct csds_writer *log, struct part *p,
   buff += csds_read_record_header(buff, &mask, offset, cur_offset);
 
   for (int i = 0; i < log->total_number_fields; i++) {
+    message("%u %s %i", mask, log->list_fields[i].name,
+            log->list_fields[i].type);
     if ((mask & log->list_fields[i].mask) &&
         (log->list_fields[i].type == mask_type_gas)) {
 
@@ -1181,10 +1184,8 @@ int csds_read_part(const struct csds_writer *log, struct part *p,
       } else if (strcmp("SmoothingLengths", name) == 0) {
         memcpy(&p->h, buff, sizeof(float));
         buff += sizeof(float);
-      }
-#if defined(GADGET2_SPH)
-      else if (strcmp("Entropies", name) == 0) {
-        memcpy(&p->entropy, buff, sizeof(float));
+      } else if (strcmp("InternalEnergies", name) == 0) {
+        memcpy(&p->u, buff, sizeof(float));
         buff += sizeof(float);
       } else if (strcmp("Masses", name) == 0) {
         memcpy(&p->mass, buff, sizeof(float));
@@ -1195,8 +1196,10 @@ int csds_read_part(const struct csds_writer *log, struct part *p,
       } else if (strcmp("ParticleIDs", name) == 0) {
         memcpy(&p->id, buff, sizeof(long long));
         buff += sizeof(long long);
+      } else if (strcmp("SPHENIXSecondaryFields", name) == 0) {
+        // No need to read it for testing
+        buff += 7 * sizeof(float);
       }
-#endif
       else {
         error("Field '%s' not found", name);
       }
