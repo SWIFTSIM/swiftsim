@@ -1173,8 +1173,6 @@ int csds_read_part(const struct csds_writer *log, struct part *p,
   buff += csds_read_record_header(buff, &mask, offset, cur_offset);
 
   for (int i = 0; i < log->total_number_fields; i++) {
-    message("%u %s %i", mask, log->list_fields[i].name,
-            log->list_fields[i].type);
     if ((mask & log->list_fields[i].mask) &&
         (log->list_fields[i].type == mask_type_gas)) {
 
