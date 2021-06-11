@@ -836,7 +836,7 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
         /* Set the masks */
         tmp_num_fields = csds_hydro_define_fields(current);
         tmp_num_fields +=
-            csds_chemistry_define_fields_part(current + tmp_num_fields);
+            csds_chemistry_define_fields_parts(current + tmp_num_fields);
         // TODO add cooling + SF
         break;
 
@@ -851,7 +851,7 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
         /* Set the masks */
         tmp_num_fields = csds_stars_define_fields(current);
         tmp_num_fields +=
-            csds_chemistry_define_fields_spart(current + tmp_num_fields);
+            csds_chemistry_define_fields_sparts(current + tmp_num_fields);
         tmp_num_fields +=
             csds_star_formation_define_fields(current + tmp_num_fields);
         break;

@@ -87,9 +87,9 @@ INLINE static int csds_hydro_define_fields(struct csds_field *fields) {
   csds_define_hydro_standard_field(fields[4], "SmoothingLengths", struct part,
                                    h, /* saving_xpart */ 0);
 
-  /* Internal energies */
-  csds_define_hydro_standard_field(fields[5], "InternalEnergies", struct part,
-                                   u, /* saving_xpart */ 0);
+  /* Entropies */
+  csds_define_hydro_standard_field(fields[5], "Entropies", struct part,
+                                   entropy, /* saving_xpart */ 0);
 
   /* Particle IDs */
   csds_define_hydro_standard_field(fields[6], "ParticleIDs", struct part, id,

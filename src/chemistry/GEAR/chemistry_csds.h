@@ -67,7 +67,7 @@ INLINE static int csds_chemistry_define_fields_parts(
 
   /* Write the metallicities and non smoothed metallicities together. */
   csds_define_field_from_function_hydro(
-      fields[0], "GEARChemistryParts", csds_chemistry_convert_parts,
+      fields[0], "GEARChemistryParts", csds_chemistry_convert_part,
       2 * GEAR_CHEMISTRY_ELEMENT_COUNT * sizeof(float));
 
   return 1;

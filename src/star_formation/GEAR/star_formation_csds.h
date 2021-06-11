@@ -39,7 +39,7 @@ INLINE static void *csds_star_formation_convert(const struct spart *sp,
   /* Write the terms into the buffer */
   float *out = (float *)buffer;
   out[0] = sp->sf_data.birth_density;
-  out[1] = sp->sf_data.birht_mass;
+  out[1] = sp->sf_data.birth_mass;
   long long *id = (long long *)(out + 2);
   *id = sp->sf_data.progenitor_id;
 
@@ -56,8 +56,7 @@ INLINE static void *csds_star_formation_convert(const struct spart *sp,
 INLINE static int csds_star_formation_define_fields(struct csds_field *fields) {
 
   /* Write all the fields together. */
-  struct spart sp;
-  csds_define_field_from_function_hydro(fields[0], "GEARStarFormation",
+  csds_define_field_from_function_stars(fields[0], "GEARStarFormation",
                                         csds_star_formation_convert,
                                         2 * sizeof(float) + sizeof(long long));
 
