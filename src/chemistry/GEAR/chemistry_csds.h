@@ -19,7 +19,6 @@
 #ifndef SWIFT_CHEMISTRY_NONE_CHEMISTRY_CSDS_H
 #define SWIFT_CHEMISTRY_NONE_CHEMISTRY_CSDS_H
 
-
 /* Other Includes */
 #include "csds_io.h"
 #include "hydro.h"
@@ -36,8 +35,10 @@
  *
  * @return Position after the bits written.
  */
-INLINE static void *csds_chemistry_convert_part(const struct part *p, const struct xpart *xp,
-                                                const struct engine *e, void *buffer) {
+INLINE static void *csds_chemistry_convert_part(const struct part *p,
+                                                const struct xpart *xp,
+                                                const struct engine *e,
+                                                void *buffer) {
 
   /* Add the smoothed metals */
   const size_t size = GEAR_CHEMISTRY_ELEMENT_COUNT * sizeof(double);
@@ -47,7 +48,7 @@ INLINE static void *csds_chemistry_convert_part(const struct part *p, const stru
   /* Add the metal mass */
   float *metals = buffer;
   const float m = hydro_get_mass(p);
-  for(int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
+  for (int i = 0; i < GEAR_CHEMISTRY_ELEMENT_COUNT; i++) {
     metals[i] = p->chemistry_data.metal_mass[i] / m;
   }
 
@@ -61,16 +62,16 @@ INLINE static void *csds_chemistry_convert_part(const struct part *p, const stru
  *
  * @return The number of fields.
  */
-INLINE static int csds_chemistry_define_fields_parts(struct csds_field *fields) {
+INLINE static int csds_chemistry_define_fields_parts(
+    struct csds_field *fields) {
 
   /* Write the metallicities and non smoothed metallicities together. */
-  csds_define_field_from_function_hydro(fields[0], "GEARChemistryParts",
-                                        csds_chemistry_convert_parts,
-                                        2 * GEAR_CHEMISTRY_ELEMENT_COUNT * sizeof(float));
+  csds_define_field_from_function_hydro(
+      fields[0], "GEARChemistryParts", csds_chemistry_convert_parts,
+      2 * GEAR_CHEMISTRY_ELEMENT_COUNT * sizeof(float));
 
   return 1;
 }
-
 
 /**
  * @brief Defines the fields to write in the CSDS.
@@ -79,15 +80,16 @@ INLINE static int csds_chemistry_define_fields_parts(struct csds_field *fields) 
  *
  * @return The number of fields.
  */
-INLINE static int csds_chemistry_define_fields_sparts(struct csds_field *fields) {
+INLINE static int csds_chemistry_define_fields_sparts(
+    struct csds_field *fields) {
 
   csds_define_hydro_standard_field(fields[0], "GEARChemistrySparts",
-                                   struct spart, chemistry_data.metal_mass_fraction,
-                                   /* saving_xpart */0);
+                                   struct spart,
+                                   chemistry_data.metal_mass_fraction,
+                                   /* saving_xpart */ 0);
 
   return 1;
 }
-
 
 #endif  // WITH_CSDS
 #endif  // SWIFT_CHEMISTRY_NONE_CHEMISTRY_CSDS_H

@@ -238,27 +238,28 @@ void csds_copy_part_fields(const struct csds_writer *log, const struct part *p,
 
   /* Write the hydro fields */
   // TODO: write only some fields
-  for(int i = 0; i < log->number_fields[swift_type_gas]; i++) {
+  for (int i = 0; i < log->number_fields[swift_type_gas]; i++) {
     struct csds_field *field = &log->field_pointers[swift_type_gas][i];
 
     /* Do we have a conversion function? */
     if (field->conversion_hydro) {
       char *tmp_buff = field->conversion_hydro(p, xp, e, buff);
       /* Check that the correct number of bits are written */
-      if ((tmp_buff - buff) != (long int) field->size) {
+      if ((tmp_buff - buff) != (long int)field->size) {
         error("The field %s took more place than expected", field->name);
       }
     }
     /* Write it manually */
     else {
       if (field->use_xpart == 1)
-        memcpy(buff, ((char *) xp) + field->offset, field->size);
+        memcpy(buff, ((char *)xp) + field->offset, field->size);
       else if (field->use_xpart == 0)
-        memcpy(buff, ((char *) p) + field->offset, field->size);
+        memcpy(buff, ((char *)p) + field->offset, field->size);
       else
-        error("It seems that you are using the wrong CSDS function in the hydro."
-              " You need to use csds_define_hydro_standard_field and not"
-              " the general one.");
+        error(
+            "It seems that you are using the wrong CSDS function in the hydro."
+            " You need to use csds_define_hydro_standard_field and not"
+            " the general one.");
     }
 
     /* Update the variables */
@@ -306,7 +307,7 @@ void csds_compute_size_and_mask(struct csds_field *fields, int n_fields,
   *size = 0;
   *mask = 0;
   // TODO: write only some fields
-  for(int i = 0; i < n_fields; i++) {
+  for (int i = 0; i < n_fields; i++) {
     *size += fields[i].size;
     *mask |= fields[i].mask;
   }
@@ -330,8 +331,7 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
                     const enum csds_special_flags flag, const int flag_data) {
 
   /* Build the special flag */
-  const int size_special_flag =
-      log->list_fields[csds_index_special_flags].size;
+  const int size_special_flag = log->list_fields[csds_index_special_flags].size;
   const uint32_t special_flags =
       csds_pack_flags_and_data(flag, flag_data, swift_type_gas);
 
@@ -339,9 +339,8 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
   size_t size = 0;
   unsigned int mask = 0;
   // TODO: write only some fields
-  csds_compute_size_and_mask(
-      log->field_pointers[swift_type_gas], log->number_fields[swift_type_gas],
-      &size, &mask);
+  csds_compute_size_and_mask(log->field_pointers[swift_type_gas],
+                             log->number_fields[swift_type_gas], &size, &mask);
   /* Add the flag */
   if (flag != csds_flag_none) {
     size += size_special_flag;
@@ -383,8 +382,8 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
   /* Ensure that the buffer was fully used */
   const int diff = buff - buff_before;
   if (diff != (int)size_total) {
-    error("The requested buffer was not totally used: %i != %zi",
-          diff, size_total);
+    error("The requested buffer was not totally used: %i != %zi", diff,
+          size_total);
   }
 #endif
 }
@@ -426,20 +425,20 @@ void csds_copy_spart_fields(const struct csds_writer *log,
 
   /* Write the stellar fields */
   // TODO: write only some fields
-  for(int i = 0; i < log->number_fields[swift_type_stars]; i++) {
+  for (int i = 0; i < log->number_fields[swift_type_stars]; i++) {
     struct csds_field *field = &log->field_pointers[swift_type_stars][i];
 
     /* Do we have a conversion function? */
     if (field->conversion_stars) {
       char *tmp_buff = field->conversion_stars(sp, e, buff);
       /* Check that the correct number of bits are written */
-      if ((tmp_buff - buff) != (long int) field->size) {
+      if ((tmp_buff - buff) != (long int)field->size) {
         error("The field %s took more place than expected", field->name);
       }
     }
     /* Write it manually */
     else {
-      memcpy(buff, ((char *) sp) + field->offset, field->size);
+      memcpy(buff, ((char *)sp) + field->offset, field->size);
     }
 
     /* Update the variables */
@@ -485,8 +484,7 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
                      const struct engine *e, const int log_all_fields,
                      const enum csds_special_flags flag, const int flag_data) {
   /* Build the special flag */
-  const int size_special_flag =
-      log->list_fields[csds_index_special_flags].size;
+  const int size_special_flag = log->list_fields[csds_index_special_flags].size;
   const uint32_t special_flags =
       csds_pack_flags_and_data(flag, flag_data, swift_type_stars);
 
@@ -494,9 +492,9 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
   // TODO: write only some fields
   unsigned int mask = 0;
   size_t size = 0;
-  csds_compute_size_and_mask(
-      log->field_pointers[swift_type_stars], log->number_fields[swift_type_stars],
-      &size, &mask);
+  csds_compute_size_and_mask(log->field_pointers[swift_type_stars],
+                             log->number_fields[swift_type_stars], &size,
+                             &mask);
 
   /* Add the flag */
   if (flag != csds_flag_none) {
@@ -518,7 +516,7 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
   for (int i = 0; i < count; i++) {
     /* reset the offset of the previous log */
     if (flag == csds_flag_create || flag == csds_flag_mpi_enter) {
-        sp[i].csds_data.last_offset = 0;
+      sp[i].csds_data.last_offset = 0;
     }
 
     /* Copy everything into the buffer */
@@ -578,20 +576,20 @@ void csds_copy_gpart_fields(const struct csds_writer *log,
 
   /* Write the gravity fields */
   // TODO: write only some fields
-  for(int i = 0; i < log->number_fields[swift_type_dark_matter]; i++) {
+  for (int i = 0; i < log->number_fields[swift_type_dark_matter]; i++) {
     struct csds_field *field = &log->field_pointers[swift_type_dark_matter][i];
 
     /* Do we have a conversion function? */
     if (field->conversion_grav) {
       char *tmp_buff = field->conversion_grav(gp, e, buff);
       /* Check that the correct number of bits are written */
-      if ((tmp_buff - buff) != (long int) field->size) {
+      if ((tmp_buff - buff) != (long int)field->size) {
         error("The field %s took more place than expected", field->name);
       }
     }
     /* Write it manually */
     else {
-      memcpy(buff, ((char *) gp) + field->offset, field->size);
+      memcpy(buff, ((char *)gp) + field->offset, field->size);
     }
 
     /* Update the variables */
@@ -637,8 +635,7 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
                      const struct engine *e, const int log_all_fields,
                      const enum csds_special_flags flag, const int flag_data) {
   /* Build the special flag */
-  const int size_special_flag =
-      log->list_fields[csds_index_special_flags].size;
+  const int size_special_flag = log->list_fields[csds_index_special_flags].size;
   const uint32_t special_flags =
       csds_pack_flags_and_data(flag, flag_data, swift_type_dark_matter);
 
@@ -657,8 +654,8 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
   unsigned int mask = 0;
   size_t size = 0;
   csds_compute_size_and_mask(log->field_pointers[swift_type_dark_matter],
-                             log->number_fields[swift_type_dark_matter],
-                             &size, &mask);
+                             log->number_fields[swift_type_dark_matter], &size,
+                             &mask);
 
   /* Add the flag */
   if (flag != csds_flag_none) {
@@ -795,7 +792,7 @@ void csds_get_dump_name(struct csds_writer *log, char *filename) {
  */
 void csds_init_masks(struct csds_writer *log, const struct engine *e) {
   /* Set the pointers to 0 */
-  for(int i = 0; i < swift_type_count; i++) {
+  for (int i = 0; i < swift_type_count; i++) {
     log->field_pointers[i] = NULL;
     log->number_fields[i] = 0;
   }
@@ -808,21 +805,21 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
   if (csds_index_special_flags != 0) {
     error("Expecting the special flags to be the first element.");
   }
-  csds_define_common_field(list[csds_index_special_flags],
-                           "SpecialFlags", sizeof(uint32_t));
+  csds_define_common_field(list[csds_index_special_flags], "SpecialFlags",
+                           sizeof(uint32_t));
   num_fields += 1;
 
   /* Add the timestamp */
   if (csds_index_timestamp != 1) {
     error("Expecting the timestamp to be the first element.");
   }
-  csds_define_common_field(list[csds_index_timestamp],
-                         "Timestamp", sizeof(integertime_t) + sizeof(double));
+  csds_define_common_field(list[csds_index_timestamp], "Timestamp",
+                           sizeof(integertime_t) + sizeof(double));
   list[num_fields].type = mask_type_timestep;  // flag it as timestamp
   num_fields += 1;
 
   /* Initialize all the particles types */
-  for(int i = 0; i < swift_type_count; i++) {
+  for (int i = 0; i < swift_type_count; i++) {
     int tmp_num_fields = 0;
     struct csds_field *current = &list[num_fields];
     enum mask_type mask_type;
@@ -838,8 +835,8 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
 
         /* Set the masks */
         tmp_num_fields = csds_hydro_define_fields(current);
-        tmp_num_fields += csds_chemistry_define_fields_part(
-            current + tmp_num_fields);
+        tmp_num_fields +=
+            csds_chemistry_define_fields_part(current + tmp_num_fields);
         // TODO add cooling + SF
         break;
 
@@ -853,10 +850,10 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
 
         /* Set the masks */
         tmp_num_fields = csds_stars_define_fields(current);
-        tmp_num_fields += csds_chemistry_define_fields_spart(
-            current + tmp_num_fields);
-        tmp_num_fields += csds_star_formation_define_fields(
-            current + tmp_num_fields);
+        tmp_num_fields +=
+            csds_chemistry_define_fields_spart(current + tmp_num_fields);
+        tmp_num_fields +=
+            csds_star_formation_define_fields(current + tmp_num_fields);
         break;
 
       case swift_type_dark_matter:
@@ -869,11 +866,10 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
         /* Set the masks */
         tmp_num_fields = csds_gravity_define_fields(current);
         break;
-
     }
 
     /* Set the particle type */
-    for(int j = 0; j < tmp_num_fields; j++) {
+    for (int j = 0; j < tmp_num_fields; j++) {
       current[j].type = mask_type;
     }
 
@@ -935,10 +931,10 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
   memcpy(log->list_fields, list, size_list);
 
   /* Update the pointers */
-  for(int i = 0; i < swift_type_count; i++) {
+  for (int i = 0; i < swift_type_count; i++) {
     if (log->field_pointers[i] != NULL) {
       log->field_pointers[i] =
-        log->list_fields + (log->field_pointers[i] - list);
+          log->list_fields + (log->field_pointers[i] - list);
     }
   }
 
@@ -1101,19 +1097,18 @@ void csds_write_file_header(struct csds_writer *log) {
                   log->number_fields);
 
   /* Now write the order for each particle type */
-  for(int i = 0; i < swift_type_count; i++) {
+  for (int i = 0; i < swift_type_count; i++) {
     int number_fields = log->number_fields[i];
-    if(number_fields == 0)
-      continue;
+    if (number_fields == 0) continue;
 
     struct csds_field *field = log->field_pointers[i];
 
     /* Loop over all the fields from this particle type */
-    for(int k = 0; k < number_fields; k++) {
+    for (int k = 0; k < number_fields; k++) {
       unsigned int current_mask = field[k].mask;
 
       /* Find the index among all the fields. */
-      for(int m = 0; m < log->total_number_fields; m++) {
+      for (int m = 0; m < log->total_number_fields; m++) {
         if (log->list_fields[m].mask == current_mask) {
           csds_write_data(dump, &file_offset, sizeof(int), &m);
           break;
@@ -1342,13 +1337,11 @@ void csds_struct_restore(struct csds_writer *log, FILE *stream) {
                       log->total_number_fields, stream, NULL, "csds_masks");
 
   /* Restore the pointers */
-  for(int i = 0; i < swift_type_count; i++) {
-    if (log->field_pointers == NULL)
-      continue;
+  for (int i = 0; i < swift_type_count; i++) {
+    if (log->field_pointers == NULL) continue;
 
     log->field_pointers[i] =
-      log->list_fields +
-      (log->field_pointers[i] - old_list_fields);
+        log->list_fields + (log->field_pointers[i] - old_list_fields);
   }
 
   /* Restart the dump file. */

@@ -34,6 +34,5 @@ INLINE static int csds_star_formation_define_fields(struct csds_field *fields) {
   return 0;
 }
 
-
 #endif  // WITH_CSDS
 #endif  // SWIFT_STAR_FORMATION_NONE_STAR_FORMATION_CSDS_H

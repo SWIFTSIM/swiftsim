@@ -34,7 +34,8 @@
  * @return Position after the bits written.
  */
 INLINE static void *csds_gravity_convert_acc(const struct gpart *gp,
-                                             const struct engine *e, void *buffer) {
+                                             const struct engine *e,
+                                             void *buffer) {
   /* Compute the acceleration due to hydro and gravity */
   float *acc = (float *)buffer;
   acc[0] = gp->a_grav[0] + gp->a_grav_mesh[0];
@@ -57,8 +58,7 @@ INLINE static int csds_gravity_define_fields(struct csds_field *fields) {
   csds_define_standard_field(fields[0], "Coordinates", struct gpart, x);
 
   /* Velocities */
-  csds_define_standard_field(
-      fields[1], "Velocities", struct gpart, v_full);
+  csds_define_standard_field(fields[1], "Velocities", struct gpart, v_full);
 
   /* Accelerations */
   struct gpart p;
@@ -69,7 +69,8 @@ INLINE static int csds_gravity_define_fields(struct csds_field *fields) {
   csds_define_standard_field(fields[3], "Masses", struct gpart, mass);
 
   /* Particle IDs */
-  csds_define_standard_field(fields[4], "ParticleIDs", struct gpart, id_or_neg_offset);
+  csds_define_standard_field(fields[4], "ParticleIDs", struct gpart,
+                             id_or_neg_offset);
 
   return 5;
 }

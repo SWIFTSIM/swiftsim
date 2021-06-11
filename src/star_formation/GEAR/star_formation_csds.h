@@ -34,12 +34,13 @@
  * @return Position after the bits written.
  */
 INLINE static void *csds_star_formation_convert(const struct spart *sp,
-                                                const struct engine *e, void *buffer) {
+                                                const struct engine *e,
+                                                void *buffer) {
   /* Write the terms into the buffer */
   float *out = (float *)buffer;
   out[0] = sp->sf_data.birth_density;
   out[1] = sp->sf_data.birht_mass;
-  long long *id = (long long *) (out + 2);
+  long long *id = (long long *)(out + 2);
   *id = sp->sf_data.progenitor_id;
 
   return id + 1;
@@ -56,13 +57,12 @@ INLINE static int csds_star_formation_define_fields(struct csds_field *fields) {
 
   /* Write all the fields together. */
   struct spart sp;
-  csds_define_field_from_function_hydro(
-      fields[0], "GEARStarFormation", csds_star_formation_convert,
-      2 * sizeof(float) + sizeof(long long));
+  csds_define_field_from_function_hydro(fields[0], "GEARStarFormation",
+                                        csds_star_formation_convert,
+                                        2 * sizeof(float) + sizeof(long long));
 
   return 1;
 }
-
 
 #endif  // WITH_CSDS
 #endif  // SWIFT_STAR_FORMATION_NONE_STAR_FORMATION_CSDS_H

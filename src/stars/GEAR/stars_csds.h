@@ -35,7 +35,8 @@
  * @return Position after the bits written.
  */
 INLINE static void *csds_stars_convert_acc(const struct spart *sp,
-                                           const struct engine *e, void *buffer) {
+                                           const struct engine *e,
+                                           void *buffer) {
   /* Compute the acceleration due to hydro and gravity */
   float *acc = (float *)buffer;
   acc[0] = sp->gpart->a_grav[0] + sp->gpart->a_grav_mesh[0];
@@ -79,7 +80,6 @@ INLINE static int csds_stars_define_fields(struct csds_field *fields) {
 
   return 7;
 }
-
 
 #endif  // WITH_CSDS
 #endif  // SWIFT_DEFAULT_STARS_CSDS_H

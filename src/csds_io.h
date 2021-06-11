@@ -63,28 +63,29 @@ struct csds_field {
 
   /* Conversion functions (NULL if none) */
   void *(*conversion_hydro)(const struct part *, const struct xpart *xp,
-                           const struct engine *e, void *buffer);
-  void *(*conversion_grav)(const struct gpart *,
-                           const struct engine *e, void *buffer);
-  void *(*conversion_stars)(const struct spart *,
-                           const struct engine *e, void *buffer);
+                            const struct engine *e, void *buffer);
+  void *(*conversion_grav)(const struct gpart *, const struct engine *e,
+                           void *buffer);
+  void *(*conversion_stars)(const struct spart *, const struct engine *e,
+                            void *buffer);
 };
 
-#define csds_define_common_field(csds_field, field_name, size_type) {   \
-  csds_field.offset = 0;                                                \
-  csds_field.size = size_type;                                          \
-  if (strlen(field_name) >= csds_string_length)                         \
-    error("Name %s too long", field_name);                              \
-  strcpy(csds_field.name, field_name);                                  \
-  csds_field.mask = 0;                                                  \
-  csds_field.use_xpart = -1;                                            \
-  csds_field.conversion_hydro = NULL;                                   \
-  csds_field.conversion_grav = NULL;                                    \
-  csds_field.conversion_stars = NULL;                                   \
-}
+#define csds_define_common_field(csds_field, field_name, size_type) \
+  {                                                                 \
+    csds_field.offset = 0;                                          \
+    csds_field.size = size_type;                                    \
+    if (strlen(field_name) >= csds_string_length)                   \
+      error("Name %s too long", field_name);                        \
+    strcpy(csds_field.name, field_name);                            \
+    csds_field.mask = 0;                                            \
+    csds_field.use_xpart = -1;                                      \
+    csds_field.conversion_hydro = NULL;                             \
+    csds_field.conversion_grav = NULL;                              \
+    csds_field.conversion_stars = NULL;                             \
+  }
 
-
-#define csds_define_standard_field(csds_field, field_name, part, field) { \
+#define csds_define_standard_field(csds_field, field_name, part, field) \
+  {                                                                     \
     csds_field.offset = offsetof(part, field);                          \
     part *tmp;                                                          \
     csds_field.size = sizeof(tmp->field);                               \
@@ -98,47 +99,50 @@ struct csds_field {
     csds_field.conversion_stars = NULL;                                 \
   }
 
-#define csds_define_hydro_standard_field(                               \
-      csds_field, field_name, part, field, saving_xpart) {              \
-    csds_define_standard_field(csds_field, field_name, part, field);    \
-    csds_field.use_xpart = saving_xpart;                                \
-}
-
-
-#define csds_define_field_from_function_general(                        \
-      csds_field, field_name, conversion_func, field_size, part_type) { \
-    if (strlen(field_name) >= csds_string_length)                       \
-      error("Name %s too long", field_name);                            \
-    strcpy(csds_field.name, field_name);                                \
-    csds_field.size = field_size;                                       \
-    csds_field.mask = 0;                                                \
-    csds_field.use_xpart = -1;                                          \
-    csds_field.conversion_hydro = NULL;                                 \
-    csds_field.conversion_grav = NULL;                                  \
-    csds_field.conversion_stars = NULL;                                 \
-    csds_field.conversion_##part_type = conversion_func;                \
+#define csds_define_hydro_standard_field(csds_field, field_name, part, field, \
+                                         saving_xpart)                        \
+  {                                                                           \
+    csds_define_standard_field(csds_field, field_name, part, field);          \
+    csds_field.use_xpart = saving_xpart;                                      \
   }
 
-#define csds_define_field_from_function_hydro(                          \
-      csds_field, field_name, conversion_func, size) {                  \
-    csds_define_field_from_function_general(                            \
-      csds_field, field_name, conversion_func, size, hydro)             \
-}
+#define csds_define_field_from_function_general(                    \
+    csds_field, field_name, conversion_func, field_size, part_type) \
+  {                                                                 \
+    if (strlen(field_name) >= csds_string_length)                   \
+      error("Name %s too long", field_name);                        \
+    strcpy(csds_field.name, field_name);                            \
+    csds_field.size = field_size;                                   \
+    csds_field.mask = 0;                                            \
+    csds_field.use_xpart = -1;                                      \
+    csds_field.conversion_hydro = NULL;                             \
+    csds_field.conversion_grav = NULL;                              \
+    csds_field.conversion_stars = NULL;                             \
+    csds_field.conversion_##part_type = conversion_func;            \
+  }
 
-#define csds_define_field_from_function_stars(                          \
-      csds_field, field_name, conversion_func, size) {                  \
-    csds_define_field_from_function_general(                            \
-        csds_field, field_name, conversion_func, size, stars)           \
-}
+#define csds_define_field_from_function_hydro(csds_field, field_name,     \
+                                              conversion_func, size)      \
+  {                                                                       \
+    csds_define_field_from_function_general(csds_field, field_name,       \
+                                            conversion_func, size, hydro) \
+  }
 
-#define csds_define_field_from_function_gravity(                        \
-      csds_field, field_name, conversion_func, size) {                  \
-    csds_define_field_from_function_general(                            \
-       csds_field, field_name, conversion_func, size, grav)             \
-}
+#define csds_define_field_from_function_stars(csds_field, field_name,     \
+                                              conversion_func, size)      \
+  {                                                                       \
+    csds_define_field_from_function_general(csds_field, field_name,       \
+                                            conversion_func, size, stars) \
+  }
 
+#define csds_define_field_from_function_gravity(csds_field, field_name,  \
+                                                conversion_func, size)   \
+  {                                                                      \
+    csds_define_field_from_function_general(csds_field, field_name,      \
+                                            conversion_func, size, grav) \
+  }
 
-void csds_write_description(struct csds_writer* log, struct engine* e);
+void csds_write_description(struct csds_writer *log, struct engine *e);
 
 #endif
 

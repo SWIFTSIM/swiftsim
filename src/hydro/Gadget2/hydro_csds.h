@@ -35,8 +35,10 @@
  *
  * @return Position after the bits written.
  */
-INLINE static void *csds_hydro_convert_acc(const struct part *p, const struct xpart *xp,
-                                           const struct engine *e, void *buffer) {
+INLINE static void *csds_hydro_convert_acc(const struct part *p,
+                                           const struct xpart *xp,
+                                           const struct engine *e,
+                                           void *buffer) {
   /* Compute the acceleration due to hydro and gravity */
   float *acc = (float *)buffer;
 
@@ -65,10 +67,12 @@ INLINE static void *csds_hydro_convert_acc(const struct part *p, const struct xp
 INLINE static int csds_hydro_define_fields(struct csds_field *fields) {
 
   /* Positions */
-  csds_define_hydro_standard_field(fields[0], "Coordinates", struct part, x, /* saving_xpart */0);
+  csds_define_hydro_standard_field(fields[0], "Coordinates", struct part, x,
+                                   /* saving_xpart */ 0);
 
   /* Velocities */
-  csds_define_hydro_standard_field(fields[1], "Velocities", struct part, v, /* saving_xpart */0);
+  csds_define_hydro_standard_field(fields[1], "Velocities", struct part, v,
+                                   /* saving_xpart */ 0);
 
   /* Accelerations */
   struct part p;
@@ -76,23 +80,27 @@ INLINE static int csds_hydro_define_fields(struct csds_field *fields) {
       fields[2], "Accelerations", csds_hydro_convert_acc, sizeof(p.a_hydro));
 
   /* Masses */
-  csds_define_hydro_standard_field(fields[3], "Masses", struct part, mass, /* saving_xpart */0);
+  csds_define_hydro_standard_field(fields[3], "Masses", struct part, mass,
+                                   /* saving_xpart */ 0);
 
   /* Smoothing lengths */
-  csds_define_hydro_standard_field(fields[4], "SmoothingLengths", struct part, h, /* saving_xpart */0);
+  csds_define_hydro_standard_field(fields[4], "SmoothingLengths", struct part,
+                                   h, /* saving_xpart */ 0);
 
   /* Internal energies */
-  csds_define_hydro_standard_field(fields[5], "InternalEnergies", struct part, u, /* saving_xpart */0);
+  csds_define_hydro_standard_field(fields[5], "InternalEnergies", struct part,
+                                   u, /* saving_xpart */ 0);
 
   /* Particle IDs */
-  csds_define_hydro_standard_field(fields[6], "ParticleIDs", struct part, id, /* saving_xpart */0);
+  csds_define_hydro_standard_field(fields[6], "ParticleIDs", struct part, id,
+                                   /* saving_xpart */ 0);
 
   /* Densities */
-  csds_define_hydro_standard_field(fields[7], "Densities", struct part, rho, /* saving_xpart */0);
+  csds_define_hydro_standard_field(fields[7], "Densities", struct part, rho,
+                                   /* saving_xpart */ 0);
 
   return 8;
 }
-
 
 #endif  // WITH_CSDS
 #endif  // SWIFT_GADGET2_HYDRO_CSDS_H
