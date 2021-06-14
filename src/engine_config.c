@@ -147,6 +147,9 @@ void engine_config(int restart, int fof, struct engine *e,
                    int nr_task_threads, int nr_pool_threads, int with_aff,
                    int verbose, const char *restart_file) {
 
+  struct clocks_time tic, toc;
+  if (nodeID == 0) clocks_gettime(&tic);
+
   /* Store the values and initialise global fields. */
   e->nodeID = nodeID;
   e->nr_threads = nr_task_threads;
@@ -921,4 +924,10 @@ void engine_config(int restart, int fof, struct engine *e,
 
   /* Wait for the runner threads to be in place. */
   swift_barrier_wait(&e->wait_barrier);
+
+  if (e->nodeID == 0) {
+    clocks_gettime(&toc);
+    message("took %.3f %s.", clocks_diff(&tic, &toc), clocks_getunit());
+    fflush(stdout);
+  }
 }
