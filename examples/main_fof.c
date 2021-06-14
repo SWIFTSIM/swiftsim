@@ -634,7 +634,7 @@ int main(int argc, char *argv[]) {
 
   /* Initialize the engine with the space and policies. */
   if (myrank == 0) clocks_gettime(&tic);
-  engine_init(
+  float accounted_time = engine_init(
       &e, &s, params, output_options, N_total[swift_type_gas],
       N_total[swift_type_count], N_total[swift_type_sink],
       N_total[swift_type_stars], N_total[swift_type_black_hole],
@@ -652,8 +652,8 @@ int main(int argc, char *argv[]) {
 
   if (myrank == 0) {
     clocks_gettime(&toc);
-    message("engine_init took %.3f %s.", clocks_diff(&tic, &toc),
-            clocks_getunit());
+    message("engine_init took %.3f %s.",
+            clocks_diff(&tic, &toc) - accounted_time, clocks_getunit());
     fflush(stdout);
   }
 

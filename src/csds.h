@@ -196,8 +196,8 @@ void csds_log_gpart(struct csds_writer *log, struct gpart *p,
 void csds_log_gparts(struct csds_writer *log, struct gpart *gp, int count,
                      const struct engine *e, const int log_all_fields,
                      const enum csds_special_flags flag, const int flag_data);
-void csds_init(struct csds_writer *log, const struct engine *e,
-               struct swift_params *params);
+float csds_init(struct csds_writer *log, const struct engine *e,
+                struct swift_params *params);
 void csds_free(struct csds_writer *log);
 void csds_log_timestamp(struct csds_writer *log, integertime_t t, double time,
                         size_t *offset);
@@ -262,6 +262,10 @@ __attribute__((always_inline)) INLINE static int csds_should_write(
 
   return (csds_data->steps_since_last_output > log->delta_step);
 }
+
+#else /* WITH_CSDS */
+
+struct csds_writer {};
 
 #endif /* WITH_CSDS */
 

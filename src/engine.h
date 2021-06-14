@@ -581,7 +581,7 @@ void engine_dump_snapshot(struct engine *e);
 void engine_run_on_dump(struct engine *e);
 void engine_init_output_lists(struct engine *e, struct swift_params *params,
                               const struct output_options *output_options);
-void engine_init(
+float engine_init(
     struct engine *e, struct space *s, struct swift_params *params,
     struct output_options *output_options, long long Ngas, long long Ngparts,
     long long Nsinks, long long Nstars, long long Nblackholes,

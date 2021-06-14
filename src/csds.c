@@ -1022,9 +1022,11 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
  * @param log The #csds_writer
  * @param e The #engine.
  * @param params The #swift_params
+ *
+ * @return The amount of time taken by this function.
  */
-void csds_init(struct csds_writer *log, const struct engine *e,
-               struct swift_params *params) {
+float csds_init(struct csds_writer *log, const struct engine *e,
+                struct swift_params *params) {
 
   ticks tic = getticks();
 
@@ -1069,9 +1071,10 @@ void csds_init(struct csds_writer *log, const struct engine *e,
   /* init dump. */
   dump_init(&log->dump, csds_name_file, buffer_size);
 
-  if (e->verbose)
-    message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
-            clocks_getunit());
+  const float time = clocks_from_ticks(getticks() - tic);
+  if (e->verbose) message("took %.3f %s.", time, clocks_getunit());
+
+  return time;
 }
 
 /**

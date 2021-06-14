@@ -2775,8 +2775,10 @@ void engine_unpin(void) {
  * @param chemistry The chemistry information.
  * @param fof_properties The #fof_props of this run.
  * @param los_properties the #los_props of this run.
+ *
+ * @return The time already accounted for.
  */
-void engine_init(
+float engine_init(
     struct engine *e, struct space *s, struct swift_params *params,
     struct output_options *output_options, long long Ngas, long long Ngparts,
     long long Nsinks, long long Nstars, long long Nblackholes,
@@ -2794,6 +2796,9 @@ void engine_init(
     const struct star_formation *starform,
     const struct chemistry_global_data *chemistry,
     struct fof_props *fof_properties, struct los_props *los_properties) {
+
+  /* Counter for the time already accounted in some subfunctions */
+  float accounted_time = 0;
 
   /* Clean-up everything */
   bzero(e, sizeof(struct engine));
@@ -2908,7 +2913,7 @@ void engine_init(
 #if defined(WITH_CSDS)
   if (e->policy & engine_policy_csds) {
     e->csds = (struct csds_writer *)malloc(sizeof(struct csds_writer));
-    csds_init(e->csds, e, params);
+    accounted_time += csds_init(e->csds, e, params);
   }
 #endif
 
@@ -3010,6 +3015,8 @@ void engine_init(
   } else {
     e->neutrino_mass_conversion_factor = 0.f;
   }
+
+  return accounted_time;
 }
 
 /**
