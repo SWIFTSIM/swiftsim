@@ -1417,24 +1417,24 @@ int main(int argc, char *argv[]) {
 
     /* Initialize the engine with the space and policies. */
     if (myrank == 0) clocks_gettime(&tic);
-    engine_init(&e, &s, params, output_options, N_total[swift_type_gas],
-                N_total[swift_type_count], N_total[swift_type_sink],
-                N_total[swift_type_stars], N_total[swift_type_black_hole],
-                N_total[swift_type_dark_matter_background],
-                N_total[swift_type_neutrino], engine_policies, talking,
-                &reparttype, &us, &prog_const, &cosmo, &hydro_properties,
-                &entropy_floor, &gravity_properties, &stars_properties,
-                &black_holes_properties, &sink_properties, &neutrino_properties,
-                &feedback_properties, &rt_properties, &mesh, &potential,
-                &cooling_func, &starform, &chemistry, &fof_properties,
-                &los_properties);
+    const float accounted_time = engine_init(
+        &e, &s, params, output_options, N_total[swift_type_gas],
+        N_total[swift_type_count], N_total[swift_type_sink],
+        N_total[swift_type_stars], N_total[swift_type_black_hole],
+        N_total[swift_type_dark_matter_background],
+        N_total[swift_type_neutrino], engine_policies, talking, &reparttype,
+        &us, &prog_const, &cosmo, &hydro_properties, &entropy_floor,
+        &gravity_properties, &stars_properties, &black_holes_properties,
+        &sink_properties, &neutrino_properties, &feedback_properties,
+        &rt_properties, &mesh, &potential, &cooling_func, &starform, &chemistry,
+        &fof_properties, &los_properties);
     engine_config(/*restart=*/0, /*fof=*/0, &e, params, nr_nodes, myrank,
                   nr_threads, nr_pool_threads, with_aff, talking, restart_file);
 
     if (myrank == 0) {
       clocks_gettime(&toc);
-      message("engine_init took %.3f %s.", clocks_diff(&tic, &toc),
-              clocks_getunit());
+      message("engine_init took %.3f %s.",
+              clocks_diff(&tic, &toc) - accounted_time, clocks_getunit());
       fflush(stdout);
     }
 
@@ -1791,6 +1791,7 @@ int main(int argc, char *argv[]) {
   if (with_cooling || with_temperature) cooling_clean(e.cooling_func);
   if (with_feedback) feedback_clean(e.feedback_props);
   if (with_rt) rt_clean(e.rt_props);
+
   engine_clean(&e, /*fof=*/0, restart);
   free(params);
   free(output_options);
