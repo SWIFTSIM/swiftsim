@@ -176,7 +176,8 @@ __attribute__((always_inline)) INLINE static void
 rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
                                  double star_age, double dt,
                                  const struct rt_props* rt_props,
-                                 const struct phys_const* phys_const) {
+                                 const struct phys_const* phys_const,
+                                 const struct unit_system* internal_units) {
 
   /* Skip initial fake time-step */
   if (dt == 0.0l) return;
