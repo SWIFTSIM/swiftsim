@@ -173,7 +173,6 @@ void engine_config(int restart, int fof, struct engine *e,
   e->restart_next = 0;
   e->restart_dt = 0;
   e->run_fof = 0;
-  engine_rank = nodeID;
 
   if (restart && fof) {
     error(
