@@ -160,7 +160,15 @@ __attribute__((always_inline)) INLINE static void rt_part_has_no_neighbours(
  * @param p The #part.
  */
 __attribute__((always_inline)) INLINE static void rt_spart_has_no_neighbours(
-    struct spart* sp){};
+    struct spart* sp){
+  
+  /* Reset energy to be injected so that global statistics
+   * checks still work */
+  for (int g = 0; g < RT_NGROUPS; g++) {
+    sp->rt_data.emission_this_step[g] = 0.f;
+  }
+  message("WARNING: found star without neighbours");
+};
 
 /**
  * @brief Update the photon number of a particle, i.e. compute
@@ -195,7 +203,9 @@ rt_injection_update_photon_density(struct part* restrict p,
 __attribute__((always_inline)) INLINE static void
 rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
                                  double star_age, double dt,
-                                 struct rt_props* props) {
+                                 const struct rt_props* rt_props,
+                                 const struct phys_const* phys_const,
+                                 const struct unit_system* internal_units) {
 
   /* Skip initial fake time-step */
   if (dt == 0.0l) return;
@@ -209,7 +219,7 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
   /* now get the emission rates */
   double star_age_begin_of_step = star_age - dt;
   star_age_begin_of_step = max(0.l, star_age_begin_of_step);
-  rt_set_stellar_emission_rate(sp, star_age_begin_of_step, star_age, props);
+  rt_set_stellar_emission_rate(sp, star_age_begin_of_step, star_age, rt_props, phys_const, internal_units);
 }
 
 /**

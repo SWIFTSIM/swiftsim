@@ -57,12 +57,14 @@ static void rt_debugging_end_of_step_stars_mapper(void *restrict map_data,
       if (sp->rt_data.debug_injected_energy[g] != 0.f) {
         float diff = 1.f - sp->rt_data.emission_this_step[g] / 
                       sp->rt_data.debug_injected_energy[g];
-        if (fabs(diff) > 1e-4) {
+        if (fabs(diff) > 1e-2) {
           message("Incorrect amount of energy injected: "
-                  "group %d expected %.3g got %.3g diff %.3g",
+                  "group %d expected %.3g got %.3g diff %.3g || %lld %.6g %d",
                   g, sp->rt_data.emission_this_step[g], 
                   sp->rt_data.debug_injected_energy[g], 
-                  diff);
+                  diff, sp->id, sp->density.wcount, 
+                  sp->rt_data.debug_iact_hydro_inject
+                  );
         }
       }
     }

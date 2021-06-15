@@ -33,8 +33,9 @@ You need to provide the following runtime parameters in the yaml file:
    GEARRT:
        photon_groups_Hz: [3.288e15, 5.945e15, 13.157e15]  # Photon frequency group bin edges in Hz
        use_const_emission_rates: 1 
-       star_emission_rates_erg_per_s: [1., 1., 1., 1.]    # stellar emission rates for each photon 
-                                                          # frequency bin in erg/s
+       star_emission_rates_LSol: [1., 1., 1., 1.]         # stellar emission rates for each photon 
+                                                          # frequency bin in units of solar luminosity
+
 
 The ``photon_groups`` need to be ``N - 1`` frequency edges (floats) to separate 
 the spectrum into ``N`` groups. The outer limits of zero and infinity are 
