@@ -25,6 +25,7 @@ class RTGasData(object):
         self.h = None
 
         self.PhotonEnergies = None
+        self.PhotonFluxes = None
 
         return
 
@@ -154,7 +155,7 @@ def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
     if rundata.use_const_emission_rate:
         # read emission rate parameter as string
         emissionstr = firstfile.metadata.parameters[
-            "GEARRT:star_emission_rates_erg_per_s"
+            "GEARRT:star_emission_rates_LSol"
         ].decode("utf-8")
         # clean string up
         if emissionstr.startswith("["):
@@ -167,7 +168,7 @@ def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
         emlist = []
         for er in emissions:
             emlist.append(float(er))
-        rundata.const_emission_rates = unyt.unyt_array(emlist) * unyt.erg / unyt.s
+        rundata.const_emission_rates = unyt.unyt_array(emlist, unyt.L_Sun)
 
         if len(rundata.const_emission_rates) != rundata.ngroups:
             print("Got number of emission rates different from number of groups?")
@@ -204,14 +205,40 @@ def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
         Gas.IDs = data.gas.particle_ids
         Gas.coords = data.gas.coordinates
         Gas.h = data.gas.smoothing_lengths
-        Gas.PhotonEnergies = unyt.unyt_array(
+        Gas.PhotonEnergies = swiftsimio.cosmo_array(
             [
                 data.gas.photon_energies.group1,
                 data.gas.photon_energies.group2,
                 data.gas.photon_energies.group3,
                 data.gas.photon_energies.group4,
-            ]
-        )
+            ]).T
+
+        Gas.PhotonFluxes = swiftsimio.cosmo_array(
+            (
+                unyt.uvstack(
+                    (   data.gas.photon_fluxes.Group1X,
+                        data.gas.photon_fluxes.Group1Y,
+                        data.gas.photon_fluxes.Group1Z )
+                ), 
+                unyt.uvstack(
+                    (   data.gas.photon_fluxes.Group2X,
+                        data.gas.photon_fluxes.Group2Y,
+                        data.gas.photon_fluxes.Group2Z )
+                ), 
+                unyt.uvstack(
+                    (   data.gas.photon_fluxes.Group3X,
+                        data.gas.photon_fluxes.Group3Y,
+                        data.gas.photon_fluxes.Group3Z )
+                ), 
+                unyt.uvstack(
+                    (   data.gas.photon_fluxes.Group4X,
+                        data.gas.photon_fluxes.Group4Y,
+                        data.gas.photon_fluxes.Group4Z )
+                ), 
+            ), 
+            data.gas.photon_fluxes.Group1X.units
+        ).T
+ 
 
         #  Get star data
         Stars = RTStarData()

@@ -43,7 +43,7 @@ struct rt_props {
   float photon_groups[RT_NGROUPS];
 
   /* Global constant stellar emission rates */
-  float stellar_const_emission_rates[RT_NGROUPS];
+  double stellar_const_emission_rates[RT_NGROUPS];
 
 #ifdef SWIFT_RT_DEBUG_CHECKS
   /* Do extended tests where we assume that all parts
@@ -144,13 +144,13 @@ __attribute__((always_inline)) INLINE static void rt_props_init(
       params, "GEARRT:use_const_emission_rates", /* default = */ 0);
 
   if (rtp->use_const_emission_rates) {
-    float emission_rates[RT_NGROUPS];
-    parser_get_param_float_array(params, "GEARRT:star_emission_rates_erg_per_s",
-                                 RT_NGROUPS, emission_rates);
-    float unit_fact = units_cgs_conversion_factor(us, UNIT_CONV_POWER);
-    float unit_fact_inv = 1.f / unit_fact;
+    double emission_rates[RT_NGROUPS];
+    parser_get_param_double_array(params, "GEARRT:star_emission_rates_LSol",
+                                  RT_NGROUPS, emission_rates);
+    const double unit_power = units_cgs_conversion_factor(us, UNIT_CONV_POWER);
+    const double unit_power_inv = 1. / unit_power;
     for (int g = 0; g < RT_NGROUPS; g++) {
-      rtp->stellar_const_emission_rates[g] = emission_rates[g] * unit_fact_inv;
+      rtp->stellar_const_emission_rates[g] = emission_rates[g] * unit_power_inv;
     }
   } else {
     /* kill the run for now */
