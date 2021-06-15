@@ -277,7 +277,9 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
               const double star_age_end_of_step =
                   stars_compute_age(sp, e->cosmology, e->time, with_cosmology);
 
-              rt_compute_stellar_emission_rate(sp, e->time, star_age_end_of_step, dt_star, rt_props, phys_const, us);
+              rt_compute_stellar_emission_rate(sp, e->time,
+                                               star_age_end_of_step, dt_star,
+                                               rt_props, phys_const, us);
             }
 
             /* Ok, we are done with this particle */
@@ -445,7 +447,8 @@ void runner_do_stars_ghost(struct runner *r, struct cell *c, int timer) {
           const double star_age_end_of_step =
               stars_compute_age(sp, e->cosmology, e->time, with_cosmology);
 
-          rt_compute_stellar_emission_rate(sp, e->time, star_age_end_of_step, dt_star, rt_props, phys_const, us);
+          rt_compute_stellar_emission_rate(sp, e->time, star_age_end_of_step,
+                                           dt_star, rt_props, phys_const, us);
         }
       }
 

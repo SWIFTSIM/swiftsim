@@ -187,10 +187,10 @@ INLINE static int rt_write_stars(const struct spart* sparts,
       "RTDebugRadEmittedTot", ULONGLONG, 1, UNIT_CONV_NO_UNITS, 0, sparts,
       rt_data.debug_radiation_emitted_tot,
       "Total radiation emitted during the lifetime of this star");
-  list[3] = io_make_output_field(
-      "RTDebugInjectedPhotonEnergy", FLOAT, RT_NGROUPS, UNIT_CONV_ENERGY,
-      0, sparts, rt_data.debug_injected_energy_tot, 
-      "Total radiation actually injected into gas");
+  list[3] = io_make_output_field("RTDebugInjectedPhotonEnergy", FLOAT,
+                                 RT_NGROUPS, UNIT_CONV_ENERGY, 0, sparts,
+                                 rt_data.debug_injected_energy_tot,
+                                 "Total radiation actually injected into gas");
 #endif
 
   return num_elements;

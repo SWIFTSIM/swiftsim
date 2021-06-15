@@ -63,7 +63,7 @@ struct rt_spart_data {
 
   /* Stellar energy emission that will be injected in to gas.
    * Total energy, not density, not rate! */
-  /* TODO: keep this also for RT_HYDRO_CONTROLLED_INJECTION and 
+  /* TODO: keep this also for RT_HYDRO_CONTROLLED_INJECTION and
    * store results with each hydro-star interaction in here */
   float emission_this_step[RT_NGROUPS];
 
@@ -80,12 +80,12 @@ struct rt_spart_data {
   /* skip this for GEAR */
   /* int debug_injection_check; [> called in a self/rt_injection task? <] */
 
-  float debug_injected_energy[RT_NGROUPS]; /* how much energy this star 
-                                              particle actually has injected 
-                                              into the gas */
-  float debug_injected_energy_tot[RT_NGROUPS]; /* how much energy this star 
-                                              particle actually has injected 
-                                              into the gas over the entire 
+  float debug_injected_energy[RT_NGROUPS];     /* how much energy this star
+                                                  particle actually has injected
+                                                  into the gas */
+  float debug_injected_energy_tot[RT_NGROUPS]; /* how much energy this star
+                                              particle actually has injected
+                                              into the gas over the entire
                                               run*/
 #endif
 };
