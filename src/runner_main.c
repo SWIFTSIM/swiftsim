@@ -522,6 +522,8 @@ void *runner_main(void *data) {
             free(t->buff);
           } else if (t->subtype == task_subtype_bpart_merger) {
             free(t->buff);
+          } else if (t->subtype == task_subtype_limiter) {
+            free(t->buff);
           }
           break;
         case task_type_recv:
@@ -557,7 +559,8 @@ void *runner_main(void *data) {
                                       (struct black_holes_bpart_data *)t->buff);
             free(t->buff);
           } else if (t->subtype == task_subtype_limiter) {
-            runner_do_recv_part(r, ci, 0, 1);
+            cell_unpack_timebin(ci, (timebin_t *)t->buff);
+            free(t->buff);
           } else if (t->subtype == task_subtype_gpart) {
             runner_do_recv_gpart(r, ci, 1);
           } else if (t->subtype == task_subtype_spart_density) {
