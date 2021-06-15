@@ -54,7 +54,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
   /* If the star doesn't have any neighbours, we
    * have nothing to do here. */
   if (si->density.wcount == 0.f) {
-    message("caught star without neighbours %.6g %.6g %.6g", r2, hi*hi*kernel_gamma2, hi*hi*kernel_gamma2/r2);
+    message("caught star without neighbours %.6g %.6g %.6g", r2,
+            hi * hi * kernel_gamma2, hi * hi * kernel_gamma2 / r2);
     return;
   }
 
@@ -69,16 +70,20 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
   /* TODO: this is done differently for RT_HYDRO_CONTROLLED_INJECTION */
   for (int g = 0; g < RT_NGROUPS; g++) {
     /* if (g == 0) */
-    /*   message("inject check PRE p%lld s%lld %.6e %.6e %.6e", pj->id, si->id, pj->rt_data.conserved[g].energy, si->rt_data.emission_this_step[g], psi_i_xj); */
+    /*   message("inject check PRE p%lld s%lld %.6e %.6e %.6e", pj->id, si->id,
+     * pj->rt_data.conserved[g].energy, si->rt_data.emission_this_step[g],
+     * psi_i_xj); */
     pj->rt_data.conserved[g].energy +=
         si->rt_data.emission_this_step[g] * psi_i_xj;
     /* if (g == 0) */
-    /*   message("inject check POST p%lld s%lld %.6e %.6e %.6e", pj->id, si->id, pj->rt_data.conserved[g].energy, si->rt_data.emission_this_step[g], psi_i_xj); */
+    /*   message("inject check POST p%lld s%lld %.6e %.6e %.6e", pj->id, si->id,
+     * pj->rt_data.conserved[g].energy, si->rt_data.emission_this_step[g],
+     * psi_i_xj); */
   }
 
 #ifdef SWIFT_RT_DEBUG_CHECKS
   /* Take note how much energy we actually injected */
-  for (int g = 0; g < RT_NGROUPS; g++){
+  for (int g = 0; g < RT_NGROUPS; g++) {
     float res = si->rt_data.emission_this_step[g] * psi_i_xj;
     si->rt_data.debug_injected_energy[g] += res;
     si->rt_data.debug_injected_energy_tot[g] += res;

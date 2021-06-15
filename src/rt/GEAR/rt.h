@@ -97,7 +97,7 @@ __attribute__((always_inline)) INLINE static void rt_init_spart(
  */
 __attribute__((always_inline)) INLINE static void rt_reset_spart(
     struct spart* restrict sp) {
-  for (int g = 0; g < RT_NGROUPS; g++){
+  for (int g = 0; g < RT_NGROUPS; g++) {
     sp->rt_data.emission_this_step[g] = 0.f;
   }
 
@@ -110,7 +110,7 @@ __attribute__((always_inline)) INLINE static void rt_reset_spart(
   /* skip this for GEAR */
   /* sp->rt_data.debug_injection_check = 0; */
 
-  for (int g = 0; g < RT_NGROUPS; g++){
+  for (int g = 0; g < RT_NGROUPS; g++) {
     sp->rt_data.debug_injected_energy[g] = 0.f;
   }
 #endif
@@ -126,7 +126,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_spart(
   rt_reset_spart(sp);
 #ifdef SWIFT_RT_DEBUG_CHECKS
   sp->rt_data.debug_radiation_emitted_tot = 0ULL;
-  for (int g = 0; g < RT_NGROUPS; g++){
+  for (int g = 0; g < RT_NGROUPS; g++) {
     sp->rt_data.debug_injected_energy_tot[g] = 0.f;
   }
 #endif
@@ -160,8 +160,8 @@ __attribute__((always_inline)) INLINE static void rt_part_has_no_neighbours(
  * @param p The #part.
  */
 __attribute__((always_inline)) INLINE static void rt_spart_has_no_neighbours(
-    struct spart* sp){
-  
+    struct spart* sp) {
+
   /* Reset energy to be injected so that global statistics
    * checks still work */
   for (int g = 0; g < RT_NGROUPS; g++) {
@@ -219,7 +219,8 @@ rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
   /* now get the emission rates */
   double star_age_begin_of_step = star_age - dt;
   star_age_begin_of_step = max(0.l, star_age_begin_of_step);
-  rt_set_stellar_emission_rate(sp, star_age_begin_of_step, star_age, rt_props, phys_const, internal_units);
+  rt_set_stellar_emission_rate(sp, star_age_begin_of_step, star_age, rt_props,
+                               phys_const, internal_units);
 }
 
 /**

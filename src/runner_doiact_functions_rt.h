@@ -133,7 +133,9 @@ void DOSELF1_RT(struct runner *r, struct cell *c, int timer) {
       }
 #endif
 
-      if (r2 < hig2 && si->density.wcount == 0.f) message("called star %lld %10.6g %10.6g %10.6g", si->id, r2, hig2, hig2/r2);
+      if (r2 < hig2 && si->density.wcount == 0.f)
+        message("called star %lld %10.6g %10.6g %10.6g", si->id, r2, hig2,
+                hig2 / r2);
       if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj, a, H);
     }
   }
@@ -242,7 +244,9 @@ void DOPAIR1_NONSYM_RT_NAIVE(struct runner *r, struct cell *ci,
       }
 #endif
 
-      if (r2 < hig2 && si->density.wcount == 0.f) message("called star %lld %10.6g %10.6g %10.6g", si->id, r2, hig2, hig2/r2);
+      if (r2 < hig2 && si->density.wcount == 0.f)
+        message("called star %lld %10.6g %10.6g %10.6g", si->id, r2, hig2,
+                hig2 / r2);
       if (r2 < hig2) IACT_RT(r2, dx, hi, hj, si, pj, a, H);
 
     } /* loop over the parts in cj. */
@@ -384,7 +388,9 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
 
         /* Hit or miss? */
         if (r2 < hig2) {
-          if (r2 < hig2 && spi->density.wcount == 0.f) message("called star %lld %10.6g %10.6g %10.6g", spi->id, r2, hig2, hig2/r2);
+          if (r2 < hig2 && spi->density.wcount == 0.f)
+            message("called star %lld %10.6g %10.6g %10.6g", spi->id, r2, hig2,
+                    hig2 / r2);
           IACT_RT(r2, dx, hi, hj, spi, pj, a, H);
         }
       } /* loop over the parts in cj. */
@@ -494,7 +500,9 @@ void DO_SYM_PAIR1_RT(struct runner *r, struct cell *ci, struct cell *cj,
         /* Hit or miss? */
         if (r2 < hjg2) {
 
-          if (r2 < hjg2 && spj->density.wcount == 0.f) message("called star %lld %10.6g %10.6g %10.6g", spj->id, r2, hjg2, hjg2/r2);
+          if (r2 < hjg2 && spj->density.wcount == 0.f)
+            message("called star %lld %10.6g %10.6g %10.6g", spj->id, r2, hjg2,
+                    hjg2 / r2);
           IACT_RT(r2, dx, hj, hi, spj, pi, a, H);
         }
       } /* loop over the parts in ci. */

@@ -47,24 +47,23 @@ static void rt_debugging_end_of_step_stars_mapper(void *restrict map_data,
     emission_sum += sp->rt_data.debug_iact_hydro_inject;
     emission_sum_tot += sp->rt_data.debug_radiation_emitted_tot;
 
-    for (int g = 0; g < RT_NGROUPS; g++){
-      /* also check now that we actually injected the correct 
+    for (int g = 0; g < RT_NGROUPS; g++) {
+      /* also check now that we actually injected the correct
        * amount of energy
        * sp->rt_data.emission_this_step: energy we should distribute
        *                                 this step
        * sp->rt_data.debug_injected_energy: energy we actually did
        *                                    distribute this step    */
       if (sp->rt_data.debug_injected_energy[g] != 0.f) {
-        float diff = 1.f - sp->rt_data.emission_this_step[g] / 
-                      sp->rt_data.debug_injected_energy[g];
+        float diff = 1.f - sp->rt_data.emission_this_step[g] /
+                               sp->rt_data.debug_injected_energy[g];
         if (fabs(diff) > 1e-2) {
-          message("Incorrect amount of energy injected: "
-                  "group %d expected %.3g got %.3g diff %.3g || %lld %.6g %d",
-                  g, sp->rt_data.emission_this_step[g], 
-                  sp->rt_data.debug_injected_energy[g], 
-                  diff, sp->id, sp->density.wcount, 
-                  sp->rt_data.debug_iact_hydro_inject
-                  );
+          message(
+              "Incorrect amount of energy injected: "
+              "group %d expected %.3g got %.3g diff %.3g || %lld %.6g %d",
+              g, sp->rt_data.emission_this_step[g],
+              sp->rt_data.debug_injected_energy[g], diff, sp->id,
+              sp->density.wcount, sp->rt_data.debug_iact_hydro_inject);
         }
       }
     }
@@ -72,7 +71,7 @@ static void rt_debugging_end_of_step_stars_mapper(void *restrict map_data,
     /* reset stuff such that it is set even if the star particle
      * isn't active in the next step */
     sp->rt_data.debug_iact_hydro_inject = 0;
-    for (int g = 0; g < RT_NGROUPS; g++){
+    for (int g = 0; g < RT_NGROUPS; g++) {
       sp->rt_data.debug_injected_energy[g] = 0.f;
     }
   }
