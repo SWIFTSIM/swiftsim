@@ -165,6 +165,10 @@ void gravity_props_init(struct gravity_props *p, struct swift_params *params,
       /* Co-moving softenings taken straight from the parameter file */
       p->epsilon_nu_comoving =
           parser_get_param_double(params, "Gravity:comoving_nu_softening");
+
+      /* Exclude neutrinos in the max/min delta v used for multipole drifts? */
+      p->exclude_neutrinos_delta_vel = parser_get_opt_param_int(
+          params, "Gravity:exclude_neutrinos_delta_vel", 0);
     }
 
     if (is_zoom_simulation) {
