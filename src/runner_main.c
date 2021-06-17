@@ -586,7 +586,7 @@ void *runner_main(void *data) {
           runner_do_pack_limiter(r, ci, &t->buff, 1);
           break;
         case task_type_unpack:
-          runner_do_pack_limiter(r, ci, t->buff, 1);
+          runner_do_unpack_limiter(r, ci, t->buff, 1);
           break;
 #endif
         case task_type_grav_down:
