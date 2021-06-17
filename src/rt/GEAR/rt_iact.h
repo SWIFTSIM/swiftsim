@@ -53,11 +53,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
 
   /* If the star doesn't have any neighbours, we
    * have nothing to do here. */
-  if (si->density.wcount == 0.f) {
-    message("caught star without neighbours %.6g %.6g %.6g", r2,
-            hi * hi * kernel_gamma2, hi * hi * kernel_gamma2 / r2);
-    return;
-  }
+  if (si->density.wcount == 0.f) return;
 
   float wi;
   const float r = sqrtf(r2);
@@ -65,26 +61,18 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_inject(
   const float xi = r * hi_inv;
   kernel_eval(xi, &wi);
   const float hi_inv_dim = pow_dimension(hi_inv);
-  const float psi_i_xj = wi / si->density.wcount * hi_inv_dim;
+  /* psi(x_star - x_gas, h_star) */
+  const float psi = wi * hi_inv_dim / si->density.wcount;
 
   /* TODO: this is done differently for RT_HYDRO_CONTROLLED_INJECTION */
   for (int g = 0; g < RT_NGROUPS; g++) {
-    /* if (g == 0) */
-    /*   message("inject check PRE p%lld s%lld %.6e %.6e %.6e", pj->id, si->id,
-     * pj->rt_data.conserved[g].energy, si->rt_data.emission_this_step[g],
-     * psi_i_xj); */
-    pj->rt_data.conserved[g].energy +=
-        si->rt_data.emission_this_step[g] * psi_i_xj;
-    /* if (g == 0) */
-    /*   message("inject check POST p%lld s%lld %.6e %.6e %.6e", pj->id, si->id,
-     * pj->rt_data.conserved[g].energy, si->rt_data.emission_this_step[g],
-     * psi_i_xj); */
+    pj->rt_data.conserved[g].energy += si->rt_data.emission_this_step[g] * psi;
   }
 
 #ifdef SWIFT_RT_DEBUG_CHECKS
   /* Take note how much energy we actually injected */
   for (int g = 0; g < RT_NGROUPS; g++) {
-    float res = si->rt_data.emission_this_step[g] * psi_i_xj;
+    float res = si->rt_data.emission_this_step[g] * psi;
     si->rt_data.debug_injected_energy[g] += res;
     si->rt_data.debug_injected_energy_tot[g] += res;
   }
@@ -181,6 +169,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_transport(
  * @brief Flux calculation between particle i and particle j: non-symmetric
  * version
  *
+ * This method calls runner_iact_rt_fluxes_common with mode 0.
+ *
  * @param r2 Comoving squared distance between particle i and particle j.
  * @param dx Comoving distance vector between the particles (dx = pi->x -
  * pj->x).
@@ -202,6 +192,9 @@ runner_iact_nonsym_rt_transport(float r2, const float *dx, float hi, float hj,
 /**
  * @brief Calculate the gradient interaction between particle i and particle j
  *
+ * This method wraps around rt_gradients_collect, which can be an empty
+ * method, in which case no gradients are used.
+ *
  * @param r2 Comoving squared distance between particle i and particle j.
  * @param dx Comoving distance vector between the particles (dx = pi->x -
  * pj->x).
@@ -222,6 +215,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_rt_gradient(
 /**
  * @brief Calculate the gradient interaction between particle i and particle j:
  * non-symmetric version
+ *
+ * This method wraps around rt_gradients_nonsym_collect, which can be an
+ * empty method, in which case no gradients are used.
  *
  * @param r2 Comoving squared distance between particle i and particle j.
  * @param dx Comoving distance vector between the particles (dx = pi->x -
