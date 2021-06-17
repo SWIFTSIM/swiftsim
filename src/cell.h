@@ -377,6 +377,14 @@ struct cell {
       struct link *recv;
     };
 
+    union {
+      /* Single list of all pack tasks associated with this cell. */
+      struct link *pack;
+
+      /* Single list of all unpack tasks associated with this cell. */
+      struct link *unpack;
+    };
+
     /*! Bit mask of the proxies this cell is registered with. */
     unsigned long long int sendto;
 

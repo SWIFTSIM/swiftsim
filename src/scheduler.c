@@ -2091,6 +2091,7 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
           size = count = t->ci->hydro.count * sizeof(timebin_t);
           if (posix_memalign((void **)&buff, SWIFT_CACHE_ALIGNMENT, count) != 0)
             error("Error allocating timebin recv buffer");
+          type = MPI_BYTE;
           t->buff = buff;
 
         } else if (t->subtype == task_subtype_gpart) {
@@ -2214,10 +2215,8 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         } else if (t->subtype == task_subtype_limiter) {
 
           size = count = t->ci->hydro.count * sizeof(timebin_t);
-          if (posix_memalign((void **)&buff, SWIFT_CACHE_ALIGNMENT, count) != 0)
-            error("Error allocating timebin send buffer");
-          t->buff = buff;
-          cell_pack_timebin(t->ci, (timebin_t *)buff);
+          type = MPI_BYTE;
+          buff = t->buff;
 
         } else if (t->subtype == task_subtype_gpart) {
 
@@ -2365,6 +2364,7 @@ struct task *scheduler_unlock(struct scheduler *s, struct task *t) {
     if (res < 1) {
       error("Negative wait!");
     } else if (res == 1) {
+      task_pass_buffer(t, t2);
       scheduler_enqueue(s, t2);
     }
   }
