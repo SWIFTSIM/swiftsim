@@ -76,6 +76,8 @@ const char *taskID_names[task_type_count] = {
     "timestep_sync",
     "send",
     "recv",
+    "pack",
+    "unpack",
     "grav_long_range",
     "grav_mm",
     "grav_down_in",
@@ -165,13 +167,13 @@ const char *subtaskID_names[task_subtype_count] = {
 };
 
 const char *task_category_names[task_category_count] = {
-    "drift",       "sorts",   "resort",
-    "hydro",       "gravity", "feedback",
-    "black holes", "cooling", "star formation",
-    "limiter",     "sync",    "time integration",
-    "mpi",         "fof",     "others",
-    "neutrino",    "sink",    "RT",
-    "CSDS"};
+    "drift",       "sorts",    "resort",
+    "hydro",       "gravity",  "feedback",
+    "black holes", "cooling",  "star formation",
+    "limiter",     "sync",     "time integration",
+    "mpi",         "pack",     "fof",
+    "others",      "neutrino", "sink",
+    "RT",          "CSDS"};
 
 #ifdef WITH_MPI
 /* MPI communicators for the subtypes. */
@@ -1161,6 +1163,30 @@ int task_lock(struct task *t) {
 }
 
 /**
+ * @brief Pass infformation from one task to the next when
+ * the first has completed and enqueues the second one.
+ *
+ * WARNING: This can only make sense for tasks tb that have
+ * a single dependency!! i.e. ta is the one and only task
+ * unlocking tb.
+ *
+ * @param ta the first #task.
+ * @param tb the second #task.
+ */
+__attribute__((nonnull)) void task_pass_buffer(const struct task *restrict ta,
+                                               struct task *restrict tb) {
+
+#ifdef WITH_MPI
+  /* When running MPI operations that pack and unpack the data, we
+     need to pass the buffer pointer from one task to the next. */
+  if (ta->type == task_type_pack && tb->type == task_type_send)
+    tb->buff = ta->buff;
+  else if (ta->type == task_type_recv && tb->type == task_type_unpack)
+    tb->buff = ta->buff;
+#endif
+}
+
+/**
  * @brief Print basic information about a task.
  *
  * @param t The #task.
@@ -1723,6 +1749,10 @@ enum task_categories task_get_category(const struct task *t) {
     case task_type_send:
     case task_type_recv:
       return task_category_mpi;
+
+    case task_type_pack:
+    case task_type_unpack:
+      return task_category_pack;
 
     case task_type_kick1:
     case task_type_kick2:
