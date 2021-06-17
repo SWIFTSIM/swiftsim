@@ -32,19 +32,22 @@
  * @param sp Star particle to work on.
  * @param age_beg Age of the stars at the beginning of the step
  * @param age_end Age of the stars at the end of the step
- * @param props RT props struct
+ * @param rt_props RT properties struct
+ * @param phys_const struct holding physical constants
+ * @param internal_units units struct containing internal units
  */
+
 __attribute__((always_inline)) INLINE static void rt_set_stellar_emission_rate(
     struct spart* restrict sp, double age_beg, double age_end,
     const struct rt_props* rt_props, const struct phys_const* phys_const,
     const struct unit_system* internal_units) {
 
   if (rt_props->use_const_emission_rates) {
-    /* The read-in constant stellar emisison rates are in units of
-     * L_sol * s / Myr. But they have been read in assuming they are
-     * in cgs. Convert this only now to proper internal units to avoid
-     * overflows. We only store the energy that is to be distributed
-     * from this spart to its neighbours in this step in internal units.*/
+    /* The read-in constant stellar emisison rates are in units of L_sol.
+     * But they have been read in assuming they are in cgs. Convert this
+     * only now to proper internal units to avoid float overflows. We only
+     * store the energy that is to be distributed from this spart to its
+     * neighbours in this step in internal units.*/
     const double solar_luminosity = 3.826e33; /* erg/s */
     const double dt = (age_end - age_beg);
     for (int g = 0; g < RT_NGROUPS; g++) {

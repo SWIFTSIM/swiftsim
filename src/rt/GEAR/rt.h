@@ -97,6 +97,7 @@ __attribute__((always_inline)) INLINE static void rt_init_spart(
  */
 __attribute__((always_inline)) INLINE static void rt_reset_spart(
     struct spart* restrict sp) {
+
   for (int g = 0; g < RT_NGROUPS; g++) {
     sp->rt_data.emission_this_step[g] = 0.f;
   }
@@ -150,7 +151,6 @@ __attribute__((always_inline)) INLINE static void rt_split_part(struct part* p,
  */
 __attribute__((always_inline)) INLINE static void rt_part_has_no_neighbours(
     struct part* p) {
-
   message("WARNING: found particle without neighbours");
 };
 
@@ -198,7 +198,9 @@ rt_injection_update_photon_density(struct part* restrict p,
  * @param time current system time
  * @param star_age age of the star *at the end of the step*
  * @param dt star time step
- * @param props RT properties struct
+ * @param rt_props RT properties struct
+ * @param phys_const physical constants struct
+ * @param internal_units struct holding internal units
  */
 __attribute__((always_inline)) INLINE static void
 rt_compute_stellar_emission_rate(struct spart* restrict sp, double time,
@@ -297,6 +299,8 @@ __attribute__((always_inline)) INLINE static void rt_finalise_transport(
 
 /**
  * @brief Do the thermochemistry on a particle.
+ *
+ * This function wraps around rt_do_thermochemistry function.
  *
  * @param p particle to work on
  */

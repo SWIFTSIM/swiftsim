@@ -65,8 +65,6 @@ runner_iact_nonsym_feedback_density(const float r2, const float *dx,
 
   /* The normalization by 1 / h^d is done in feedback.h */
   si->feedback_data.enrichment_weight += mj * wi;
-
-  /* TODO MLADEN: ADD THE SAME THING TO RT? */
 }
 
 /**
