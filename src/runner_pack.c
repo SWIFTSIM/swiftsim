@@ -50,9 +50,9 @@ void runner_do_pack_limiter(struct runner *r, struct cell *c, void **buffer,
   cell_pack_timebin(c, *buffer);
 }
 
-
 /**
- * @brief UnPack the data needed by the time-step limiter loop after receiving it
+ * @brief UnPack the data needed by the time-step limiter loop after receiving
+ * it
  *
  * @param r The runner thread.
  * @param c The cell.
