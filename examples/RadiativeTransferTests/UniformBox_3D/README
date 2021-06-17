@@ -17,7 +17,9 @@ is used by the other scripts.
 
 The python scripts with the suffix `-GEAR` do the same as the other scripts, but
 are made to test the GEAR RT scheme. Debugging checks must be enabled in the run
-in order to create the appropriate outputs (`--enable-debugging-checks`).
+in order to create the appropriate outputs (`--enable-debugging-checks`). The
+scripts and parameter files for GEAR are written for 4 photon groups, so compile
+swift with `--with-rt=GEAR_4`.
 
 Tl;dr: 
     - `./rt_uniform_box_checks.py` only works for this example
