@@ -2323,6 +2323,7 @@ struct task *scheduler_done(struct scheduler *s, struct task *t) {
     if (res < 1) {
       error("Negative wait!");
     } else if (res == 1) {
+      task_pass_buffer(t, t2);
       scheduler_enqueue(s, t2);
     }
   }
