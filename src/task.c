@@ -1179,9 +1179,8 @@ __attribute__((nonnull)) void task_pass_buffer(const struct task *restrict ta,
 #ifdef WITH_MPI
   /* When running MPI operations that pack and unpack the data, we
      need to pass the buffer pointer from one task to the next. */
-  if (ta->type == task_type_pack && tb->type == task_type_send) {
+  if (ta->type == task_type_pack && tb->type == task_type_send)
     tb->buff = ta->buff;
-  }
   else if (ta->type == task_type_recv && tb->type == task_type_unpack)
     tb->buff = ta->buff;
 #endif
