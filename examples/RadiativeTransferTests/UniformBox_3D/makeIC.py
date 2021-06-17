@@ -10,6 +10,7 @@ from swiftsimio import Writer
 
 import unyt
 import numpy as np
+import h5py
 
 # Box is 1 Mpc
 boxsize = 100 * unyt.m
@@ -67,3 +68,37 @@ w.stars.generate_smoothing_lengths(boxsize=boxsize, dimension=3)
 
 # If IDs are not present, this automatically generates
 w.write("uniformBox-rt.hdf5")
+
+
+# Writing Photon Initial Conditions
+# --------------------------------------
+
+# This part is specific for the GEAR RT scheme, assuming we're
+# running with nPhotonGroups photon groups.
+
+nPhotonGroups = 4
+
+# Now open file back up again and add photon groups
+# you can make them unitless, the units have already been
+# written down in the writer. In this case, it's in cgs.
+
+F = h5py.File("uniformBox-rt.hdf5", "r+")
+header = F["Header"]
+nparts = header.attrs["NumPart_ThisFile"][0]
+nstars = header.attrs["NumPart_ThisFile"][4]
+parts = F["/PartType0"]
+
+
+for grp in range(nPhotonGroups):
+    dsetname = "PhotonEnergiesGroup{0:d}".format(grp + 1)
+    energydata = np.ones((nparts), dtype=np.float) * (grp + 1)
+    parts.create_dataset(dsetname, data=energydata)
+
+    dsetname = "PhotonFluxesGroup{0:d}".format(grp + 1)
+    #  if dsetname not in parts.keys():
+    fluxdata = np.ones((nparts, 3), dtype=np.float) * (grp + 1)
+    fluxdata[:, 1] *= 2.0
+    fluxdata[:, 2] *= 3.0
+    parts.create_dataset(dsetname, data=fluxdata)
+
+F.close()

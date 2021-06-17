@@ -22,20 +22,19 @@
 
 
 import numpy as np
+import unyt
 from sys import argv
 from swift_rt_GEAR_io import get_snap_data
 
 
 # some behaviour options
-skip_snap_zero = True  # skip snap_0000.hdf5
-skip_last_snap = False  # skip snap_0max.hdf5
-skip_coords = True  # skip coordinates check
-skip_sml = True  # skip smoothing lengths check
-print_diffs = False  # print differences you find
+print_diffs = True  # print differences you find
 break_on_diff = False  # quit when you find a difference
 
 # tolerance for a float to be equal
 float_comparison_tolerance = 1e-5
+# tolerance for a float that was summed up over all particles to vary
+float_particle_sum_comparison_tolerance = 1e-3
 
 
 if len(argv) > 1:
@@ -64,7 +63,7 @@ def check_injection(snapdata, rundata):
     # into the gas
     # ----------------------------------------------------------------
 
-    initial_energies = [np.sum(s) for s in snapdata[0].gas.PhotonEnergies]
+    initial_energies = snapdata[0].gas.PhotonEnergies.sum(axis=0)
     initial_time = snapdata[0].time
 
     emission_rates = rundata.const_emission_rates
@@ -72,23 +71,20 @@ def check_injection(snapdata, rundata):
 
     for snap in snapdata:
         dt = snap.time - initial_time
-        photon_energies = [np.sum(s) for s in snap.gas.PhotonEnergies]
+        photon_energies = snap.gas.PhotonEnergies.sum(axis=0)
+        injected = snap.nstars * emission_rates * dt
+        energies_expected = initial_energies + injected
+        diff = np.array(1.0 - energies_expected / photon_energies)
 
-        for g in range(ngroups):
-            injected = snap.nstars * emission_rates[g] * dt
-            energies_expected = initial_energies[g] + injected
-            diff = abs(1.0 - energies_expected / photon_energies[g])
-            if diff > float_comparison_tolerance:
-                print(
-                    "--- Snapshot",
-                    snap.snapnr,
-                    "group",
-                    g + 1,
-                    "diff",
-                    diff,
-                    photon_energies[g],
-                    energies_expected,
-                )
+        if (np.abs(diff) > float_particle_sum_comparison_tolerance).any():
+            print("Snapshot", snap.snapnr, "Injected Energy Prediction is wrong;")
+            if print_diffs:
+                for g in range(ngroups):
+                    if abs(diff[g]) > float_particle_sum_comparison_tolerance:
+                        print("--- group ", g + 1)
+                        print("----- diff:           ", diff[g])
+                        print("----- photon energies:", photon_energies[g])
+                        print("----- expected:       ", energies_expected[g])
                 if break_on_diff:
                     quit()
 
@@ -99,7 +95,7 @@ def main():
     """
 
     snapdata, rundata = get_snap_data(
-        prefix=file_prefix, skip_snap_zero=skip_snap_zero, skip_last_snap=skip_last_snap
+        prefix=file_prefix, skip_snap_zero=False, skip_last_snap=False
     )
 
     check_injection(snapdata, rundata)
