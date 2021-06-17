@@ -188,7 +188,7 @@ void engine_addtasks_send_hydro(
       if (with_limiter) {
         t_limiter = scheduler_addtask(s, task_type_send, task_subtype_limiter,
                                       ci->mpi.tag, 0, ci, cj);
-        t_pack_limiter = scheduler_addtask(s, task_type_send,
+        t_pack_limiter = scheduler_addtask(s, task_type_pack,
                                            task_subtype_limiter, 0, 0, ci, cj);
 
         scheduler_addunlock(s, t_pack_limiter, t_limiter);
@@ -620,7 +620,7 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
     if (with_limiter) {
       for (struct link *l = c->hydro.limiter; l != NULL; l = l->next) {
         scheduler_addunlock(s, t_ti, l->t);
-        scheduler_addunlock(s, t_limiter, l->t);
+        scheduler_addunlock(s, t_unpack_limiter, l->t);
       }
     }
 
