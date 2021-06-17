@@ -33,10 +33,11 @@
 #include "timers.h"
 
 /**
- * @brief Construct the cell properties from the received #part.
+ * @brief Pack the data needed by the time-step limiter loop prior to sending
  *
  * @param r The runner thread.
  * @param c The cell.
+ * @param buffer The array to allocate and fill.
  * @param timer Are we timing this ?
  */
 void runner_do_pack_limiter(struct runner *r, struct cell *c, void **buffer,
@@ -49,6 +50,15 @@ void runner_do_pack_limiter(struct runner *r, struct cell *c, void **buffer,
   cell_pack_timebin(c, *buffer);
 }
 
+
+/**
+ * @brief UnPack the data needed by the time-step limiter loop after receiving it
+ *
+ * @param r The runner thread.
+ * @param c The cell.
+ * @param buffer The array to read from and free.
+ * @param timer Are we timing this ?
+ */
 void runner_do_unpack_limiter(struct runner *r, struct cell *c, void *buffer,
                               const int timer) {
 
