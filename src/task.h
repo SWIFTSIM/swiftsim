@@ -300,8 +300,7 @@ struct task {
 void task_unlock(struct task *t);
 float task_overlap(const struct task *ta, const struct task *tb);
 int task_lock(struct task *t);
-void task_pass_buffer(const struct task *restrict ta, struct task *restrict tb);
-void task_do_rewait(struct task *t);
+struct task *task_get_unique_dependent(const struct task *t);
 void task_print(const struct task *t);
 void task_dump_all(struct engine *e, int step);
 void task_dump_stats(const char *dumpfile, struct engine *e,
