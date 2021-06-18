@@ -1942,10 +1942,9 @@ void space_check_cosmology(struct space *s, const struct cosmology *cosmo,
   double mass_nu = 0.;
   for (size_t i = 0; i < nr_gparts; ++i) {
 
-#ifdef SWIFT_DEBUG_CHECKS
-    if (gparts[i].time_bin == time_bin_not_created)
-      error("Found an extra particle when checking cosmology");
-#endif
+    /* Skip extra particles */
+    if (gparts[i].time_bin == time_bin_not_created) continue;
+
     switch (gparts[i].type) {
       case swift_type_dark_matter:
       case swift_type_dark_matter_background:

@@ -437,7 +437,7 @@ void write_output_distributed(struct engine* e,
         e->s->nr_sinks - e->s->nr_inhibited_sinks - e->s->nr_extra_sinks;
   }
 
-  Ndm_written = io_count_dark_matter_to_write(
+  Ndm_written = io_count_background_dark_matter_to_write(
       e->s, subsample[swift_type_dark_matter],
       subsample_fraction[swift_type_dark_matter], e->snapshot_output_count);
 
