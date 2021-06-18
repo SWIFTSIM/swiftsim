@@ -1937,6 +1937,7 @@ void space_check_cosmology(struct space *s, const struct cosmology *cosmo,
   const size_t nr_gparts = s->nr_gparts;
 
   /* Sum up the mass in this space */
+  int has_background_particles = 0;
   double mass_cdm = 0.;
   double mass_b = 0.;
   double mass_nu = 0.;
@@ -1962,6 +1963,9 @@ void space_check_cosmology(struct space *s, const struct cosmology *cosmo,
       default:
         error("Invalid particle type");
     }
+
+    if (gparts[i].type == swift_type_dark_matter_background)
+      has_background_particles = 1;
   }
 
 /* Reduce the total mass */
@@ -2003,14 +2007,16 @@ void space_check_cosmology(struct space *s, const struct cosmology *cosmo,
     /* Expected matter density */
     const double Omega_m = cosmo->Omega_cdm + cosmo->Omega_b;
 
-    if (with_hydro && fabs(Omega_particles_cdm - cosmo->Omega_cdm) > 1e-3)
+    if (with_hydro && !has_background_particles &&
+        fabs(Omega_particles_cdm - cosmo->Omega_cdm) > 1e-3)
       error(
           "The cold dark matter content of the simulation does not match the "
           "cosmology in the parameter file: cosmo.Omega_cdm = %e particles "
           "Omega_cdm = %e",
           cosmo->Omega_cdm, Omega_particles_cdm);
 
-    if (with_hydro && fabs(Omega_particles_b - cosmo->Omega_b) > 1e-3)
+    if (with_hydro && !has_background_particles &&
+        fabs(Omega_particles_b - cosmo->Omega_b) > 1e-3)
       error(
           "The baryon content of the simulation does not match the cosmology "
           "in the parameter file: cosmo.Omega_b = %e particles Omega_b = %e",
