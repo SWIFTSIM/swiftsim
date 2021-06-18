@@ -2093,6 +2093,7 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
             error("Error allocating timebin recv buffer");
           type = MPI_BYTE;
           t->buff = buff;
+          task_get_unique_dependent(t)->buff = buff;
 
         } else if (t->subtype == task_subtype_gpart) {
 
@@ -2323,7 +2324,6 @@ struct task *scheduler_done(struct scheduler *s, struct task *t) {
     if (res < 1) {
       error("Negative wait!");
     } else if (res == 1) {
-      task_pass_buffer(t, t2);
       scheduler_enqueue(s, t2);
     }
   }
@@ -2365,7 +2365,6 @@ struct task *scheduler_unlock(struct scheduler *s, struct task *t) {
     if (res < 1) {
       error("Negative wait!");
     } else if (res == 1) {
-      task_pass_buffer(t, t2);
       scheduler_enqueue(s, t2);
     }
   }

@@ -584,6 +584,7 @@ void *runner_main(void *data) {
 
         case task_type_pack:
           runner_do_pack_limiter(r, ci, &t->buff, 1);
+          task_get_unique_dependent(t)->buff = t->buff;
           break;
         case task_type_unpack:
           runner_do_unpack_limiter(r, ci, t->buff, 1);
