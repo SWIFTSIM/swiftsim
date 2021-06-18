@@ -1163,30 +1163,6 @@ int task_lock(struct task *t) {
 }
 
 /**
- * @brief Pass infformation from one task to the next when
- * the first has completed and enqueues the second one.
- *
- * WARNING: This can only make sense for tasks tb that have
- * a single dependency!! i.e. ta is the one and only task
- * unlocking tb.
- *
- * @param ta the first #task.
- * @param tb the second #task.
- */
-__attribute__((nonnull)) void task_pass_buffer(const struct task *restrict ta,
-                                               struct task *restrict tb) {
-
-#ifdef WITH_MPI
-  /* When running MPI operations that pack and unpack the data, we
-     need to pass the buffer pointer from one task to the next. */
-  if (ta->type == task_type_pack && tb->type == task_type_send)
-    tb->buff = ta->buff;
-  else if (ta->type == task_type_recv && tb->type == task_type_unpack)
-    tb->buff = ta->buff;
-#endif
-}
-
-/**
  * @brief Returns a pointer to the unique task unlocked by this task.
  *
  * The task MUST have only dependence!
