@@ -3162,9 +3162,9 @@ void engine_recompute_displacement_constraint(struct engine *e) {
     /* Baryon case */
     if (N_b > 0.f) {
 
-      /* Minimal mass for the baryons */
-      const float min_mass_b =
-          min4(min_mass[0], min_mass[3], min_mass[4], min_mass[5]);
+      /* Minimal mass for the gas */
+      /* Due to Pop III stars, we cannot use the stars. */
+      const float min_mass_b = min_mass[0];
 
       /* Inter-particle sepration for the baryons */
       const float d_b = cbrtf(min_mass_b / (Ob * rho_crit0));
