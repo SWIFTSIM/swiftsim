@@ -82,7 +82,44 @@ __attribute__((always_inline)) INLINE static void rt_gradients_update_part(struc
   rtd->gradient[g].flux[2][2] += dFz[2];
 }
 
+/**
+ * @brief Finalize the gradient computation after all 
+ * particle-particle interactions are finished.
+ *
+ * @param p the Particle
+ **/
+ 
+__attribute__((always_inline)) INLINE static void rt_finalize_gradient_part(struct part * restrict p){
 
+  /* add kernel normalization to gradients */
+  const float h = p->h;
+  const float h_inv = 1.0f / h;
+
+  float norm;
+  if (hydro_part_geometry_well_behaved(p)) {
+    const float hinvdim = pow_dimension(h_inv);
+    norm = hinvdim;
+  } else {
+    const float hinvdimp1 = pow_dimension_plus_one(h_inv);
+    const float volume = p->geometry.volume;
+    norm = hinvdimp1 * volume;
+  }
+
+  struct rt_part_data * rtd = &p->rt_data;
+  for (int g = 0; g < RT_NGROUPS; g++) {
+    rtd->gradient[g].energy[0] *= norm;
+    rtd->gradient[g].energy[1] *= norm;
+    rtd->gradient[g].energy[2] *= norm;
+    for (int i = 0; i < 3; i++) {
+      rtd->gradient[g].flux[i][0] *= norm;
+      rtd->gradient[g].flux[i][1] *= norm;
+      rtd->gradient[g].flux[i][2] *= norm;
+    }
+  }
+
+  /* hydro_slope_limit_cell(p); */
+
+}
 
 /**
  * @brief symmetric gradient calculations done during the neighbour loop
@@ -313,7 +350,6 @@ __attribute__((always_inline)) INLINE static void rt_gradients_nonsym_collect(
 
   /* hydro_slope_limit_cell_collect(pi, pj, r); */
   }
-
 }
 
 
