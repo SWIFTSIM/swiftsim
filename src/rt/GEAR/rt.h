@@ -22,6 +22,7 @@
 #include "rt_debugging.h"
 #include "rt_gradients.h"
 #include "rt_properties.h"
+#include "rt_slope_limiters_cell.h"
 #include "rt_stellar_emission_rate.h"
 #include "rt_thermochemistry.h"
 
@@ -39,6 +40,7 @@ __attribute__((always_inline)) INLINE static void rt_init_part(
     struct part* restrict p) {
 
   rt_gradients_init(p);
+  rt_slope_limit_cell_init(p);
 }
 
 /**
@@ -79,7 +81,7 @@ __attribute__((always_inline)) INLINE static void rt_first_init_part(
   /* Don't reset conserved quantities here! ICs will be overwritten */
   rt_init_part(p);
   rt_reset_part(p);
-  for (int g = 0; g < RT_NGROUPS; g++){
+  for (int g = 0; g < RT_NGROUPS; g++) {
     p->rt_data.density[g].energy = 0.f;
     p->rt_data.density[g].flux[0] = 0.f;
     p->rt_data.density[g].flux[1] = 0.f;
@@ -191,8 +193,8 @@ rt_injection_update_photon_density(struct part* restrict p,
                                    struct rt_props* props) {
 
   const float V = p->geometry.volume;
-  const float Vinv = 1./ V;
-  for (int g = 0; g < RT_NGROUPS; g++){
+  const float Vinv = 1. / V;
+  for (int g = 0; g < RT_NGROUPS; g++) {
     p->rt_data.density[g].energy = p->rt_data.conserved[g].energy * Vinv;
     p->rt_data.density[g].flux[0] = p->rt_data.conserved[g].flux[0] * Vinv;
     p->rt_data.density[g].flux[1] = p->rt_data.conserved[g].flux[1] * Vinv;
