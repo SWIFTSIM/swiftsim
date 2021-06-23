@@ -255,8 +255,10 @@ void engine_addtasks_send_hydro(
     engine_addlink(e, &ci->mpi.send, t_gradient);
 #endif
     engine_addlink(e, &ci->mpi.send, t_ti);
-    if (with_limiter) engine_addlink(e, &ci->mpi.send, t_limiter);
-    if (with_limiter) engine_addlink(e, &ci->mpi.pack, t_pack_limiter);
+    if (with_limiter) {
+      engine_addlink(e, &ci->mpi.send, t_limiter);
+      engine_addlink(e, &ci->mpi.pack, t_pack_limiter);
+    }
 #ifdef EXTRA_STAR_LOOPS
     if (with_feedback) engine_addlink(e, &ci->mpi.send, t_prep1);
 #endif
@@ -585,8 +587,10 @@ void engine_addtasks_recv_hydro(struct engine *e, struct cell *c,
     engine_addlink(e, &c->mpi.recv, t_gradient);
 #endif
     engine_addlink(e, &c->mpi.recv, t_ti);
-    if (with_limiter) engine_addlink(e, &c->mpi.recv, t_limiter);
-    if (with_limiter) engine_addlink(e, &c->mpi.unpack, t_unpack_limiter);
+    if (with_limiter) {
+      engine_addlink(e, &c->mpi.recv, t_limiter);
+      engine_addlink(e, &c->mpi.unpack, t_unpack_limiter);
+    }
 #ifdef EXTRA_STAR_LOOPS
     if (with_feedback) engine_addlink(e, &c->mpi.recv, t_prep1);
 #endif
