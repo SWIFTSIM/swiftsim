@@ -24,7 +24,11 @@
    and runner_dosub_FUNCTION calling the pairwise interaction function
    runner_iact_FUNCTION. */
 
+/* This file's header */
 #include "runner_doiact_hydro.h"
+
+/* Local headers */
+#include "random.h"
 
 /**
  * @brief Compute the interactions between a cell pair (non-symmetric case).
@@ -973,7 +977,26 @@ void DOSELF_SUBSET(struct runner *r, struct cell *restrict ci,
                             (float)(pj->x[1] - ci->loc[1]),
                             (float)(pj->x[2] - ci->loc[2])};
       float dx[3] = {pix[0] - pjx[0], pix[1] - pjx[1], pix[2] - pjx[2]};
-      const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
+      float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
+
+      /* Prevent crashes when particles are exactly on top of
+       * each others */
+      if (r2 < hydro_distance_to_h_min_ratio * hydro_distance_to_h_min_ratio *
+                   min(hi * hi, hj * hj)) {
+        dx[0] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                             (enum random_number_type)1) -
+                  1.f) *
+                 hydro_distance_to_h_min_ratio * hi;
+        dx[1] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                             (enum random_number_type)2) -
+                  1.f) *
+                 hydro_distance_to_h_min_ratio * hi;
+        dx[2] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                             (enum random_number_type)3) -
+                  1.f) *
+                 hydro_distance_to_h_min_ratio * hi;
+        r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
+      }
 
 #ifdef SWIFT_DEBUG_CHECKS
       /* Check that particles have been drifted to the current time */
@@ -2109,6 +2132,25 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
           r2 += dx[k] * dx[k];
         }
 
+        /* Prevent crashes when particles are exactly on top of
+         * each others */
+        if (r2 < hydro_distance_to_h_min_ratio * hydro_distance_to_h_min_ratio *
+                     min(hi * hi, hj * hj)) {
+          dx[0] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)1) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          dx[1] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)2) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          dx[2] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)3) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
+        }
+
         /* Hit or miss? */
         if (r2 < hj * hj * kernel_gamma2) {
 
@@ -2151,6 +2193,26 @@ void DOSELF1(struct runner *r, struct cell *restrict c) {
           dx[k] = pix[k] - pj->x[k];
           r2 += dx[k] * dx[k];
         }
+
+        /* Prevent crashes when particles are exactly on top of
+         * each others */
+        if (r2 < hydro_distance_to_h_min_ratio * hydro_distance_to_h_min_ratio *
+                     min(hi * hi, hj * hj)) {
+          dx[0] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)1) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          dx[1] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)2) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          dx[2] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)3) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
+        }
+
         const int doj =
             (part_is_active(pj, e)) && (r2 < hj * hj * kernel_gamma2);
 
@@ -2337,6 +2399,25 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
           r2 += dx[k] * dx[k];
         }
 
+        /* Prevent crashes when particles are exactly on top of
+         * each others */
+        if (r2 < hydro_distance_to_h_min_ratio * hydro_distance_to_h_min_ratio *
+                     min(hi * hi, hj * hj)) {
+          dx[0] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)1) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          dx[1] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)2) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          dx[2] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)3) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
+        }
+
 #if defined(SWIFT_RT_DEBUG_CHECKS) && \
     (FUNCTION_TASK_LOOP == TASK_LOOP_RT_TRANSPORT)
         rt_debugging_count_transport_call(pj);
@@ -2390,6 +2471,25 @@ void DOSELF2(struct runner *r, struct cell *restrict c) {
         for (int k = 0; k < 3; k++) {
           dx[k] = pix[k] - pj->x[k];
           r2 += dx[k] * dx[k];
+        }
+
+        /* Prevent crashes when particles are exactly on top of
+         * each others */
+        if (r2 < hydro_distance_to_h_min_ratio * hydro_distance_to_h_min_ratio *
+                     min(hi * hi, hj * hj)) {
+          dx[0] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)1) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          dx[1] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)2) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          dx[2] += (2.f * random_unit_interval(pi->id + pj->id, e->ti_current,
+                                               (enum random_number_type)3) -
+                    1.f) *
+                   hydro_distance_to_h_min_ratio * hi;
+          r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
         }
 
 #if defined(SWIFT_RT_DEBUG_CHECKS) && \
