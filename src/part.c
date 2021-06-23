@@ -540,8 +540,11 @@ void part_verify_links(struct part *parts, struct gpart *gparts,
 #ifdef WITH_MPI
 /* MPI data type for the particle transfers */
 MPI_Datatype part_mpi_type;
+MPI_Datatype part_limiter_mpi_type;
 MPI_Datatype xpart_mpi_type;
 MPI_Datatype gpart_mpi_type;
+MPI_Datatype gpart_send_mpi_type;
+MPI_Datatype gpart_recv_mpi_type;
 MPI_Datatype spart_mpi_type;
 MPI_Datatype bpart_mpi_type;
 MPI_Datatype lospart_mpi_type;
@@ -572,6 +575,13 @@ void part_create_mpi_types(void) {
       MPI_Type_commit(&gpart_mpi_type) != MPI_SUCCESS) {
     error("Failed to create MPI type for gparts.");
   }
+
+  /* Create the indexed types to send and receive gparts */
+  gravity_create_MPI_types(&gpart_send_mpi_type, &gpart_recv_mpi_type);
+
+  /* Create the indexed types to send and receive the time-bin */
+  create_indexed_mpi_type(struct part, &part_limiter_mpi_type, time_bin);
+
   if (MPI_Type_contiguous(sizeof(struct spart) / sizeof(unsigned char),
                           MPI_BYTE, &spart_mpi_type) != MPI_SUCCESS ||
       MPI_Type_commit(&spart_mpi_type) != MPI_SUCCESS) {
@@ -587,8 +597,11 @@ void part_create_mpi_types(void) {
 void part_free_mpi_types(void) {
 
   MPI_Type_free(&part_mpi_type);
+  MPI_Type_free(&part_limiter_mpi_type);
   MPI_Type_free(&xpart_mpi_type);
   MPI_Type_free(&gpart_mpi_type);
+  MPI_Type_free(&gpart_send_mpi_type);
+  MPI_Type_free(&gpart_recv_mpi_type);
   MPI_Type_free(&spart_mpi_type);
   MPI_Type_free(&bpart_mpi_type);
   MPI_Type_free(&lospart_mpi_type);

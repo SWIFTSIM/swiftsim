@@ -164,8 +164,11 @@ void part_verify_links(struct part *parts, struct gpart *gparts,
 #ifdef WITH_MPI
 /* MPI data type for the particle transfers */
 extern MPI_Datatype part_mpi_type;
+extern MPI_Datatype part_limiter_mpi_type;
 extern MPI_Datatype xpart_mpi_type;
 extern MPI_Datatype gpart_mpi_type;
+extern MPI_Datatype gpart_recv_mpi_type;
+extern MPI_Datatype gpart_send_mpi_type;
 extern MPI_Datatype spart_mpi_type;
 extern MPI_Datatype bpart_mpi_type;
 extern MPI_Datatype lospart_mpi_type;

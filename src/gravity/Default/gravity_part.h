@@ -20,6 +20,7 @@
 #define SWIFT_DEFAULT_GRAVITY_PART_H
 
 #include "fof_struct.h"
+#include "mpi_part.h"
 
 /**
  * @brief Gravity particle.
@@ -113,5 +114,61 @@ struct gpart {
   long long num_interacted_pm;
 #endif
 };
+
+/**
+ * @brief Gravity particle data when on a foreign node.
+ *
+ * We only need a small fraction of the information on foreign
+ * nodes as the particles don't get updated there.
+ */
+struct gpart_foreign {
+
+  /*! Particle position. */
+  double x[3];
+
+  /*! Particle mass. */
+  float mass;
+
+  /*! Time-step length */
+  timebin_t time_bin;
+
+  /*! Type of the #gpart (DM, gas, star, ...) */
+  enum part_type type;
+
+#ifdef SWIFT_DEBUG_CHECKS
+
+  /* Time of the last drift */
+  integertime_t ti_drift;
+#endif
+};
+
+#ifdef WITH_MPI
+
+/**
+ * @brief Register the MPI types to send a subset of a #gpart and receive it
+ * as a #gpart_foreign.
+ *
+ * We here list the fields of a #gpart to be sent and received over MPI.
+ *
+ * @param gpart_send_mpi_type The MPI type for the sending.
+ * @param gpart_send_mpi_type The MPI type for the receiving.
+ */
+INLINE static void gravity_create_MPI_types(MPI_Datatype *gpart_send_mpi_type,
+                                            MPI_Datatype *gpart_recv_mpi_type) {
+
+#ifdef SWIFT_DEBUG_CHECKS
+
+  create_indexed_mpi_type(struct gpart, gpart_send_mpi_type, x, mass, time_bin,
+                          type, ti_drift);
+  create_indexed_mpi_type(struct gpart_foreign, gpart_recv_mpi_type, x, mass,
+                          time_bin, type, ti_drift);
+#else
+  create_indexed_mpi_type(struct gpart, gpart_send_mpi_type, x, mass, time_bin,
+                          type);
+  create_indexed_mpi_type(struct gpart_foreign, gpart_recv_mpi_type, x, mass,
+                          time_bin, type);
+#endif
+}
+#endif /* WITH_MPI */
 
 #endif /* SWIFT_DEFAULT_GRAVITY_PART_H */
