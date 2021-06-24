@@ -132,6 +132,12 @@ struct hydro_props {
   struct diffusion_global_data diffusion;
 };
 
+/**
+ * @brief Ratio of particle distance to smoothing length below which
+ * a small delta is added to avoid division by 0 in the interation loops.
+ */
+static const float hydro_distance_to_h_min_ratio = 1e-4f;
+
 void hydro_props_print(const struct hydro_props *p);
 void hydro_props_init(struct hydro_props *p,
                       const struct phys_const *phys_const,
