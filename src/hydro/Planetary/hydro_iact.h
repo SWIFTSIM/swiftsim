@@ -63,9 +63,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
     error("Inhibited pj in interaction function!");
 #endif
 
-  /* Get r and 1/r. */
+  /* Get r. */
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
 
   /* Get the masses. */
   const float mi = pi->mass;
@@ -90,6 +89,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
   pj->density.rho_dh -= mi * (hydro_dimension * wj + uj * wj_dx);
   pj->density.wcount += wj;
   pj->density.wcount_dh -= (hydro_dimension * wj + uj * wj_dx);
+
+  /* Skip overlapping particles */
+  if (r < 1e-6 * hi) {
+#ifdef SWIFT_DEBUG_CHECKS
+    message("Skipping too-close particles %lld, %lld, r = %.7g h", pi->id, pj->id, r / hi);
+#endif
+    return;
+  }
+  const float r_inv = 1.0f / r;
 
   /* Compute dv dot r */
   float dv[3], curlvr[3];
@@ -147,9 +155,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
   /* Get the masses. */
   const float mj = pj->mass;
 
-  /* Get r and 1/r. */
+  /* Get r. */
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
 
   const float h_inv = 1.f / hi;
   const float ui = r * h_inv;
@@ -159,6 +166,15 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
   pi->density.rho_dh -= mj * (hydro_dimension * wi + ui * wi_dx);
   pi->density.wcount += wi;
   pi->density.wcount_dh -= (hydro_dimension * wi + ui * wi_dx);
+
+  /* Skip overlapping particles */
+  if (r < 1e-6 * hi) {
+#ifdef SWIFT_DEBUG_CHECKS
+    message("Skipping too-close particles %lld, %lld, r = %.7g h", pi->id, pj->id, r / hi);
+#endif
+    return;
+  }
+  const float r_inv = 1.0f / r;
 
   /* Compute dv dot r */
   float dv[3], curlvr[3];
@@ -209,10 +225,17 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
   const float a2_Hubble = a * a * H;
 
-  /* Get r and 1/r. */
+  /* Get r. */
   const float r = sqrtf(r2);
+
+  /* Skip overlapping particles */
+  if (r < 1e-6 * hi) {
+#ifdef SWIFT_DEBUG_CHECKS
+    message("Skipping too-close particles %lld, %lld, r = %.7g h", pi->id, pj->id, r / hi);
+#endif
+    return;
+  }
   const float r_inv = 1.0f / r;
-  ;
 
   /* Recover some data */
   const float mi = pi->mass;
@@ -339,8 +362,16 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
   const float a2_Hubble = a * a * H;
 
-  /* Get r and 1/r. */
+  /* Get r. */
   const float r = sqrtf(r2);
+
+  /* Skip overlapping particles */
+  if (r < 1e-6 * hi) {
+#ifdef SWIFT_DEBUG_CHECKS
+    message("Skipping too-close particles %lld, %lld, r = %.7g h", pi->id, pj->id, r / hi);
+#endif
+    return;
+  }
   const float r_inv = 1.0f / r;
 
   /* Recover some data */
