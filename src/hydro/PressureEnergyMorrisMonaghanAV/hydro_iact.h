@@ -91,7 +91,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
   pj->density.wcount_dh -= (hydro_dimension * wj + uj * wj_dx);
 
   /* Now we need to compute the div terms */
-  const float r_inv = 1.f / r;
+  const float r_inv = r ? 1.0f / r : 0.0f;
   const float faci = mj * wi_dx * r_inv;
   const float facj = mi * wj_dx * r_inv;
 
@@ -158,7 +158,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
   pi->density.wcount += wi;
   pi->density.wcount_dh -= (hydro_dimension * wi + ui * wi_dx);
 
-  const float r_inv = 1.f / r;
+  const float r_inv = r ? 1.0f / r : 0.0f;
   const float faci = mj * wi_dx * r_inv;
 
   /* Compute dv dot r */
@@ -200,7 +200,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
   const float a2_Hubble = a * a * H;
 
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
+  const float r_inv = r ? 1.0f / r : 0.0f;
 
   /* Recover some data */
   const float mj = pj->mass;
@@ -328,7 +328,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
   const float a2_Hubble = a * a * H;
 
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
+  const float r_inv = r ? 1.0f / r : 0.0f;
 
   /* Recover some data */
   // const float mi = pi->mass;
