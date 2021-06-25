@@ -44,7 +44,8 @@
  */
 __attribute__((always_inline)) INLINE static void runner_iact_density(
     const float r2, const float dx[3], const float hi, const float hj,
-    struct part* pi, struct part* pj, const float a, const float H) {
+    struct part* restrict pi, struct part* restrict pj, const float a,
+    const float H) {
 
   float wi, wj, wi_dx, wj_dx;
   float dv[3], curlvr[3];
@@ -127,7 +128,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
     const float r2, const float dx[3], const float hi, const float hj,
-    struct part* pi, const struct part* pj, const float a, const float H) {
+    struct part* restrict pi, const struct part* restrict pj, const float a,
+    const float H) {
 
   float wi, wi_dx;
   float dv[3], curlvr[3];
@@ -341,7 +343,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_force(
     const float r2, const float dx[3], const float hi, const float hj,
-    struct part* pi, struct part* pj, const float a, const float H) {
+    struct part* restrict pi, struct part* restrict pj, const float a,
+    const float H) {
 
   /* Cosmological factors entering the EoMs */
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
@@ -492,7 +495,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
     const float r2, const float dx[3], const float hi, const float hj,
-    struct part* pi, const struct part* pj, const float a, const float H) {
+    struct part* restrict pi, const struct part* restrict pj, const float a,
+    const float H) {
 
   /* Cosmological factors entering the EoMs */
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
