@@ -43,8 +43,8 @@
  * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_density(
-    float r2, const float* dx, float hi, float hj, struct part* pi,
-    struct part* pj, float a, float H) {
+    const float r2, const float dx[3], const float hi, const float hj,
+    struct part* pi, struct part* pj, const float a, const float H) {
 
   float wi, wj, wi_dx, wj_dx;
   float dv[3], curlvr[3];
@@ -126,8 +126,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
  * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
-    float r2, const float* dx, float hi, float hj, struct part* pi,
-    const struct part* pj, float a, float H) {
+    const float r2, const float dx[3], const float hi, const float hj,
+    struct part* pi, const struct part* pj, const float a, const float H) {
 
   float wi, wi_dx;
   float dv[3], curlvr[3];
@@ -191,8 +191,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
  * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_gradient(
-    float r2, const float* dx, float hi, float hj, struct part* restrict pi,
-    struct part* restrict pj, float a, float H) {
+    const float r2, const float dx[3], const float hi, const float hj,
+    struct part* restrict pi, struct part* restrict pj, const float a,
+    const float H) {
 
   /* We need to construct the maximal signal velocity between our particle
    * and all of it's neighbours */
@@ -271,8 +272,9 @@ __attribute__((always_inline)) INLINE static void runner_iact_gradient(
  * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
-    float r2, const float* dx, float hi, float hj, struct part* restrict pi,
-    struct part* restrict pj, float a, float H) {
+    const float r2, const float dx[3], const float hi, const float hj,
+    struct part* restrict pi, struct part* restrict pj, const float a,
+    const float H) {
 
   /* We need to construct the maximal signal velocity between our particle
    * and all of it's neighbours */
@@ -338,8 +340,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_gradient(
  * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_force(
-    float r2, const float* dx, float hi, float hj, struct part* pi,
-    struct part* pj, float a, float H) {
+    const float r2, const float dx[3], const float hi, const float hj,
+    struct part* pi, struct part* pj, const float a, const float H) {
 
   /* Cosmological factors entering the EoMs */
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
@@ -489,8 +491,8 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
  * @param H Current Hubble parameter.
  */
 __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
-    float r2, const float* dx, float hi, float hj, struct part* pi,
-    const struct part* pj, float a, float H) {
+    const float r2, const float dx[3], const float hi, const float hj,
+    struct part* pi, const struct part* pj, const float a, const float H) {
 
   /* Cosmological factors entering the EoMs */
   const float fac_mu = pow_three_gamma_minus_five_over_two(a);
