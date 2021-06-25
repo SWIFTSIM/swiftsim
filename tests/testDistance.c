@@ -27,12 +27,11 @@
 void compute_interaction(struct part *pi, struct part *pj, float a, float H) {
 
   /* Compute the distance between the two particles */
-  const float dx[3] = {pi->x[0] - pj->x[0], pi->x[1] - pj->x[1], pi->x[2] - pj->x[2]};
+  const float dx[3] = {pi->x[0] - pj->x[0], pi->x[1] - pj->x[1],
+                       pi->x[2] - pj->x[2]};
   const float r2 = dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2];
 
-  message("r2=%e", r2);
-  
-  if (r2 < pi->h * pi->h *  kernel_gamma2) {
+  if (r2 < pi->h * pi->h * kernel_gamma2) {
 
     /* And interact them (density) */
     runner_iact_density(r2, dx, pi->h, pj->h, pi, pj, a, H);
@@ -78,10 +77,8 @@ void test(void) {
   pi.x[2] = 1.;
 
   /* Move the second particle at various distances from the first */
-  for (double log_dist = -6.f; log_dist < 1.5f; log_dist+=0.01f) {
-    
-    const double dist = exp10f(log_dist);
-    
+  for (double dist = 1.0f; 1.0 + dist > 1.0; dist /= 2.) {
+
     pj.x[0] = pi.x[0] + random_uniform(0., dist * pi.h);
     pj.x[1] = pi.x[1] + random_uniform(0., dist * pi.h);
     pj.x[2] = pi.x[2] + random_uniform(0., dist * pi.h);
@@ -95,7 +92,6 @@ void test(void) {
   pj.x[2] = pi.x[2];
 
   compute_interaction(&pi, &pj, a, H);
-  
 }
 
 int main(int argc, char *argv[]) {
@@ -114,7 +110,7 @@ int main(int argc, char *argv[]) {
   message("Seed = %d", seed);
   srand(seed);
 
-  for (int i = 0; i < 1; ++i) {
+  for (int i = 0; i < 100; ++i) {
     message("Random test %d/100", i);
     test();
   }
