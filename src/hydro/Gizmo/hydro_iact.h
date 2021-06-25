@@ -215,7 +215,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_fluxes_common(
 
   /* Get r and 1/r. */
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
+  const float r_inv = r ? 1.0f / r : 0.0f;
 
   /* Initialize local variables */
   float Bi[3][3];

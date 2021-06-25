@@ -63,7 +63,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_density(
 
   /* Get r and 1/r. */
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
+  const float r_inv = r ? 1.0f / r : 0.0f;
 
   /* Get the masses. */
   const float mi = pi->mass;
@@ -147,7 +147,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_density(
 
   /* Get r and 1/r. */
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
+  const float r_inv = r ? 1.0f / r : 0.0f;
 
   const float h_inv = 1.f / hi;
   const float ui = r * h_inv;
@@ -209,7 +209,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_force(
 
   /* Get r and 1/r. */
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
+  const float r_inv = r ? 1.0f / r : 0.0f;
 
   /* Recover some data */
   const float mi = pi->mass;
@@ -341,7 +341,7 @@ __attribute__((always_inline)) INLINE static void runner_iact_nonsym_force(
 
   /* Get r and 1/r. */
   const float r = sqrtf(r2);
-  const float r_inv = 1.0f / r;
+  const float r_inv = r ? 1.0f / r : 0.0f;
 
   /* Recover some data */
   const float mi = pi->mass;
