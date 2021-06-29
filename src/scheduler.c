@@ -2098,9 +2098,16 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         } else if (t->subtype == task_subtype_gpart) {
 
           count = t->ci->grav.count;
-          size = count * sizeof(struct gpart);
-          type = gpart_mpi_type;
-          buff = t->ci->grav.parts;
+          size = count * sizeof(struct gpart_foreign);
+          type = gpart_foreign_mpi_type;
+          buff = t->ci->grav.parts_foreign;
+
+        } else if (t->subtype == task_subtype_fof) {
+
+          count = t->ci->grav.count;
+          size = count * sizeof(struct gpart_fof_foreign);
+          type = gpart_fof_foreign_mpi_type;
+          buff = t->ci->grav.parts_fof_foreign;
 
         } else if (t->subtype == task_subtype_spart_density ||
                    t->subtype == task_subtype_spart_prep2) {
@@ -2222,9 +2229,16 @@ void scheduler_enqueue(struct scheduler *s, struct task *t) {
         } else if (t->subtype == task_subtype_gpart) {
 
           count = t->ci->grav.count;
-          size = count * sizeof(struct gpart);
-          type = gpart_mpi_type;
-          buff = t->ci->grav.parts;
+          size = count * sizeof(struct gpart_foreign);
+          type = gpart_foreign_mpi_type;
+          buff = t->buff;
+
+        } else if (t->subtype == task_subtype_fof) {
+
+          count = t->ci->grav.count;
+          size = count * sizeof(struct gpart_fof_foreign);
+          type = gpart_fof_foreign_mpi_type;
+          buff = t->buff;
 
         } else if (t->subtype == task_subtype_spart_density ||
                    t->subtype == task_subtype_spart_prep2) {
