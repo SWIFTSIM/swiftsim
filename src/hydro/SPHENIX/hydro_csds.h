@@ -33,7 +33,7 @@
  * @param e The #engine
  * @param buffer Allocated buffer for writing the particle.
  *
- * @return Position after the bits written.
+ * @return Buffer after the bits written.
  */
 INLINE static void *csds_hydro_convert_acc(const struct part *p,
                                            const struct xpart *xp,
@@ -67,7 +67,7 @@ INLINE static void *csds_hydro_convert_acc(const struct part *p,
  * @param e The #engine
  * @param buffer Allocated buffer for writing the particle.
  *
- * @return Position after the bits written.
+ * @return Buffer after the bits written.
  */
 INLINE static void *csds_hydro_convert_secondary(const struct part *p,
                                                  const struct xpart *xp,

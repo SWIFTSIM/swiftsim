@@ -30,7 +30,7 @@
  * @param e The #engine
  * @param buffer Allocated buffer for writing the particle.
  *
- * @return Position after the bits written.
+ * @return Buffer after the bits written.
  */
 INLINE static void *csds_stars_convert_acc(const struct spart *sp,
                                            const struct engine *e,

@@ -33,7 +33,7 @@
  * @param e The #engine
  * @param buffer Allocated buffer for writing the particle.
  *
- * @return Position after the bits written.
+ * @return Buffer after the bits written.
  */
 INLINE static void *csds_chemistry_write_part(const struct part *p,
                                               const struct xpart *xp,
