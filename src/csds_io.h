@@ -70,20 +70,36 @@ struct csds_field {
                             void *buffer);
 };
 
-#define csds_define_common_field(csds_field, field_name, size_type) \
-  {                                                                 \
-    csds_field.offset = 0;                                          \
-    csds_field.size = size_type;                                    \
-    if (strlen(field_name) >= csds_string_length)                   \
-      error("Name %s too long", field_name);                        \
-    strcpy(csds_field.name, field_name);                            \
-    csds_field.mask = 0;                                            \
-    csds_field.use_xpart = -1;                                      \
-    csds_field.conversion_hydro = NULL;                             \
-    csds_field.conversion_grav = NULL;                              \
-    csds_field.conversion_stars = NULL;                             \
+/**
+ * @brief Define a field common to all the simulations
+ * (e.g. timestamp or special flag).
+ *
+ * @param csds_field A pointer to the #csds_field to initialize.
+ * @param field_name A string containing the name of the field.
+ * @param size_field The size of the field in bytes (sizeof)
+ */
+#define csds_define_common_field(csds_field, field_name, size_field) \
+  {                                                                  \
+    csds_field.offset = 0;                                           \
+    csds_field.size = size_field;                                    \
+    if (strlen(field_name) >= csds_string_length)                    \
+      error("Name %s too long", field_name);                         \
+    strcpy(csds_field.name, field_name);                             \
+    csds_field.mask = 0;                                             \
+    csds_field.use_xpart = -1;                                       \
+    csds_field.conversion_hydro = NULL;                              \
+    csds_field.conversion_grav = NULL;                               \
+    csds_field.conversion_stars = NULL;                              \
   }
 
+/**
+ * @brief Define a field that simply requires a memcpy (e.g. the IDs).
+ *
+ * @param csds_field A pointer to the #csds_field to initialize.
+ * @param field_name A string containing the name of the field.
+ * @param part The type of particles (e.g. struct part)
+ * @param field The field to write (e.g. id)
+ */
 #define csds_define_standard_field(csds_field, field_name, part, field) \
   {                                                                     \
     csds_field.offset = offsetof(part, field);                          \
@@ -99,6 +115,16 @@ struct csds_field {
     csds_field.conversion_stars = NULL;                                 \
   }
 
+/**
+ * @brief Same than the previous function but for the hydro.
+ * This function specifies the particle (part vs xpart)
+ *
+ * @param csds_field A pointer to the #csds_field to initialize.
+ * @param field_name A string containing the name of the field.
+ * @param part The type of particles (e.g. struct part)
+ * @param field The field to write (e.g. id)
+ * @param saving_xpart Does the field belongs to the xpart?
+ */
 #define csds_define_hydro_standard_field(csds_field, field_name, part, field, \
                                          saving_xpart)                        \
   {                                                                           \
@@ -106,6 +132,16 @@ struct csds_field {
     csds_field.use_xpart = saving_xpart;                                      \
   }
 
+/**
+ * @brief Define a field from a function.
+ * This function should never be called by the user.
+ *
+ * @param csds_field A pointer to the #csds_field to initialize.
+ * @param field_name A string containing the name of the field.
+ * @param conversion_func The conversion function.
+ * @param field_size The size of the field to write.
+ * @param part_type The type of particles.
+ */
 #define csds_define_field_from_function_general(                    \
     csds_field, field_name, conversion_func, field_size, part_type) \
   {                                                                 \
@@ -121,6 +157,14 @@ struct csds_field {
     csds_field.conversion_##part_type = conversion_func;            \
   }
 
+/**
+ * @brief Define a field from a function for hydro.
+ *
+ * @param csds_field A pointer to the #csds_field to initialize.
+ * @param field_name A string containing the name of the field.
+ * @param conversion_func The conversion function.
+ * @param field_size The size of the field to write.
+ */
 #define csds_define_field_from_function_hydro(csds_field, field_name,     \
                                               conversion_func, size)      \
   {                                                                       \
@@ -128,6 +172,14 @@ struct csds_field {
                                             conversion_func, size, hydro) \
   }
 
+/**
+ * @brief Define a field from a function for stars.
+ *
+ * @param csds_field A pointer to the #csds_field to initialize.
+ * @param field_name A string containing the name of the field.
+ * @param conversion_func The conversion function.
+ * @param field_size The size of the field to write.
+ */
 #define csds_define_field_from_function_stars(csds_field, field_name,     \
                                               conversion_func, size)      \
   {                                                                       \
@@ -135,6 +187,14 @@ struct csds_field {
                                             conversion_func, size, stars) \
   }
 
+/**
+ * @brief Define a field from a function for gravity.
+ *
+ * @param csds_field A pointer to the #csds_field to initialize.
+ * @param field_name A string containing the name of the field.
+ * @param conversion_func The conversion function.
+ * @param field_size The size of the field to write.
+ */
 #define csds_define_field_from_function_gravity(csds_field, field_name,  \
                                                 conversion_func, size)   \
   {                                                                      \
