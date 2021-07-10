@@ -44,7 +44,7 @@ enum mask_type {
 
 struct csds_field {
   /* Name of the field */
-  char name[csds_string_length];
+  char name[CSDS_STRING_SIZE];
 
   /* Mask value. */
   unsigned int mask;
@@ -82,7 +82,7 @@ struct csds_field {
   {                                                                  \
     csds_field.offset = 0;                                           \
     csds_field.size = size_field;                                    \
-    if (strlen(field_name) >= csds_string_length)                    \
+    if (strlen(field_name) >= CSDS_STRING_SIZE)                      \
       error("Name %s too long", field_name);                         \
     strcpy(csds_field.name, field_name);                             \
     csds_field.mask = 0;                                             \
@@ -105,7 +105,7 @@ struct csds_field {
     csds_field.offset = offsetof(part, field);                          \
     part *tmp;                                                          \
     csds_field.size = sizeof(tmp->field);                               \
-    if (strlen(field_name) >= csds_string_length)                       \
+    if (strlen(field_name) >= CSDS_STRING_SIZE)                         \
       error("Name %s too long", field_name);                            \
     strcpy(csds_field.name, field_name);                                \
     csds_field.mask = 0;                                                \
@@ -145,7 +145,7 @@ struct csds_field {
 #define csds_define_field_from_function_general(                    \
     csds_field, field_name, conversion_func, field_size, part_type) \
   {                                                                 \
-    if (strlen(field_name) >= csds_string_length)                   \
+    if (strlen(field_name) >= CSDS_STRING_SIZE)                     \
       error("Name %s too long", field_name);                        \
     strcpy(csds_field.name, field_name);                            \
     csds_field.size = field_size;                                   \

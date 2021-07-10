@@ -41,7 +41,6 @@
 #include "active.h"
 #include "atomic.h"
 #include "chemistry_csds.h"
-#include "dump.h"
 #include "engine.h"
 #include "error.h"
 #include "gravity_csds.h"
@@ -86,7 +85,7 @@ char csds_file_format[csds_format_size] = "SWIFT_CSDS";
  */
 float csds_get_current_filesize_used_gb(const struct csds_writer *log,
                                         const struct engine *e) {
-  return log->dump.count / (1024.f * 1024.f * 1024.f);
+  return log->logfile.count / (1024.f * 1024.f * 1024.f);
 }
 
 /**
@@ -116,17 +115,17 @@ char *csds_write_record_header(char *buff, const unsigned int *mask,
 }
 
 /**
- * @brief Write to the dump.
+ * @brief Write to the logfile.
  *
- * @param d #dump file
+ * @param d #csds_logfile_writer file
  * @param offset (return) offset of the data
  * @param size number of bytes to write
  * @param p pointer to the data
  */
-void csds_write_data(struct dump *d, size_t *offset, size_t size,
+void csds_write_data(struct csds_logfile_writer *d, size_t *offset, size_t size,
                      const void *p) {
   /* get buffer. */
-  char *buff = dump_get(d, size, offset);
+  char *buff = csds_logfile_writer_get(d, size, offset);
 
   /* write data to the buffer. */
   memcpy(buff, p, size);
@@ -351,9 +350,9 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
   size += csds_header_bytes;
   size_t size_total = count * size;
 
-  /* Allocate a chunk of memory in the dump of the right size. */
+  /* Allocate a chunk of memory in the logfile of the right size. */
   size_t offset_new;
-  char *buff = (char *)dump_get(&log->dump, size_total, &offset_new);
+  char *buff = (char *)csds_logfile_writer_get(&log->logfile, size_total, &offset_new);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Save the buffer position in order to test if the requested buffer was
@@ -508,9 +507,9 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
   size += csds_header_bytes;
   size_t size_total = count * size;
 
-  /* Allocate a chunk of memory in the dump of the right size. */
+  /* Allocate a chunk of memory in the logfile of the right size. */
   size_t offset_new;
-  char *buff = (char *)dump_get(&log->dump, size_total, &offset_new);
+  char *buff = (char *)csds_logfile_writer_get(&log->logfile, size_total, &offset_new);
 #ifdef SWIFT_DEBUG_CHECKS
   /* Save the buffer position in order to test if the requested buffer was
    * really used */
@@ -671,9 +670,9 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
   size += csds_header_bytes;
   size_t size_total = size * count_dm;
 
-  /* Allocate a chunk of memory in the dump of the right size. */
+  /* Allocate a chunk of memory in the logfile of the right size. */
   size_t offset_new;
-  char *buff = (char *)dump_get(&log->dump, size_total, &offset_new);
+  char *buff = (char *)csds_logfile_writer_get(&log->logfile, size_total, &offset_new);
 #ifdef SWIFT_DEBUG_CHECKS
   /* Save the buffer position in order to test if the requested buffer was
    * really used */
@@ -722,14 +721,14 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
  */
 void csds_log_timestamp(struct csds_writer *log, integertime_t timestamp,
                         double time, size_t *offset) {
-  struct dump *dump = &log->dump;
+  struct csds_logfile_writer *logfile = &log->logfile;
   /* Start by computing the size of the message. */
   const int size =
       log->list_fields[csds_index_timestamp].size + csds_header_bytes;
 
-  /* Allocate a chunk of memory in the dump of the right size. */
+  /* Allocate a chunk of memory in the logfile of the right size. */
   size_t offset_new;
-  char *buff = (char *)dump_get(dump, size, &offset_new);
+  char *buff = (char *)csds_logfile_writer_get(logfile, size, &offset_new);
 
   /* Write the header. */
   unsigned int mask = log->list_fields[csds_index_timestamp].mask;
@@ -774,20 +773,20 @@ void csds_ensure_size(struct csds_writer *log, const struct engine *e) {
   // TODO improve estimate with the size of each particle
   limit *= log->max_record_size;
 
-  /* ensure enough space in dump */
-  dump_ensure(&log->dump, limit, log->buffer_scale * limit);
+  /* ensure enough space in logfile */
+  csds_logfile_writer_ensure(&log->logfile, limit, log->buffer_scale * limit);
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
             clocks_getunit());
 }
 
-/** @brief Generate the name of the dump files
+/** @brief Generate the name of the logfile files
  *
  * @param log The #csds_writer.
- * @param filename The filename of the dump file.
+ * @param filename The filename of the logfile file.
  */
-void csds_get_dump_name(struct csds_writer *log, char *filename) {
+void csds_get_logfile_name(struct csds_writer *log, char *filename) {
   sprintf(filename, "%s_%04i.dump", log->base_name, engine_rank);
 }
 
@@ -988,9 +987,9 @@ void csds_init(struct csds_writer *log, const struct engine *e,
   /* set initial value of parameters. */
   log->timestamp_offset = 0;
 
-  /* generate dump filename. */
+  /* generate logfile filename. */
   char csds_name_file[PARSER_MAX_LINE_SIZE];
-  csds_get_dump_name(log, csds_name_file);
+  csds_get_logfile_name(log, csds_name_file);
 
   /* Compute max size for a particle record. */
   int max_size = csds_offset_size + csds_mask_size;
@@ -1004,8 +1003,8 @@ void csds_init(struct csds_writer *log, const struct engine *e,
   }
   log->max_record_size = max_size;
 
-  /* init dump. */
-  dump_init(&log->dump, csds_name_file, buffer_size);
+  /* init logfile. */
+  csds_logfile_writer_init(&log->logfile, csds_name_file, buffer_size);
 
   if (e->verbose)
     message("took %.3f %s.", clocks_from_ticks(getticks() - tic),
@@ -1013,12 +1012,12 @@ void csds_init(struct csds_writer *log, const struct engine *e,
 }
 
 /**
- * @brief Close dump file and desallocate memory
+ * @brief Close logfile file and desallocate memory
  *
  * @param log The #csds_writer
  */
 void csds_free(struct csds_writer *log) {
-  dump_close(&log->dump);
+  csds_logfile_writer_close(&log->logfile);
 
   free(log->list_fields);
   log->list_fields = NULL;
@@ -1034,9 +1033,9 @@ void csds_free(struct csds_writer *log) {
 void csds_write_file_header(struct csds_writer *log) {
 
   /* get required variables. */
-  struct dump *dump = &log->dump;
+  struct csds_logfile_writer *logfile = &log->logfile;
 
-  uint64_t file_offset = dump->file_offset;
+  uint64_t file_offset = logfile->file_offset;
 
   if (file_offset != 0)
     error(
@@ -1044,29 +1043,29 @@ void csds_write_file_header(struct csds_writer *log) {
         "This function should be called before writing anything in the CSDS");
 
   /* Write format information. */
-  csds_write_data(dump, &file_offset, csds_format_size, &csds_file_format);
+  csds_write_data(logfile, &file_offset, csds_format_size, &csds_file_format);
 
   /* Write the major version number. */
-  int major = csds_major_version;
-  csds_write_data(dump, &file_offset, sizeof(int), &major);
+  int major = CSDS_MAJOR_VERSION;
+  csds_write_data(logfile, &file_offset, sizeof(int), &major);
 
   /* Write the minor version number. */
-  int minor = csds_minor_version;
-  csds_write_data(dump, &file_offset, sizeof(int), &minor);
+  int minor = CSDS_MINOR_VERSION;
+  csds_write_data(logfile, &file_offset, sizeof(int), &minor);
 
   /* write offset direction. */
   const int reversed = 0;
-  csds_write_data(dump, &file_offset, sizeof(int), &reversed);
+  csds_write_data(logfile, &file_offset, sizeof(int), &reversed);
 
   /* placeholder to write the offset of the first log here. */
-  char *skip_header = dump_get(dump, csds_offset_size, &file_offset);
+  char *skip_header = csds_logfile_writer_get(logfile, csds_offset_size, &file_offset);
 
   /* write number of bytes used for names. */
-  const unsigned int label_size = csds_string_length;
-  csds_write_data(dump, &file_offset, sizeof(unsigned int), &label_size);
+  const unsigned int label_size = CSDS_STRING_SIZE;
+  csds_write_data(logfile, &file_offset, sizeof(unsigned int), &label_size);
 
   /* placeholder to write the number of unique masks. */
-  char *skip_unique_masks = dump_get(dump, sizeof(unsigned int), &file_offset);
+  char *skip_unique_masks = csds_logfile_writer_get(logfile, sizeof(unsigned int), &file_offset);
 
   /* write masks. */
   // loop over all mask type.
@@ -1088,17 +1087,17 @@ void csds_write_file_header(struct csds_writer *log) {
     unique_mask += 1;
 
     // mask name.
-    csds_write_data(dump, &file_offset, csds_string_length,
+    csds_write_data(logfile, &file_offset, CSDS_STRING_SIZE,
                     &log->list_fields[i].name);
 
     // mask size.
-    csds_write_data(dump, &file_offset, sizeof(unsigned int),
+    csds_write_data(logfile, &file_offset, sizeof(unsigned int),
                     &log->list_fields[i].size);
   }
   memcpy(skip_unique_masks, &unique_mask, sizeof(unsigned int));
 
   /* Write the number of fields per particle */
-  csds_write_data(dump, &file_offset, sizeof(log->number_fields),
+  csds_write_data(logfile, &file_offset, sizeof(log->number_fields),
                   log->number_fields);
 
   /* Now write the order for each particle type */
@@ -1115,7 +1114,7 @@ void csds_write_file_header(struct csds_writer *log) {
       /* Find the index among all the fields. */
       for (int m = 0; m < log->total_number_fields; m++) {
         if (log->list_fields[m].mask == current_mask) {
-          csds_write_data(dump, &file_offset, sizeof(int), &m);
+          csds_write_data(logfile, &file_offset, sizeof(int), &m);
           break;
         }
       }
@@ -1348,11 +1347,11 @@ void csds_struct_restore(struct csds_writer *log, FILE *stream) {
         log->list_fields + (log->field_pointers[i] - old_list_fields);
   }
 
-  /* Restart the dump file. */
+  /* Restart the logfile. */
   char csds_name_file[PARSER_MAX_LINE_SIZE];
-  csds_get_dump_name(log, csds_name_file);
+  csds_get_logfile_name(log, csds_name_file);
 
-  dump_restart(&log->dump, csds_name_file);
+  csds_logfile_writer_restart(&log->logfile, csds_name_file);
 }
 
 #endif /* WITH_CSDS */
