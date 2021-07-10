@@ -144,8 +144,7 @@ void csds_copy_part_fields(const struct csds_writer *log, const struct part *p,
 
   /* Special flags */
   if (mask & log->list_fields[SPECIAL_FLAGS_INDEX].mask) {
-    memcpy(buff, &special_flags,
-           log->list_fields[SPECIAL_FLAGS_INDEX].size);
+    memcpy(buff, &special_flags, log->list_fields[SPECIAL_FLAGS_INDEX].size);
     buff += log->list_fields[SPECIAL_FLAGS_INDEX].size;
     mask &= ~log->list_fields[SPECIAL_FLAGS_INDEX].mask;
   }
@@ -267,7 +266,8 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
 
   /* Allocate a chunk of memory in the logfile of the right size. */
   size_t offset_new;
-  char *buff = (char *)csds_logfile_writer_get(&log->logfile, size_total, &offset_new);
+  char *buff =
+      (char *)csds_logfile_writer_get(&log->logfile, size_total, &offset_new);
 
 #ifdef SWIFT_DEBUG_CHECKS
   /* Save the buffer position in order to test if the requested buffer was
@@ -333,8 +333,7 @@ void csds_copy_spart_fields(const struct csds_writer *log,
 
   /* Special flags */
   if (mask & log->list_fields[SPECIAL_FLAGS_INDEX].mask) {
-    memcpy(buff, &special_flags,
-           log->list_fields[SPECIAL_FLAGS_INDEX].size);
+    memcpy(buff, &special_flags, log->list_fields[SPECIAL_FLAGS_INDEX].size);
     buff += log->list_fields[SPECIAL_FLAGS_INDEX].size;
     mask &= ~log->list_fields[SPECIAL_FLAGS_INDEX].mask;
   }
@@ -424,7 +423,8 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
 
   /* Allocate a chunk of memory in the logfile of the right size. */
   size_t offset_new;
-  char *buff = (char *)csds_logfile_writer_get(&log->logfile, size_total, &offset_new);
+  char *buff =
+      (char *)csds_logfile_writer_get(&log->logfile, size_total, &offset_new);
 #ifdef SWIFT_DEBUG_CHECKS
   /* Save the buffer position in order to test if the requested buffer was
    * really used */
@@ -486,8 +486,7 @@ void csds_copy_gpart_fields(const struct csds_writer *log,
 
   /* Special flags */
   if (mask & log->list_fields[SPECIAL_FLAGS_INDEX].mask) {
-    memcpy(buff, &special_flags,
-           log->list_fields[SPECIAL_FLAGS_INDEX].size);
+    memcpy(buff, &special_flags, log->list_fields[SPECIAL_FLAGS_INDEX].size);
     buff += log->list_fields[SPECIAL_FLAGS_INDEX].size;
     mask &= ~log->list_fields[SPECIAL_FLAGS_INDEX].mask;
   }
@@ -587,7 +586,8 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
 
   /* Allocate a chunk of memory in the logfile of the right size. */
   size_t offset_new;
-  char *buff = (char *)csds_logfile_writer_get(&log->logfile, size_total, &offset_new);
+  char *buff =
+      (char *)csds_logfile_writer_get(&log->logfile, size_total, &offset_new);
 #ifdef SWIFT_DEBUG_CHECKS
   /* Save the buffer position in order to test if the requested buffer was
    * really used */
@@ -638,8 +638,7 @@ void csds_log_timestamp(struct csds_writer *log, integertime_t timestamp,
                         double time, size_t *offset) {
   struct csds_logfile_writer *logfile = &log->logfile;
   /* Start by computing the size of the message. */
-  const int size =
-      log->list_fields[TIMESTAMP_INDEX].size + CSDS_HEADER_SIZE;
+  const int size = log->list_fields[TIMESTAMP_INDEX].size + CSDS_HEADER_SIZE;
 
   /* Allocate a chunk of memory in the logfile of the right size. */
   size_t offset_new;
@@ -952,12 +951,12 @@ void csds_write_file_header(struct csds_writer *log) {
 
   /* Write the beginning of the header */
   char *offset_first_record =
-    csds_logfile_writer_write_begining_header(logfile);
+      csds_logfile_writer_write_begining_header(logfile);
 
   /* placeholder to write the number of unique masks. */
   size_t file_offset = 0;
   char *skip_unique_masks =
-    csds_logfile_writer_get(logfile, sizeof(unsigned int), &file_offset);
+      csds_logfile_writer_get(logfile, sizeof(unsigned int), &file_offset);
 
   /* write masks. */
   // loop over all mask type.
