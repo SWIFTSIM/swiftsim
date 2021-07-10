@@ -502,7 +502,7 @@ void engine_collect_end_of_step(struct engine *e, int apply) {
   /* Get the file size from the CSDS. */
   if (e->policy & engine_policy_csds)
     data.csds_file_size_gb =
-        csds_get_current_filesize_used_gb(&e->csds->logfile);
+        csds_logfile_writer_get_current_filesize_used_gb(&e->csds->logfile);
 #endif
 
   /* Need to use a consistent check of the hours since we started. */
