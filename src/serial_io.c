@@ -1213,6 +1213,8 @@ void write_output_serial(struct engine* e,
     io_write_attribute(h_grp, "NumFilesPerSnapshot", INT, &numFiles, 1);
     io_write_attribute_i(h_grp, "ThisFile", 0);
     io_write_attribute_s(h_grp, "SelectOutput", current_selection_name);
+    io_write_attribute_i(h_grp, "Virtual", 0);
+
     if (subsample_any) {
       io_write_attribute_s(h_grp, "OutputType", "SubSampled");
       io_write_attribute(h_grp, "SubSampleFractions", FLOAT, subsample_fraction,

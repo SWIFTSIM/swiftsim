@@ -271,6 +271,366 @@ void write_distributed_array(
 }
 
 /**
+ * @brief Prepares an array in the snapshot.
+ *
+ * @param e The #engine we are writing from.
+ * @param grp The HDF5 grp to write to.
+ * @param fileName The name of the file we are writing to.
+ * @param xmfFile The (opened) XMF file we are appending to.
+ * @param partTypeGroupName The name of the group we are writing to.
+ * @param props The #io_props of the field to write.
+ * @param N_total The total number of particles to write in this array.
+ * @param snapshot_units The units used for the data in this snapshot.
+ */
+void write_array_virtual(struct engine* e, hid_t grp, const char* fileName,
+                         FILE* xmfFile, char* partTypeGroupName,
+                         struct io_props props, long long N_total,
+                         const long long* N_counts, const int ptype,
+                         const enum lossy_compression_schemes lossy_compression,
+                         const struct unit_system* snapshot_units) {
+
+  /* Create data space */
+  const hid_t h_space = H5Screate(H5S_SIMPLE);
+  if (h_space < 0)
+    error("Error while creating data space for field '%s'.", props.name);
+
+  int rank = 0;
+  hsize_t shape[2];
+  hsize_t chunk_shape[2];
+  if (props.dimension > 1) {
+    rank = 2;
+    shape[0] = N_total;
+    shape[1] = props.dimension;
+    chunk_shape[0] = 1 << 20; /* Just a guess...*/
+    chunk_shape[1] = props.dimension;
+  } else {
+    rank = 1;
+    shape[0] = N_total;
+    shape[1] = 0;
+    chunk_shape[0] = 1 << 20; /* Just a guess...*/
+    chunk_shape[1] = 0;
+  }
+
+  /* Make sure the chunks are not larger than the dataset */
+  if ((long long)chunk_shape[0] > N_total) chunk_shape[0] = N_total;
+
+  /* Change shape of data space */
+  hid_t h_err = H5Sset_extent_simple(h_space, rank, shape, NULL);
+  if (h_err < 0)
+    error("Error while changing data space shape for field '%s'.", props.name);
+
+  /* Dataset type */
+  hid_t h_type = H5Tcopy(io_hdf5_type(props.type));
+
+  /* Dataset properties */
+  hid_t h_prop = H5Pcreate(H5P_DATASET_CREATE);
+
+  /* Are we imposing some form of lossy compression filter? */
+  char comp_buffer[32] = "None";
+  if (lossy_compression != compression_write_lossless)
+    sprintf(comp_buffer, "%s",
+            lossy_compression_schemes_names[lossy_compression]);
+
+  /* Create dataset */
+  const hid_t h_data = H5Dcreate(grp, props.name, h_type, h_space, H5P_DEFAULT,
+                                 h_prop, H5P_DEFAULT);
+  if (h_data < 0) error("Error while creating dataspace '%s'.", props.name);
+
+  /* Write unit conversion factors for this data set */
+  char buffer[FIELD_BUFFER_SIZE] = {0};
+  units_cgs_conversion_string(buffer, snapshot_units, props.units,
+                              props.scale_factor_exponent);
+  float baseUnitsExp[5];
+  units_get_base_unit_exponents_array(baseUnitsExp, props.units);
+  io_write_attribute_f(h_data, "U_M exponent", baseUnitsExp[UNIT_MASS]);
+  io_write_attribute_f(h_data, "U_L exponent", baseUnitsExp[UNIT_LENGTH]);
+  io_write_attribute_f(h_data, "U_t exponent", baseUnitsExp[UNIT_TIME]);
+  io_write_attribute_f(h_data, "U_I exponent", baseUnitsExp[UNIT_CURRENT]);
+  io_write_attribute_f(h_data, "U_T exponent", baseUnitsExp[UNIT_TEMPERATURE]);
+  io_write_attribute_f(h_data, "h-scale exponent", 0.f);
+  io_write_attribute_f(h_data, "a-scale exponent", props.scale_factor_exponent);
+  io_write_attribute_s(h_data, "Expression for physical CGS units", buffer);
+  io_write_attribute_s(h_data, "Lossy compression filter", comp_buffer);
+
+  /* Write the actual number this conversion factor corresponds to */
+  const double factor =
+      units_cgs_conversion_factor(snapshot_units, props.units);
+  io_write_attribute_d(
+      h_data,
+      "Conversion factor to CGS (not including cosmological corrections)",
+      factor);
+  io_write_attribute_d(
+      h_data,
+      "Conversion factor to physical CGS (including cosmological corrections)",
+      factor * pow(e->cosmology->a, props.scale_factor_exponent));
+
+#ifdef SWIFT_DEBUG_CHECKS
+  if (strlen(props.description) == 0)
+    error("Invalid (empty) description of the field '%s'", props.name);
+#endif
+
+  /* Write the full description */
+  io_write_attribute_s(h_data, "Description", props.description);
+
+  /* Add a line to the XMF */
+  if (xmfFile != NULL)
+    xmf_write_line(xmfFile, fileName, partTypeGroupName, props.name, N_total,
+                   props.dimension, props.type);
+
+  /* Close everything */
+  H5Tclose(h_type);
+  H5Pclose(h_prop);
+  H5Dclose(h_data);
+  H5Sclose(h_space);
+}
+
+/**
+ * @brief Prepares a file for a parallel write.
+ *
+ * @param e The #engine.
+ * @param fileName The file name to write to.
+ * @param N_total The total number of particles of each type to write.
+ * @param numFields The number of fields to write for each particle type.
+ * @param internal_units The #unit_system used internally.
+ * @param snapshot_units The #unit_system used in the snapshots.
+ * @param subsample_any Are any fields being subsampled?
+ * @param subsample_fraction The subsampling fraction of each particle type.
+ */
+void write_virtual_file(struct engine* e, const char* fileName,
+                        const char* xmfFileName,
+                        const long long N_total[swift_type_count],
+                        const long long* N_counts,
+                        const int numFields[swift_type_count],
+                        char current_selection_name[FIELD_BUFFER_SIZE],
+                        const struct unit_system* internal_units,
+                        const struct unit_system* snapshot_units,
+                        const int subsample_any,
+                        const float subsample_fraction[swift_type_count]) {
+
+  struct output_options* output_options = e->output_options;
+  const int with_cosmology = e->policy & engine_policy_cosmology;
+  const int with_cooling = e->policy & engine_policy_cooling;
+  const int with_temperature = e->policy & engine_policy_temperature;
+  const int with_fof = e->policy & engine_policy_fof;
+#ifdef HAVE_VELOCIRAPTOR
+  const int with_stf = (e->policy & engine_policy_structure_finding) &&
+                       (e->s->gpart_group_data != NULL);
+#else
+  const int with_stf = 0;
+#endif
+  const int with_rt = e->policy & engine_policy_rt;
+
+  int numFiles = 1;
+
+  /* Open HDF5 file with the chosen parameters */
+  hid_t h_file = H5Fcreate(fileName, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  if (h_file < 0) error("Error while opening file '%s'.", fileName);
+
+  /* Open header to write simulation properties */
+  /* message("Writing file header..."); */
+  hid_t h_grp =
+      H5Gcreate(h_file, "/Header", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if (h_grp < 0) error("Error while creating file header\n");
+
+  /* Convert basic output information to snapshot units */
+  const double factor_time =
+      units_conversion_factor(internal_units, snapshot_units, UNIT_CONV_TIME);
+  const double factor_length =
+      units_conversion_factor(internal_units, snapshot_units, UNIT_CONV_LENGTH);
+  const double dblTime = e->time * factor_time;
+  const double dim[3] = {e->s->dim[0] * factor_length,
+                         e->s->dim[1] * factor_length,
+                         e->s->dim[2] * factor_length};
+
+  /* Print the relevant information and print status */
+  io_write_attribute(h_grp, "BoxSize", DOUBLE, dim, 3);
+  io_write_attribute(h_grp, "Time", DOUBLE, &dblTime, 1);
+  const int dimension = (int)hydro_dimension;
+  io_write_attribute(h_grp, "Dimension", INT, &dimension, 1);
+  io_write_attribute(h_grp, "Redshift", DOUBLE, &e->cosmology->z, 1);
+  io_write_attribute(h_grp, "Scale-factor", DOUBLE, &e->cosmology->a, 1);
+  io_write_attribute_s(h_grp, "Code", "SWIFT");
+  io_write_attribute_s(h_grp, "RunName", e->run_name);
+  io_write_attribute_s(h_grp, "System", hostname());
+
+  /* Write out the particle types */
+  io_write_part_type_names(h_grp);
+
+  /* Write out the time-base */
+  if (with_cosmology) {
+    io_write_attribute_d(h_grp, "TimeBase_dloga", e->time_base);
+    const double delta_t = cosmology_get_timebase(e->cosmology, e->ti_current);
+    io_write_attribute_d(h_grp, "TimeBase_dt", delta_t);
+  } else {
+    io_write_attribute_d(h_grp, "TimeBase_dloga", 0);
+    io_write_attribute_d(h_grp, "TimeBase_dt", e->time_base);
+  }
+
+  /* Store the time at which the snapshot was written */
+  time_t tm = time(NULL);
+  struct tm* timeinfo = localtime(&tm);
+  char snapshot_date[64];
+  strftime(snapshot_date, 64, "%T %F %Z", timeinfo);
+  io_write_attribute_s(h_grp, "SnapshotDate", snapshot_date);
+
+  /* GADGET-2 legacy values */
+  /* Number of particles of each type */
+  long long numParticlesThisFile[swift_type_count] = {0};
+  unsigned int numParticles[swift_type_count] = {0};
+  unsigned int numParticlesHighWord[swift_type_count] = {0};
+
+  for (int ptype = 0; ptype < swift_type_count; ++ptype) {
+    numParticles[ptype] = (unsigned int)N_total[ptype];
+    numParticlesHighWord[ptype] = (unsigned int)(N_total[ptype] >> 32);
+
+    if (numFields[ptype] == 0) {
+      numParticlesThisFile[ptype] = 0;
+    } else {
+      numParticlesThisFile[ptype] = N_total[ptype];
+    }
+  }
+
+  io_write_attribute(h_grp, "NumPart_ThisFile", LONGLONG, numParticlesThisFile,
+                     swift_type_count);
+  io_write_attribute(h_grp, "NumPart_Total", UINT, numParticles,
+                     swift_type_count);
+  io_write_attribute(h_grp, "NumPart_Total_HighWord", UINT,
+                     numParticlesHighWord, swift_type_count);
+  double MassTable[swift_type_count] = {0};
+  io_write_attribute(h_grp, "MassTable", DOUBLE, MassTable, swift_type_count);
+  io_write_attribute(h_grp, "InitialMassTable", DOUBLE,
+                     e->s->initial_mean_mass_particles, swift_type_count);
+  unsigned int flagEntropy[swift_type_count] = {0};
+  flagEntropy[0] = writeEntropyFlag();
+  io_write_attribute(h_grp, "Flag_Entropy_ICs", UINT, flagEntropy,
+                     swift_type_count);
+  io_write_attribute(h_grp, "NumFilesPerSnapshot", INT, &numFiles, 1);
+  io_write_attribute_i(h_grp, "ThisFile", 0);
+  io_write_attribute_s(h_grp, "SelectOutput", current_selection_name);
+  io_write_attribute_i(h_grp, "Virtual", 1);
+
+  if (subsample_any) {
+    io_write_attribute_s(h_grp, "OutputType", "SubSampled");
+    io_write_attribute(h_grp, "SubSampleFractions", FLOAT, subsample_fraction,
+                       swift_type_count);
+  } else {
+    io_write_attribute_s(h_grp, "OutputType", "FullVolume");
+  }
+
+  /* Close header */
+  H5Gclose(h_grp);
+
+  /* Write all the meta-data */
+  io_write_meta_data(h_file, e, internal_units, snapshot_units);
+
+  /* Loop over all particle types */
+  for (int ptype = 0; ptype < swift_type_count; ptype++) {
+
+    /* Don't do anything if there are (a) no particles of this kind, or (b)
+     * if we have disabled every field of this particle type. */
+    if (N_total[ptype] == 0 || numFields[ptype] == 0) continue;
+
+    /* Create the particle group in the file */
+    char partTypeGroupName[PARTICLE_GROUP_BUFFER_SIZE];
+    snprintf(partTypeGroupName, PARTICLE_GROUP_BUFFER_SIZE, "/PartType%d",
+             ptype);
+    h_grp = H5Gcreate(h_file, partTypeGroupName, H5P_DEFAULT, H5P_DEFAULT,
+                      H5P_DEFAULT);
+    if (h_grp < 0)
+      error("Error while creating particle group %s.", partTypeGroupName);
+
+    /* Add an alias name for convenience */
+    char aliasName[PARTICLE_GROUP_BUFFER_SIZE];
+    snprintf(aliasName, PARTICLE_GROUP_BUFFER_SIZE, "/%sParticles",
+             part_type_names[ptype]);
+    hid_t h_err = H5Lcreate_soft(partTypeGroupName, h_grp, aliasName,
+                                 H5P_DEFAULT, H5P_DEFAULT);
+    if (h_err < 0) error("Error while creating alias for particle group.\n");
+
+    /* Write the number of particles as an attribute */
+    io_write_attribute_l(h_grp, "NumberOfParticles", N_total[ptype]);
+
+    int num_fields = 0;
+    struct io_props list[100];
+    bzero(list, 100 * sizeof(struct io_props));
+
+    /* Write particle fields from the particle structure */
+    switch (ptype) {
+
+      case swift_type_gas:
+        io_select_hydro_fields(NULL, NULL, with_cosmology, with_cooling,
+                               with_temperature, with_fof, with_stf, with_rt, e,
+                               &num_fields, list);
+        break;
+
+      case swift_type_dark_matter:
+      case swift_type_dark_matter_background:
+        io_select_dm_fields(NULL, NULL, with_fof, with_stf, e, &num_fields,
+                            list);
+        break;
+
+      case swift_type_neutrino:
+        io_select_neutrino_fields(NULL, NULL, with_fof, with_stf, e,
+                                  &num_fields, list);
+        break;
+
+      case swift_type_sink:
+        io_select_sink_fields(NULL, with_cosmology, with_fof, with_stf, e,
+                              &num_fields, list);
+        break;
+
+      case swift_type_stars:
+        io_select_star_fields(NULL, with_cosmology, with_fof, with_stf, with_rt,
+                              e, &num_fields, list);
+        break;
+
+      case swift_type_black_hole:
+        io_select_bh_fields(NULL, with_cosmology, with_fof, with_stf, e,
+                            &num_fields, list);
+        break;
+
+      default:
+        error("Particle Type %d not yet supported. Aborting", ptype);
+    }
+
+    /* Did the user specify a non-standard default for the entire particle
+     * type? */
+    const enum lossy_compression_schemes compression_level_current_default =
+        output_options_get_ptype_default_compression(
+            output_options->select_output, current_selection_name,
+            (enum part_type)ptype, e->verbose);
+
+    /* Prepare everything that is not cancelled */
+    int num_fields_written = 0;
+    for (int i = 0; i < num_fields; ++i) {
+
+      /* Did the user cancel this field? */
+      const enum lossy_compression_schemes compression_level =
+          output_options_get_field_compression(
+              output_options, current_selection_name, list[i].name,
+              (enum part_type)ptype, compression_level_current_default,
+              e->verbose);
+
+      if (compression_level != compression_do_not_write) {
+        write_array_virtual(e, h_grp, fileName, NULL,  // xmfFile,
+                            partTypeGroupName, list[i], N_total[ptype],
+                            N_counts, ptype, compression_level, snapshot_units);
+        num_fields_written++;
+      }
+    }
+
+    /* Only write this now that we know exactly how many fields there are. */
+    io_write_attribute_i(h_grp, "NumberOfFields", num_fields_written);
+
+    /* Close particle group */
+    H5Gclose(h_grp);
+  }
+
+  /* Close the file for now */
+  H5Fclose(h_file);
+}
+
+/**
  * @brief Writes a snapshot distributed into multiple files.
  *
  * @param e The engine containing all the system.
@@ -347,14 +707,21 @@ void write_output_distributed(struct engine* e,
   }
 
   /* Directory and file name */
+  char fileName_virtual[1024];
   char dirName[1024];
   char fileName[1024];
+  char xmfFileName[FILENAME_BUFFER_SIZE];
   char snapshot_subdir_name[FILENAME_BUFFER_SIZE];
   char snapshot_base_name[FILENAME_BUFFER_SIZE];
 
   output_options_get_basename(output_options, current_selection_name,
                               e->snapshot_subdir, e->snapshot_base_name,
                               snapshot_subdir_name, snapshot_base_name);
+
+  io_get_snapshot_filename(
+      fileName, xmfFileName, output_list, e->snapshot_invoke_stf,
+      e->stf_output_count, e->snapshot_output_count, e->snapshot_subdir,
+      snapshot_subdir_name, e->snapshot_base_name, snapshot_base_name);
 
   /* Are we using a sub-dir? */
   if (strnlen(e->snapshot_subdir, PARSER_MAX_LINE_SIZE) > 0) {
@@ -365,12 +732,20 @@ void write_output_distributed(struct engine* e,
             snapshot_base_name, number_digits, snap_count, snapshot_base_name,
             number_digits, snap_count, mpi_rank);
 
+    sprintf(fileName_virtual, "%s/%s_%0*d/%s_%0*d.hdf5", snapshot_subdir_name,
+            snapshot_base_name, number_digits, snap_count, snapshot_base_name,
+            number_digits, snap_count);
+
   } else {
     sprintf(dirName, "%s_%0*d", snapshot_base_name, number_digits, snap_count);
 
     sprintf(fileName, "%s_%0*d/%s_%0*d.%d.hdf5", snapshot_base_name,
             number_digits, snap_count, snapshot_base_name, number_digits,
             snap_count, mpi_rank);
+
+    sprintf(fileName_virtual, "%s_%0*d/%s_%0*d.hdf5", snapshot_base_name,
+            number_digits, snap_count, snapshot_base_name, number_digits,
+            snap_count);
   }
 
   /* Create the directory */
@@ -467,6 +842,12 @@ void write_output_distributed(struct engine* e,
   long long N_total[swift_type_count] = {0};
   MPI_Allreduce(N, N_total, swift_type_count, MPI_LONG_LONG_INT, MPI_SUM, comm);
 
+  /* Collect the number of particles written by each rank */
+  long long* N_counts =
+      (long long*)malloc(mpi_size * swift_type_count * sizeof(long long));
+  MPI_Gather(N_total, swift_type_count, MPI_LONG_LONG_INT, N_counts,
+             swift_type_count, MPI_LONG_LONG_INT, 0, comm);
+
   /* Open file */
   /* message("Opening file '%s'.", fileName); */
   h_file = H5Fcreate(fileName, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -562,6 +943,7 @@ void write_output_distributed(struct engine* e,
   io_write_attribute_i(h_grp, "NumFilesPerSnapshot", numFiles);
   io_write_attribute_i(h_grp, "ThisFile", mpi_rank);
   io_write_attribute_s(h_grp, "SelectOutput", current_selection_name);
+  io_write_attribute_i(h_grp, "Virtual", 0);
 
   if (subsample_any) {
     io_write_attribute_s(h_grp, "OutputType", "SubSampled");
@@ -936,6 +1318,15 @@ void write_output_distributed(struct engine* e,
 
   /* Close file */
   H5Fclose(h_file);
+
+  /* Write the virtual meta-file */
+  if (mpi_rank == 0)
+    write_virtual_file(e, fileName_virtual, xmfFileName, N_total, N_counts,
+                       numFields, current_selection_name, internal_units,
+                       snapshot_units, subsample_any, subsample_fraction);
+
+  /* Free the counts-per-rank array */
+  free(N_counts);
 
   /* Make sure nobody is allowed to progress until everyone is done. */
   MPI_Barrier(comm);
