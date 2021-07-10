@@ -294,26 +294,6 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName,
   if (h_space < 0)
     error("Error while creating data space for field '%s'.", props.name);
 
-  int rank = 0;
-  hsize_t shape[2];
-  hsize_t chunk_shape[2];
-  if (props.dimension > 1) {
-    rank = 2;
-    shape[0] = N_total;
-    shape[1] = props.dimension;
-    chunk_shape[0] = 1 << 20; /* Just a guess...*/
-    chunk_shape[1] = props.dimension;
-  } else {
-    rank = 1;
-    shape[0] = N_total;
-    shape[1] = 0;
-    chunk_shape[0] = 1 << 20; /* Just a guess...*/
-    chunk_shape[1] = 0;
-  }
-
-  /* Make sure the chunks are not larger than the dataset */
-  if ((long long)chunk_shape[0] > N_total) chunk_shape[0] = N_total;
-
   /* Change shape of data space */
   hid_t h_err = H5Sset_extent_simple(h_space, rank, shape, NULL);
   if (h_err < 0)
