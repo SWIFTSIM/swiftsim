@@ -1177,45 +1177,6 @@ AC_ARG_WITH([random-seed],
 )
 AC_DEFINE_UNQUOTED([SWIFT_RANDOM_SEED_XOR], [$with_random_seed],[Value of the random seed.])
 
-# Check for python.
-have_python="no"
-AC_ARG_WITH([python],
-    [AS_HELP_STRING([--with-python=PATH],
-       [root directory where python is installed @<:@yes/no@:>@]
-    )],
-    [with_python="$withval"],
-    [with_python="no"]
-)
-if test "x$with_python" != "xno"; then
-   if test "$with_python" == ""; then
-      # use linux default python
-      with_python="/usr/"
-   fi
-   AM_PATH_PYTHON([3], [], [AC_MSG_ERROR(python not found)])   
-   AC_ARG_VAR([PYTHON_LIBS], [Linking flags for python, bypassing python-config])
-   AC_ARG_VAR([PYTHON_INCS], [Include flags for python, bypassing python-config])
-   AC_ARG_VAR([PYTHON_CONFIG], [Path to python-config])
-   AS_IF([test -z "$PYTHON_INCS"], [
-      AS_IF([test -z "$PYTHON_CONFIG"], [
-      	AC_PATH_PROGS([PYTHON_CONFIG],
-	          [python$PYTHON_VERSION-config python-config],
-                  [no],
-                  [`dirname $PYTHON`])
-    	AS_IF([test "$PYTHON_CONFIG" = no], [AC_MSG_ERROR([cannot find python-config for $PYTHON.])])
-      ])
-      AC_MSG_CHECKING([python include flags])
-      PYTHON_INCS=`$PYTHON_CONFIG --includes`
-      PYTHON_LIBS=`$PYTHON_CONFIG --ldflags`
-      AC_MSG_RESULT([$PYTHON_INCS])
-      AC_MSG_RESULT([$PYTHON_LIBS])
-  ])
-  have_python="yes"
-  AC_DEFINE([HAVE_PYTHON],1,[Python appears to be present.])
-fi
-AC_SUBST([PYTHON_INCS])
-AC_SUBST([PYTHON_LIBS])
-AM_CONDITIONAL([HAVEPYTHON],[test -n "$PYTHON_INCS"])
-
 
 # Check for HDF5. This is required.
 AX_LIB_HDF5
@@ -2642,6 +2603,5 @@ AC_MSG_RESULT([
    Planetary fixed entropy     : $planetary_fixed_entropy
 
    Continuous Sim. Data Stream : $with_csds
-   Python enabled              : $have_python
 
  ------------------------])

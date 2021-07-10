@@ -33,13 +33,13 @@
 /* This enum defines the type of particle to use
    with a given mask.
    The values should be the same than in part_type.h. */
-enum mask_type {
-  mask_type_gas = 0,
-  mask_type_dark_matter = 1,
+enum mask_for_type {
+  mask_for_gas = 0,
+  mask_for_dark_matter = 1,
   /* Only need a single type of dm. */
-  mask_type_stars = 4,
-  mask_type_black_hole = 5,
-  mask_type_timestep = -1,
+  mask_for_stars = 4,
+  mask_for_black_hole = 5,
+  mask_for_timestep = -1,
 } __attribute__((packed));
 
 struct csds_field {
@@ -50,7 +50,7 @@ struct csds_field {
   unsigned int mask;
 
   /* Type of particle (follow part_type.h and -1 for timestamp). */
-  enum mask_type type;
+  enum mask_for_type type;
 
   /* The offset of the field within the particle */
   size_t offset;
