@@ -307,7 +307,6 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
     source_shape[1] = props.dimension;
     count[1] = props.dimension;
 
-    return;
   } else {
     rank = 1;
     shape[0] = N_total;
@@ -359,9 +358,6 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
 
     char fileName[1024];
     sprintf(fileName, "%s.%d.hdf5", fileName_base, i);
-
-    message("%d fileName: '%s' count=%lld start=%lld", i, fileName, count[0],
-            start[0]);
 
     /* Make the virtual link */
     h_err = H5Pset_virtual(h_prop, h_space, fileName, source_dataset_name,
