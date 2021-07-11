@@ -423,9 +423,8 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
   if (xmfFile != NULL) {
     char fileName[1024];
     sprintf(fileName, "%s.hdf5", fileName_base);
-
-    xmf_write_line(xmfFile, fileName, partTypeGroupName, props.name, N_total,
-                   props.dimension, props.type);
+    xmf_write_line(xmfFile, fileName, /*distributed=*/1, partTypeGroupName,
+                   props.name, N_total, props.dimension, props.type);
   }
 
   /* Close everything */
@@ -471,10 +470,21 @@ void write_virtual_file(struct engine* e, const char* fileName_base,
 #endif
   const int with_rt = e->policy & engine_policy_rt;
 
+  FILE* xmfFile = 0;
   int numFiles = 1;
+
+  /* First time, we need to create the XMF file */
+  if (e->snapshot_output_count == 0) xmf_create_file(xmfFileName);
+
+  /* Prepare the XMF file for the new entry */
+  xmfFile = xmf_prepare_file(xmfFileName);
 
   char fileName[1024];
   sprintf(fileName, "%s.hdf5", fileName_base);
+
+  /* Write the part of the XMF file corresponding to this
+   * specific output */
+  xmf_write_outputheader(xmfFile, fileName, e->time);
 
   /* Open HDF5 file with the chosen parameters */
   hid_t h_file = H5Fcreate(fileName, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -584,6 +594,11 @@ void write_virtual_file(struct engine* e, const char* fileName_base,
      * if we have disabled every field of this particle type. */
     if (N_total[ptype] == 0 || numFields[ptype] == 0) continue;
 
+    /* Add the global information for that particle type to
+     * the XMF meta-file */
+    xmf_write_groupheader(xmfFile, fileName, /*distributed=*/1, N_total[ptype],
+                          (enum part_type)ptype);
+
     /* Create the particle group in the file */
     char partTypeGroupName[PARTICLE_GROUP_BUFFER_SIZE];
     snprintf(partTypeGroupName, PARTICLE_GROUP_BUFFER_SIZE, "/PartType%d",
@@ -666,10 +681,9 @@ void write_virtual_file(struct engine* e, const char* fileName_base,
               e->verbose);
 
       if (compression_level != compression_do_not_write) {
-        write_array_virtual(e, h_grp, fileName_base, NULL,  // xmfFile,
-                            partTypeGroupName, list[i], N_total[ptype],
-                            N_counts, num_ranks, ptype, compression_level,
-                            snapshot_units);
+        write_array_virtual(e, h_grp, fileName_base, xmfFile, partTypeGroupName,
+                            list[i], N_total[ptype], N_counts, num_ranks, ptype,
+                            compression_level, snapshot_units);
         num_fields_written++;
       }
     }
@@ -679,7 +693,13 @@ void write_virtual_file(struct engine* e, const char* fileName_base,
 
     /* Close particle group */
     H5Gclose(h_grp);
+
+    /* Close this particle group in the XMF file as well */
+    xmf_write_groupfooter(xmfFile, (enum part_type)ptype);
   }
+
+  /* Write LXMF file descriptor */
+  xmf_write_outputfooter(xmfFile, e->snapshot_output_count, e->time);
 
   /* Close the file for now */
   H5Fclose(h_file);
@@ -1389,5 +1409,4 @@ void write_output_distributed(struct engine* e,
   e->snapshot_output_count++;
   if (e->snapshot_invoke_stf) e->stf_output_count++;
 }
-
 #endif /* HAVE_HDF5 && WITH_MPI */
