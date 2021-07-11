@@ -282,10 +282,11 @@ void write_distributed_array(
  * @param N_total The total number of particles to write in this array.
  * @param snapshot_units The units used for the data in this snapshot.
  */
-void write_array_virtual(struct engine* e, hid_t grp, const char* fileName,
+void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
                          FILE* xmfFile, char* partTypeGroupName,
                          struct io_props props, long long N_total,
-                         const long long* N_counts, const int ptype,
+                         const long long* N_counts, const int num_ranks,
+                         const int ptype,
                          const enum lossy_compression_schemes lossy_compression,
                          const struct unit_system* snapshot_units) {
 
@@ -293,6 +294,27 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName,
   const hid_t h_space = H5Screate(H5S_SIMPLE);
   if (h_space < 0)
     error("Error while creating data space for field '%s'.", props.name);
+
+  int rank = 0;
+  hsize_t shape[2];
+  hsize_t source_shape[2];
+  hsize_t start[2];
+  hsize_t count[2];
+  if (props.dimension > 1) {
+    rank = 2;
+    shape[0] = N_total;
+    shape[1] = props.dimension;
+    source_shape[1] = props.dimension;
+    count[1] = props.dimension;
+
+    return;
+  } else {
+    rank = 1;
+    shape[0] = N_total;
+    shape[1] = 0;
+    source_shape[1] = 0;
+    count[1] = 0;
+  }
 
   /* Change shape of data space */
   hid_t h_err = H5Sset_extent_simple(h_space, rank, shape, NULL);
@@ -304,6 +326,7 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName,
 
   /* Dataset properties */
   hid_t h_prop = H5Pcreate(H5P_DATASET_CREATE);
+  // H5Pset_fill_value (h_prop, H5T_NATIVE_INT, &fill_value);
 
   /* Are we imposing some form of lossy compression filter? */
   char comp_buffer[32] = "None";
@@ -311,7 +334,47 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName,
     sprintf(comp_buffer, "%s",
             lossy_compression_schemes_names[lossy_compression]);
 
-  /* Create dataset */
+  /* The name of the dataset to map to in the other files */
+  char source_dataset_name[256];
+  sprintf(source_dataset_name, "PartType%d/%s", ptype, props.name);
+
+  start[0] = 0;
+  start[1] = 0;
+
+  /* Create all the virtual mappings */
+  for (int i = 0; i < num_ranks; ++i) {
+
+    /* Get the number of particles of this type written on this rank */
+    count[0] = N_counts[i * swift_type_count + ptype];
+
+    /* Select the space in the virtual file */
+    h_err = H5Sselect_hyperslab(h_space, H5S_SELECT_SET, start, /*stride=*/NULL,
+                                count, /*block=*/NULL);
+    if (h_err < 0) error("Error selecting hyper-slab in the virtual file");
+
+    /* Select the space in the (already existing) source file */
+    source_shape[0] = count[0];
+    hid_t h_source_space = H5Screate_simple(rank, source_shape, NULL);
+    if (h_source_space < 0) error("Error creating space in the source file");
+
+    char fileName[1024];
+    sprintf(fileName, "%s.%d.hdf5", fileName_base, i);
+
+    message("%d fileName: '%s' count=%lld start=%lld", i, fileName, count[0],
+            start[0]);
+
+    /* Make the virtual link */
+    h_err = H5Pset_virtual(h_prop, h_space, fileName, source_dataset_name,
+                           h_source_space);
+    if (h_err < 0) error("Error setting the virtual properties");
+
+    H5Sclose(h_source_space);
+
+    /* Move to the next slab */
+    start[0] += count[0];
+  }
+
+  /* Create virtual dataset */
   const hid_t h_data = H5Dcreate(grp, props.name, h_type, h_space, H5P_DEFAULT,
                                  h_prop, H5P_DEFAULT);
   if (h_data < 0) error("Error while creating dataspace '%s'.", props.name);
@@ -353,9 +416,13 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName,
   io_write_attribute_s(h_data, "Description", props.description);
 
   /* Add a line to the XMF */
-  if (xmfFile != NULL)
+  if (xmfFile != NULL) {
+    char fileName[1024];
+    sprintf(fileName, "%s.hdf5", fileName_base);
+
     xmf_write_line(xmfFile, fileName, partTypeGroupName, props.name, N_total,
                    props.dimension, props.type);
+  }
 
   /* Close everything */
   H5Tclose(h_type);
@@ -376,10 +443,10 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName,
  * @param subsample_any Are any fields being subsampled?
  * @param subsample_fraction The subsampling fraction of each particle type.
  */
-void write_virtual_file(struct engine* e, const char* fileName,
+void write_virtual_file(struct engine* e, const char* fileName_base,
                         const char* xmfFileName,
                         const long long N_total[swift_type_count],
-                        const long long* N_counts,
+                        const long long* N_counts, const int num_ranks,
                         const int numFields[swift_type_count],
                         char current_selection_name[FIELD_BUFFER_SIZE],
                         const struct unit_system* internal_units,
@@ -401,6 +468,9 @@ void write_virtual_file(struct engine* e, const char* fileName,
   const int with_rt = e->policy & engine_policy_rt;
 
   int numFiles = 1;
+
+  char fileName[1024];
+  sprintf(fileName, "%s.hdf5", fileName_base);
 
   /* Open HDF5 file with the chosen parameters */
   hid_t h_file = H5Fcreate(fileName, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -592,9 +662,10 @@ void write_virtual_file(struct engine* e, const char* fileName,
               e->verbose);
 
       if (compression_level != compression_do_not_write) {
-        write_array_virtual(e, h_grp, fileName, NULL,  // xmfFile,
+        write_array_virtual(e, h_grp, fileName_base, NULL,  // xmfFile,
                             partTypeGroupName, list[i], N_total[ptype],
-                            N_counts, ptype, compression_level, snapshot_units);
+                            N_counts, num_ranks, ptype, compression_level,
+                            snapshot_units);
         num_fields_written++;
       }
     }
@@ -687,9 +758,9 @@ void write_output_distributed(struct engine* e,
   }
 
   /* Directory and file name */
-  char fileName_virtual[1024];
   char dirName[1024];
   char fileName[1024];
+  char fileName_base[1024];
   char xmfFileName[FILENAME_BUFFER_SIZE];
   char snapshot_subdir_name[FILENAME_BUFFER_SIZE];
   char snapshot_base_name[FILENAME_BUFFER_SIZE];
@@ -712,7 +783,7 @@ void write_output_distributed(struct engine* e,
             snapshot_base_name, number_digits, snap_count, snapshot_base_name,
             number_digits, snap_count, mpi_rank);
 
-    sprintf(fileName_virtual, "%s/%s_%0*d/%s_%0*d.hdf5", snapshot_subdir_name,
+    sprintf(fileName_base, "%s/%s_%0*d/%s_%0*d", snapshot_subdir_name,
             snapshot_base_name, number_digits, snap_count, snapshot_base_name,
             number_digits, snap_count);
 
@@ -723,9 +794,8 @@ void write_output_distributed(struct engine* e,
             number_digits, snap_count, snapshot_base_name, number_digits,
             snap_count, mpi_rank);
 
-    sprintf(fileName_virtual, "%s_%0*d/%s_%0*d.hdf5", snapshot_base_name,
-            number_digits, snap_count, snapshot_base_name, number_digits,
-            snap_count);
+    sprintf(fileName_base, "%s_%0*d/%s_%0*d", snapshot_base_name, number_digits,
+            snap_count, snapshot_base_name, number_digits, snap_count);
   }
 
   /* Create the directory */
@@ -825,8 +895,8 @@ void write_output_distributed(struct engine* e,
   /* Collect the number of particles written by each rank */
   long long* N_counts =
       (long long*)malloc(mpi_size * swift_type_count * sizeof(long long));
-  MPI_Gather(N_total, swift_type_count, MPI_LONG_LONG_INT, N_counts,
-             swift_type_count, MPI_LONG_LONG_INT, 0, comm);
+  MPI_Gather(N, swift_type_count, MPI_LONG_LONG_INT, N_counts, swift_type_count,
+             MPI_LONG_LONG_INT, 0, comm);
 
   /* Open file */
   /* message("Opening file '%s'.", fileName); */
@@ -1301,9 +1371,10 @@ void write_output_distributed(struct engine* e,
 
   /* Write the virtual meta-file */
   if (mpi_rank == 0)
-    write_virtual_file(e, fileName_virtual, xmfFileName, N_total, N_counts,
-                       numFields, current_selection_name, internal_units,
-                       snapshot_units, subsample_any, subsample_fraction);
+    write_virtual_file(e, fileName_base, xmfFileName, N_total, N_counts,
+                       mpi_size, numFields, current_selection_name,
+                       internal_units, snapshot_units, subsample_any,
+                       subsample_fraction);
 
   /* Free the counts-per-rank array */
   free(N_counts);
