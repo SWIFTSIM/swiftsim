@@ -306,6 +306,8 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
     shape[1] = props.dimension;
     source_shape[1] = props.dimension;
     count[1] = props.dimension;
+    start[0] = 0;
+    start[1] = 0;
 
   } else {
     rank = 1;
@@ -313,6 +315,8 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
     shape[1] = 0;
     source_shape[1] = 0;
     count[1] = 0;
+    start[0] = 0;
+    start[1] = 0;
   }
 
   /* Change shape of data space */
@@ -337,8 +341,14 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
   char source_dataset_name[256];
   sprintf(source_dataset_name, "PartType%d/%s", ptype, props.name);
 
-  start[0] = 0;
-  start[1] = 0;
+  /* Make a relative name */
+  char fileName_relative_base[256];
+  int pos_last_slash = strlen(fileName_base) - 1;
+  while (pos_last_slash >= 0) {
+    if (fileName_base[pos_last_slash] == '/') break;
+    --pos_last_slash;
+  }
+  sprintf(fileName_relative_base, "%s", &fileName_base[pos_last_slash]);
 
   /* Create all the virtual mappings */
   for (int i = 0; i < num_ranks; ++i) {
@@ -357,7 +367,7 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
     if (h_source_space < 0) error("Error creating space in the source file");
 
     char fileName[1024];
-    sprintf(fileName, "%s.%d.hdf5", fileName_base, i);
+    sprintf(fileName, "%s.%d.hdf5", fileName_relative_base, i);
 
     /* Make the virtual link */
     h_err = H5Pset_virtual(h_prop, h_space, fileName, source_dataset_name,
