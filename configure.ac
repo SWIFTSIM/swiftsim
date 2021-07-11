@@ -52,6 +52,7 @@ AM_CONFIG_HEADER(config.h)
 # Find and test the compiler.
 AX_CHECK_ENABLE_DEBUG
 AC_PROG_CC
+AC_PROG_CXX
 AM_PROG_CC_C_O
 AC_OPENMP
 
@@ -68,9 +69,15 @@ AC_DEFINE([_GLIBCXX_INCLUDE_NEXT_C_HEADERS],1,[Hack for min() and max() using g+
 # Enable POSIX and platform extension preprocessor macros.
 AC_USE_SYSTEM_EXTENSIONS
 
-# Check for compiler version and vendor.
+# Check for C compiler version and vendor.
 AX_COMPILER_VENDOR
 AX_COMPILER_VERSION
+
+# Repeat for C++ compiler
+AC_LANG_PUSH([C++])
+AX_COMPILER_VENDOR
+AX_COMPILER_VERSION
+AC_LANG_POP([C++])
 
 # Check whether we have a recent enough GCC
 if test "$ax_cv_c_compiler_vendor" = "gnu"; then
@@ -147,6 +154,15 @@ if test "$enable_ipo" = "yes"; then
       AC_MSG_RESULT([added LLVM interprocedural optimization support])
    else
       AC_MSG_WARN([Compiler does not support interprocedural optimization])
+   fi
+
+   # Interprocedural optimization support for C++.
+   if test "$ax_cv_cxx_compiler_vendor" = "intel"; then
+      CXXFLAGS="$CXXFLAGS -ip -ipo"
+   elif test "$ax_cv_cxx_compiler_vendor" = "gnu"; then
+      CXXFLAGS="$CXXFLAGS -flto"
+   elif test "$ax_cv_cxx_compiler_vendor" = "clang"; then
+      CXXFLAGS="$CXXFLAGS -flto=thin"
    fi
 fi
 
@@ -577,6 +593,11 @@ if test "$enable_opt" = "yes" ; then
    AX_CC_MAXOPT
    ac_test_CFLAGS="yes"
 
+   # Also for the C++ compiler
+   ac_test_CXXFLAGS="no"
+   AX_CXX_MAXOPT
+   ac_test_CXXFLAGS="yes"
+
    # Choose the best flags for the gravity sub-library on this compiler and architecture
    if test "$ax_cv_c_compiler_vendor" = "intel"; then
       case "$icc_flags" in
@@ -743,6 +764,63 @@ fi
 AC_SUBST([GSL_LIBS])
 AC_SUBST([GSL_INCS])
 AM_CONDITIONAL([HAVEGSL],[test -n "$GSL_LIBS"])
+
+# Check for HEALPix C++ API
+have_healpix_cxx="no"
+AC_ARG_WITH([healpix_cxx],
+    [AS_HELP_STRING([--with-healpix-cxx=PATH],
+       [root directory where HEALPix C++ library is installed @<:@yes/no@:>@]
+    )],
+    [with_healpix_cxx="$withval"],
+    [with_healpix_cxx="test"]
+)
+if test "x$with_healpix_cxx" != "xno"; then
+   if test "x$with_healpix_cxx" != "xyes" -a "x$with_healpix_cxx" != "xtest" -a "x$with_healpix_cxx" != "x"; then
+      HEALPIX_CXX_LIBS="-L$with_healpix_cxx/lib -lhealpix_cxx -lsharp"
+      HEALPIX_CXX_INCS="-I$with_healpix_cxx/include"
+   else
+      HEALPIX_CXX_LIBS="-lhealpix_cxx -lsharp"
+      HEALPIX_CXX_INCS=""
+   fi
+   if test "x$with_healpix_cxx" = "xtest"; then
+      AC_LANG_PUSH(C++)
+      tmp_ldflags=${LDFLAGS}
+      LDFLAGS="${LDFLAGS} ${HEALPIX_CXX_LIBS}"
+      tmp_cppflags=${CPPFLAGS}
+      CPPFLAGS="${CPPFLAGS} ${HEALPIX_CXX_INCS}"
+      have_healpix_cxx="yes"
+      AC_LINK_IFELSE([AC_LANG_PROGRAM(
+         [[#include "healpix_cxx/healpix_base.h"]],
+         [Healpix_Base2 hb = Healpix_Base2(8, RING);])],
+         [AC_DEFINE(HAVE_HEALPIX_CXX,1,[Define if you have the Healpix C++ API])],[have_healpix_cxx="no"])
+      LDFLAGS=${tmp_ldflags}
+      CPPFLAGS=${tmp_cppflags}
+      AC_LANG_POP()
+   else
+      AC_LANG_PUSH(C++)
+      tmp_ldflags=${LDFLAGS}
+      LDFLAGS="${LDFLAGS} ${HEALPIX_CXX_LIBS}"
+      tmp_cppflags=${CPPFLAGS}
+      CPPFLAGS="${CPPFLAGS} ${HEALPIX_CXX_INCS}"
+      AC_LINK_IFELSE([AC_LANG_PROGRAM(
+         [[#include "healpix_cxx/healpix_base.h"]],
+         [Healpix_Base2 hb = Healpix_Base2(8, RING);])],
+         [AC_DEFINE(HAVE_HEALPIX_CXX,1,[Define if you have the Healpix C++ API])],
+         [AC_MSG_ERROR(something is wrong with the HEALPIX_CXX library!)])
+      LDFLAGS=${tmp_ldflags}
+      CPPFLAGS=${tmp_cppflags}
+      AC_LANG_POP()
+      have_healpix_cxx="yes"
+   fi
+   if test "$have_healpix_cxx" = "no"; then
+      HEALPIX_CXX_LIBS=""
+      HEALPIX_CXX_INCS=""
+   fi
+fi
+AC_SUBST([HEALPIX_CXX_LIBS])
+AC_SUBST([HEALPIX_CXX_INCS])
+AM_CONDITIONAL([HAVEHEALPIX_CXX],[test -n "$HEALPIX_CXX_LIBS"])
+
 
 # Check for pthreads.
 AX_PTHREAD([LIBS="$PTHREAD_LIBS $LIBS" CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
@@ -1668,6 +1746,18 @@ if test "$enable_standalone_fof" = "yes"; then
 fi
 AM_CONDITIONAL([HAVESTANDALONEFOF],[test $enable_standalone_fof = "yes"])
 
+# Check if lightcone output is on.
+AC_ARG_ENABLE([lightcone],
+   [AS_HELP_STRING([--enable-lightcone],
+     [Activate lightcone outputs.],
+   )],
+   [enable_lightcone="$enableval"],
+   [enable_lightcone="no"]
+)
+if test "$enable_lightcone" = "yes"; then
+   AC_DEFINE([WITH_LIGHTCONE], 1, [Enable lightcone outputs])
+fi
+
 # Gravity scheme.
 AC_ARG_WITH([gravity],
    [AS_HELP_STRING([--with-gravity=<scheme>],
@@ -2591,6 +2681,7 @@ AC_MSG_RESULT([
    METIS/ParMETIS       : $have_metis / $have_parmetis
    FFTW3 enabled        : $have_fftw
    GSL enabled          : $have_gsl
+   HEALPix C++ enabled  : $have_healpix_cxx
    libNUMA enabled      : $have_numa
    GRACKLE enabled      : $have_grackle
    Special allocators   : $have_special_allocator
@@ -2598,6 +2689,7 @@ AC_MSG_RESULT([
    Pthread barriers     : $have_pthread_barrier
    VELOCIraptor enabled : $have_velociraptor
    FoF activated:       : $enable_fof
+   Lightcones enabled   : $enable_lightcone
 
    Hydro scheme       : $with_hydro
    Dimensionality     : $with_dimension

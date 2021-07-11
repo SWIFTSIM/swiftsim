@@ -93,6 +93,11 @@ GRACKLE
 ~~~~~~~
 GRACKLE cooling is implemented in SWIFT. If you wish to take advantage of it, you will need it installed.
 
+HEALPix C++ library
+~~~~~~~~~~~~~~~~~~~
+
+This is required for making light cone HEALPix maps.
+
 
 Initial Setup
 -------------

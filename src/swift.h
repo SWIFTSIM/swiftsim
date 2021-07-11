@@ -52,6 +52,7 @@
 #include "hashmap.h"
 #include "hydro.h"
 #include "hydro_properties.h"
+#include "lightcone.h"
 #include "line_of_sight.h"
 #include "lock.h"
 #include "map.h"
