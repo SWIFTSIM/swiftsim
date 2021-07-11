@@ -148,7 +148,6 @@ int csds_read_timestamp(const struct csds_writer *log, integertime_t *t,
 void csds_struct_dump(const struct csds_writer *log, FILE *stream);
 void csds_struct_restore(struct csds_writer *log, FILE *stream);
 
-
 /**
  * @brief Initialize the csds data for a particle.
  *
