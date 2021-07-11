@@ -1400,6 +1400,46 @@ void write_output_distributed(struct engine* e,
                        internal_units, snapshot_units, subsample_any,
                        subsample_fraction);
 
+  /* Now write the top-level cell structure in the virtual file
+   * but this time, it is *not* distributed. i.e. all the offsets are
+   * in the virtual file */
+  hid_t h_file_cells = 0, h_grp_cells = 0;
+  if (mpi_rank == 0) {
+
+    char fileName_virtual[1030];
+    sprintf(fileName_virtual, "%s.hdf5", fileName_base);
+
+    /* Open the snapshot on rank 0 */
+    h_file_cells = H5Fopen(fileName_virtual, H5F_ACC_RDWR, H5P_DEFAULT);
+    if (h_file_cells < 0)
+      error("Error while opening file '%s' on rank %d.", fileName_virtual,
+            mpi_rank);
+
+    /* Create the group we want in the file */
+    h_grp_cells = H5Gcreate(h_file_cells, "/Cells", H5P_DEFAULT, H5P_DEFAULT,
+                            H5P_DEFAULT);
+    if (h_grp_cells < 0) error("Error while creating cells group");
+  }
+
+  /* We need to recompute the offsets since they are now with respect
+   * to a single file. */
+  for (int i = 0; i < swift_type_count; ++i) global_offsets[i] = 0;
+  MPI_Exscan(N, global_offsets, swift_type_count, MPI_LONG_LONG_INT, MPI_SUM,
+             comm);
+
+  /* Write the location of the particles in the arrays */
+  io_write_cell_offsets(h_grp_cells, e->s->cdim, e->s->dim, e->s->cells_top,
+                        e->s->nr_cells, e->s->width, mpi_rank,
+                        /*distributed=*/0, subsample, subsample_fraction,
+                        e->snapshot_output_count, N_total, global_offsets,
+                        numFields, internal_units, snapshot_units);
+
+  /* Close everything */
+  if (mpi_rank == 0) {
+    H5Gclose(h_grp_cells);
+    H5Fclose(h_file_cells);
+  }
+
   /* Free the counts-per-rank array */
   free(N_counts);
 
@@ -1409,4 +1449,5 @@ void write_output_distributed(struct engine* e,
   e->snapshot_output_count++;
   if (e->snapshot_invoke_stf) e->stf_output_count++;
 }
+
 #endif /* HAVE_HDF5 && WITH_MPI */
