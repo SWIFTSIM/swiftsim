@@ -298,25 +298,25 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
   int rank = 0;
   hsize_t shape[2];
   hsize_t source_shape[2];
-  hsize_t start[2];
+  hsize_t start[2] = {0, 0};
   hsize_t count[2];
   if (props.dimension > 1) {
     rank = 2;
     shape[0] = N_total;
     shape[1] = props.dimension;
+    source_shape[0] = 0;
     source_shape[1] = props.dimension;
+    count[0] = 0;
     count[1] = props.dimension;
-    start[0] = 0;
-    start[1] = 0;
 
   } else {
     rank = 1;
     shape[0] = N_total;
     shape[1] = 0;
+    source_shape[0] = 0;
     source_shape[1] = 0;
+    count[0] = 0;
     count[1] = 0;
-    start[0] = 0;
-    start[1] = 0;
   }
 
   /* Change shape of data space */
@@ -329,7 +329,6 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
 
   /* Dataset properties */
   hid_t h_prop = H5Pcreate(H5P_DATASET_CREATE);
-  // H5Pset_fill_value (h_prop, H5T_NATIVE_INT, &fill_value);
 
   /* Are we imposing some form of lossy compression filter? */
   char comp_buffer[32] = "None";
@@ -341,14 +340,13 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
   char source_dataset_name[256];
   sprintf(source_dataset_name, "PartType%d/%s", ptype, props.name);
 
-  /* Make a relative name */
+  /* Construct a relative base name */
   char fileName_relative_base[256];
   int pos_last_slash = strlen(fileName_base) - 1;
-  while (pos_last_slash >= 0) {
+  for (/* */; pos_last_slash >= 0; --pos_last_slash)
     if (fileName_base[pos_last_slash] == '/') break;
-    --pos_last_slash;
-  }
-  sprintf(fileName_relative_base, "%s", &fileName_base[pos_last_slash]);
+
+  sprintf(fileName_relative_base, "%s", &fileName_base[pos_last_slash + 1]);
 
   /* Create all the virtual mappings */
   for (int i = 0; i < num_ranks; ++i) {
@@ -376,7 +374,7 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
 
     H5Sclose(h_source_space);
 
-    /* Move to the next slab */
+    /* Move to the next slab (i.e. next file) */
     start[0] += count[0];
   }
 
