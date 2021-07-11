@@ -290,6 +290,8 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
                          const enum lossy_compression_schemes lossy_compression,
                          const struct unit_system* snapshot_units) {
 
+#if H5_VERSION_GE(1, 10, 0)
+
   /* Create data space */
   const hid_t h_space = H5Screate(H5S_SIMPLE);
   if (h_space < 0)
@@ -432,6 +434,12 @@ void write_array_virtual(struct engine* e, hid_t grp, const char* fileName_base,
   H5Pclose(h_prop);
   H5Dclose(h_data);
   H5Sclose(h_space);
+
+#else
+  error(
+      "Function cannot be called when the code is compiled with hdf5 older "
+      "than 1.10.0");
+#endif
 }
 
 /**
@@ -456,6 +464,8 @@ void write_virtual_file(struct engine* e, const char* fileName_base,
                         const struct unit_system* snapshot_units,
                         const int subsample_any,
                         const float subsample_fraction[swift_type_count]) {
+
+#if H5_VERSION_GE(1, 10, 0)
 
   struct output_options* output_options = e->output_options;
   const int with_cosmology = e->policy & engine_policy_cosmology;
@@ -703,6 +713,12 @@ void write_virtual_file(struct engine* e, const char* fileName_base,
 
   /* Close the file for now */
   H5Fclose(h_file);
+
+#else
+  error(
+      "Function cannot be called when the code is compiled with hdf5 older "
+      "than 1.10.0");
+#endif
 }
 
 /**
@@ -1393,12 +1409,17 @@ void write_output_distributed(struct engine* e,
   /* Close file */
   H5Fclose(h_file);
 
+#if H5_VERSION_GE(1, 10, 0)
+
   /* Write the virtual meta-file */
   if (mpi_rank == 0)
     write_virtual_file(e, fileName_base, xmfFileName, N_total, N_counts,
                        mpi_size, numFields, current_selection_name,
                        internal_units, snapshot_units, subsample_any,
                        subsample_fraction);
+
+  /* Make sure nobody is allowed to progress until rank 0 is done. */
+  MPI_Barrier(comm);
 
   /* Now write the top-level cell structure in the virtual file
    * but this time, it is *not* distributed. i.e. all the offsets are
@@ -1439,6 +1460,8 @@ void write_output_distributed(struct engine* e,
     H5Gclose(h_grp_cells);
     H5Fclose(h_file_cells);
   }
+
+#endif
 
   /* Free the counts-per-rank array */
   free(N_counts);
