@@ -338,8 +338,8 @@ void write_array_single(const struct engine* e, hid_t grp, char* fileName,
 
   /* Write XMF description for this data set */
   if (xmfFile != NULL)
-    xmf_write_line(xmfFile, fileName, partTypeGroupName, props.name, N,
-                   props.dimension, props.type);
+    xmf_write_line(xmfFile, fileName, /*distributed=*/0, partTypeGroupName,
+                   props.name, N, props.dimension, props.type);
 
   /* Write unit conversion factors for this data set */
   char buffer[FIELD_BUFFER_SIZE] = {0};
@@ -1081,8 +1081,8 @@ void write_output_single(struct engine* e,
     if (numParticles[ptype] == 0 || numFields[ptype] == 0) continue;
 
     /* Add the global information for that particle type to the XMF meta-file */
-    xmf_write_groupheader(xmfFile, fileName, numParticles[ptype],
-                          (enum part_type)ptype);
+    xmf_write_groupheader(xmfFile, fileName, /*distributed=*/0,
+                          numParticles[ptype], (enum part_type)ptype);
 
     /* Open the particle group in the file */
     char partTypeGroupName[PARTICLE_GROUP_BUFFER_SIZE];
