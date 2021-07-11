@@ -496,8 +496,8 @@ void prepare_array_parallel(
 
   /* Add a line to the XMF */
   if (xmfFile != NULL)
-    xmf_write_line(xmfFile, fileName, partTypeGroupName, props.name, N_total,
-                   props.dimension, props.type);
+    xmf_write_line(xmfFile, fileName, /*distributed=*/0, partTypeGroupName,
+                   props.name, N_total, props.dimension, props.type);
 
   /* Close everything */
   H5Tclose(h_type);
@@ -1283,7 +1283,7 @@ void prepare_file(struct engine* e, const char* fileName,
 
     /* Add the global information for that particle type to
      * the XMF meta-file */
-    xmf_write_groupheader(xmfFile, fileName, N_total[ptype],
+    xmf_write_groupheader(xmfFile, fileName, /*distributed=*/0, N_total[ptype],
                           (enum part_type)ptype);
 
     /* Create the particle group in the file */
