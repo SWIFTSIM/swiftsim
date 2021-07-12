@@ -143,10 +143,11 @@ void csds_copy_part_fields(const struct csds_writer *log, const struct part *p,
   buff = csds_write_record_header(buff, &mask, offset, offset_new);
 
   /* Special flags */
-  if (mask & log->list_fields[SPECIAL_FLAGS_INDEX].mask) {
-    memcpy(buff, &special_flags, log->list_fields[SPECIAL_FLAGS_INDEX].size);
-    buff += log->list_fields[SPECIAL_FLAGS_INDEX].size;
-    mask &= ~log->list_fields[SPECIAL_FLAGS_INDEX].mask;
+  if (mask & log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].mask) {
+    memcpy(buff, &special_flags,
+           log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].size);
+    buff += log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].size;
+    mask &= ~log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].mask;
   }
 
   /* Write the hydro fields */
@@ -246,7 +247,7 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
                     const enum csds_special_flags flag, const int flag_data) {
 
   /* Build the special flag */
-  const int size_special_flag = log->list_fields[SPECIAL_FLAGS_INDEX].size;
+  const int size_special_flag = log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].size;
   const uint32_t special_flags =
       csds_pack_flags_and_data(flag, flag_data, swift_type_gas);
 
@@ -259,7 +260,7 @@ void csds_log_parts(struct csds_writer *log, const struct part *p,
   /* Add the flag */
   if (flag != csds_flag_none) {
     size += size_special_flag;
-    mask |= log->list_fields[SPECIAL_FLAGS_INDEX].mask;
+    mask |= log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].mask;
   }
   size += CSDS_HEADER_SIZE;
   size_t size_total = count * size;
@@ -332,10 +333,11 @@ void csds_copy_spart_fields(const struct csds_writer *log,
   buff = csds_write_record_header(buff, &mask, offset, offset_new);
 
   /* Special flags */
-  if (mask & log->list_fields[SPECIAL_FLAGS_INDEX].mask) {
-    memcpy(buff, &special_flags, log->list_fields[SPECIAL_FLAGS_INDEX].size);
-    buff += log->list_fields[SPECIAL_FLAGS_INDEX].size;
-    mask &= ~log->list_fields[SPECIAL_FLAGS_INDEX].mask;
+  if (mask & log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].mask) {
+    memcpy(buff, &special_flags,
+           log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].size);
+    buff += log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].size;
+    mask &= ~log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].mask;
   }
 
   /* Write the stellar fields */
@@ -401,7 +403,7 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
                      const struct engine *e, const int log_all_fields,
                      const enum csds_special_flags flag, const int flag_data) {
   /* Build the special flag */
-  const int size_special_flag = log->list_fields[SPECIAL_FLAGS_INDEX].size;
+  const int size_special_flag = log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].size;
   const uint32_t special_flags =
       csds_pack_flags_and_data(flag, flag_data, swift_type_stars);
 
@@ -415,7 +417,7 @@ void csds_log_sparts(struct csds_writer *log, struct spart *sp, int count,
 
   /* Add the flag */
   if (flag != csds_flag_none) {
-    mask |= log->list_fields[SPECIAL_FLAGS_INDEX].mask;
+    mask |= log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].mask;
     size += size_special_flag;
   }
   size += CSDS_HEADER_SIZE;
@@ -485,10 +487,11 @@ void csds_copy_gpart_fields(const struct csds_writer *log,
   buff = csds_write_record_header(buff, &mask, offset, offset_new);
 
   /* Special flags */
-  if (mask & log->list_fields[SPECIAL_FLAGS_INDEX].mask) {
-    memcpy(buff, &special_flags, log->list_fields[SPECIAL_FLAGS_INDEX].size);
-    buff += log->list_fields[SPECIAL_FLAGS_INDEX].size;
-    mask &= ~log->list_fields[SPECIAL_FLAGS_INDEX].mask;
+  if (mask & log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].mask) {
+    memcpy(buff, &special_flags,
+           log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].size);
+    buff += log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].size;
+    mask &= ~log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].mask;
   }
 
   /* Write the gravity fields */
@@ -554,7 +557,7 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
                      const struct engine *e, const int log_all_fields,
                      const enum csds_special_flags flag, const int flag_data) {
   /* Build the special flag */
-  const int size_special_flag = log->list_fields[SPECIAL_FLAGS_INDEX].size;
+  const int size_special_flag = log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].size;
   const uint32_t special_flags =
       csds_pack_flags_and_data(flag, flag_data, swift_type_dark_matter);
 
@@ -578,7 +581,7 @@ void csds_log_gparts(struct csds_writer *log, struct gpart *p, int count,
 
   /* Add the flag */
   if (flag != csds_flag_none) {
-    mask |= log->list_fields[SPECIAL_FLAGS_INDEX].mask;
+    mask |= log->list_fields[CSDS_SPECIAL_FLAGS_INDEX].mask;
     size += size_special_flag;
   }
   size += CSDS_HEADER_SIZE;
@@ -638,14 +641,15 @@ void csds_log_timestamp(struct csds_writer *log, integertime_t timestamp,
                         double time, size_t *offset) {
   struct csds_logfile_writer *logfile = &log->logfile;
   /* Start by computing the size of the message. */
-  const int size = log->list_fields[TIMESTAMP_INDEX].size + CSDS_HEADER_SIZE;
+  const int size =
+      log->list_fields[CSDS_TIMESTAMP_INDEX].size + CSDS_HEADER_SIZE;
 
   /* Allocate a chunk of memory in the logfile of the right size. */
   size_t offset_new;
   char *buff = (char *)csds_logfile_writer_get(logfile, size, &offset_new);
 
   /* Write the header. */
-  unsigned int mask = log->list_fields[TIMESTAMP_INDEX].mask;
+  unsigned int mask = log->list_fields[CSDS_TIMESTAMP_INDEX].mask;
   buff = csds_write_record_header(buff, &mask, offset, offset_new);
 
   /* Store the timestamp. */
@@ -722,18 +726,18 @@ void csds_init_masks(struct csds_writer *log, const struct engine *e) {
 
   /* The next fields must be the two first ones. */
   /* Add the special flags (written manually => no need of offset) */
-  if (SPECIAL_FLAGS_INDEX != 0) {
+  if (CSDS_SPECIAL_FLAGS_INDEX != 0) {
     error("Expecting the special flags to be the first element.");
   }
-  csds_define_common_field(list[SPECIAL_FLAGS_INDEX], "SpecialFlags",
+  csds_define_common_field(list[CSDS_SPECIAL_FLAGS_INDEX], "SpecialFlags",
                            sizeof(uint32_t));
   num_fields += 1;
 
   /* Add the timestamp */
-  if (TIMESTAMP_INDEX != 1) {
+  if (CSDS_TIMESTAMP_INDEX != 1) {
     error("Expecting the timestamp to be the first element.");
   }
-  csds_define_common_field(list[TIMESTAMP_INDEX], "Timestamp",
+  csds_define_common_field(list[CSDS_TIMESTAMP_INDEX], "Timestamp",
                            sizeof(integertime_t) + sizeof(double));
   list[num_fields].type = mask_for_timestep;  // flag it as timestamp
   num_fields += 1;
@@ -911,7 +915,7 @@ void csds_init(struct csds_writer *log, const struct engine *e,
   /* Loop over all fields except timestamp. */
   for (int i = 0; i < log->total_number_fields; i++) {
     /* Skip the timestamp */
-    if (i == TIMESTAMP_INDEX) continue;
+    if (i == CSDS_TIMESTAMP_INDEX) continue;
 
     max_size += log->list_fields[i].size;
   }
@@ -1176,11 +1180,11 @@ int csds_read_timestamp(const struct csds_writer *log, integertime_t *t,
   buff += csds_read_record_header(buff, &mask, offset, cur_offset);
 
   /* We are only interested in timestamps. */
-  if (!(mask & log->list_fields[TIMESTAMP_INDEX].mask))
+  if (!(mask & log->list_fields[CSDS_TIMESTAMP_INDEX].mask))
     error("Trying to read timestamp from a particle.");
 
   /* Make sure we don't have extra fields. */
-  if (mask != log->list_fields[TIMESTAMP_INDEX].mask)
+  if (mask != log->list_fields[CSDS_TIMESTAMP_INDEX].mask)
     error("Timestamp message contains extra fields.");
 
   /* Copy the timestamp value from the buffer. */
