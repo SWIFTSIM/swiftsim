@@ -149,7 +149,8 @@ def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
         )
         quit()
 
-    rundata.ngroups = int(firstfile.metadata.subgrid_scheme["PhotonGroupNumber"])
+    ngroups = int(firstfile.metadata.subgrid_scheme["PhotonGroupNumber"])
+    rundata.ngroups = ngroups
     rundata.use_const_emission_rate = bool(
         firstfile.metadata.parameters["GEARRT:use_const_emission_rates"]
     )
@@ -210,46 +211,16 @@ def get_snap_data(prefix="output", skip_snap_zero=False, skip_last_snap=False):
         Gas.h = data.gas.smoothing_lengths
         Gas.PhotonEnergies = swiftsimio.cosmo_array(
             [
-                data.gas.photon_energies.group1,
-                data.gas.photon_energies.group2,
-                data.gas.photon_energies.group3,
-                data.gas.photon_energies.group4,
+                getattr(data.gas.photon_energies, "group"+str(g+1)) for g in range(ngroups)
             ]
         ).T
 
-        Gas.PhotonFluxes = swiftsimio.cosmo_array(
-            (
-                unyt.uvstack(
-                    (
-                        data.gas.photon_fluxes.Group1X,
-                        data.gas.photon_fluxes.Group1Y,
-                        data.gas.photon_fluxes.Group1Z,
-                    )
-                ),
-                unyt.uvstack(
-                    (
-                        data.gas.photon_fluxes.Group2X,
-                        data.gas.photon_fluxes.Group2Y,
-                        data.gas.photon_fluxes.Group2Z,
-                    )
-                ),
-                unyt.uvstack(
-                    (
-                        data.gas.photon_fluxes.Group3X,
-                        data.gas.photon_fluxes.Group3Y,
-                        data.gas.photon_fluxes.Group3Z,
-                    )
-                ),
-                unyt.uvstack(
-                    (
-                        data.gas.photon_fluxes.Group4X,
-                        data.gas.photon_fluxes.Group4Y,
-                        data.gas.photon_fluxes.Group4Z,
-                    )
-                ),
-            ),
-            data.gas.photon_fluxes.Group1X.units,
-        ).T
+        stack = []
+        for g in range(ngroups):
+            newdata = (getattr(data.gas.photon_fluxes, "Group"+str(g+1)+"X"), getattr(data.gas.photon_fluxes, "Group"+str(g+1)+"Y"), getattr(data.gas.photon_fluxes, "Group"+str(g+1)+"Z")) 
+            arr = unyt.uvstack(newdata)
+            stack.append(arr)
+        Gas.PhotonFluxes = swiftsimio.cosmo_array(stack, data.gas.photon_fluxes.Group1X.units)
 
         #  Get star data
         Stars = RTStarData()

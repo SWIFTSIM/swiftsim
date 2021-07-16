@@ -27,7 +27,7 @@ from swift_rt_GEAR_io import get_snap_data
 from matplotlib import pyplot as plt
 
 # some behaviour options
-print_diffs = False  # print differences you find
+print_diffs = True  # print differences you find
 print_additional_information = True
 break_on_diff = False  # quit when you find a difference
 skip_plots = False  # skip showing plots for diagnosis
@@ -106,8 +106,8 @@ def check_injection(snapdata, rundata):
     for snap in snapdata[1:]:
         dt = snap.time - initial_time
         # sum of each group over all particles
-        photon_energies = np.sum(snap.gas.PhotonEnergies, axis=0)
-        injected_energies = np.sum(snap.stars.InjectedPhotonEnergy, axis=0)
+        photon_energies = np.atleast_1d(np.sum(snap.gas.PhotonEnergies, axis=0))
+        injected_energies = np.atleast_1d(np.sum(snap.stars.InjectedPhotonEnergy, axis=0))
 
         for g in range(ngroups):
             energy_expected = initial_energies[g] + injected_energies[g]
@@ -140,7 +140,7 @@ def check_injection(snapdata, rundata):
     # at which all stars have been active at least once to do this test
     # correctly.)
     initial_time = snapdata[1].time
-    emission_at_initial_time = snapdata[1].stars.InjectedPhotonEnergy.sum(axis=0)
+    emission_at_initial_time = np.atleast_1d(snapdata[1].stars.InjectedPhotonEnergy.sum(axis=0))
 
     if rundata.use_const_emission_rate and not rundata.hydro_controlled_injection:
         if len(snapdata) <= 2:
